@@ -1,0 +1,14 @@
+{
+  "name": "@swimrun/gpx-to-swimrun-segments",
+  "version": "0.0.1",
+  "exports": "./mod.ts",
+  "tasks": {
+    "dev": "deno run --watch --allow-net --allow-read src/main.ts",
+    "test": "deno test",
+    "lint": "deno lint",
+    "fmt": "deno fmt"
+  },
+  "compilerOptions": {
+    "strict": true
+  }
+}
