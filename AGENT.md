@@ -89,23 +89,17 @@ Bending without resistance erodes trust in the agent's output.
 
 ### Markdown linting
 
-All markdown files must conform to **markdownlint** rules
-(also known as quickmark). Configuration is in
-`.markdownlint.json` at project root.
+All markdown files must conform to **QuickMark** rules.
+Configuration is in `quickmark.toml` at project root.
 
-Key rules:
+**This project uses QuickMark (quickmark.toml), NOT David
+Anson's markdownlint (.markdownlint.json).** Do not create
+`.markdownlint.json` or `.markdownlint.yaml` files.
 
-- **Line length**: max 80 characters (except tables and code
-  blocks)
-- **MD024 disabled**: duplicate headings are allowed because
-  Kiro spec format requires repeated `#### Acceptance Criteria`
-  headings
-- No trailing whitespace
-- Single blank line between blocks
-- Fenced code blocks must specify a language
+Key configuration in `quickmark.toml`:
 
-Run the linter before committing:
-
-```bash
-markdownlint '**/*.md' --ignore node_modules
-```
+- `line-length = "off"` — disabled for documentation projects
+- `no-inline-html = "off"` — allowed for formatting
+- `no-bare-urls = "off"` — allowed for references
+- `no-duplicate-heading = "off"` — required because Kiro spec
+  format uses repeated `#### Acceptance Criteria` headings
