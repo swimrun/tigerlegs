@@ -238,13 +238,13 @@ distances, so that I can plan my race pacing and gear transitions.
    THEN THE Analyzer SHALL display an error message indicating the
    waypoint could not be matched to the track
 5. THE Analyzer SHALL display Run_Segment distances in kilometres
-   rounded to one decimal place
+   rounded to the nearest 0.1 km (100 metres)
 6. THE Analyzer SHALL display Swim_Segment distances in metres
-   rounded to the nearest 100 metres
+   rounded to the nearest 50 metres
 7. THE Segment_Table SHALL display a totals row showing cumulative
-   run distance in kilometres rounded to one decimal place and
+   run distance in kilometres rounded to the nearest 0.1 km and
    cumulative swim distance in metres rounded to the nearest
-   100 metres
+   50 metres
 
 ### Requirement 4: Map Visualization
 
@@ -271,27 +271,38 @@ distances, so that I can plan my race pacing and gear transitions.
 
 ### Requirement 5: Segment Table Display
 
-**User Story:** US-5 — As a swimrun athlete, I want a clear table of all
-segments with distances, so that I can quickly review the race
-structure.
+**User Story:** US-5 — As a swimrun athlete, I want a clear, compact
+table of all segments with distances, so that I can quickly review
+the race structure and write distances on my swimrun paddles.
 
 #### Acceptance Criteria
 
 1. WHEN segments are calculated, THE Segment_Table SHALL display
-   one row per segment in race order, numbered sequentially
-   starting at 1
-2. THE Segment_Table SHALL display columns for segment number, run
-   distance (km), and swim distance (m)
-3. WHEN a Swim_Segment row is displayed, THE Segment_Table SHALL
-   populate the swim distance column and display a blank cell in
-   the run distance column
-4. WHEN a Run_Segment row is displayed, THE Segment_Table SHALL
-   populate the run distance column and display a blank cell in
-   the swim distance column
-5. THE Segment_Table SHALL display a final totals row, visually
+   one row per segment pair, where each row contains both the swim
+   distance and the run distance for that transition pair, numbered
+   sequentially starting at 1 (ADR-0007)
+2. THE Segment_Table SHALL display columns for segment number, swim
+   distance (m), and run distance (km), with no empty cells in the
+   table body
+3. WHEN the race starts with a run (default), THE Segment_Table
+   SHALL use column order: #, Run (km), Swim (m) — each row shows
+   run N followed by swim N
+4. WHEN the race starts with a swim, THE Segment_Table SHALL use
+   column order: #, Swim (m), Run (km) — each row shows swim N
+   followed by run N
+5. IF a segment pair is incomplete (first row has no swim because
+   race starts with a run, or last row has no run because race ends
+   with a swim), THEN THE Segment_Table SHALL display a dash ("—")
+   in the empty cell to explicitly indicate absence
+6. THE Segment_Table SHALL display a final totals row, visually
    distinct from segment rows, with summed run distance in
    kilometres and summed swim distance in metres
-6. IF no segments are calculated from the uploaded file, THEN THE
+7. THE Segment_Table SHALL provide a toggle to switch column order
+   between "swim first" and "run first"
+8. THE Segment_Table SHALL optionally display a cumulative distance
+   column (swim + run, in km rounded to 0.1 km), toggleable in
+   the UI
+9. IF no segments are calculated from the uploaded file, THEN THE
    Segment_Table SHALL display a message indicating no segments
    were found instead of an empty table
 
@@ -442,20 +453,12 @@ data, so that I can analyze self-recorded training and race files.
    Speed_Analyzer SHALL calculate instantaneous speed between
    consecutive trackpoints as distance divided by elapsed time,
    using the Haversine formula for distance
-2. THE Speed_Analyzer SHALL apply a sliding window average over
-   a configurable number of consecutive trackpoints (default: 10,
-   minimum: 3, maximum: 50) to smooth short-term speed fluctuations
-3. THE Speed_Analyzer SHALL classify a trackpoint sequence as
-   Swim_Segment when the sliding window average speed is below
-   5 kph for a minimum of 5 consecutive windowed readings
+2. THE Speed_Analyzer SHALL apply a sliding window average over a configurable number of consecutive trackpoints (default: 10, minimum: 3, maximum: 50) to smooth short-term speed fluctuations
+3. THE Speed_Analyzer SHALL classify a trackpoint sequence as Swim_Segment when the sliding window average speed is below 5 kph for a minimum of 5 consecutive windowed readings
 4. THE Speed_Analyzer SHALL classify a trackpoint sequence as
    Run_Segment when the sliding window average speed is at or
    above 5 kph for a minimum of 5 consecutive windowed readings
-5. THE Speed_Analyzer SHALL assign a Confidence_Score between 0.0
-   and 1.0 to each detected transition, calculated as the ratio of
-   the absolute speed difference between the mean speed of the
-   preceding segment and the mean speed of the following segment,
-   divided by 10 kph, capped at 1.0
+5. THE Speed_Analyzer SHALL assign a Confidence_Score between 0.0 and 1.0 to each detected transition, calculated as the ratio of the absolute speed difference between the mean speed of the preceding segment and the mean speed of the following segment, divided by 10 kph, capped at 1.0
 6. IF a GPX file contains trackpoints without timestamp data, THEN
    THE Analyzer SHALL indicate that speed-based detection is
    unavailable for that file and suggest using landscape-based
@@ -574,17 +577,15 @@ in afstandmeten.nl or similar tools).
 
 ### Requirement 15: Deno Backend Service
 
-**User Story:** US-13 — As a developer, I want a Deno backend that
-manages API keys and proxies external requests, so that API
-credentials are never exposed to the browser client.
+**User Story:** US-13 — As a developer, I want a Deno backend that manages API keys and proxies external requests, so that API credentials are never exposed to the browser client.
 
 #### Acceptance Criteria
 
 1. THE Deno_Backend SHALL provide HTTP endpoints that proxy requests
-   to external terrain and map services (OpenStreetMap, Komoot)
-2. THE Deno_Backend SHALL store API keys in environment variables
-   or a secure configuration file, and those keys SHALL NOT be
-   included in any client-side code or response payload
+   to external terrain and map services (OpenStreetMap Overpass API)
+2. THE Deno_Backend SHALL store configuration (API URLs, allowed
+   origins) in environment variables; the public Overpass API
+   requires no API key or authentication
 3. THE Deno_Backend SHALL validate incoming requests from the
    frontend client by verifying that the request origin matches
    the configured allowed origins list, and that coordinates are

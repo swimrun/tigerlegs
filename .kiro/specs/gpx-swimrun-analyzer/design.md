@@ -250,8 +250,7 @@ graph TD
 Environment variables on the VPS:
 
 - `ALLOWED_ORIGINS` — comma-separated list of allowed CORS origins
-- `OSM_API_KEY` — OpenStreetMap Overpass API key (if required by self-hosted instance)
-- `KOMOOT_API_KEY` — Komoot/Photon API key (future — geocoding only, not used for terrain)
+- `OVERPASS_API_URL` — Overpass API endpoint (default: `https://overpass-api.de/api/interpreter`; no API key needed for public instance)
 - `CACHE_TYPE` — `"filesystem"` or `"sqlite"`
 - `CACHE_PATH` — path to cache directory or SQLite database file
 - `PORT` — server listen port (default: 8000)
@@ -358,12 +357,12 @@ export interface FilterResult {
   originalDistance: number;
 }
 
-/** Formatted segment for display */
-export interface DisplaySegment {
+/** Formatted segment pair for display (ADR-0007: paired-row, no empty cells) */
+export interface DisplaySegmentPair {
   number: number;
-  type: SegmentType;
-  runDistanceKm: string | null;
-  swimDistanceM: string | null;
+  swimDistanceM: string;       // rounded to nearest 50m, or "—" if absent
+  runDistanceKm: string;       // rounded to nearest 0.1 km, or "—" if absent
+  cumulativeKm: string | null; // optional cumulative column
   detectedBy: string;
   confidenceScore: number;
 }
@@ -644,8 +643,27 @@ export function buildSegments(
   classifiedWaypoints: ClassifiedWaypoint[]
 ): Result<Segment[]>;
 
-export function formatSegmentDistance(segment: Segment): DisplaySegment;
+/**
+ * Pair consecutive segments into display rows (ADR-0007).
+ * Each pair contains a swim and its subsequent run (or vice versa).
+ */
+export function pairSegmentsForDisplay(
+  segments: Segment[],
+  swimFirst: boolean
+): DisplaySegmentPair[];
+
+export function formatSegmentDistance(segment: Segment): DisplaySegmentPair;
 export function calculateTotals(segments: Segment[]): SegmentTotals;
+
+/**
+ * Round swim distance to nearest 50 metres (ADR-0007).
+ */
+export function roundSwimDistance(metres: number): number;
+
+/**
+ * Round run distance to nearest 0.1 km (ADR-0007).
+ */
+export function roundRunDistance(km: number): number;
 ```
 
 ### 10. File Upload Controller (`src/client/file-upload.ts`)
@@ -670,7 +688,17 @@ export function fitBounds(map: L.Map, trackpoints: Trackpoint[]): void;
 ### 12. Table Renderer (`src/client/table-renderer.ts`)
 
 ```typescript
-export function renderTable(container: HTMLElement, segments: DisplaySegment[], totals: SegmentTotals): void;
+export interface TableConfig {
+  swimFirst: boolean;           // column order toggle (ADR-0007)
+  showCumulative: boolean;      // optional cumulative distance column
+}
+
+export function renderTable(
+  container: HTMLElement,
+  pairs: DisplaySegmentPair[],
+  totals: SegmentTotals,
+  config: TableConfig
+): void;
 export function renderEmptyState(container: HTMLElement): void;
 ```
 
