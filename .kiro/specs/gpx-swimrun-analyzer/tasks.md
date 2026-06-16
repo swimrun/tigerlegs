@@ -58,13 +58,13 @@ Implement a client-server swimrun GPX analysis tool using Deno with TypeScript. 
     - Map waypoints to nearest trackpoint within 50m radius
     - _Requirements: 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 2.8, 8.1_
 
-  - [ ] 3.2 Write property tests for waypoint classifier
+  - [x] 3.2 Write property tests for waypoint classifier
     - **Property 4: Waypoint classification correctness**
     - **Property 6: Unpaired swim-start detection**
     - Create `test/client/waypoint-classifier.test.ts`
     - **Validates: Requirements 2.1, 2.2, 2.8, 8.1**
 
-  - [ ] 3.3 Implement segment builder
+  - [x] 3.3 Implement segment builder
     - Create `src/client/segment-builder.ts` with `buildSegments`, `pairSegmentsForDisplay`, `formatSegmentDistance`, `calculateTotals`, `roundSwimDistance`, `roundRunDistance`
     - Produce complete, non-overlapping, alternating coverage of all trackpoints
     - Pair segments into display rows: each row has both swim and run distance (ADR-0007, no empty cells)
@@ -83,7 +83,7 @@ Implement a client-server swimrun GPX analysis tool using Deno with TypeScript. 
   - Ensure all tests pass, ask the user if questions arise.
 
 - [ ] 5. Implement speed-based segment detection (Strategy 2)
-  - [ ] 5.1 Implement speed analyzer
+  - [x] 5.1 Implement speed analyzer
     - Create `src/client/speed-analyzer.ts` with `calculateInstantaneousSpeed`, `applySlidingWindow`, `detectBySpeed`, `calculateSpeedConfidence`, `isSpeedDetectionAvailable`
     - Configurable sliding window (default 10, min 3, max 50)
     - Classify <5 kph as swim, ≥5 kph as run, <0.5 kph as stationary (ignored)
@@ -127,12 +127,12 @@ Implement a client-server swimrun GPX analysis tool using Deno with TypeScript. 
     - Cache keys at 5 decimal places (~1m resolution)
     - _Requirements: 15.4, 15.9_
 
-  - [ ] 8.2 Write property tests for cache keys
+  - [x] 8.2 Write property tests for cache keys
     - **Property 22: Cache key determinism and precision**
     - Create `test/server/cache.test.ts`
     - **Validates: Requirements 15.4**
 
-  - [ ] 8.3 Implement terrain proxy service
+  - [x] 8.3 Implement terrain proxy service
     - Create `src/server/terrain-proxy-service.ts` with `lookupTerrain`, `queryOSM`, `fetchTrackCorridor`, `classifyCoordinates`
     - Single corridor Overpass QL query with `around` statement for water polygons and road/path features
     - Point-in-polygon classification for each coordinate

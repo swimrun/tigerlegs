@@ -159,3 +159,97 @@ Deno.test("filesystem cache - non-expired entries are returned", async () => {
     await Deno.remove(tmpDir, { recursive: true });
   }
 });
+
+
+// --- Property-Based Tests for coordinateCacheKey (Property 22) ---
+// **Validates: Requirements 15.4**
+
+import fc from "fast-check";
+import { arbitraryCoordinate } from "../generators.ts";
+
+Deno.test("Property 22.1: Same coordinate always produces the same key (deterministic)", () => {
+  fc.assert(
+    fc.property(arbitraryCoordinate, (coord) => {
+      const key1 = coordinateCacheKey(coord);
+      const key2 = coordinateCacheKey(coord);
+      assertEquals(key1, key2);
+    }),
+    { numRuns: 200 },
+  );
+});
+
+Deno.test("Property 22.2: Coordinates differing only beyond 5th decimal place produce the same key", () => {
+  // toFixed(5) rounds at the 5th decimal place. A perturbation beyond 5dp
+  // will only produce the same key if the original value is NOT sitting on
+  // a rounding boundary. We test this by ensuring the perturbation doesn't
+  // cross a 5dp rounding threshold: both values must round to the same 5dp.
+  fc.assert(
+    fc.property(
+      fc.record({
+        lat: fc.double({ min: -90, max: 90, noNaN: true }),
+        lon: fc.double({ min: -180, max: 180, noNaN: true }),
+      }),
+      (coord) => {
+        // Create a coordinate that differs only beyond the 5th decimal place
+        // by reconstructing from the 5dp-rounded value + a sub-5dp offset.
+        // This guarantees both coordinates share the same 5dp representation.
+        const lat5dp = parseFloat(coord.lat.toFixed(5));
+        const lon5dp = parseFloat(coord.lon.toFixed(5));
+
+        // Reconstruct two coordinates that both have the same 5dp representation
+        const coord1 = { lat: lat5dp + 0.000001, lon: lon5dp + 0.000001 };
+        const coord2 = { lat: lat5dp + 0.000004, lon: lon5dp + 0.000004 };
+
+        // Skip if out of range
+        if (
+          coord1.lat < -90 || coord1.lat > 90 || coord1.lon < -180 || coord1.lon > 180 ||
+          coord2.lat < -90 || coord2.lat > 90 || coord2.lon < -180 || coord2.lon > 180
+        ) {
+          return true;
+        }
+
+        const key1 = coordinateCacheKey(coord1);
+        const key2 = coordinateCacheKey(coord2);
+        assertEquals(key1, key2);
+      },
+    ),
+    { numRuns: 200 },
+  );
+});
+
+Deno.test("Property 22.3: Coordinates differing at the 5th decimal place produce different keys", () => {
+  fc.assert(
+    fc.property(
+      // Use a coordinate range that avoids boundary overflow when adding 0.00001
+      fc.record({
+        lat: fc.double({ min: -89.99999, max: 89.99998, noNaN: true }),
+        lon: fc.double({ min: -179.99999, max: 179.99998, noNaN: true }),
+      }),
+      fc.constantFrom("lat", "lon") as fc.Arbitrary<"lat" | "lon">,
+      (coord, axis) => {
+        // Shift by exactly 1 unit at the 5th decimal place (0.00001)
+        const shifted = { ...coord };
+        shifted[axis] = coord[axis] + 0.00001;
+
+        const key1 = coordinateCacheKey(coord);
+        const key2 = coordinateCacheKey(shifted);
+        assertNotEquals(key1, key2);
+      },
+    ),
+    { numRuns: 200 },
+  );
+});
+
+Deno.test("Property 22.4: Key format is always 'terrain:{lat}:{lon}' with exactly 5 decimal digits", () => {
+  // Regex: terrain: followed by optional minus, digits, dot, exactly 5 digits,
+  // colon, optional minus, digits, dot, exactly 5 digits
+  const keyPattern = /^terrain:-?\d+\.\d{5}:-?\d+\.\d{5}$/;
+
+  fc.assert(
+    fc.property(arbitraryCoordinate, (coord) => {
+      const key = coordinateCacheKey(coord);
+      assertEquals(keyPattern.test(key), true, `Key "${key}" does not match expected format`);
+    }),
+    { numRuns: 200 },
+  );
+});
