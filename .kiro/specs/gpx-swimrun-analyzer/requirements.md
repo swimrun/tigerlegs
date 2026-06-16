@@ -190,33 +190,21 @@ that I do not have to manually mark each transition.
 
 #### Acceptance Criteria
 
-1. WHEN a GPX file is parsed, THE Waypoint_Strategy SHALL identify
-   swim-start waypoints by matching `sym` value `200` or name
-   starting with "Début SWIM" (case-sensitive prefix match)
-2. WHEN a GPX file is parsed, THE Waypoint_Strategy SHALL identify
-   swim-end waypoints by matching `sym` value `201` or name
-   starting with "Fin SWIM" (case-sensitive prefix match)
-3. WHEN swim-start and swim-end waypoints are identified, THE
-   Analyzer SHALL pair them in file-appearance order, where the Nth
-   swim-start pairs with the Nth swim-end, and create a
-   Swim_Segment entry for each pair
-4. WHEN consecutive swim segments are identified, THE Analyzer
-   SHALL create Run_Segment entries for trackpoints between each
-   swim-end waypoint and the next swim-start waypoint
-5. IF the first classified waypoint in the course is a swim-start,
-   THEN THE Analyzer SHALL create the first segment as a
-   Swim_Segment starting from the track start without a preceding
-   Run_Segment
-6. IF the first classified waypoint in the course is not a
-   swim-start, THEN THE Analyzer SHALL create a Run_Segment from
-   the track start to the first swim-start waypoint
-7. IF the last classified waypoint is a swim-end, THEN THE Analyzer
-   SHALL create a final Run_Segment from that swim-end to the track
-   end
-8. IF a swim-start waypoint has no subsequent swim-end waypoint in
-   the file, THEN THE Analyzer SHALL display an error message
-   indicating an unpaired swim-start waypoint was found and exclude
-   that waypoint from segmentation
+1. WHEN a GPX file is parsed, THE Waypoint_Strategy SHALL identify swim-start waypoints by matching ANY of the following (case-insensitive):
+   - `sym` value `200`
+   - Name containing "swim start", "swim entry", "water entry", "début swim", "start swim", "zwem start", "begin zwem"
+   - Name matching pattern "S\d+" (e.g. "S1", "S2") when paired with a corresponding swim-end
+2. WHEN a GPX file is parsed, THE Waypoint_Strategy SHALL identify swim-end waypoints by matching ANY of the following (case-insensitive):
+   - `sym` value `201`
+   - Name containing "swim end", "swim exit", "water exit", "fin swim", "end swim", "zwem eind", "einde zwem"
+   - Name matching pattern "SE\d+" or "S\d+E" (e.g. "SE1", "S1E") when paired with a corresponding swim-start
+3. THE Waypoint_Strategy SHALL support user-configurable custom sym values and name patterns via a settings panel, allowing users to add patterns specific to their race organiser's GPX conventions (e.g. racedaymap.com, Openrunner, Garmin Connect)
+4. WHEN swim-start and swim-end waypoints are identified, THE Analyzer SHALL pair them in file-appearance order, where the Nth swim-start pairs with the Nth swim-end, and create a Swim_Segment entry for each pair
+5. WHEN consecutive swim segments are identified, THE Analyzer SHALL create Run_Segment entries for trackpoints between each swim-end waypoint and the next swim-start waypoint
+6. IF the first classified waypoint in the course is a swim-start, THEN THE Analyzer SHALL create the first segment as a Swim_Segment starting from the track start without a preceding Run_Segment
+7. IF the first classified waypoint in the course is not a swim-start, THEN THE Analyzer SHALL create a Run_Segment from the track start to the first swim-start waypoint
+8. IF the last classified waypoint is a swim-end, THEN THE Analyzer SHALL create a final Run_Segment from that swim-end to the track end
+9. IF a swim-start waypoint has no subsequent swim-end waypoint in the file, THEN THE Analyzer SHALL display an error message indicating an unpaired swim-start waypoint was found and exclude that waypoint from segmentation
 
 ### Requirement 3: Distance Calculation
 
@@ -359,9 +347,9 @@ locations on the map, so that I can plan my nutrition strategy.
 
 #### Acceptance Criteria
 
-1. WHEN a GPX file is parsed, THE Waypoint_Strategy SHALL identify
-   aid station waypoints by matching `sym` value `3` or name
-   containing "Ravitaillement" (case-insensitive)
+1. WHEN a GPX file is parsed, THE Waypoint_Strategy SHALL identify aid station waypoints by matching ANY of the following (case-insensitive):
+   - `sym` value `3` or `49`
+   - Name containing "ravitaillement", "aid station", "feed zone", "energy post", "food", "drink", "verzorging", "voeding", "verpflegung"
 2. WHEN aid stations are identified, THE Map_View SHALL display aid
    station markers using an icon visually distinct from swim-start
    and swim-end markers at each aid station location
@@ -459,27 +447,19 @@ data, so that I can analyze self-recorded training and race files.
    Run_Segment when the sliding window average speed is at or
    above 5 kph for a minimum of 5 consecutive windowed readings
 5. THE Speed_Analyzer SHALL assign a Confidence_Score between 0.0 and 1.0 to each detected transition, calculated as the ratio of the absolute speed difference between the mean speed of the preceding segment and the mean speed of the following segment, divided by 10 kph, capped at 1.0
-6. IF a GPX file contains trackpoints without timestamp data, THEN
-   THE Analyzer SHALL indicate that speed-based detection is
-   unavailable for that file and suggest using landscape-based
-   detection instead
+6. IF a GPX file contains trackpoints without timestamp data, THEN THE Analyzer SHALL indicate that speed-based detection is unavailable for that file and suggest using landscape-based detection instead
 7. THE Speed_Analyzer SHALL ignore stationary trackpoints (speed
    below 0.5 kph) when determining segment transitions, treating
    them as pauses rather than activity changes
 8. WHEN a speed transition is detected, THE Speed_Analyzer SHALL
    place the segment boundary at the midpoint trackpoint of the
    consecutive-reading sequence (as defined in criteria 3 and 4)
-   during which the sliding window average speed crossed the 5 kph
-   threshold
+   during which the sliding window average speed crossed the 5 kph threshold
 9. IF two consecutive trackpoints have identical timestamps or an
    elapsed time of zero seconds, THEN THE Speed_Analyzer SHALL
-   skip the second trackpoint and exclude it from speed calculation
-   and window averaging
+   skip the second trackpoint and exclude it from speed calculation and window averaging
 10. IF the beginning or end of a track contains fewer than 5
-    consecutive windowed readings meeting the swim or run threshold
-    before the first transition or after the last transition, THEN
-    THE Speed_Analyzer SHALL classify those trackpoints using the
-    type of the nearest adjacent detected segment
+    consecutive windowed readings meeting the swim or run threshold before the first transition or after the last transition, THEN THE Speed_Analyzer SHALL classify those trackpoints using the type of the nearest adjacent detected segment
 
 ### Requirement 13: GPS Noise Filtering for Swim Segments
 

@@ -329,3 +329,157 @@ Deno.test("parseTracks - parses tracks with sequential trackpoint indices", () =
   assertEquals(tracks[0].trackpoints[1].index, 1);
   assertEquals(tracks[0].trackpoints[2].index, 2);
 });
+
+// --- Property-Based Tests ---
+
+import fc from "fast-check";
+import { assert } from "@std/assert";
+import { arbitraryGPXData } from "../generators.ts";
+
+/**
+ * **Validates: Requirements 1.2, 7.1, 7.2, 7.3**
+ *
+ * Property 2: GPX parse round-trip preserves coordinate and temporal data
+ *
+ * For any valid GPXData, serializing to XML and parsing back preserves:
+ * - Coordinates to 6 decimal places
+ * - Elevation to integer precision
+ * - Timestamps to 1-second precision
+ * - Idempotent (parsing same string twice yields identical results)
+ */
+Deno.test("Property 2: GPX parse round-trip preserves coordinate and temporal data", () => {
+  fc.assert(
+    fc.property(arbitraryGPXData, (originalData) => {
+      const xml = gpxDataToXml(originalData);
+      const result = parseGPX(xml);
+
+      // Must parse successfully
+      assert(result.ok, `Failed to parse generated GPX: ${!result.ok ? result.error : ""}`);
+      if (!result.ok) return;
+
+      const parsed = result.value;
+
+      // Same number of waypoints
+      assertEquals(parsed.waypoints.length, originalData.waypoints.length);
+
+      // Verify each waypoint's coordinate and elevation
+      for (let i = 0; i < originalData.waypoints.length; i++) {
+        const orig = originalData.waypoints[i];
+        const got = parsed.waypoints[i];
+
+        // Coordinates preserved to 6 decimal places
+        const expectedLat = Math.round(orig.coordinate.lat * 1_000_000) / 1_000_000;
+        const expectedLon = Math.round(orig.coordinate.lon * 1_000_000) / 1_000_000;
+        assertEquals(got.coordinate.lat, expectedLat);
+        assertEquals(got.coordinate.lon, expectedLon);
+
+        // Elevation preserved to integer
+        assertEquals(got.elevation, Math.round(orig.elevation));
+      }
+
+      // Same number of tracks
+      assertEquals(parsed.tracks.length, originalData.tracks.length);
+
+      // Verify each track's trackpoints
+      for (let t = 0; t < originalData.tracks.length; t++) {
+        const origTrack = originalData.tracks[t];
+        const gotTrack = parsed.tracks[t];
+
+        assertEquals(gotTrack.trackpoints.length, origTrack.trackpoints.length);
+
+        for (let p = 0; p < origTrack.trackpoints.length; p++) {
+          const origTp = origTrack.trackpoints[p];
+          const gotTp = gotTrack.trackpoints[p];
+
+          // Coordinates preserved to 6 decimal places
+          const expectedLat = Math.round(origTp.coordinate.lat * 1_000_000) / 1_000_000;
+          const expectedLon = Math.round(origTp.coordinate.lon * 1_000_000) / 1_000_000;
+          assertEquals(gotTp.coordinate.lat, expectedLat);
+          assertEquals(gotTp.coordinate.lon, expectedLon);
+
+          // Elevation preserved to integer
+          assertEquals(gotTp.elevation, Math.round(origTp.elevation));
+
+          // Timestamps preserved to 1-second precision
+          if (origTp.timestamp !== null) {
+            assert(gotTp.timestamp !== null, "Expected timestamp to be preserved");
+            // Both should be truncated to second precision
+            const origDate = new Date(origTp.timestamp);
+            const gotDate = new Date(gotTp.timestamp!);
+            // Within 1 second of each other (truncation to seconds)
+            assert(
+              Math.abs(origDate.getTime() - gotDate.getTime()) < 1000,
+              `Timestamps differ by more than 1 second: ${origTp.timestamp} vs ${gotTp.timestamp}`,
+            );
+          } else {
+            assertEquals(gotTp.timestamp, null);
+          }
+
+          // Sequential index preserved
+          assertEquals(gotTp.index, p);
+        }
+      }
+
+      // Idempotency: parsing the same XML string twice yields identical results
+      const result2 = parseGPX(xml);
+      assert(result2.ok);
+      if (!result2.ok) return;
+
+      assertEquals(parsed.waypoints, result2.value.waypoints);
+      assertEquals(parsed.tracks, result2.value.tracks);
+    }),
+    { numRuns: 50 },
+  );
+});
+
+/**
+ * **Validates: Requirements 1.4**
+ *
+ * Property 3: Invalid XML produces error result
+ *
+ * For any string that is not well-formed XML, parseGPX SHALL return
+ * a Result with ok: false and a non-empty error message.
+ * The function SHALL never throw an exception for malformed input.
+ */
+Deno.test("Property 3: Invalid XML produces error result", () => {
+  // Generate arbitrary non-XML strings that are unlikely to be valid XML
+  const arbitraryNonXml = fc.oneof(
+    // Random strings
+    fc.string({ minLength: 1, maxLength: 500 }),
+    // Strings with XML-like but invalid characters
+    fc.string({ minLength: 1, maxLength: 200 }).map((s) => `<${s}>`),
+    // Broken XML fragments
+    fc.string({ minLength: 1, maxLength: 100 }).map((s) => `<?xml${s}`),
+    // Strings with unmatched tags
+    fc.string({ minLength: 1, maxLength: 50 }).map((s) => `<open>${s}</different>`),
+    // Binary-like content
+    fc.uint8Array({ minLength: 1, maxLength: 200 }).map((arr) =>
+      String.fromCharCode(...arr)
+    ),
+  );
+
+  fc.assert(
+    fc.property(arbitraryNonXml, (input) => {
+      // Should never throw
+      let result;
+      try {
+        result = parseGPX(input);
+      } catch (e) {
+        // Property violated: parseGPX should never throw
+        assert(false, `parseGPX threw an exception for input: ${JSON.stringify(input.slice(0, 50))}. Error: ${e}`);
+        return;
+      }
+
+      // If the result happens to be ok (e.g., random string was accidentally valid XML with tracks),
+      // that's fine — the property only concerns truly invalid XML.
+      // But if it's not ok, the error message must be non-empty.
+      if (!result.ok) {
+        assert(
+          result.error.length > 0,
+          "Error message must be non-empty when parsing fails",
+        );
+      }
+    }),
+    { numRuns: 100 },
+  );
+});

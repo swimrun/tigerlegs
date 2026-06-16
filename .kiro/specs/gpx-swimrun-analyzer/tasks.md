@@ -32,7 +32,7 @@ Implement a client-server swimrun GPX analysis tool using Deno with TypeScript. 
     - Validate `.gpx` extension (case-insensitive) and file size ≤ 10,485,760 bytes
     - _Requirements: 1.1, 1.3, 1.6_
 
-  - [ ] 2.2 Write property test for file validation
+  - [x] 2.2 Write property test for file validation
     - **Property 1: File validation accepts only .gpx files within size limit**
     - Create `test/client/file-validation.test.ts`
     - **Validates: Requirements 1.1, 1.3, 1.6**
@@ -44,14 +44,14 @@ Implement a client-server swimrun GPX analysis tool using Deno with TypeScript. 
     - Handle invalid XML gracefully (never throw, return error Result)
     - _Requirements: 1.2, 1.4, 1.5, 7.1, 7.2, 7.3_
 
-  - [ ] 2.4 Write property tests for GPX parser
+  - [x] 2.4 Write property tests for GPX parser
     - **Property 2: GPX parse round-trip preserves coordinate and temporal data**
     - **Property 3: Invalid XML produces error result**
     - Create `test/client/gpx-parser.test.ts`
     - **Validates: Requirements 1.2, 1.4, 7.1, 7.2, 7.3**
 
 - [ ] 3. Implement waypoint-based segment detection (Strategy 1)
-  - [ ] 3.1 Implement waypoint classifier
+  - [x] 3.1 Implement waypoint classifier
     - Create `src/client/waypoint-classifier.ts` with `classifyWaypoint`, `classifyWaypoints`, `validateSwimPairing`, `detectByWaypoint`
     - Classify by sym values (200=swim-start, 201=swim-end, 3=aid-station) and name patterns ("Début SWIM", "Fin SWIM", "Ravitaillement")
     - Pair Nth swim-start with Nth swim-end in file-appearance order
@@ -121,7 +121,7 @@ Implement a client-server swimrun GPX analysis tool using Deno with TypeScript. 
   - Ensure all tests pass, ask the user if questions arise.
 
 - [ ] 8. Implement Deno backend service
-  - [ ] 8.1 Implement cache layer
+  - [x] 8.1 Implement cache layer
     - Create `src/server/cache.ts` with `CacheStore` interface, `coordinateCacheKey`, `createCacheStore`
     - Support filesystem and SQLite backends
     - Cache keys at 5 decimal places (~1m resolution)
