@@ -6,7 +6,7 @@ Implement a client-server swimrun GPX analysis tool using Deno with TypeScript. 
 
 ## Tasks
 
-- [ ] 1. Set up project structure, shared types, and testing infrastructure
+- [x] 1. Set up project structure, shared types, and testing infrastructure
   - [x] 1.1 Create directory structure and shared types module
     - Create `src/shared/types.ts` with all interfaces and type definitions (Coordinate, Waypoint, Trackpoint, Track, GPXData, Segment, StrategyResult, TerrainResult, FilterResult, DisplaySegment, etc.)
     - Create `src/client/` and `src/server/` directories
@@ -19,32 +19,32 @@ Implement a client-server swimrun GPX analysis tool using Deno with TypeScript. 
     - Use Haversine formula with mean Earth radius of 6,371 km
     - _Requirements: 3.1, 3.2, 3.3, 3.4_
 
-  - [ ]* 1.3 Write property tests for distance calculator
+  - [x] 1.3 Write property tests for distance calculator
     - **Property 7: Haversine distance satisfies metric space axioms**
     - **Property 8: Distance accumulation is additive over subsequences**
     - **Property 9: Nearest trackpoint search returns closest point within radius**
     - Create `test/shared/distance-calculator.test.ts`
     - **Validates: Requirements 3.1, 3.2, 3.3, 3.4**
 
-- [ ] 2. Implement GPX parsing and file validation
+- [x] 2. Implement GPX parsing and file validation
   - [x] 2.1 Implement file upload validation
     - Create `src/client/file-upload.ts` with `validateFile`, `readFileAsText`, and `MAX_FILE_SIZE_BYTES` (10 MB)
     - Validate `.gpx` extension (case-insensitive) and file size ≤ 10,485,760 bytes
     - _Requirements: 1.1, 1.3, 1.6_
 
-  - [ ]* 2.2 Write property test for file validation
+  - [ ] 2.2 Write property test for file validation
     - **Property 1: File validation accepts only .gpx files within size limit**
     - Create `test/client/file-validation.test.ts`
     - **Validates: Requirements 1.1, 1.3, 1.6**
 
-  - [ ] 2.3 Implement GPX parser
+  - [x] 2.3 Implement GPX parser
     - Create `src/client/gpx-parser.ts` with `parseGPX`, `parseWaypoints`, `parseTracks`, `parseCoordinate`
     - Use `DOMParser` for XML parsing, return `Result<GPXData>`
     - Preserve coordinates to 6 decimal places, elevation to integer, timestamps to 1-second ISO 8601
     - Handle invalid XML gracefully (never throw, return error Result)
     - _Requirements: 1.2, 1.4, 1.5, 7.1, 7.2, 7.3_
 
-  - [ ]* 2.4 Write property tests for GPX parser
+  - [ ] 2.4 Write property tests for GPX parser
     - **Property 2: GPX parse round-trip preserves coordinate and temporal data**
     - **Property 3: Invalid XML produces error result**
     - Create `test/client/gpx-parser.test.ts`
@@ -58,7 +58,7 @@ Implement a client-server swimrun GPX analysis tool using Deno with TypeScript. 
     - Map waypoints to nearest trackpoint within 50m radius
     - _Requirements: 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 2.8, 8.1_
 
-  - [ ]* 3.2 Write property tests for waypoint classifier
+  - [ ] 3.2 Write property tests for waypoint classifier
     - **Property 4: Waypoint classification correctness**
     - **Property 6: Unpaired swim-start detection**
     - Create `test/client/waypoint-classifier.test.ts`
@@ -73,7 +73,7 @@ Implement a client-server swimrun GPX analysis tool using Deno with TypeScript. 
     - Use "—" for absent values in incomplete pairs (first/last segment)
     - _Requirements: 2.3, 2.4, 2.5, 2.6, 2.7, 3.5, 3.6, 3.7, 5.1, 5.2, 5.3, 5.4, 5.5, 5.7, 5.8_
 
-  - [ ]* 3.4 Write property tests for segment builder
+  - [ ] 3.4 Write property tests for segment builder
     - **Property 5: Segmentation produces complete, non-overlapping, alternating coverage**
     - **Property 10: Segment display formatting follows type-specific rules**
     - Create `test/client/segment-builder.test.ts` and `test/client/formatting.test.ts`
@@ -93,7 +93,7 @@ Implement a client-server swimrun GPX analysis tool using Deno with TypeScript. 
     - Handle track start/end with fewer than 5 readings by inheriting from nearest adjacent segment
     - _Requirements: 12.1, 12.2, 12.3, 12.4, 12.5, 12.6, 12.7, 12.8, 12.9, 12.10_
 
-  - [ ]* 5.2 Write property tests for speed analyzer
+  - [ ] 5.2 Write property tests for speed analyzer
     - **Property 12: Speed calculation correctness**
     - **Property 13: Sliding window average correctness**
     - **Property 14: Speed-based segment classification follows threshold rules**
@@ -112,7 +112,7 @@ Implement a client-server swimrun GPX analysis tool using Deno with TypeScript. 
     - Never mutate original trackpoint array
     - _Requirements: 13.1, 13.2, 13.3, 13.4, 13.5, 13.6, 13.7, 13.8, 13.10_
 
-  - [ ]* 6.2 Write property tests for GPS filter
+  - [ ] 6.2 Write property tests for GPS filter
     - **Property 16: GPS filter scatter ratio and method selection**
     - Create `test/client/gps-filter.test.ts`
     - **Validates: Requirements 13.1, 13.3, 13.4, 13.5, 13.6, 13.7, 13.8**
@@ -127,7 +127,7 @@ Implement a client-server swimrun GPX analysis tool using Deno with TypeScript. 
     - Cache keys at 5 decimal places (~1m resolution)
     - _Requirements: 15.4, 15.9_
 
-  - [ ]* 8.2 Write property tests for cache keys
+  - [ ] 8.2 Write property tests for cache keys
     - **Property 22: Cache key determinism and precision**
     - Create `test/server/cache.test.ts`
     - **Validates: Requirements 15.4**
@@ -152,7 +152,7 @@ Implement a client-server swimrun GPX analysis tool using Deno with TypeScript. 
     - Log proxied requests (timestamp, target, status) without sensitive payload data
     - _Requirements: 15.1, 15.2, 15.3, 15.5, 15.6, 15.7, 15.8, 15.9_
 
-  - [ ]* 8.5 Write property tests for backend request validation
+  - [ ] 8.5 Write property tests for backend request validation
     - **Property 19: Backend request validation**
     - Create `test/server/request-validation.test.ts`
     - **Validates: Requirements 15.3, 15.4, 15.8**
@@ -167,7 +167,7 @@ Implement a client-server swimrun GPX analysis tool using Deno with TypeScript. 
     - Confidence = agreeing points / total points, boosted to ≥0.9 for road data, reduced by 0.1 per unknown point
     - _Requirements: 14.1, 14.2, 14.3, 14.4, 14.5, 14.6, 14.7, 14.8, 14.9_
 
-  - [ ]* 9.2 Write property tests for landscape detection
+  - [ ] 9.2 Write property tests for landscape detection
     - **Property 17: Coordinate sampling interval constraint**
     - **Property 18: Landscape segment creation from terrain data**
     - Create `test/client/landscape-client.test.ts`
@@ -182,7 +182,7 @@ Implement a client-server swimrun GPX analysis tool using Deno with TypeScript. 
     - Ensure complete, contiguous coverage in output
     - _Requirements: 16.1, 16.2, 16.3, 16.5, 16.9_
 
-  - [ ]* 9.4 Write property tests for strategy combiner
+  - [ ] 9.4 Write property tests for strategy combiner
     - **Property 20: Strategy combination resolves by highest confidence**
     - **Property 21: Strategy applicability auto-detection**
     - Create `test/client/strategy-combiner.test.ts`
@@ -241,7 +241,7 @@ Implement a client-server swimrun GPX analysis tool using Deno with TypeScript. 
     - Keyboard-navigable text-based segment list alternative
     - _Requirements: 6.1, 6.2, 6.3, 6.4, 6.5, 6.6, 10.4, 10.5_
 
-  - [ ]* 11.5 Write property tests for highlight controller
+  - [ ] 11.5 Write property tests for highlight controller
     - **Property 11: Highlight controller maintains single-selection with toggle**
     - Create `test/client/highlight-controller.test.ts`
     - **Validates: Requirements 6.5, 6.6**
@@ -263,7 +263,7 @@ Implement a client-server swimrun GPX analysis tool using Deno with TypeScript. 
     - Verify static file serving from container
     - _Requirements: 15.2, 15.6, 15.9_
 
-  - [ ]* 13.3 Write integration tests
+  - [ ] 13.3 Write integration tests
     - Create `test/integration/full-pipeline.test.ts` — upload → segments using test GPX files
     - Create `test/integration/multi-strategy.test.ts` — strategy combination with mocked terrain API
     - Create `test/server/terrain-proxy.test.ts` — backend proxy + cache with mocked OSM responses
@@ -275,7 +275,7 @@ Implement a client-server swimrun GPX analysis tool using Deno with TypeScript. 
 
 ## Notes
 
-- Tasks marked with `*` are optional and can be skipped for faster MVP
+- All tasks are required — this project follows true TDD (tests are not optional)
 - Each task references specific requirements for traceability
 - Checkpoints ensure incremental validation
 - Property tests validate universal correctness properties from the design document (22 properties total)
