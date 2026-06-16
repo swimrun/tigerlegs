@@ -9,6 +9,7 @@
     "fmt": "deno fmt"
   },
   "imports": {
+    "@xmldom/xmldom": "npm:@xmldom/xmldom@^0.9",
     "fast-check": "npm:fast-check@^3.22.0",
     "@std/assert": "jsr:@std/assert@^1"
   },

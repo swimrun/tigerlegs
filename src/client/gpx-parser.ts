@@ -1,3 +1,4 @@
+import { DOMParser } from "@xmldom/xmldom";
 import type {
   Coordinate,
   GPXData,
@@ -93,9 +94,12 @@ export function parseGPX(xmlString: string): Result<GPXData> {
   let doc: Document;
   try {
     const parser = new DOMParser();
-    doc = parser.parseFromString(xmlString, "application/xml");
+    doc = parser.parseFromString(
+      xmlString,
+      "application/xml",
+    ) as unknown as Document;
   } catch {
-    return { ok: false, error: "Failed to parse XML content" };
+    return { ok: false, error: "File could not be parsed" };
   }
 
   // Check for XML parsing errors (DOMParser puts <parsererror> in the document)

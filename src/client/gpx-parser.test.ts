@@ -1,4 +1,5 @@
 import { assertEquals } from "@std/assert";
+import { DOMParser } from "@xmldom/xmldom";
 import { parseCoordinate, parseGPX, parseTracks, parseWaypoints } from "./gpx-parser.ts";
 
 // Helper: minimal valid GPX wrapper
@@ -261,7 +262,7 @@ Deno.test("parseCoordinate - parses lat/lon from element with 6 decimal precisio
     '<trkpt lat="45.1234569" lon="-5.9876541"/>',
     "application/xml",
   );
-  const element = doc.documentElement;
+  const element = doc.documentElement as unknown as Element;
 
   const coord = parseCoordinate(element);
   assertEquals(coord.lat, 45.123457);
@@ -284,7 +285,7 @@ Deno.test("parseWaypoints - parses multiple waypoints from document", () => {
   </wpt>`);
 
   const parser = new DOMParser();
-  const doc = parser.parseFromString(xml, "application/xml");
+  const doc = parser.parseFromString(xml, "application/xml") as unknown as Document;
   const waypoints = parseWaypoints(doc);
 
   assertEquals(waypoints.length, 2);
@@ -304,7 +305,7 @@ Deno.test("parseTracks - parses tracks from document", () => {
   </trk>`);
 
   const parser = new DOMParser();
-  const doc = parser.parseFromString(xml, "application/xml");
+  const doc = parser.parseFromString(xml, "application/xml") as unknown as Document;
   const tracks = parseTracks(doc);
 
   assertEquals(tracks.length, 1);
