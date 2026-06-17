@@ -73,7 +73,7 @@ Implement a client-server swimrun GPX analysis tool using Deno with TypeScript. 
     - Use "—" for absent values in incomplete pairs (first/last segment)
     - _Requirements: 2.3, 2.4, 2.5, 2.6, 2.7, 3.5, 3.6, 3.7, 5.1, 5.2, 5.3, 5.4, 5.5, 5.7, 5.8_
 
-  - [ ] 3.4 Write property tests for segment builder
+  - [x] 3.4 Write property tests for segment builder
     - **Property 5: Segmentation produces complete, non-overlapping, alternating coverage**
     - **Property 10: Segment display formatting follows type-specific rules**
     - Create `test/client/segment-builder.test.ts` and `test/client/formatting.test.ts`
@@ -93,7 +93,7 @@ Implement a client-server swimrun GPX analysis tool using Deno with TypeScript. 
     - Handle track start/end with fewer than 5 readings by inheriting from nearest adjacent segment
     - _Requirements: 12.1, 12.2, 12.3, 12.4, 12.5, 12.6, 12.7, 12.8, 12.9, 12.10_
 
-  - [ ] 5.2 Write property tests for speed analyzer
+  - [x] 5.2 Write property tests for speed analyzer
     - **Property 12: Speed calculation correctness**
     - **Property 13: Sliding window average correctness**
     - **Property 14: Speed-based segment classification follows threshold rules**
@@ -102,7 +102,7 @@ Implement a client-server swimrun GPX analysis tool using Deno with TypeScript. 
     - **Validates: Requirements 12.1, 12.2, 12.3, 12.4, 12.5, 12.7, 12.8, 12.9**
 
 - [ ] 6. Implement GPS noise filtering
-  - [ ] 6.1 Implement GPS filter
+  - [x] 6.1 Implement GPS filter
     - Create `src/client/gps-filter.ts` with `computeScatterRatio`, `detectLateralDeviation`, `filterSwimSegment`, `smoothPath`
     - Compute scatter ratio (cumulative / straight-line distance)
     - Classify noise when scatter ratio > 1.5
@@ -139,7 +139,7 @@ Implement a client-server swimrun GPX analysis tool using Deno with TypeScript. 
     - Cache results with 7-day TTL for water, 72-hour TTL for roads
     - _Requirements: 15.1, 15.4, 15.5, 15.7_
 
-  - [ ] 8.4 Implement API router and server entry point
+  - [x] 8.4 Implement API router and server entry point
     - Create `src/server/router.ts` with `createRouter` and `RouterConfig`
     - Create `src/server/server.ts` with `startServer` and `ServerConfig`
     - Implement endpoints: GET /api/v1/health, GET /api/v1/terrain/lookup, POST /api/v1/terrain/batch

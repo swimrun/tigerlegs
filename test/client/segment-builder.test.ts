@@ -1,4 +1,5 @@
-import { assertEquals } from "@std/assert";
+import { assert, assertEquals } from "@std/assert";
+import fc from "fast-check";
 import type {
   ClassifiedWaypoint,
   Segment,
@@ -424,4 +425,225 @@ Deno.test("calculateTotals - only run segments → swim total is 0", () => {
   const totals = calculateTotals(segments);
   assertEquals(totals.totalRunKm, "8.0");
   assertEquals(totals.totalSwimM, "0");
+});
+
+// --- Property-Based Tests ---
+
+/**
+ * Generate an array of trackpoints with sequential indices and coordinates
+ * spaced at ~100m intervals along a North-South line.
+ * This ensures that waypoints placed at a trackpoint's coordinate will
+ * map to the correct trackpoint via findNearestTrackpoint (50m radius).
+ */
+const arbitraryTrackpointArray = fc
+  .nat({ max: 98 })
+  .map((extraCount) => {
+    const count = extraCount + 2; // 2..100 trackpoints
+    const baseLat = 45.0;
+    const baseLon = 5.0;
+    // ~0.001 degrees latitude ≈ 111m apart — well outside 50m matching radius
+    return Array.from({ length: count }, (_, i) => ({
+      coordinate: { lat: baseLat + i * 0.001, lon: baseLon },
+      elevation: 100,
+      timestamp: null,
+      index: i,
+    }));
+  });
+
+/**
+ * Generate a valid set of swim pairs as indices into a trackpoint array.
+ * Each pair [startIdx, endIdx] satisfies startIdx < endIdx,
+ * pairs are non-overlapping and ordered, and there's at least 1 trackpoint
+ * gap between consecutive pairs (to allow a run segment in between).
+ *
+ * This models "valid" swim pairs where each swim is separated by at least
+ * one run trackpoint, as required by Property 5's precondition.
+ */
+function arbitrarySwimPairs(
+  trackpointCount: number,
+): fc.Arbitrary<[number, number][]> {
+  if (trackpointCount < 3) {
+    // Not enough room for a swim pair with surrounding run segments
+    return fc.constant([]);
+  }
+  const maxPairs = Math.min(5, Math.floor((trackpointCount - 1) / 3));
+  return fc
+    .array(
+      fc.tuple(
+        fc.nat({ max: trackpointCount - 2 }),
+        fc.nat({ max: trackpointCount - 1 }),
+      ),
+      { minLength: 0, maxLength: maxPairs },
+    )
+    .map((rawPairs) => {
+      // Sort by start, ensure start < end, filter overlaps
+      const sorted = rawPairs
+        .map(([a, b]) => [Math.min(a, b), Math.max(a, b)] as [number, number])
+        .filter(([a, b]) => a < b)
+        .sort((a, b) => a[0] - b[0]);
+
+      // Remove overlapping pairs and ensure at least 1 trackpoint gap
+      // between consecutive swim pairs (so a run segment can exist between them)
+      const result: [number, number][] = [];
+      for (const pair of sorted) {
+        if (
+          result.length === 0 ||
+          pair[0] > result[result.length - 1][1] + 1
+        ) {
+          result.push(pair);
+        }
+      }
+      return result;
+    });
+}
+
+/**
+ * Build classified waypoints from swim pairs.
+ * Maps pair indices to trackpoint coordinates for waypoint placement.
+ */
+function buildClassifiedWaypointsFromPairs(
+  trackpoints: { coordinate: { lat: number; lon: number }; elevation: number; timestamp: null; index: number }[],
+  swimPairs: [number, number][],
+) {
+  const classifiedWaypoints = [];
+  for (const [startIdx, endIdx] of swimPairs) {
+    classifiedWaypoints.push({
+      waypoint: {
+        coordinate: trackpoints[startIdx].coordinate,
+        elevation: 100,
+        name: "",
+        symbol: "200",
+        description: "",
+      },
+      type: "swim-start" as const,
+    });
+    classifiedWaypoints.push({
+      waypoint: {
+        coordinate: trackpoints[endIdx].coordinate,
+        elevation: 100,
+        name: "",
+        symbol: "201",
+        description: "",
+      },
+      type: "swim-end" as const,
+    });
+  }
+  return classifiedWaypoints;
+}
+
+// --- Property 5: Segmentation produces complete, non-overlapping, alternating coverage ---
+// **Validates: Requirements 2.3, 2.4, 2.5, 2.6, 2.7**
+
+Deno.test("Property 5.1: First segment starts at index 0", () => {
+  fc.assert(
+    fc.property(
+      arbitraryTrackpointArray.chain((trackpoints) =>
+        arbitrarySwimPairs(trackpoints.length).map((pairs) => ({
+          trackpoints,
+          pairs,
+        }))
+      ),
+      ({ trackpoints, pairs }) => {
+        const classifiedWaypoints = buildClassifiedWaypointsFromPairs(
+          trackpoints,
+          pairs,
+        );
+        const result = buildSegments(trackpoints, classifiedWaypoints);
+        if (!result.ok) return; // skip error results (shouldn't happen with valid input)
+
+        assert(
+          result.value[0].startTrackpointIndex === 0,
+          `First segment should start at 0, got ${result.value[0].startTrackpointIndex}`,
+        );
+      },
+    ),
+    { numRuns: 100 },
+  );
+});
+
+Deno.test("Property 5.2: Last segment ends at trackpoints.length - 1", () => {
+  fc.assert(
+    fc.property(
+      arbitraryTrackpointArray.chain((trackpoints) =>
+        arbitrarySwimPairs(trackpoints.length).map((pairs) => ({
+          trackpoints,
+          pairs,
+        }))
+      ),
+      ({ trackpoints, pairs }) => {
+        const classifiedWaypoints = buildClassifiedWaypointsFromPairs(
+          trackpoints,
+          pairs,
+        );
+        const result = buildSegments(trackpoints, classifiedWaypoints);
+        if (!result.ok) return;
+
+        const lastSegment = result.value[result.value.length - 1];
+        assert(
+          lastSegment.endTrackpointIndex === trackpoints.length - 1,
+          `Last segment should end at ${trackpoints.length - 1}, got ${lastSegment.endTrackpointIndex}`,
+        );
+      },
+    ),
+    { numRuns: 100 },
+  );
+});
+
+Deno.test("Property 5.3: Each segment starts where the previous one ended + 1 (contiguous, non-overlapping)", () => {
+  fc.assert(
+    fc.property(
+      arbitraryTrackpointArray.chain((trackpoints) =>
+        arbitrarySwimPairs(trackpoints.length).map((pairs) => ({
+          trackpoints,
+          pairs,
+        }))
+      ),
+      ({ trackpoints, pairs }) => {
+        const classifiedWaypoints = buildClassifiedWaypointsFromPairs(
+          trackpoints,
+          pairs,
+        );
+        const result = buildSegments(trackpoints, classifiedWaypoints);
+        if (!result.ok) return;
+
+        for (let i = 1; i < result.value.length; i++) {
+          assert(
+            result.value[i].startTrackpointIndex ===
+              result.value[i - 1].endTrackpointIndex + 1,
+            `Segment ${i} should start at ${result.value[i - 1].endTrackpointIndex + 1}, got ${result.value[i].startTrackpointIndex}`,
+          );
+        }
+      },
+    ),
+    { numRuns: 100 },
+  );
+});
+
+Deno.test("Property 5.4: No two adjacent segments have the same type (alternating)", () => {
+  fc.assert(
+    fc.property(
+      arbitraryTrackpointArray.chain((trackpoints) =>
+        arbitrarySwimPairs(trackpoints.length).map((pairs) => ({
+          trackpoints,
+          pairs,
+        }))
+      ),
+      ({ trackpoints, pairs }) => {
+        const classifiedWaypoints = buildClassifiedWaypointsFromPairs(
+          trackpoints,
+          pairs,
+        );
+        const result = buildSegments(trackpoints, classifiedWaypoints);
+        if (!result.ok) return;
+
+        for (let i = 1; i < result.value.length; i++) {
+          assert(
+            result.value[i].type !== result.value[i - 1].type,
+            `Adjacent segments ${i - 1} and ${i} should have different types, both are "${result.value[i].type}"`,
+          );
+        }
+      },
+    ),
+    { numRuns: 100 },
+  );
 });
