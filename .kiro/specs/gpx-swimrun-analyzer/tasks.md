@@ -112,7 +112,7 @@ Implement a client-server swimrun GPX analysis tool using Deno with TypeScript. 
     - Never mutate original trackpoint array
     - _Requirements: 13.1, 13.2, 13.3, 13.4, 13.5, 13.6, 13.7, 13.8, 13.10_
 
-  - [ ] 6.2 Write property tests for GPS filter
+  - [x] 6.2 Write property tests for GPS filter
     - **Property 16: GPS filter scatter ratio and method selection**
     - Create `test/client/gps-filter.test.ts`
     - **Validates: Requirements 13.1, 13.3, 13.4, 13.5, 13.6, 13.7, 13.8**
@@ -152,13 +152,13 @@ Implement a client-server swimrun GPX analysis tool using Deno with TypeScript. 
     - Log proxied requests (timestamp, target, status) without sensitive payload data
     - _Requirements: 15.1, 15.2, 15.3, 15.5, 15.6, 15.7, 15.8, 15.9_
 
-  - [ ] 8.5 Write property tests for backend request validation
+  - [x] 8.5 Write property tests for backend request validation
     - **Property 19: Backend request validation**
     - Create `test/server/request-validation.test.ts`
     - **Validates: Requirements 15.3, 15.4, 15.8**
 
 - [ ] 9. Implement landscape-based detection (Strategy 3) and strategy combination
-  - [ ] 9.1 Implement landscape client
+  - [x] 9.1 Implement landscape client
     - Create `src/client/landscape-client.ts` with `sampleCoordinates`, `queryTerrain`, `detectByLandscape`, `calculateLandscapeConfidence`
     - Sample at intervals ≤ 50m, always include first and last trackpoint
     - Batch requests to backend (max 100 per request)
