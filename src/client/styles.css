@@ -24,19 +24,39 @@
   html[data-lang="de"] :is([lang="en"], [lang="nl"], [lang="fr"]) {
     display: none;
   }
-  /* Tiger photo fixed in the bottom-right corner; a circular reveal grows with scroll progress (--reveal, 0..1, set in about.ts). */
+  /* Tiger picture fixed at the bottom, centred; the sides are the same picture, stretched and blurred, so the colours match. A circular reveal grows from the bottom centre with scroll progress (--reveal, 0..1, set in about.ts). */
   .tiger-fade {
     --reveal: 0.25;
+    --tiger-w: min(100vw, 56rem);
     position: fixed;
+    left: 0;
     right: 0;
     bottom: 0;
     z-index: -1;
-    width: min(100%, 44rem);
-    aspect-ratio: 1200 / 630;
+    height: calc(var(--tiger-w) * 2 / 3);
     pointer-events: none;
-    background: url("img/tigerlegs-social.jpg") center / cover;
-    -webkit-mask-image: radial-gradient(circle farthest-corner at 100% 100%, #000 calc(var(--reveal) * 75%), transparent calc(var(--reveal) * 100%));
-    mask-image: radial-gradient(circle farthest-corner at 100% 100%, #000 calc(var(--reveal) * 75%), transparent calc(var(--reveal) * 100%));
+    -webkit-mask-image: radial-gradient(ellipse 70% 100% at 50% 100%, #000 calc(var(--reveal) * 75%), transparent calc(var(--reveal) * 100%));
+    mask-image: radial-gradient(ellipse 70% 100% at 50% 100%, #000 calc(var(--reveal) * 75%), transparent calc(var(--reveal) * 100%));
+  }
+  .tiger-fade::before,
+  .tiger-fade::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: url("img/tigerlegs-hero.jpg") center / cover;
+  }
+  .tiger-fade::before {
+    filter: blur(28px) saturate(1.1);
+    transform: scale(1.15);
+    opacity: 0.55;
+  }
+  .tiger-fade::after {
+    left: 50%;
+    right: auto;
+    width: var(--tiger-w);
+    transform: translateX(-50%);
+    -webkit-mask-image: linear-gradient(to right, transparent, #000 12%, #000 88%, transparent);
+    mask-image: linear-gradient(to right, transparent, #000 12%, #000 88%, transparent);
   }
   .tiger-stripes {
     @apply h-2;

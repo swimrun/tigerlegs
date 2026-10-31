@@ -1,9 +1,18 @@
 import { assertEquals } from "@std/assert";
 import {
+  LARGE_FILE_BYTES,
+  largeFileNotice,
   MAX_FILE_SIZE_BYTES,
   readFileAsText,
   validateFile,
 } from "../../src/client/file-upload.ts";
+
+Deno.test("largeFileNotice: none for small files, a warning from the threshold", () => {
+  assertEquals(largeFileNotice(LARGE_FILE_BYTES - 1), null);
+  const upload = largeFileNotice(LARGE_FILE_BYTES)!;
+  assertEquals(upload.includes("battery") && upload.includes("not uploaded"), true);
+  assertEquals(largeFileNotice(LARGE_FILE_BYTES, true)!.includes("mobile data"), true);
+});
 
 /** Helper to create a File with given name and size */
 function createFile(name: string, size: number, content = ""): File {

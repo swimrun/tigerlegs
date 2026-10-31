@@ -34,6 +34,24 @@ export function validateFile(file: File): ValidationResult {
   return { valid: true };
 }
 
+/** From this size on, analysing takes noticeable time and battery, so the page says so. */
+export const LARGE_FILE_BYTES = 3 * 1024 * 1024;
+
+/**
+ * Notice for large files, or null for small ones. Choosing a file on the page does not
+ * upload it, so no upload cost applies; a sample is downloaded and does use mobile data.
+ */
+export function largeFileNotice(sizeBytes: number, downloaded = false): string | null {
+  if (sizeBytes < LARGE_FILE_BYTES) return null;
+  const mb = (sizeBytes / (1024 * 1024)).toFixed(1);
+  return `Large file (${mb} MB). Analysing it can take a while and uses your device's processor and battery, ` +
+    `so a phone may get warm. ` +
+    (downloaded
+      ? "Downloading it also uses mobile data. "
+      : "The file is not uploaded, so this costs no data. ") +
+    "Please keep this page open.";
+}
+
 /**
  * Read the file content as a UTF-8 string.
  *

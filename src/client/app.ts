@@ -1,5 +1,5 @@
 import { parseGPX } from "./gpx-parser.ts";
-import { readFileAsText, validateFile } from "./file-upload.ts";
+import { largeFileNotice, readFileAsText, validateFile } from "./file-upload.ts";
 import { analyzeGpx } from "./analyze.ts";
 import { formatSegmentDistance } from "./segment-builder.ts";
 import { fetchWater, type WaterBody } from "./water.ts";
@@ -22,6 +22,7 @@ const tbody = document.querySelector("#segments tbody") as HTMLElement;
 const breaksToggle = document.getElementById("include-breaks") as HTMLInputElement;
 const totals = document.getElementById("totals") as HTMLElement;
 const terrainToggle = document.getElementById("use-terrain") as HTMLInputElement;
+const notice = document.getElementById("notice") as HTMLElement;
 const terrainWarning = document.getElementById("terrain-warning") as HTMLElement;
 const totalsRow = document.getElementById("totals-row") as HTMLElement;
 
@@ -196,6 +197,21 @@ function fail(error: string) {
   message.textContent = error;
 }
 
+/** Show the large-file notice before the heavy work starts, and keep it (with the duration) afterwards. */
+async function withLargeFileNotice(sizeBytes: number, downloaded: boolean, work: () => Promise<void>) {
+  const text = largeFileNotice(sizeBytes, downloaded);
+  notice.classList.toggle("hidden", text === null);
+  message.textContent = "";
+  if (text === null) return work();
+  notice.textContent = text;
+  // Let the browser paint the notice before the synchronous analysis blocks the page.
+  await new Promise((resolve) => setTimeout(resolve, 50));
+  const started = performance.now();
+  await work();
+  const seconds = ((performance.now() - started) / 1000).toFixed(1);
+  notice.textContent = `${text} Done in ${seconds} s.`;
+}
+
 document.querySelectorAll<HTMLElement>("[data-sample]").forEach((link) => {
   link.addEventListener("click", async (event) => {
     event.preventDefault();
@@ -203,10 +219,12 @@ document.querySelectorAll<HTMLElement>("[data-sample]").forEach((link) => {
     try {
       const response = await fetch(`samples/${name}`);
       if (!response.ok) throw new Error("Could not load the sample track");
-      current = { file: name, xml: await response.text() };
-      waterLayer.clearLayers();
-      show(current.file, current.xml);
-      if (terrainToggle.checked) await loadWater(current);
+      await withLargeFileNotice(Number(response.headers.get("content-length") ?? 0), true, async () => {
+        current = { file: name, xml: await response.text() };
+        waterLayer.clearLayers();
+        show(current.file, current.xml);
+        if (terrainToggle.checked) await loadWater(current);
+      });
     } catch (e) {
       fail(e instanceof Error ? e.message : String(e));
     }
@@ -219,10 +237,12 @@ input.addEventListener("change", async () => {
   const validation = validateFile(file);
   if (!validation.valid) return fail(validation.error ?? "Invalid file");
   try {
-    current = { file: file.name, xml: await readFileAsText(file) };
-    waterLayer.clearLayers();
-    show(current.file, current.xml);
-    if (terrainToggle.checked) await loadWater(current);
+    await withLargeFileNotice(file.size, false, async () => {
+      current = { file: file.name, xml: await readFileAsText(file) };
+      waterLayer.clearLayers();
+      show(current.file, current.xml);
+      if (terrainToggle.checked) await loadWater(current);
+    });
   } catch (e) {
     fail(e instanceof Error ? e.message : String(e));
   }
