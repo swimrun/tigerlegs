@@ -35,6 +35,18 @@ document.querySelectorAll<HTMLElement>("[data-set-lang]").forEach((link) => {
 });
 setLang(initialLang());
 
+// Scroll-linked reveal: the tiger photo grows from a small corner to fully visible at the page end.
+const tiger = document.querySelector<HTMLElement>(".tiger-fade");
+const updateReveal = () => {
+  if (!tiger) return;
+  const max = document.documentElement.scrollHeight - globalThis.innerHeight;
+  const progress = max > 0 ? Math.min(1, globalThis.scrollY / max) : 1;
+  tiger.style.setProperty("--reveal", String(0.25 + 0.85 * progress));
+};
+globalThis.addEventListener("scroll", updateReveal, { passive: true });
+globalThis.addEventListener("resize", updateReveal);
+updateReveal();
+
 // The Instagram embed is only loaded after a click, so visiting the page sends nothing to Meta.
 document.getElementById("instagram-load")?.addEventListener("click", () => {
   const slot = document.getElementById("instagram-slot");

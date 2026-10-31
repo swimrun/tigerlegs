@@ -8,6 +8,7 @@
     "npm:@tailwindcss/cli@^4.3.3": "4.3.3",
     "npm:@xmldom/xmldom@0.9": "0.9.10",
     "npm:fast-check@^3.22.0": "3.23.2",
+    "npm:marked@15": "15.0.12",
     "npm:tailwindcss@^4.3.3": "4.3.3"
   },
   "jsr": {
@@ -384,6 +385,10 @@
         "@jridgewell/sourcemap-codec"
       ]
     },
+    "marked@15.0.12": {
+      "integrity": "sha512-8dD6FusOQSrpv9Z1rdNMdlSgQOIP880DHqnohobOmYLElGEqAL/JvxvuxZO16r4HtjTlfPRDC1hbvxC9dPN2nA==",
+      "bin": true
+    },
     "micromatch@4.0.8": {
       "integrity": "sha512-PXwfBhYu0hBCPw8Dn0E+WDYb7af3dSLVWKi3HGv84IdF4TyFoC0ysxFd0Goxw7nSv4T/PzEJQxsYsEiFCKo2BA==",
       "dependencies": [
@@ -428,6 +433,7 @@
       "npm:@tailwindcss/cli@^4.3.3",
       "npm:@xmldom/xmldom@0.9",
       "npm:fast-check@^3.22.0",
+      "npm:marked@15",
       "npm:tailwindcss@^4.3.3"
     ]
   }

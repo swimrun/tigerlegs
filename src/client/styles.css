@@ -22,19 +22,19 @@
   html[data-lang="nl"] [lang="en"] {
     display: none;
   }
-  /* Tiger photo in the bottom-right corner: a ragged triangle that fades out towards the text. */
+  /* Tiger photo fixed in the bottom-right corner; a circular reveal grows with scroll progress (--reveal, 0..1, set in about.ts). */
   .tiger-fade {
-    position: absolute;
+    --reveal: 0.25;
+    position: fixed;
     right: 0;
     bottom: 0;
     z-index: -1;
-    width: min(100%, 36rem);
-    aspect-ratio: 3 / 2;
+    width: min(100%, 44rem);
+    aspect-ratio: 1200 / 630;
     pointer-events: none;
-    background: url("img/tiger-swim-terrain.jpg") center / cover;
-    clip-path: polygon(100% 0, 100% 100%, 0 100%, 8% 82%, 3% 70%, 17% 60%, 14% 47%, 30% 40%, 28% 28%, 46% 22%, 47% 10%, 66% 6%, 74% 0);
-    -webkit-mask-image: radial-gradient(ellipse 85% 85% at 100% 100%, #000 35%, transparent 78%);
-    mask-image: radial-gradient(ellipse 85% 85% at 100% 100%, #000 35%, transparent 78%);
+    background: url("img/tigerlegs-social.jpg") center / cover;
+    -webkit-mask-image: radial-gradient(circle farthest-corner at 100% 100%, #000 calc(var(--reveal) * 75%), transparent calc(var(--reveal) * 100%));
+    mask-image: radial-gradient(circle farthest-corner at 100% 100%, #000 calc(var(--reveal) * 75%), transparent calc(var(--reveal) * 100%));
   }
   .tiger-stripes {
     @apply h-2;
