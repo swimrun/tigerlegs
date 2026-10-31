@@ -6,6 +6,8 @@
 **Input**: Roadmap milestone M4 in [docs/ROADMAP.md](../../docs/ROADMAP.md); feasibility
 study in [ADR-0005](../../docs/adr/0005-rest-json-api-for-multi-client-support.md);
 UI mock-up in [img/garmin-datafield-mock.png](../../img/garmin-datafield-mock.png).
+Related research import: [research-chatgpt-hilly-pacer.md](./research-chatgpt-hilly-pacer.md)
+(a grade-adjusted pacing idea — candidate M4+ extension, not part of this spec).
 
 ![Mock-up of the data field: current leg "RUN 4/12", 620 m to the next swim, next swim 1.4 km](../../img/garmin-datafield-mock.png)
 
