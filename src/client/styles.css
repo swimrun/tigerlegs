@@ -18,20 +18,24 @@
 /* Tiger palette: Tailwind's built-in amber (accent) and stone (neutral) scales. */
 
 @layer components {
+  .tiger-stripes {
+    @apply h-2;
+    background: repeating-linear-gradient(135deg, #0c0a09 0 12px, #fbbf24 12px 32px);
+  }
   #segments {
     @apply w-full text-sm;
   }
   #segments th {
-    @apply sticky top-0 bg-stone-100 px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-stone-600;
+    @apply sticky top-0 bg-amber-100 px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-stone-800 border-b-2 border-stone-900;
   }
   #segments td {
     @apply border-t border-stone-100 px-3 py-1.5;
   }
   #segments tr.active td {
-    @apply bg-amber-100;
+    @apply bg-amber-200;
   }
   #segments tfoot td {
-    @apply sticky bottom-0 border-t-2 border-stone-300 bg-stone-100 font-semibold;
+    @apply sticky bottom-0 border-t-2 border-stone-900 bg-amber-100 font-semibold;
   }
   #segments tbody td:nth-child(2) {
     @apply font-medium;
