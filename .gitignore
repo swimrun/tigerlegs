@@ -17,3 +17,5 @@ Thumbs.db
 public/app.js
 public/app.js.map
 .cache/
+node_modules/
+public/styles.css

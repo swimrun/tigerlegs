@@ -6,7 +6,7 @@
 
 TigerLegs splits a swimrun course into its swim and run legs. You upload a GPX file, and the tool shows the course on an interactive map next to a table with the distance of every swim (in metres) and run (in kilometres).
 
-TIGER stands for *Terrain-Informed GPX ExtractoR*. The tiger is also a nod to Team Groot Rondje Eilanden (TGRE), since a tiger is an amphibious animal and a good swimmer.
+TIGERLegs stands for *Terrain-Informed Gpx Extractor: Lets Go Swimrun*. The tiger is also a nod to Team Groot Rondje Eilanden (TGRE), since a tiger is an amphibious animal and a good swimmer.
 
 **Requirements:** [Deno](https://deno.com/) 2.x and a modern web browser. The maintainers develop on macOS and have not tested other platforms.
 
