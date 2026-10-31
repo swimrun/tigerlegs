@@ -60,9 +60,9 @@ function formatDuration(seconds: number): string {
 }
 
 // Elapsed time is last minus first timestamp; moving time skips steps slower than 0.5 km/h.
-function timeSummary(points: Trackpoint[]): string {
+function timeSummary(points: Trackpoint[]): { moving: string; event: string } | null {
   const times = points.map((p) => (p.timestamp ? Date.parse(p.timestamp) : NaN));
-  if (times.some(Number.isNaN) || points.length < 2) return "";
+  if (times.some(Number.isNaN) || points.length < 2) return null;
   let moving = 0;
   for (let i = 1; i < points.length; i++) {
     const dt = (times[i] - times[i - 1]) / 1000;
@@ -70,7 +70,47 @@ function timeSummary(points: Trackpoint[]): string {
     if (dt > 0 && (km / dt) * 3600 >= 0.5) moving += dt;
   }
   const elapsed = (times[times.length - 1] - times[0]) / 1000;
-  return ` · moving time ${formatDuration(moving)}, event time ${formatDuration(elapsed)}`;
+  return { moving: formatDuration(moving), event: formatDuration(elapsed) };
+}
+
+function stat(label: string, value: string): HTMLElement {
+  const box = document.createElement("div");
+  const dt = document.createElement("dt");
+  dt.className = "text-xs uppercase tracking-wide text-stone-500";
+  dt.textContent = label;
+  const dd = document.createElement("dd");
+  dd.className = "text-lg font-semibold tabular-nums text-stone-800";
+  dd.textContent = value;
+  box.append(dt, dd);
+  return box;
+}
+
+function renderSummary(file: string, name: string, times: ReturnType<typeof timeSummary>, strategies: string[]) {
+  const title = document.createElement("h2");
+  title.className = "text-base font-semibold text-stone-900";
+  title.textContent = name;
+  const source = document.createElement("p");
+  source.className = "truncate text-xs text-stone-500";
+  source.title = file;
+  source.textContent = file;
+  const stats = document.createElement("dl");
+  stats.className = "mt-2 flex flex-wrap gap-x-6 gap-y-2";
+  if (times) stats.append(stat("Moving time", times.moving), stat("Event time", times.event));
+  const chips = document.createElement("div");
+  chips.className = "flex flex-wrap gap-1";
+  for (const s of strategies) {
+    const chip = document.createElement("span");
+    chip.className = "rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800";
+    chip.textContent = s;
+    chips.append(chip);
+  }
+  const method = document.createElement("div");
+  const label = document.createElement("dt");
+  label.className = "text-xs uppercase tracking-wide text-stone-500";
+  label.textContent = "Detected by";
+  method.append(label, chips);
+  stats.append(method);
+  totals.replaceChildren(title, source, stats);
 }
 
 function show(file: string, xml: string) {
@@ -121,7 +161,6 @@ function show(file: string, xml: string) {
   });
 
   if (latLngs.length > 0) map.fitBounds(L.polyline(latLngs).getBounds());
-  const trackLabel = `${file} — ${analysis.trackName || "unnamed track"}`;
   totalsRow.innerHTML = "";
   const label = document.createElement("td");
   label.colSpan = 2;
@@ -130,8 +169,7 @@ function show(file: string, xml: string) {
   sums.colSpan = 3;
   sums.textContent = `run ${analysis.totals.totalRunKm} km, swim ${analysis.totals.totalSwimM} m`;
   totalsRow.append(label, sums);
-  totals.textContent = trackLabel + timeSummary(track.trackpoints) +
-    ` (strategies: ${analysis.strategies.join(", ") || "none"})`;
+  renderSummary(file, analysis.trackName || "Unnamed track", timeSummary(track.trackpoints), analysis.strategies);
 }
 
 // Terrain refinement: fetch water polygons for the track, then re-run the analysis with them.
