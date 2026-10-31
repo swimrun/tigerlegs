@@ -21,6 +21,8 @@ const message = document.getElementById("message") as HTMLElement;
 const tbody = document.querySelector("#segments tbody") as HTMLElement;
 const breaksToggle = document.getElementById("include-breaks") as HTMLInputElement;
 const totals = document.getElementById("totals") as HTMLElement;
+const terrainToggle = document.getElementById("use-terrain") as HTMLInputElement;
+const terrainWarning = document.getElementById("terrain-warning") as HTMLElement;
 const totalsRow = document.getElementById("totals-row") as HTMLElement;
 
 const map = L.map("map").setView([50, 5], 5);
@@ -204,7 +206,7 @@ document.querySelectorAll<HTMLElement>("[data-sample]").forEach((link) => {
       current = { file: name, xml: await response.text() };
       waterLayer.clearLayers();
       show(current.file, current.xml);
-      await loadWater(current);
+      if (terrainToggle.checked) await loadWater(current);
     } catch (e) {
       fail(e instanceof Error ? e.message : String(e));
     }
@@ -220,9 +222,22 @@ input.addEventListener("change", async () => {
     current = { file: file.name, xml: await readFileAsText(file) };
     waterLayer.clearLayers();
     show(current.file, current.xml);
-    await loadWater(current);
+    if (terrainToggle.checked) await loadWater(current);
   } catch (e) {
     fail(e instanceof Error ? e.message : String(e));
+  }
+});
+
+terrainToggle.addEventListener("change", async () => {
+  terrainWarning.classList.toggle("hidden", !terrainToggle.checked);
+  if (!current) return;
+  if (terrainToggle.checked) {
+    await loadWater(current);
+  } else {
+    current.water = undefined;
+    waterLayer.clearLayers();
+    message.textContent = "";
+    show(current.file, current.xml);
   }
 });
 

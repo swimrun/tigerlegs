@@ -100,16 +100,29 @@ export function pointInWater(p: Coordinate, water: WaterBody[]): boolean {
   );
 }
 
+/** Grid size in degrees (about 5.5 km in latitude) that the query area snaps to. */
+export const BBOX_GRID_DEG = 0.05;
+
+/**
+ * Query area for Overpass: the track's extent grown outward to a coarse grid, so the
+ * request reveals the neighbourhood of the track instead of its exact extent.
+ */
+export function coarseBbox(points: Trackpoint[]): [number, number, number, number] {
+  const lats = points.map((p) => p.coordinate.lat), lons = points.map((p) => p.coordinate.lon);
+  const down = (v: number) => Math.floor(v / BBOX_GRID_DEG) * BBOX_GRID_DEG;
+  const up = (v: number) => Math.ceil(v / BBOX_GRID_DEG) * BBOX_GRID_DEG;
+  const round = (v: number) => Number(v.toFixed(4));
+  return [
+    round(down(Math.min(...lats)) - BBOX_GRID_DEG),
+    round(down(Math.min(...lons)) - BBOX_GRID_DEG),
+    round(up(Math.max(...lats)) + BBOX_GRID_DEG),
+    round(up(Math.max(...lons)) + BBOX_GRID_DEG),
+  ];
+}
+
 /** Fetch lakes, ponds and riverbanks around the track from OpenStreetMap (Overpass). */
 export async function fetchWater(points: Trackpoint[], signal?: AbortSignal): Promise<WaterBody[]> {
-  const lats = points.map((p) => p.coordinate.lat), lons = points.map((p) => p.coordinate.lon);
-  const pad = 0.003;
-  const bbox = [
-    Math.min(...lats) - pad,
-    Math.min(...lons) - pad,
-    Math.max(...lats) + pad,
-    Math.max(...lons) + pad,
-  ].join(",");
+  const bbox = coarseBbox(points).join(",");
   const query = `[out:json][timeout:25];(way["natural"="water"](${bbox});` +
     `relation["natural"="water"](${bbox});way["waterway"="riverbank"](${bbox}););out geom;`;
   let lastError = "no Overpass server reachable";

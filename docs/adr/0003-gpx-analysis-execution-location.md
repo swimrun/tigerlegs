@@ -52,7 +52,7 @@ and distance calculation. The Deno backend is used only for:
 
 - Zero server CPU cost for analysis — scales to unlimited users
 - Works offline for waypoint-based and speed-based detection
-- GPX file data never leaves the user's device (privacy)
+- GPX file data is never uploaded; only an opt-in, coarse area query for terrain data leaves the device (privacy)
 - Same TypeScript modules run in browser and Deno tests
 - Simpler backend with fewer responsibilities
 - No file upload bandwidth costs
@@ -123,7 +123,7 @@ Rationale:
    would quickly exhaust compute limits under moderate load.
 2. **Privacy** — Swimrun GPX files contain precise training routes,
    home locations, and timing data. Client-side processing means
-   this data never leaves the device.
+   the GPX file is never uploaded. Only the opt-in terrain lookup sends a coarse area.
 3. **Offline** — Waypoint-based and speed-based detection work
    fully offline. Only landscape lookup needs network access.
 4. **Performance** — Typical swimrun GPX files have 5,000–15,000

@@ -1,7 +1,7 @@
 import { assert, assertEquals } from "@std/assert";
 import { parseGPX } from "../../src/client/gpx-parser.ts";
 import { analyzeGpx } from "../../src/client/analyze.ts";
-import { assembleRings, parseWater, pointInRing, pointInWater } from "../../src/client/water.ts";
+import { assembleRings, BBOX_GRID_DEG, coarseBbox, parseWater, pointInRing, pointInWater } from "../../src/client/water.ts";
 
 const c = (lat: number, lon: number) => ({ lat, lon });
 
@@ -27,6 +27,17 @@ Deno.test("pointInWater treats inner rings as holes", () => {
   }];
   assert(pointInWater(c(0.5, 0.5), water));
   assert(!pointInWater(c(2, 2), water));
+});
+
+Deno.test("coarseBbox snaps outward to the grid and contains the track", () => {
+  const pts = [
+    { coordinate: c(52.371, 4.912) },
+    { coordinate: c(52.402, 4.951) },
+  ] as Parameters<typeof coarseBbox>[0];
+  const [s, w, n, e] = coarseBbox(pts);
+  assert(s < 52.371 && w < 4.912 && n > 52.402 && e > 4.951);
+  for (const v of [s, w, n, e]) assert(Math.abs(v / BBOX_GRID_DEG - Math.round(v / BBOX_GRID_DEG)) < 1e-6);
+  assert(n - s >= 2 * BBOX_GRID_DEG);
 });
 
 Deno.test("Rhederlaag with OSM water: terrain splits the speed-only runs", () => {

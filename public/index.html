@@ -61,7 +61,14 @@
         ·
         <a href="#" data-sample="twiske-backyard.gpx" class="sample-link font-medium underline hover:text-amber-700">Twiske Backyard SwimRun</a>
       </p>
-      <p class="mt-2 text-xs text-stone-500">Your file is analysed in the browser and is not uploaded. To find water and land, only the rough area of the track (a bounding box) is sent to OpenStreetMap's Overpass service.</p>
+        ·
+        <a href="#" data-sample="ruegen-swimrun.gpx" class="sample-link font-medium underline hover:text-amber-700">Ötillö Rügen</a>
+      </p>
+      <label class="mt-3 flex cursor-pointer items-start gap-2 text-sm text-stone-700">
+        <input id="use-terrain" type="checkbox" class="mt-1">
+        <span><strong>Use terrain data</strong> (more accurate swims). Off by default: your file is analysed in the browser, on speed alone, and nothing leaves your device.</span>
+      </label>
+      <p id="terrain-warning" class="mt-1 hidden rounded border border-amber-300 bg-amber-50 p-2 text-xs text-stone-800">Warning: with terrain data on, the rough area of the track (a coarse bounding box, not the track itself) and your IP address are sent to OpenStreetMap's Overpass service to look up lakes and rivers. Your GPX file is never uploaded.</p>
       <p id="message" role="alert" class="mt-2 text-sm font-medium text-red-700"></p>
     </section>
 

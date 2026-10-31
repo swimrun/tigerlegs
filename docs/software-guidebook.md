@@ -190,6 +190,7 @@ The following constraints apply:
 This chapter lists the rules that guide design choices when no constraint decides.
 
 - **Analyse on the client.** The server proxies terrain data and nothing more.
+- **Privacy by design.** Privacy is a design rule, not a setting added later (Cavoukian, 2011). Concretely: (1) the GPX file is analysed in the browser and never uploaded; (2) the default is the most private mode, speed-only analysis with no network call about the track; (3) terrain data is opt-in, behind a toggle that warns the user before anything is sent; (4) what is sent is minimal and coarse, a bounding box snapped outward to a grid of about 5 km (`BBOX_GRID_DEG` in `src/client/water.ts`), never the trackpoints, and the device location is never read; (5) the third party that receives the request (Overpass) also sees the IP address, and the interface says so; (6) no accounts, cookies or analytics exist, and the only stored value is the language choice in `localStorage`. A bounding box still reveals roughly where the track is, because it comes from the track. A bigger margin would not change that, so the opt-in and the coarse grid carry the protection.
 - **One source of truth for configuration.** Ports and origins live in `src/server/config.ts`, so changing a port touches one line.
 - **Use the domain language.** Names in code follow the glossary in Appendix A.
 - **Navigate with links, not buttons.** Every page shares a header menu with links to *Extractorrr* (with the tiger growl) and *About*, and the current page is marked. Pages have no "back to" buttons. Buttons trigger actions on the current page, links move between pages.
@@ -384,6 +385,8 @@ The team should either accept the ADR or revisit the choice.
 Brown, S. (n.d.-a). *The software guidebook*. Leanpub. https://leanpub.com/documenting-software-architecture
 
 Brown, S. (n.d.-b). *The C4 model for visualising software architecture*. https://c4model.com/
+
+Cavoukian, A. (2011). *Privacy by design: The 7 foundational principles*. Information and Privacy Commissioner of Ontario. https://www.ipc.on.ca/wp-content/uploads/resources/7foundationalprinciples.pdf
 
 Gruber, T. (2008). Ontology. In L. Liu & M. T. Özsu (Eds.), *Encyclopedia of Database Systems*. Springer. https://tomgruber.org/writing/definition-of-ontology
 

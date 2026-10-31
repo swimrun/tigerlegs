@@ -54,6 +54,7 @@ The roadmap shows what is done and what is planned. Checked items are done.
 - [ ] Elevation profile per segment
 - [ ] Support for GPX conventions beyond Openrunner
 - [ ] Garmin Connect IQ data field (see the [constraints](./docs/software-guidebook.md#4-constraints) in the guidebook)
+- [ ] Accounts and login (for example Auth0), and saving analysed routes online. This is the first feature that needs a real backend, and it needs its own privacy review, because stored routes reveal home locations. Until then the app stays static, with no backend.
 
 ## Learn more
 
