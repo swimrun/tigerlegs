@@ -50,7 +50,7 @@ Implement a client-server swimrun GPX analysis tool using Deno with TypeScript. 
     - Create `test/client/gpx-parser.test.ts`
     - **Validates: Requirements 1.2, 1.4, 7.1, 7.2, 7.3**
 
-- [ ] 3. Implement waypoint-based segment detection (Strategy 1)
+- [x] 3. Implement waypoint-based segment detection (Strategy 1)
   - [x] 3.1 Implement waypoint classifier
     - Create `src/client/waypoint-classifier.ts` with `classifyWaypoint`, `classifyWaypoints`, `validateSwimPairing`, `detectByWaypoint`
     - Classify by sym values (200=swim-start, 201=swim-end, 3=aid-station) and name patterns ("Début SWIM", "Fin SWIM", "Ravitaillement")
@@ -79,10 +79,10 @@ Implement a client-server swimrun GPX analysis tool using Deno with TypeScript. 
     - Create `test/client/segment-builder.test.ts` and `test/client/formatting.test.ts`
     - **Validates: Requirements 2.3, 2.4, 2.5, 2.6, 2.7, 3.5, 3.6, 3.7, 5.1**
 
-- [ ] 4. Checkpoint - Core segmentation
+- [x] 4. Checkpoint - Core segmentation
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 5. Implement speed-based segment detection (Strategy 2)
+- [x] 5. Implement speed-based segment detection (Strategy 2)
   - [x] 5.1 Implement speed analyzer
     - Create `src/client/speed-analyzer.ts` with `calculateInstantaneousSpeed`, `applySlidingWindow`, `detectBySpeed`, `calculateSpeedConfidence`, `isSpeedDetectionAvailable`
     - Configurable sliding window (default 10, min 3, max 50)
@@ -101,7 +101,7 @@ Implement a client-server swimrun GPX analysis tool using Deno with TypeScript. 
     - Create `test/client/speed-analyzer.test.ts`
     - **Validates: Requirements 12.1, 12.2, 12.3, 12.4, 12.5, 12.7, 12.8, 12.9**
 
-- [ ] 6. Implement GPS noise filtering
+- [x] 6. Implement GPS noise filtering
   - [x] 6.1 Implement GPS filter
     - Create `src/client/gps-filter.ts` with `computeScatterRatio`, `detectLateralDeviation`, `filterSwimSegment`, `smoothPath`
     - Compute scatter ratio (cumulative / straight-line distance)
@@ -117,10 +117,10 @@ Implement a client-server swimrun GPX analysis tool using Deno with TypeScript. 
     - Create `test/client/gps-filter.test.ts`
     - **Validates: Requirements 13.1, 13.3, 13.4, 13.5, 13.6, 13.7, 13.8**
 
-- [ ] 7. Checkpoint - Detection strategies and filtering
+- [x] 7. Checkpoint - Detection strategies and filtering
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 8. Implement Deno backend service
+- [x] 8. Implement Deno backend service
   - [x] 8.1 Implement cache layer
     - Create `src/server/cache.ts` with `CacheStore` interface, `coordinateCacheKey`, `createCacheStore`
     - Support filesystem and SQLite backends
