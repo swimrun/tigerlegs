@@ -408,14 +408,14 @@ Table 8 lists the ADRs and what each decides.
 | --- | --- |
 | [0001](./adr/0001-record-architecture-decisions.md) | Record architecture decisions |
 | [0002](./adr/0002-use-deno-with-typescript.md) | Use Deno with TypeScript |
-| [0003](./adr/0003-gpx-analysis-execution-location.md) | Choose where the GPX analysis runs (status: proposed) |
+| [0003](./adr/0003-gpx-analysis-execution-location.md) | Choose where the GPX analysis runs |
 | [0004](./adr/0004-host-deno-backend-on-eu-vps.md) | Host the backend on an EU VPS |
 | [0005](./adr/0005-rest-json-api-for-multi-client-support.md) | Offer a REST/JSON API |
 | [0006](./adr/0006-open-source-gis-stack.md) | Use an open-source GIS stack |
 | [0007](./adr/0007-compact-segment-table-format.md) | Show a compact paired segment table |
+| [0008](./adr/0008-astro-static-site-with-react-islands.md) | **Proposed:** Astro static pages with a React-based interactive frontend; compare alternatives using multi-criteria decision making |
 
-ADR-0003 still has the status *proposed*, while this guidebook and the code already analyse on the client.
-The team should either accept the ADR or revisit the choice.
+ADR-0008 proposes a shared static layout and directly linkable HTML pages, with the interactive extractor implemented in React and no runtime backend. Astro itself is not React-based; it supplies static page composition around the React application. Existing TypeScript analysis modules remain reusable. The ADR includes a provisional weighted comparison of the current Deno build, Astro, Next.js static export, Vite + React SPA and Eleventy, following the [ICT Research Methods multi-criteria decision making method](https://ictresearchmethods.nl/workshop/multi-criteria-decision-making/). The migration has not been implemented.
 
 ## References
 
