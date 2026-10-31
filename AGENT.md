@@ -70,6 +70,14 @@ they know exactly what the source said and can verify it.
 
 ## Other agent standards
 
+### Files and data stay inside this repository
+
+Do not write data, scratch files, fixtures or one-off scripts to
+`/tmp` or any other folder outside this repository. Keep test data
+under `test/fixtures/` and delete scratch files before finishing.
+Do not run one-off scripts: put checks in committed tests (Deno
+tests, and Playwright tests once added).
+
 ### Resistance to correction
 
 When challenged on a factual claim, do not immediately capitulate.
