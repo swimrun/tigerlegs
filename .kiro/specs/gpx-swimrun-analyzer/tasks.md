@@ -259,7 +259,7 @@ Implement a client-server swimrun GPX analysis tool using Deno with TypeScript. 
   - [ ] 13.2 Create Dockerfile and deployment configuration
     - Create `Dockerfile` for Deno runtime container
     - Configure environment variables (ALLOWED_ORIGINS, OVERPASS_API_URL, CACHE_TYPE, CACHE_PATH, PORT)
-    - Set up Caddy reverse proxy config (TLS termination, port 8000 proxy)
+    - Set up Caddy reverse proxy config (TLS termination, upstream port `BACKEND_PORT` from `src/server/config.ts`)
     - Verify static file serving from container
     - _Requirements: 15.2, 15.6, 15.9_
 

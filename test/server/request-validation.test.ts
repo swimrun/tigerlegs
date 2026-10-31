@@ -13,6 +13,16 @@ import { assertEquals, assert } from "@std/assert";
 import { createRouter, type RouterConfig } from "../../src/server/router.ts";
 import type { CacheStore } from "../../src/server/cache.ts";
 import type { TerrainResult } from "../../src/shared/types.ts";
+import { BACKEND_ORIGIN, FRONTEND_ORIGIN, PRODUCTION_ORIGIN } from "../../src/server/config.ts";
+
+const TERRAIN_LOOKUP_URL = `${BACKEND_ORIGIN}/api/v1/terrain/lookup`;
+const TERRAIN_BATCH_URL = `${BACKEND_ORIGIN}/api/v1/terrain/batch`;
+
+const STATUS_BAD_REQUEST = 400;
+const STATUS_FORBIDDEN = 403;
+const CODE_INVALID_COORDINATES = "INVALID_COORDINATES";
+const CODE_BATCH_TOO_LARGE = "BATCH_TOO_LARGE";
+const CODE_FORBIDDEN_ORIGIN = "FORBIDDEN_ORIGIN";
 
 // --- Test helpers ---
 
@@ -37,7 +47,13 @@ function createMockCacheStore(): CacheStore {
   };
 }
 
-const ALLOWED_ORIGINS = ["http://localhost:3000", "https://swimrun.group"];
+const ALLOWED_ORIGINS = [FRONTEND_ORIGIN, PRODUCTION_ORIGIN];
+
+function lookupRequest(lat: number, lon: number, origin: string = FRONTEND_ORIGIN): Request {
+  return new Request(`${TERRAIN_LOOKUP_URL}?lat=${lat}&lon=${lon}`, {
+    headers: { Origin: origin },
+  });
+}
 
 function createTestRouter() {
   const config: RouterConfig = {
@@ -80,15 +96,12 @@ Deno.test("Property 19.1: Any coordinate with lat outside [-90, 90] is always re
       // Any valid longitude for the request
       fc.double({ min: -180, max: 180, noNaN: true }),
       async (invalidLat, lon) => {
-        const request = new Request(
-          `http://localhost:8000/api/v1/terrain/lookup?lat=${invalidLat}&lon=${lon}`,
-          { headers: { Origin: "http://localhost:3000" } },
-        );
+        const request = lookupRequest(invalidLat, lon);
         const response = await handler(request);
         const body = await response.json();
 
-        assertEquals(response.status, 400);
-        assertEquals(body.code, "INVALID_COORDINATES");
+        assertEquals(response.status, STATUS_BAD_REQUEST);
+        assertEquals(body.code, CODE_INVALID_COORDINATES);
       },
     ),
     { numRuns: 100 },
@@ -110,15 +123,12 @@ Deno.test("Property 19.2: Any coordinate with lon outside [-180, 180] is always 
         fc.double({ min: -1000, max: -180.00001, noNaN: true }),
       ),
       async (lat, invalidLon) => {
-        const request = new Request(
-          `http://localhost:8000/api/v1/terrain/lookup?lat=${lat}&lon=${invalidLon}`,
-          { headers: { Origin: "http://localhost:3000" } },
-        );
+        const request = lookupRequest(lat, invalidLon);
         const response = await handler(request);
         const body = await response.json();
 
-        assertEquals(response.status, 400);
-        assertEquals(body.code, "INVALID_COORDINATES");
+        assertEquals(response.status, STATUS_BAD_REQUEST);
+        assertEquals(body.code, CODE_INVALID_COORDINATES);
       },
     ),
     { numRuns: 100 },
@@ -139,17 +149,14 @@ Deno.test({
           fc.double({ min: -90, max: 90, noNaN: true }),
           fc.double({ min: -180, max: 180, noNaN: true }),
           async (lat, lon) => {
-            const request = new Request(
-              `http://localhost:8000/api/v1/terrain/lookup?lat=${lat}&lon=${lon}`,
-              { headers: { Origin: "http://localhost:3000" } },
-            );
+            const request = lookupRequest(lat, lon);
             const response = await handler(request);
             const body = await response.json();
 
             // Valid coordinates should never result in INVALID_COORDINATES error
-            if (response.status === 400) {
+            if (response.status === STATUS_BAD_REQUEST) {
               assert(
-                body.code !== "INVALID_COORDINATES",
+                body.code !== CODE_INVALID_COORDINATES,
                 `Valid coords lat=${lat}, lon=${lon} were incorrectly rejected with INVALID_COORDINATES`,
               );
             }
@@ -176,10 +183,10 @@ Deno.test("Property 19.4: Batch requests with >100 coordinates are always reject
           lon: (i % 360) - 180 + 0.5, // valid lons
         }));
 
-        const request = new Request("http://localhost:8000/api/v1/terrain/batch", {
+        const request = new Request(TERRAIN_BATCH_URL, {
           method: "POST",
           headers: {
-            Origin: "http://localhost:3000",
+            Origin: FRONTEND_ORIGIN,
             "Content-Type": "application/json",
           },
           body: JSON.stringify({ coordinates }),
@@ -187,8 +194,8 @@ Deno.test("Property 19.4: Batch requests with >100 coordinates are always reject
         const response = await handler(request);
         const body = await response.json();
 
-        assertEquals(response.status, 400);
-        assertEquals(body.code, "BATCH_TOO_LARGE");
+        assertEquals(response.status, STATUS_BAD_REQUEST);
+        assertEquals(body.code, CODE_BATCH_TOO_LARGE);
       },
     ),
     { numRuns: 50 },
@@ -209,15 +216,12 @@ Deno.test("Property 19.5: Requests from non-allowed origins always get 403 (FORB
     fc.asyncProperty(
       arbitraryForbiddenOrigin,
       async (forbiddenOrigin) => {
-        const request = new Request(
-          "http://localhost:8000/api/v1/terrain/lookup?lat=45&lon=6",
-          { headers: { Origin: forbiddenOrigin } },
-        );
+        const request = lookupRequest(45, 6, forbiddenOrigin);
         const response = await handler(request);
         const body = await response.json();
 
-        assertEquals(response.status, 403);
-        assertEquals(body.code, "FORBIDDEN_ORIGIN");
+        assertEquals(response.status, STATUS_FORBIDDEN);
+        assertEquals(body.code, CODE_FORBIDDEN_ORIGIN);
       },
     ),
     { numRuns: 100 },
@@ -237,14 +241,11 @@ Deno.test({
         fc.asyncProperty(
           fc.constantFrom(...ALLOWED_ORIGINS),
           async (allowedOrigin) => {
-            const request = new Request(
-              "http://localhost:8000/api/v1/terrain/lookup?lat=45&lon=6",
-              { headers: { Origin: allowedOrigin } },
-            );
+            const request = lookupRequest(45, 6, allowedOrigin);
             const response = await handler(request);
 
             assert(
-              response.status !== 403,
+              response.status !== STATUS_FORBIDDEN,
               `Allowed origin ${allowedOrigin} was rejected with 403`,
             );
             // Consume the body to avoid resource leaks

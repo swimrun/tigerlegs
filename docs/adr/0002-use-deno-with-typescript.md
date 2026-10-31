@@ -9,7 +9,7 @@ Accepted
 ## Context
 
 We need to choose a runtime and language for building a web-based
-GPX-to-swimrun-segments tool. The tool is primarily client-side
+TigerLegs tool. The tool is primarily client-side
 (GPX parsing, Haversine distance calculation, Leaflet map rendering)
 with minimal server-side requirements (static file serving).
 

@@ -1,4 +1,5 @@
 import { assertEquals, assertStringIncludes } from "@std/assert";
+import { BACKEND_ORIGIN, FRONTEND_ORIGIN } from "./config.ts";
 import { createRouter, type RouterConfig } from "./router.ts";
 import type { CacheStore } from "./cache.ts";
 import type { TerrainResult } from "../shared/types.ts";
@@ -26,7 +27,7 @@ function createMockCacheStore(): CacheStore {
 
 function createTestRouter(overrides?: Partial<RouterConfig>) {
   const config: RouterConfig = {
-    allowedOrigins: ["http://localhost:3000", "https://swimrun.group"],
+    allowedOrigins: [FRONTEND_ORIGIN, "https://swimrun.group"],
     cacheStore: createMockCacheStore(),
     ...overrides,
   };
@@ -37,7 +38,7 @@ function createTestRouter(overrides?: Partial<RouterConfig>) {
 
 Deno.test("GET /api/v1/health returns status ok", async () => {
   const handler = createTestRouter();
-  const request = new Request("http://localhost:8000/api/v1/health");
+  const request = new Request(`${BACKEND_ORIGIN}/api/v1/health`);
   const response = await handler(request);
 
   assertEquals(response.status, 200);
@@ -47,7 +48,7 @@ Deno.test("GET /api/v1/health returns status ok", async () => {
 
 Deno.test("GET /api/v1/health does not require Origin header", async () => {
   const handler = createTestRouter();
-  const request = new Request("http://localhost:8000/api/v1/health");
+  const request = new Request(`${BACKEND_ORIGIN}/api/v1/health`);
   const response = await handler(request);
 
   assertEquals(response.status, 200);
@@ -55,7 +56,7 @@ Deno.test("GET /api/v1/health does not require Origin header", async () => {
 
 Deno.test("Responses include X-Request-Id header", async () => {
   const handler = createTestRouter();
-  const request = new Request("http://localhost:8000/api/v1/health");
+  const request = new Request(`${BACKEND_ORIGIN}/api/v1/health`);
   const response = await handler(request);
 
   const requestId = response.headers.get("X-Request-Id");
@@ -65,7 +66,7 @@ Deno.test("Responses include X-Request-Id header", async () => {
 
 Deno.test("Responses include Content-Type: application/json", async () => {
   const handler = createTestRouter();
-  const request = new Request("http://localhost:8000/api/v1/health");
+  const request = new Request(`${BACKEND_ORIGIN}/api/v1/health`);
   const response = await handler(request);
 
   assertEquals(response.headers.get("Content-Type"), "application/json");
@@ -75,7 +76,7 @@ Deno.test("Responses include Content-Type: application/json", async () => {
 
 Deno.test("Non-health endpoints reject requests without valid Origin", async () => {
   const handler = createTestRouter();
-  const request = new Request("http://localhost:8000/api/v1/terrain/lookup?lat=45&lon=6", {
+  const request = new Request(`${BACKEND_ORIGIN}/api/v1/terrain/lookup?lat=45&lon=6`, {
     headers: { Origin: "http://evil.example.com" },
   });
   const response = await handler(request);
@@ -90,8 +91,8 @@ Deno.test({
   sanitizeResources: false,
   fn: async () => {
     const handler = createTestRouter();
-    const request = new Request("http://localhost:8000/api/v1/terrain/lookup?lat=45&lon=6", {
-      headers: { Origin: "http://localhost:3000" },
+    const request = new Request(`${BACKEND_ORIGIN}/api/v1/terrain/lookup?lat=45&lon=6`, {
+      headers: { Origin: FRONTEND_ORIGIN },
     });
     const response = await handler(request);
 
@@ -106,23 +107,23 @@ Deno.test({
 
 Deno.test("CORS headers are set for allowed origin", async () => {
   const handler = createTestRouter();
-  const request = new Request("http://localhost:8000/api/v1/health", {
-    headers: { Origin: "http://localhost:3000" },
+  const request = new Request(`${BACKEND_ORIGIN}/api/v1/health`, {
+    headers: { Origin: FRONTEND_ORIGIN },
   });
   const response = await handler(request);
 
   assertEquals(
     response.headers.get("Access-Control-Allow-Origin"),
-    "http://localhost:3000",
+    FRONTEND_ORIGIN,
   );
 });
 
 Deno.test("OPTIONS preflight returns CORS headers", async () => {
   const handler = createTestRouter();
-  const request = new Request("http://localhost:8000/api/v1/terrain/lookup", {
+  const request = new Request(`${BACKEND_ORIGIN}/api/v1/terrain/lookup`, {
     method: "OPTIONS",
     headers: {
-      Origin: "http://localhost:3000",
+      Origin: FRONTEND_ORIGIN,
       "Access-Control-Request-Method": "GET",
     },
   });
@@ -131,7 +132,7 @@ Deno.test("OPTIONS preflight returns CORS headers", async () => {
   assertEquals(response.status, 204);
   assertEquals(
     response.headers.get("Access-Control-Allow-Origin"),
-    "http://localhost:3000",
+    FRONTEND_ORIGIN,
   );
   assertStringIncludes(
     response.headers.get("Access-Control-Allow-Methods") ?? "",
@@ -143,8 +144,8 @@ Deno.test("OPTIONS preflight returns CORS headers", async () => {
 
 Deno.test("GET /api/v1/terrain/lookup rejects invalid latitude", async () => {
   const handler = createTestRouter();
-  const request = new Request("http://localhost:8000/api/v1/terrain/lookup?lat=91&lon=6", {
-    headers: { Origin: "http://localhost:3000" },
+  const request = new Request(`${BACKEND_ORIGIN}/api/v1/terrain/lookup?lat=91&lon=6`, {
+    headers: { Origin: FRONTEND_ORIGIN },
   });
   const response = await handler(request);
 
@@ -155,8 +156,8 @@ Deno.test("GET /api/v1/terrain/lookup rejects invalid latitude", async () => {
 
 Deno.test("GET /api/v1/terrain/lookup rejects invalid longitude", async () => {
   const handler = createTestRouter();
-  const request = new Request("http://localhost:8000/api/v1/terrain/lookup?lat=45&lon=181", {
-    headers: { Origin: "http://localhost:3000" },
+  const request = new Request(`${BACKEND_ORIGIN}/api/v1/terrain/lookup?lat=45&lon=181`, {
+    headers: { Origin: FRONTEND_ORIGIN },
   });
   const response = await handler(request);
 
@@ -167,8 +168,8 @@ Deno.test("GET /api/v1/terrain/lookup rejects invalid longitude", async () => {
 
 Deno.test("GET /api/v1/terrain/lookup rejects missing parameters", async () => {
   const handler = createTestRouter();
-  const request = new Request("http://localhost:8000/api/v1/terrain/lookup?lat=45", {
-    headers: { Origin: "http://localhost:3000" },
+  const request = new Request(`${BACKEND_ORIGIN}/api/v1/terrain/lookup?lat=45`, {
+    headers: { Origin: FRONTEND_ORIGIN },
   });
   const response = await handler(request);
 
@@ -185,10 +186,10 @@ Deno.test("POST /api/v1/terrain/batch rejects more than 100 coordinates", async 
     lat: 45 + i * 0.001,
     lon: 6 + i * 0.001,
   }));
-  const request = new Request("http://localhost:8000/api/v1/terrain/batch", {
+  const request = new Request(`${BACKEND_ORIGIN}/api/v1/terrain/batch`, {
     method: "POST",
     headers: {
-      Origin: "http://localhost:3000",
+      Origin: FRONTEND_ORIGIN,
       "Content-Type": "application/json",
     },
     body: JSON.stringify({ coordinates }),
@@ -206,10 +207,10 @@ Deno.test("POST /api/v1/terrain/batch rejects invalid coordinates in batch", asy
     { lat: 45, lon: 6 },
     { lat: -91, lon: 6 }, // invalid
   ];
-  const request = new Request("http://localhost:8000/api/v1/terrain/batch", {
+  const request = new Request(`${BACKEND_ORIGIN}/api/v1/terrain/batch`, {
     method: "POST",
     headers: {
-      Origin: "http://localhost:3000",
+      Origin: FRONTEND_ORIGIN,
       "Content-Type": "application/json",
     },
     body: JSON.stringify({ coordinates }),
@@ -225,8 +226,8 @@ Deno.test("POST /api/v1/terrain/batch rejects invalid coordinates in batch", asy
 
 Deno.test("Unknown routes return 404", async () => {
   const handler = createTestRouter();
-  const request = new Request("http://localhost:8000/api/v1/unknown", {
-    headers: { Origin: "http://localhost:3000" },
+  const request = new Request(`${BACKEND_ORIGIN}/api/v1/unknown`, {
+    headers: { Origin: FRONTEND_ORIGIN },
   });
   const response = await handler(request);
 

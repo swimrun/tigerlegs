@@ -1,3 +1,4 @@
+import { BACKEND_ORIGIN } from "../server/config.ts";
 import { assertEquals, assertAlmostEquals } from "@std/assert";
 import {
   calculateLandscapeConfidence,
@@ -142,7 +143,7 @@ Deno.test("queryTerrain - batches requests (max batchSize per request)", async (
 
   try {
     const config: LandscapeClientConfig = {
-      apiBaseUrl: "http://localhost:8000",
+      apiBaseUrl: BACKEND_ORIGIN,
       sampleIntervalMetres: 50,
       batchSize: 100,
       timeoutMs: 10000,
@@ -167,7 +168,7 @@ Deno.test("queryTerrain - returns error on fetch failure", async () => {
 
   try {
     const config: LandscapeClientConfig = {
-      apiBaseUrl: "http://localhost:8000",
+      apiBaseUrl: BACKEND_ORIGIN,
       sampleIntervalMetres: 50,
       batchSize: 100,
       timeoutMs: 10000,
@@ -194,7 +195,7 @@ Deno.test("queryTerrain - returns error on non-200 response", async () => {
 
   try {
     const config: LandscapeClientConfig = {
-      apiBaseUrl: "http://localhost:8000",
+      apiBaseUrl: BACKEND_ORIGIN,
       sampleIntervalMetres: 50,
       batchSize: 100,
       timeoutMs: 10000,
@@ -218,7 +219,7 @@ Deno.test("queryTerrain - empty coordinates returns empty results", async () => 
 
   try {
     const config: LandscapeClientConfig = {
-      apiBaseUrl: "http://localhost:8000",
+      apiBaseUrl: BACKEND_ORIGIN,
       sampleIntervalMetres: 50,
       batchSize: 100,
       timeoutMs: 10000,

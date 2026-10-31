@@ -240,7 +240,7 @@ graph TD
     end
 
     Client[Browser / Mobile / Watch] -->|HTTPS| Caddy
-    Caddy -->|HTTP :8000| Docker
+    Caddy -->|HTTP :BACKEND_PORT| Docker
     Docker --> Cache
     Docker -->|HTTPS| OSM
     Docker -.->|HTTPS future| Komoot
@@ -253,7 +253,7 @@ Environment variables on the VPS:
 - `OVERPASS_API_URL` — Overpass API endpoint (default: `https://overpass-api.de/api/interpreter`; no API key needed for public instance)
 - `CACHE_TYPE` — `"filesystem"` or `"sqlite"`
 - `CACHE_PATH` — path to cache directory or SQLite database file
-- `PORT` — server listen port (default: 8000)
+- `PORT` — server listen port (default: `BACKEND_PORT` in `src/server/config.ts`)
 
 ## Components and Interfaces
 

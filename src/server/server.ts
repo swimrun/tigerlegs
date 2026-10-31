@@ -1,5 +1,6 @@
 import { createRouter, type RouterConfig } from "./router.ts";
 import { createCacheStore } from "./cache.ts";
+import { BACKEND_PORT, FRONTEND_ORIGIN } from "./config.ts";
 
 // --- Types ---
 
@@ -44,8 +45,8 @@ export function startServer(config: ServerConfig): void {
  * Read configuration from environment variables and start the server.
  */
 function main(): void {
-  const port = Number(Deno.env.get("PORT") ?? "8000");
-  const allowedOrigins = (Deno.env.get("ALLOWED_ORIGINS") ?? "http://localhost:3000")
+  const port = Number(Deno.env.get("PORT") ?? BACKEND_PORT);
+  const allowedOrigins = (Deno.env.get("ALLOWED_ORIGINS") ?? FRONTEND_ORIGIN)
     .split(",")
     .map((o) => o.trim());
   const staticDir = Deno.env.get("STATIC_DIR") ?? "./public";
