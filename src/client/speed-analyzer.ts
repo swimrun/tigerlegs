@@ -250,6 +250,11 @@ export function detectBySpeed(
       } else {
         confidence = 0.5;
       }
+      // A segment far from the swim/run threshold is trustworthy even next to a similar neighbour.
+      confidence = Math.max(
+        confidence,
+        Math.abs(meanBefore - cfg.swimThresholdKph) / cfg.swimThresholdKph,
+      );
     }
 
     segments.push({
