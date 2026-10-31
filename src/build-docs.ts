@@ -69,3 +69,13 @@ ${body}
 `;
 
 await Deno.writeTextFile("public/guidebook.html", page);
+
+await Deno.mkdir("public/diagrams", { recursive: true });
+for await (const entry of Deno.readDir("docs/diagrams")) {
+  if (entry.name.endsWith(".svg")) {
+    await Deno.copyFile(
+      `docs/diagrams/${entry.name}`,
+      `public/diagrams/${entry.name}`,
+    );
+  }
+}

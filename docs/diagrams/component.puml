@@ -1,0 +1,27 @@
+@startuml component
+!include <C4/C4_Component>
+
+title Component diagram of the browser app
+
+Container(backend, "Backend", "Deno", "Terrain requests")
+
+Container_Boundary(browser, "Browser app") {
+  Component(ui, "UI", "app.ts", "Upload, map, table and highlighting")
+  Component(analysis, "Analysis", "analyze.ts", "Runs the pipeline and adds distances")
+  Component(parser, "GPX parser", "gpx-parser.ts", "Turns GPX text into GPXData")
+  Component(waypoint, "Waypoint strategy", "waypoint-classifier.ts", "Segments from sym codes or names")
+  Component(speed, "Speed strategy", "speed-analyzer.ts", "Segments from speed changes")
+  Component(landscape, "Landscape strategy", "landscape-client.ts", "Segments from terrain at sampled points")
+  Component(combiner, "Strategy combiner", "strategy-combiner.ts", "Picks the best strategy per trackpoint")
+  Component(builder, "Segment builder", "segment-builder.ts", "Totals, rounding and paired table rows")
+}
+
+Rel(ui, parser, "Parses the file with")
+Rel(ui, analysis, "Analyses with")
+Rel(ui, builder, "Builds table rows with")
+Rel(analysis, waypoint, "Runs")
+Rel(analysis, speed, "Runs")
+Rel(analysis, landscape, "Runs")
+Rel(analysis, combiner, "Combines results with")
+Rel(landscape, backend, "Requests terrain", "REST, JSON")
+@enduml

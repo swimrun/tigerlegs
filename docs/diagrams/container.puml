@@ -1,0 +1,18 @@
+@startuml container
+!include <C4/C4_Container>
+
+title Container diagram of TigerLegs
+
+Person(athlete, "Athlete or organiser")
+System_Boundary(tigerlegs, "TigerLegs") {
+  Container(browser, "Browser app", "TypeScript, Leaflet", "Parses the GPX file, detects segments, draws the map and the table")
+  Container(backend, "Backend", "Deno", "Serves static files, answers terrain requests, checks the Origin header")
+  ContainerDb(cache, "Terrain cache", "Files on disk (.cache)", "Cached Overpass answers")
+}
+System_Ext(overpass, "OpenStreetMap, Overpass API", "Water and land data")
+
+Rel(athlete, browser, "Uses")
+Rel(browser, backend, "Requests terrain", "REST, JSON, port 8123")
+Rel(backend, cache, "Reads and writes")
+Rel(backend, overpass, "Queries terrain", "HTTPS")
+@enduml

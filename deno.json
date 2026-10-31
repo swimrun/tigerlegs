@@ -5,6 +5,7 @@
   "tasks": {
     "build": "deno task build:js && deno task build:docs && deno task build:css",
     "build:docs": "deno run --allow-read=docs --allow-write=public src/build-docs.ts",
+    "diagrams": "plantuml -tsvg docs/diagrams/*.puml",
     "build:js": "deno bundle --platform browser --output public/app.js src/client/app.ts && deno bundle --platform browser --output public/about.js src/client/about.ts",
     "build:css": "deno run -A npm:@tailwindcss/cli -i src/client/styles.css -o public/styles.css --minify",
     "dev": "deno task build && deno run --allow-net --allow-read --allow-write --allow-env src/main.ts",

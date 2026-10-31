@@ -32,12 +32,7 @@ Figure 1 shows the system in its environment.
 
 *Figure 1*: System context of TigerLegs.
 
-```mermaid
-flowchart LR
-    athlete([Athlete or organiser]) -->|uploads GPX, views segments| system[TigerLegs]
-    system -->|terrain queries| osm[(OpenStreetMap, Overpass API)]
-    system -->|loads tiles| tiles[(Map tiles)]
-```
+![System context diagram: the athlete uploads a GPX file to TigerLegs, which queries OpenStreetMap through the Overpass API.](diagrams/context.svg)
 
 Figure 1 shows that the system has one kind of user and two external data sources.
 The athlete never talks to OpenStreetMap directly: the backend queries it and caches the answers.
@@ -236,13 +231,7 @@ Figure 3 shows the two containers and how they communicate.
 
 *Figure 3*: C4 container diagram.
 
-```mermaid
-flowchart LR
-    athlete([Athlete]) --> browser[Browser app<br/>TypeScript, Leaflet]
-    browser -->|REST JSON, port 8123| backend[Backend<br/>Deno]
-    backend --> osm[(Overpass API)]
-    backend --> cache[(.cache on disk)]
-```
+![Container diagram: the browser app talks to the Deno backend, which uses a disk cache and the Overpass API.](diagrams/container.svg)
 
 The browser app does the analysis and draws the map.
 The backend serves the static files and answers terrain requests.
@@ -251,7 +240,12 @@ The frontend and the backend currently share port 8123, which `src/server/config
 
 ### 6.2 Components
 
-Table 6 lists the components of the browser app and the file that holds each one.
+Figure 4 shows the components of the browser app and how they depend on each other.
+Table 6 lists each component and the file that holds it.
+
+*Figure 4*: C4 component diagram of the browser app.
+
+![Component diagram of the browser app: the UI uses the parser, the analysis and the segment builder; the analysis runs three strategies and the combiner.](diagrams/component.svg)
 
 *Table 6*: Components of the browser app.
 
@@ -272,9 +266,9 @@ The combiner leaves `distanceKm` at 0; the analysis component fills it in.
 
 ### 6.3 Domain model
 
-Figure 4 shows the main domain types, which `src/shared/types.ts` defines.
+Figure 5 shows the main domain types, which `src/shared/types.ts` defines.
 
-*Figure 4*: Domain model.
+*Figure 5*: Domain model.
 
 ```mermaid
 classDiagram

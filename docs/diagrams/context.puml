@@ -1,0 +1,14 @@
+@startuml context
+!include <C4/C4_Context>
+
+title System context of TigerLegs
+
+Person(athlete, "Athlete or organiser", "Wants the swim and run split of a swimrun course")
+System(tigerlegs, "TigerLegs", "Detects swim and run segments in a GPX file and shows them on a map and in a table")
+System_Ext(overpass, "OpenStreetMap, Overpass API", "Water and land data")
+System_Ext(tiles, "Map tile server", "Background map tiles")
+
+Rel(athlete, tigerlegs, "Uploads GPX, views segments", "HTTPS")
+Rel(tigerlegs, overpass, "Queries terrain", "HTTPS")
+Rel(athlete, tiles, "Loads tiles through the map", "HTTPS")
+@enduml
