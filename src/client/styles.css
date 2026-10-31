@@ -22,6 +22,20 @@
   html[data-lang="nl"] [lang="en"] {
     display: none;
   }
+  /* Tiger photo in the bottom-right corner: a ragged triangle that fades out towards the text. */
+  .tiger-fade {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    z-index: -1;
+    width: min(100%, 36rem);
+    aspect-ratio: 3 / 2;
+    pointer-events: none;
+    background: url("img/tiger-swim-terrain.jpg") center / cover;
+    clip-path: polygon(100% 0, 100% 100%, 0 100%, 8% 82%, 3% 70%, 17% 60%, 14% 47%, 30% 40%, 28% 28%, 46% 22%, 47% 10%, 66% 6%, 74% 0);
+    -webkit-mask-image: radial-gradient(ellipse 85% 85% at 100% 100%, #000 35%, transparent 78%);
+    mask-image: radial-gradient(ellipse 85% 85% at 100% 100%, #000 35%, transparent 78%);
+  }
   .tiger-stripes {
     @apply h-2;
     background: repeating-linear-gradient(135deg, #0c0a09 0 12px, #fbbf24 12px 32px);
