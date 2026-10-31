@@ -195,6 +195,19 @@ function fail(error: string) {
   message.textContent = error;
 }
 
+document.getElementById("sample-button")!.addEventListener("click", async () => {
+  try {
+    const response = await fetch("samples/rhederlaag-swimrun.gpx");
+    if (!response.ok) throw new Error("Could not load the sample track");
+    current = { file: "rhederlaag-swimrun.gpx", xml: await response.text() };
+    waterLayer.clearLayers();
+    show(current.file, current.xml);
+    await loadWater(current);
+  } catch (e) {
+    fail(e instanceof Error ? e.message : String(e));
+  }
+});
+
 input.addEventListener("change", async () => {
   const file = input.files?.[0];
   if (!file) return;

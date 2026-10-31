@@ -32,7 +32,7 @@ Deno.test("pointInWater treats inner rings as holes", () => {
 
 Deno.test("Rhederlaag with OSM water: terrain splits the speed-only runs", () => {
   const parsed = parseGPX(
-    Deno.readTextFileSync(new URL("../../assets/Oktober_SwimRun_fest_met_Robert_Jan_.gpx", import.meta.url)),
+    Deno.readTextFileSync(new URL("../../public/samples/rhederlaag-swimrun.gpx", import.meta.url)),
   );
   assert(parsed.ok);
   const analysis = analyzeGpx(parsed.value);
