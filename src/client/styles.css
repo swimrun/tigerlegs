@@ -17,7 +17,10 @@
   #segments tr.active td {
     @apply bg-amber-100;
   }
-  #segments td:nth-child(2) {
+  #segments tfoot td {
+    @apply sticky bottom-0 border-t-2 border-stone-300 bg-stone-100 font-semibold;
+  }
+  #segments tbody td:nth-child(2) {
     @apply font-medium;
   }
 }

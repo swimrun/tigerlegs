@@ -1,7 +1,8 @@
 import { parseGPX } from "./gpx-parser.ts";
 import { readFileAsText, validateFile } from "./file-upload.ts";
 import { analyzeGpx } from "./analyze.ts";
-import { formatSegmentDistance } from "./segment-builder.ts";
+import { calculateTotals, formatSegmentDistance } from "./segment-builder.ts";
+import { fetchWater, refineWithWater, type WaterBody } from "./water.ts";
 import { haversineDistance } from "../shared/distance-calculator.ts";
 import type { Segment, Trackpoint } from "../shared/types.ts";
 
@@ -16,6 +17,7 @@ const message = document.getElementById("message") as HTMLElement;
 const tbody = document.querySelector("#segments tbody") as HTMLElement;
 const breaksToggle = document.getElementById("include-breaks") as HTMLInputElement;
 const totals = document.getElementById("totals") as HTMLElement;
+const totalsRow = document.getElementById("totals-row") as HTMLElement;
 
 const map = L.map("map").setView([50, 5], 5);
 L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
@@ -23,6 +25,8 @@ L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
   attribution: "&copy; OpenStreetMap contributors",
 }).addTo(map);
 let layer = L.layerGroup().addTo(map);
+const waterLayer = L.layerGroup().addTo(map);
+L.control.layers(null, { "Water (OpenStreetMap)": waterLayer }, { collapsed: false }).addTo(map);
 
 function highlight(index: number | null, polylines: unknown[]) {
   polylines.forEach((p, i) =>
@@ -34,7 +38,19 @@ function highlight(index: number | null, polylines: unknown[]) {
   );
 }
 
-let current: { file: string; xml: string } | null = null;
+let current: { file: string; xml: string; water?: WaterBody[] } | null = null;
+
+function drawWater(water: WaterBody[]) {
+  waterLayer.clearLayers();
+  for (const body of water) {
+    const ring = (r: { lat: number; lon: number }[]) => r.map((c) => [c.lat, c.lon]);
+    for (const outer of body.outer) {
+      L.polygon([ring(outer), ...body.inner.map(ring)], {
+        color: "#0288d1", weight: 1, fillColor: "#4fc3f7", fillOpacity: 0.35, interactive: false,
+      }).addTo(waterLayer);
+    }
+  }
+}
 
 function formatDuration(seconds: number): string {
   const h = Math.floor(seconds / 3600);
@@ -63,6 +79,11 @@ function show(file: string, xml: string) {
 
   const analysis = analyzeGpx(parsed.value);
   const track = parsed.value.tracks.find((t) => t.trackpoints.length > 0)!;
+  if (current?.water) {
+    analysis.segments = refineWithWater(analysis.segments, track.trackpoints, current.water);
+    analysis.totals = calculateTotals(analysis.segments);
+    analysis.strategies = [...analysis.strategies, "landscape"];
+  }
   const latLngs = track.trackpoints.map((p) => [p.coordinate.lat, p.coordinate.lon]);
   const includeBreaks = breaksToggle.checked;
 
@@ -100,11 +121,36 @@ function show(file: string, xml: string) {
   });
 
   if (latLngs.length > 0) map.fitBounds(L.polyline(latLngs).getBounds());
-  totals.textContent =
-    `${file} — ${analysis.trackName || "unnamed track"}: run ${analysis.totals.totalRunKm} km, swim ${analysis.totals.totalSwimM} m` +
-    timeSummary(track.trackpoints) +
+  const trackLabel = `${file} — ${analysis.trackName || "unnamed track"}`;
+  totalsRow.innerHTML = "";
+  const label = document.createElement("td");
+  label.colSpan = 2;
+  label.textContent = "Total";
+  const sums = document.createElement("td");
+  sums.colSpan = 3;
+  sums.textContent = `run ${analysis.totals.totalRunKm} km, swim ${analysis.totals.totalSwimM} m`;
+  totalsRow.append(label, sums);
+  totals.textContent = trackLabel + timeSummary(track.trackpoints) +
     ` (strategies: ${analysis.strategies.join(", ") || "none"})`;
-  message.textContent = "";
+}
+
+// Terrain refinement: fetch water polygons for the track, then re-run the analysis with them.
+async function loadWater(target: NonNullable<typeof current>) {
+  const parsed = parseGPX(target.xml);
+  if (!parsed.ok) return;
+  const points = parsed.value.tracks.find((t) => t.trackpoints.length > 0)!.trackpoints;
+  message.textContent = "Loading water and land data from OpenStreetMap…";
+  try {
+    target.water = await fetchWater(points);
+    if (current !== target) return;
+    drawWater(target.water);
+    show(target.file, target.xml);
+    message.textContent = "";
+  } catch (e) {
+    message.textContent = `Terrain data unavailable, showing speed-based result only (${
+      e instanceof Error ? e.message : String(e)
+    }).`;
+  }
 }
 
 function fail(error: string) {
@@ -118,7 +164,9 @@ input.addEventListener("change", async () => {
   if (!validation.valid) return fail(validation.error ?? "Invalid file");
   try {
     current = { file: file.name, xml: await readFileAsText(file) };
+    waterLayer.clearLayers();
     show(current.file, current.xml);
+    await loadWater(current);
   } catch (e) {
     fail(e instanceof Error ? e.message : String(e));
   }

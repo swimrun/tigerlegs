@@ -38,7 +38,7 @@
       <label for="gpx-input" class="mb-2 block text-sm font-medium text-stone-700">Upload a .gpx file</label>
       <input id="gpx-input" type="file" accept=".gpx"
         class="block w-full text-sm text-stone-600 file:mr-4 file:cursor-pointer file:rounded-md file:border-0 file:bg-amber-500 file:px-4 file:py-2 file:font-semibold file:text-stone-900 hover:file:bg-amber-400">
-      <p class="mt-2 text-xs text-stone-500">Your file is analysed in the browser and never leaves your device.</p>
+      <p class="mt-2 text-xs text-stone-500">Your file is analysed in the browser and is not uploaded. To find water and land, only the rough area of the track (a bounding box) is sent to OpenStreetMap's Overpass service.</p>
       <p id="message" role="alert" class="mt-2 text-sm font-medium text-red-700"></p>
     </section>
 
@@ -54,6 +54,7 @@
         <table id="segments">
           <thead><tr><th>#</th><th>Type</th><th>Distance</th><th>Detected by</th><th>Confidence</th></tr></thead>
           <tbody></tbody>
+          <tfoot><tr id="totals-row"></tr></tfoot>
         </table>
       </div>
     </div>
