@@ -19,33 +19,21 @@
   <link rel="stylesheet" href="styles.css">
 </head>
 <body class="min-h-screen bg-stone-50 text-stone-800 antialiased">
-  <header class="border-b border-amber-500 bg-gradient-to-b from-amber-300 to-amber-400 text-stone-800 shadow-sm">
-    <div class="mx-auto grid max-w-7xl grid-cols-[1fr_auto_1fr] items-center gap-4 px-4 py-4">
-      <div></div>
-      <div class="flex flex-col items-center text-center">
-        <img src="img/tigerlegs-logo-web.png" alt="TigerLegs logo" class="h-24 w-auto mix-blend-multiply sm:h-28">
-      </div>
-      <div class="flex items-center justify-end gap-3">
+  <header class="site-header">
+    <div class="site-header-inner">
+      <a href="./" class="site-brand"><img src="img/tigerlegs-logo-web.png" alt="TigerLegs logo"></a>
+      <div class="site-header-tools">
         <span class="rounded bg-stone-950 px-2 py-0.5 text-xs font-semibold uppercase tracking-wider text-amber-400">Beta</span>
         <span id="app-version" class="text-xs text-stone-700"></span>
-        <nav id="main-menu" aria-label="Main menu" class="flex gap-4 text-sm font-medium">
-          <a href="./" aria-current="page" class="border-b-2 border-stone-900 text-stone-950">Extractorrr</a>
-          <a href="about.html" class="text-stone-800 hover:underline">About</a>
-          <a href="guidebook.html" class="text-stone-800 hover:underline">Guidebook</a>
+        <nav id="main-menu" aria-label="Main menu" class="site-menu">
+          <a href="./" aria-current="page">Extractorrr</a>
+          <a href="about.html">About</a>
+          <a href="guidebook.html">Guidebook</a>
         </nav>
         <div id="user-avatar"></div>
       </div>
     </div>
-    <div class="bg-stone-950 text-center">
-      <p class="font-display text-xl uppercase tracking-wider text-stone-100 sm:text-3xl">
-      <span class="text-amber-400">T</span>errain-<span class="text-amber-400">I</span>nformed
-      <span class="text-amber-400">G</span>px
-      <span class="text-amber-400">E</span>xtracto<span class="text-amber-400">r</span>:
-      <span class="text-amber-400">L</span>ets
-      <span class="text-amber-400">G</span>o <span class="text-amber-400">S</span>wimrun
-      </p>
-      
-    </div>
+    <div class="site-tagline"><img src="img/tigerlegs-acronym-anim-dark.svg" alt="TIGERLEGS: Terrain Informed Gpx ExtractoR: LEts Go Swimrun!"></div>
     <div class="tiger-stripes"></div>
   </header>
 
@@ -60,7 +48,6 @@
         <a href="#" data-sample="rondje-eilanden.gpx" class="sample-link font-medium underline hover:text-amber-700">Rondje Eilanden</a>
         ·
         <a href="#" data-sample="twiske-backyard.gpx" class="sample-link font-medium underline hover:text-amber-700">Twiske Backyard SwimRun</a>
-      </p>
         ·
         <a href="#" data-sample="ruegen-swimrun.gpx" class="sample-link font-medium underline hover:text-amber-700">Ötillö Rügen</a>
       </p>

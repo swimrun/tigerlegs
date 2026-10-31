@@ -4,6 +4,10 @@ TigerLegs splits a swimrun course, given as a GPX file, into swim and run segmen
 TIGERLegs stands for *Terrain-Informed Gpx Extractor: LEts Go Swimrun!* (TIGE-R + LEGS).
 The tiger also refers to Team Groot Rondje Eilanden (TGRE), the team of the maintainers.
 
+![A pair of tigers following a GPS route: one runs into the lake while its partner is already swimming.](../public/img/tigerlegs-pair.jpg)
+
+*LEts Go Swimrun! Two partners, one course: running and swimming together.*
+
 This guidebook follows the section structure of Brown's software guidebook (Brown, n.d.-a): lightweight documentation of what you cannot read from the code.
 The C4 diagrams (Brown, n.d.-b) form only part of it, namely chapter 6.
 

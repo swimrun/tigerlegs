@@ -1,6 +1,7 @@
 @import "tailwindcss";
 @source "../../public/index.html";
 @source "../../public/about.html";
+@source "../../public/guidebook.html";
 
 @font-face {
   font-family: "Bebas Neue";
@@ -18,6 +19,94 @@
 /* Tiger palette: Tailwind's built-in amber (accent) and stone (neutral) scales. */
 
 @layer components {
+  .site-header {
+    @apply border-b border-amber-500 bg-gradient-to-b from-amber-300 to-amber-400 text-stone-800 shadow-sm;
+  }
+  .site-header-inner {
+    @apply mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 px-4 py-4 sm:flex-row;
+  }
+  .site-brand img {
+    @apply h-24 w-auto mix-blend-multiply;
+  }
+  .site-header-tools {
+    @apply flex flex-wrap items-center justify-center gap-3;
+  }
+  .site-menu {
+    @apply flex gap-4 text-sm font-medium;
+  }
+  .site-menu a:hover {
+    @apply underline;
+  }
+  .site-menu a[aria-current="page"] {
+    @apply border-b-2 border-stone-900 text-stone-950;
+  }
+  .site-tagline {
+    @apply bg-stone-950 px-4 text-center font-display text-xl uppercase tracking-wider text-amber-400 sm:text-3xl;
+  }
+  .site-tagline img {
+    @apply mx-auto h-9 py-1 sm:h-12 sm:py-1.5;
+  }
+  .guidebook {
+    @apply mx-auto max-w-3xl px-4 py-8 leading-relaxed;
+    overflow-wrap: anywhere;
+  }
+  .guidebook h1 {
+    @apply mb-4 border-b-4 border-amber-500 pb-2 font-display text-4xl uppercase tracking-wider;
+  }
+  .guidebook h2 {
+    @apply mb-4 mt-10 border-l-4 border-amber-500 pl-3 text-2xl font-semibold;
+  }
+  .guidebook h3 {
+    @apply mb-3 mt-6 text-xl font-semibold;
+  }
+  .guidebook h4 {
+    @apply mb-2 mt-4 font-semibold;
+  }
+  .guidebook :is(h1, h2, h3, h4, h5, h6) {
+    scroll-margin-top: 1rem;
+  }
+  .guidebook :is(p, ul, ol, table, pre, blockquote) {
+    @apply mb-4;
+  }
+  .guidebook a {
+    @apply text-amber-800 underline;
+  }
+  .guidebook ul {
+    @apply list-disc pl-6;
+  }
+  .guidebook ol {
+    @apply list-decimal pl-6;
+  }
+  .guidebook li > :is(ul, ol) {
+    @apply mb-0;
+  }
+  .guidebook table {
+    @apply block max-w-full overflow-x-auto border-collapse text-sm;
+  }
+  .guidebook :is(th, td) {
+    @apply border border-stone-300 px-3 py-2 text-left;
+  }
+  .guidebook th {
+    @apply bg-amber-100;
+  }
+  .guidebook code {
+    @apply rounded bg-stone-200 px-1;
+  }
+  .guidebook pre {
+    @apply overflow-x-auto rounded bg-stone-200 p-3;
+  }
+  .guidebook pre code {
+    @apply p-0;
+  }
+  .guidebook pre.mermaid {
+    @apply bg-transparent text-center;
+  }
+  .guidebook img {
+    @apply h-auto max-w-full rounded-lg;
+  }
+  .guidebook blockquote {
+    @apply border-l-4 border-amber-500 pl-4 text-stone-600;
+  }
   html[data-lang="en"] :is([lang="nl"], [lang="fr"], [lang="de"]),
   html[data-lang="nl"] :is([lang="en"], [lang="fr"], [lang="de"]),
   html[data-lang="fr"] :is([lang="en"], [lang="nl"], [lang="de"]),
