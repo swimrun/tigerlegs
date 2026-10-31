@@ -43,6 +43,7 @@ TIGERLegs stands for *Terrain-Informed Gpx Extractor: LEts Go Swimrun!* (TIGE-R 
 ## Roadmap
 
 The roadmap shows what is done and what is planned. Checked items are done.
+For the longer horizon — terrain milestones, the Garmin Connect IQ data field and Apple Watch/Coros export — see the [milestone roadmap](./docs/ROADMAP.md) and the [product vision](./docs/PRODUCT_VISION.md).
 
 - [x] GPX parsing with swim and run segment detection
 - [x] Interactive Leaflet map with colour-coded segments

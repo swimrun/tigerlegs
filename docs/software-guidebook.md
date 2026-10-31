@@ -47,7 +47,7 @@ Live tracking and race results are out of scope.
 This chapter describes what the system does for its users.
 The Kiro specs in `.kiro/specs/gpx-swimrun-analyzer/` hold the detailed requirements; this chapter gives the overview.
 Section 2.1 maps the user stories to use cases, and section 2.2 shows a real course that the system analyses.
-The roadmap is in the README.
+The near-term roadmap is in the README; milestones and the watch-platform strategy are in [ROADMAP.md](./ROADMAP.md) and [PRODUCT_VISION.md](./PRODUCT_VISION.md).
 
 An athlete interacts with the system in four ways.
 Each way below is a user story with one acceptance criterion in Given/When/Then form.
