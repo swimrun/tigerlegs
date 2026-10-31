@@ -16,6 +16,8 @@ Thumbs.db
 .env.local
 public/app.js
 public/app.js.map
+public/analysis-worker.js
+public/analysis-worker.js.map
 public/about.js
 public/about.js.map
 .cache/

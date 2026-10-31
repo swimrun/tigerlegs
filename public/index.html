@@ -38,10 +38,15 @@
   </header>
 
   <main class="mx-auto max-w-7xl px-4 py-6">
-    <section class="mb-6 rounded-lg border border-stone-200 border-t-4 border-t-amber-500 bg-white p-4 shadow-sm">
+    <section id="drop-zone" aria-label="GPX file drop zone" class="mb-6 rounded-lg border border-stone-200 border-t-4 border-t-amber-500 bg-white p-4 shadow-sm">
       <label for="gpx-input" class="mb-2 block text-sm font-medium text-stone-700">Upload a .gpx file</label>
       <input id="gpx-input" type="file" accept=".gpx"
         class="block w-full text-sm text-stone-600 file:mr-4 file:cursor-pointer file:rounded-md file:border-0 file:bg-amber-500 file:px-4 file:py-2 file:font-semibold file:text-stone-900 hover:file:bg-amber-400">
+      <p class="mt-2 text-xs text-stone-600">Or drop one GPX file here. Your file is read locally, not uploaded.</p>
+      <div id="track-picker" class="mt-3 hidden">
+        <label for="track-select" class="text-sm font-medium">This file has multiple tracks. Choose a track:</label>
+        <select id="track-select" class="rounded border border-stone-300 bg-white p-2 text-sm"></select>
+      </div>
       <p class="mt-3 text-sm text-stone-700">Or try a sample:
         <a href="#" data-sample="rhederlaag-swimrun.gpx" class="sample-link font-medium underline hover:text-amber-700">Rhederlaag SwimRun</a>
         ·
@@ -51,11 +56,20 @@
         ·
         <a href="#" data-sample="ruegen-swimrun.gpx" class="sample-link font-medium underline hover:text-amber-700">Ötillö Rügen</a>
       </p>
-      <label class="mt-3 flex cursor-pointer items-start gap-2 text-sm text-stone-700">
+      <fieldset class="mt-3 space-y-2">
+        <legend class="text-sm font-semibold">Detection strategies</legend>
+        <div class="flex flex-wrap gap-4 text-sm">
+          <label><input id="use-waypoints" type="checkbox" checked> Waypoints</label>
+          <label><input id="use-speed" type="checkbox" checked> Speed</label>
+        </div>
+      <label class="flex cursor-pointer items-start gap-2 text-sm text-stone-700">
         <input id="use-terrain" type="checkbox" class="mt-1">
-        <span><strong>Use terrain data</strong> (more accurate swims). Off by default: your file is analysed in the browser, on speed alone, and nothing leaves your device.</span>
+        <span><strong>Use terrain data</strong> (more accurate swims). Off by default: analysis uses available speed and waypoint data locally; your GPX file is not uploaded.</span>
       </label>
       <p id="terrain-warning" class="mt-1 hidden rounded border border-amber-300 bg-amber-50 p-2 text-xs text-stone-800">Warning: with terrain data on, the rough area of the track (a coarse bounding box, not the track itself) and your IP address are sent to OpenStreetMap's Overpass service to look up lakes and rivers. Your GPX file is never uploaded.</p>
+      </fieldset>
+      <p id="analysis-status" role="status" class="mt-2 text-sm text-stone-700"></p>
+      <p id="point-warning" role="status" class="mt-2 hidden rounded border border-amber-300 bg-amber-50 p-2 text-sm text-stone-800"></p>
       <p id="notice" role="status" class="mt-2 hidden rounded border border-amber-300 bg-amber-50 p-2 text-sm text-stone-800"></p>
       <p id="message" role="alert" class="mt-2 text-sm font-medium text-red-700"></p>
     </section>
@@ -69,10 +83,15 @@
           <span class="relative h-6 w-11 rounded-full bg-stone-300 transition-colors after:absolute after:left-0.5 after:top-0.5 after:h-5 after:w-5 after:rounded-full after:bg-white after:shadow after:transition-transform peer-checked:bg-amber-500 peer-checked:after:translate-x-5 peer-focus-visible:ring-2 peer-focus-visible:ring-amber-500 peer-focus-visible:ring-offset-2"></span>
         </label>
         <div id="totals" class="border-b border-stone-100 px-4 py-3"></div>
-        <table id="segments">
-          <thead><tr><th>#</th><th>Type</th><th>Distance</th><th>Detected by</th><th>Confidence</th></tr></thead>
-          <tbody></tbody>
-          <tfoot><tr id="totals-row"></tr></tfoot>
+        <div class="flex flex-wrap gap-4 px-3 py-2 text-sm">
+          <label><input id="swim-first" type="checkbox"> Swim first</label>
+          <label><input id="show-cumulative" type="checkbox"> Cumulative distance</label>
+        </div>
+        <p id="segment-help" class="px-3 py-2 text-xs text-stone-600">Click a map line or table row to select a segment; click it again to deselect. Use Tab to reach segment buttons and Enter or Space to select. Escape clears the selection.</p>
+        <table id="segments" aria-label="Swimrun segments" aria-describedby="segment-help">
+          <thead><tr><th scope="col">#</th><th scope="col">Run (km)</th><th scope="col">Swim (m)</th><th scope="col">Detected by</th><th scope="col">Confidence</th></tr></thead>
+          <tbody><tr><td colspan="5">No segments found</td></tr></tbody>
+          <tfoot></tfoot>
         </table>
       </div>
     </div>

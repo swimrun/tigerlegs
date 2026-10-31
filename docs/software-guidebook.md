@@ -68,6 +68,25 @@ Hover still previews a segment when no selection is pinned.
 **Cumulative distance** sums the unrounded distances of the displayed segments and shows the result to one decimal place; displayed breaks contribute only when **Include breaks** is enabled.
 Incomplete pairs use a dash for the missing distance, and boundary disagreements include a conflict label identifying the resolving strategy.
 
+### Upload and analysis controls
+
+Choose a GPX file or drop exactly one file onto the upload area; both paths use the same validation and analysis pipeline.
+For a file with several tracks, the selector lists track names and point counts, and analysis waits for the athlete to choose a non-empty track.
+Only that track supplies coordinates, timestamps, distances and the terrain query area.
+**Waypoints** and **Speed** are enabled by default; **Use terrain data** remains off until explicitly enabled.
+Strategies without usable data are reported in the status area.
+Disabling the last local strategy is rejected with a message and retains the results.
+Terrain can always be switched off: if it was the only enabled strategy, local speed analysis is re-enabled instead of forcing terrain back on.
+Changing the file or track, or disabling terrain, cancels the pending terrain request; late replies cannot overwrite the current selection.
+
+The GPX parser runs in a Web Worker so parsing itself does not block the page.
+Analysis also runs in the worker for a selected track with more than 10,000 points.
+Files with more than 50,000 points across all tracks require confirmation before analysis; cancelling retains the previous results.
+More than 100 waypoints produces a warning but does not block analysis.
+The status area reports analysis duration and worker usage, while the large-file notice remains visible during and after processing.
+These controls require no backend; GitHub Pages serves the worker bundle alongside the app.
+External Overpass response time is separate from local analysis time, and an unavailable service produces a visible error while retaining local results.
+
 Behind these stories, the system detects segments with three strategies, which Table 1 lists.
 
 *Table 1*: Strategies for detecting swim and run segments.

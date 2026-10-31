@@ -192,8 +192,8 @@ Implement a client-server swimrun GPX analysis tool using Deno with TypeScript. 
   - Ensure all tests pass, ask the user if questions arise.
 
 - [ ] 11. Implement frontend UI layer
-  - [ ] 11.1 Create HTML shell and app entry point
-    - Create `src/client/index.html` with semantic HTML (main, nav, table, button)
+  - [x] 11.1 Create HTML shell and app entry point
+    - Create `public/index.html` with semantic HTML (main, nav, table, button), served directly on GitHub Pages
     - Create `src/client/app.ts` as the application entry point managing `AppState`
     - Implement file upload UI with drag-and-drop and file input
     - Wire FileUploadController → GPXParser → strategy execution → rendering pipeline
@@ -204,6 +204,8 @@ Implement a client-server swimrun GPX analysis tool using Deno with TypeScript. 
     - Show warnings for >50,000 trackpoints (confirm before proceeding) and >100 waypoints
     - Use Web Worker for files with >10,000 trackpoints
     - Error/warning message area above map/table (red=critical, amber=warning)
+    - Verified with `test/client/analysis-job.test.ts`, a real module worker, the synthetic multi-track fixture and browser checks for drop/import, explicit track selection, strategy guards, confirmation/cancellation at 50,001 points and the 101-waypoint warning.
+    - GPX parsing always runs in a worker; analysis runs there above 10,000 points. Tested Rügen (19,771 points) in the browser, including strategy rerun under five seconds. Terrain remains opt-in and cancellable; switching it off always succeeds, restoring local speed analysis if terrain was the only enabled strategy.
     - _Requirements: 1.1, 9.1, 9.2, 9.3, 10.1, 10.5, 10.6, 11.1, 11.2, 11.3, 11.5, 16.6, 16.7, 16.8_
 
   - [ ] 11.2 Implement map renderer
@@ -218,7 +220,7 @@ Implement a client-server swimrun GPX analysis tool using Deno with TypeScript. 
     - Full track as single polyline when no segments found
     - _Requirements: 4.1, 4.2, 4.3, 4.4, 4.5, 8.2, 8.3, 8.4, 10.3, 13.9_
 
-  - [ ] 11.3 Implement table renderer
+  - [x] 11.3 Implement table renderer
     - Create `src/client/table-renderer.ts` with `renderTable`, `renderEmptyState`, `TableConfig`
     - One row per segment pair (ADR-0007): each row shows both swim and run distance
     - Columns: segment number, swim distance (m), run distance (km) — order toggleable
@@ -230,18 +232,20 @@ Implement a client-server swimrun GPX analysis tool using Deno with TypeScript. 
     - Conflict indicator when strategies disagree on boundary
     - "No segments found" message for empty state
     - ARIA labels and scope attributes on table headers
+    - Verified by `test/client/table-renderer.test.ts`, existing formatting/pairing tests and browser checks with the Rhederlaag sample. Displayed breaks retain their own rows; each swim/run distance is independently keyboard-selectable.
     - _Requirements: 5.1, 5.2, 5.3, 5.4, 5.5, 5.6, 5.7, 5.8, 5.9, 10.2, 16.3, 16.4_
 
-  - [ ] 11.4 Implement highlight controller
+  - [x] 11.4 Implement highlight controller
     - Create `src/client/highlight-controller.ts` with `createHighlightController` returning `HighlightController` interface
     - Click segment on map → highlight table row + scroll into view
     - Click table row → highlight map segment (double line weight, opacity 1.0)
     - Click same segment again → deselect (toggle off)
     - New selection removes previous highlight from both views
     - Keyboard-navigable text-based segment list alternative
+    - Uses typed view adapters rather than a direct Leaflet dependency. Table distance buttons provide the text-based keyboard alternative; hover previews remain available without replacing a pinned selection.
     - _Requirements: 6.1, 6.2, 6.3, 6.4, 6.5, 6.6, 10.4, 10.5_
 
-  - [ ] 11.5 Write property tests for highlight controller
+  - [x] 11.5 Write property tests for highlight controller
     - **Property 11: Highlight controller maintains single-selection with toggle**
     - Create `test/client/highlight-controller.test.ts`
     - **Validates: Requirements 6.5, 6.6**

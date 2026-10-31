@@ -35,6 +35,21 @@ so do not rename or replace it without updating them.
 
 ## Expected segment distances
 
+### Provisional recording observations
+
+These observations come from the participant who supplied the recordings, not a verified course sheet.
+
+- **Rhederlaag:** the current speed-only result has eight swim/run pairs; approximately twelve are expected (exact count pending). In particular, a displayed 2.7 km run contains two water crossings and should split into five alternating run/swim segments. Paired table rows are not individual segments.
+- **Twiske Backyard:** the recording contains three repetitions of the same swimrun lap, with rest until the next hour between laps. Each lap reportedly contains approximately five or six swims and as many runs; the participant will confirm the count. Previously, speed-only analysis labelled each whole mixed lap as a run and the two roughly 26-minute rests as swims.
+
+The Twiske GPX continues recording during the rests: accumulated GPS drift is not evidence of actual swimming. Analysis now marks sustained confinement within 50 m of an anchor for at least ten minutes as an unclassified rest candidate and preserves it between laps. This conservative heuristic is not proof of a rest: exceptionally slow movement within that area can also qualify, and short excursions near a rest may remain classified as movement. Rest distance remains visible when breaks are included; it does not contribute to swim/run totals.
+
+Speed-only classification cannot reliably distinguish a slow run, a swim with GPS drift, and a rest. Terrain remains opt-in, and mapped-water crossings should be tested offline against the existing Rhederlaag fixture rather than tuning the algorithm to an uncertain total count. Missing or incomplete water polygons and the terrain speed gate can still hide crossings. Exact lap counts and transition locations remain open validation work.
+
+Regression tests cover the real Twiske rest interiors, continuous track coverage, GPS jitter, slow moving swims, short pauses, missing timestamps, and preserving same-type laps across rests.
+
+The recorded Rhederlaag water fixture does split the 2.7 km run, but currently produces five swim fragments overlapping that region, not a verified two crossings. This is evidence of refinement, not a correct course reconstruction. The terrain strategy only claims swims: it cannot correct speed-only false swims on land, and its 7 km/h speed gate plus confidence arbitration can leave runs inside a mapped crossing. Fixing rest interiors does not recover Twiske's within-lap swims or eliminate every short movement classification around a rest.
+
 ### ÖTILLÖ Sandhamn-Utö
 
 ~75km total: 9km swimming, 65km trail running across 24 islands.

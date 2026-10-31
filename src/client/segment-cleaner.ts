@@ -21,6 +21,9 @@ function join(a: Segment, b: Segment, type: Segment["type"]): Segment {
     distanceKm: total,
     detectedBy: [...new Set([...a.detectedBy, ...b.detectedBy])],
     confidenceScore: weight,
+    ...((a.restDurationSeconds !== undefined || b.restDurationSeconds !== undefined)
+      ? { restDurationSeconds: (a.restDurationSeconds ?? 0) + (b.restDurationSeconds ?? 0) }
+      : {}),
   };
 }
 
@@ -48,6 +51,7 @@ export function cleanSegments(segments: Segment[]): Segment[] {
     const beforeBreak = out[out.length - 2];
     if (
       seg.type !== "unclassified" && last?.type === "unclassified" &&
+      last.restDurationSeconds === undefined &&
       beforeBreak?.type === seg.type
     ) {
       out.pop();

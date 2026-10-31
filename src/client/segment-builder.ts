@@ -115,100 +115,38 @@ export function pairSegmentsForDisplay(
   segments: Segment[],
   swimFirst: boolean,
 ): DisplaySegmentPair[] {
-  if (segments.length === 0) return [];
-
-  const primaryType = swimFirst ? "swim" : "run";
-  const secondaryType = swimFirst ? "run" : "swim";
-  const pairs: DisplaySegmentPair[] = [];
-
-  let i = 0;
-  let pairNumber = 1;
-
-  // If the first segment is the secondary type (e.g., swim in run-first mode),
-  // create a row with "—" for the primary type
-  if (segments[0].type === secondaryType) {
-    const secondary = segments[0];
-    const swimDist = secondary.type === "swim"
-      ? String(roundSwimDistance(secondary.distanceKm * 1000))
-      : "—";
-    const runDist = secondary.type === "run"
-      ? roundRunDistance(secondary.distanceKm).toFixed(1)
-      : "—";
-
-    pairs.push({
-      number: pairNumber++,
-      swimDistanceM: swimDist,
-      runDistanceKm: runDist,
+  return groupSegmentsForDisplay(segments, swimFirst).map((group, index) => {
+    const swim = group.find((segment) => segment.type === "swim");
+    const run = group.find((segment) => segment.type === "run");
+    return {
+      number: index + 1,
+      swimDistanceM: swim ? formatSegmentDistance(swim).swimDistanceM : "—",
+      runDistanceKm: run ? formatSegmentDistance(run).runDistanceKm : "—",
       cumulativeKm: null,
-      detectedBy: secondary.detectedBy.join(" + "),
-      confidenceScore: secondary.confidenceScore,
-    });
-    i = 1;
-  }
+      detectedBy: [...new Set(group.flatMap((segment) => segment.detectedBy))]
+        .join(" + "),
+      confidenceScore: Math.min(
+        ...group.map((segment) => segment.confidenceScore),
+      ),
+    };
+  });
+}
 
-  // Process remaining segments in pairs
-  while (i < segments.length) {
-    const primary = segments[i];
-    const secondary = i + 1 < segments.length ? segments[i + 1] : null;
-
-    let swimDist: string;
-    let runDist: string;
-    let detectedBy: string;
-    let confidence: number;
-
-    if (primaryType === "run") {
-      // Primary is run
-      runDist = roundRunDistance(primary.distanceKm).toFixed(1);
-      if (secondary && secondary.type === "swim") {
-        swimDist = String(roundSwimDistance(secondary.distanceKm * 1000));
-        detectedBy = [...new Set([
-          ...primary.detectedBy,
-          ...secondary.detectedBy,
-        ])].join(" + ");
-        confidence = Math.min(
-          primary.confidenceScore,
-          secondary.confidenceScore,
-        );
-        i += 2;
-      } else {
-        swimDist = "—";
-        detectedBy = primary.detectedBy.join(" + ");
-        confidence = primary.confidenceScore;
-        i += 1;
-      }
-    } else {
-      // Primary is swim
-      swimDist = String(roundSwimDistance(primary.distanceKm * 1000));
-      if (secondary && secondary.type === "run") {
-        runDist = roundRunDistance(secondary.distanceKm).toFixed(1);
-        detectedBy = [...new Set([
-          ...primary.detectedBy,
-          ...secondary.detectedBy,
-        ])].join(" + ");
-        confidence = Math.min(
-          primary.confidenceScore,
-          secondary.confidenceScore,
-        );
-        i += 2;
-      } else {
-        runDist = "—";
-        detectedBy = primary.detectedBy.join(" + ");
-        confidence = primary.confidenceScore;
-        i += 1;
-      }
+export function groupSegmentsForDisplay(
+  segments: Segment[],
+  swimFirst: boolean,
+): Segment[][] {
+  const primary = swimFirst ? "swim" : "run";
+  const secondary = swimFirst ? "run" : "swim";
+  const groups: Segment[][] = [];
+  for (let i = 0; i < segments.length; i++) {
+    const group = [segments[i]];
+    if (segments[i].type === primary && segments[i + 1]?.type === secondary) {
+      group.push(segments[++i]);
     }
-
-    pairs.push({
-      number: pairNumber++,
-      swimDistanceM: swimDist,
-      runDistanceKm: runDist,
-      cumulativeKm: null,
-      detectedBy,
-      confidenceScore: confidence,
-    });
+    groups.push(group);
   }
-
-  return pairs;
+  return groups;
 }
 
 /**

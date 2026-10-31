@@ -1,20 +1,31 @@
-import type { GPXData, Segment, SegmentTotals, StrategyResult, Trackpoint } from "../shared/types.ts";
+import type {
+  GPXData,
+  Segment,
+  SegmentTotals,
+  StrategyName,
+  StrategyResult,
+  Trackpoint,
+} from "../shared/types.ts";
 import { calculateTrackDistance } from "../shared/distance-calculator.ts";
 import { detectBySpeed } from "./speed-analyzer.ts";
 import { detectByWaypoint } from "./waypoint-classifier.ts";
 import {
   combineStrategies,
+  type ConflictInfo,
   detectApplicableStrategies,
+  detectConflicts,
 } from "./strategy-combiner.ts";
 import { calculateTotals } from "./segment-builder.ts";
 import { cleanSegments } from "./segment-cleaner.ts";
 import { detectByWater, type WaterBody } from "./water.ts";
+import { detectRestSpans, splitAtRests } from "./rest-detector.ts";
 
 export interface Analysis {
   trackName: string;
   segments: Segment[];
   totals: SegmentTotals;
   strategies: string[];
+  conflicts: ConflictInfo[];
 }
 
 const SMOOTHING_SECONDS = 40;
@@ -38,10 +49,30 @@ function medianSampleSeconds(points: Trackpoint[]): number | null {
  * Analyse parsed GPX data with the waypoint and speed strategies. When OpenStreetMap
  * water bodies are supplied (fetched in the browser), the landscape strategy joins in.
  */
-export function analyzeGpx(gpx: GPXData, water: WaterBody[] = []): Analysis {
-  const track = gpx.tracks.find((t) => t.trackpoints.length > 0) ?? gpx.tracks[0];
+export interface AnalysisOptions {
+  trackIndex?: number;
+  enabledStrategies?: readonly StrategyName[];
+}
+
+export function analyzeGpx(
+  gpx: GPXData,
+  water: WaterBody[] = [],
+  options: AnalysisOptions = {},
+): Analysis {
+  const track = options.trackIndex === undefined
+    ? gpx.tracks.find((t) => t.trackpoints.length > 0)
+    : gpx.tracks[options.trackIndex];
+  if (!track || track.trackpoints.length === 0) {
+    throw new RangeError("Select a track containing trackpoints");
+  }
   const trackpoints = track.trackpoints;
-  const applicable = detectApplicableStrategies(gpx);
+  const applicable = detectApplicableStrategies({
+    waypoints: gpx.waypoints,
+    tracks: [track],
+  })
+    .filter((strategy) =>
+      options.enabledStrategies?.includes(strategy) ?? true
+    );
   const results: StrategyResult[] = [];
 
   if (applicable.includes("waypoint")) {
@@ -50,7 +81,10 @@ export function analyzeGpx(gpx: GPXData, water: WaterBody[] = []): Analysis {
   if (applicable.includes("speed")) {
     // Smooth over a fixed time span so 1 s recordings do not flicker between swim and run.
     const dt = medianSampleSeconds(trackpoints) ?? 1;
-    const points = Math.max(3, Math.min(50, Math.round(SMOOTHING_SECONDS / dt)));
+    const points = Math.max(
+      3,
+      Math.min(50, Math.round(SMOOTHING_SECONDS / dt)),
+    );
     results.push(detectBySpeed(trackpoints, {
       windowSize: points,
       minConsecutive: points,
@@ -62,14 +96,22 @@ export function analyzeGpx(gpx: GPXData, water: WaterBody[] = []): Analysis {
     results.push(detectByWater(trackpoints, water));
   }
 
-  const withDistances = combineStrategies(results, trackpoints.length).map((seg, i, all) => {
-    // Include the step to the next segment's first point so distances add up.
-    const end = i < all.length - 1 ? seg.endTrackpointIndex + 2 : seg.endTrackpointIndex + 1;
-    return {
-      ...seg,
-      distanceKm: calculateTrackDistance(trackpoints.slice(seg.startTrackpointIndex, end)),
-    };
-  });
+  const combined = combineStrategies(results, trackpoints.length);
+  const rests = applicable.includes("speed") ? detectRestSpans(trackpoints) : [];
+  const withDistances = splitAtRests(combined, rests, trackpoints).map(
+    (seg, i, all) => {
+      // Include the step to the next segment's first point so distances add up.
+      const end = i < all.length - 1
+        ? seg.endTrackpointIndex + 2
+        : seg.endTrackpointIndex + 1;
+      return {
+        ...seg,
+        distanceKm: calculateTrackDistance(
+          trackpoints.slice(seg.startTrackpointIndex, end),
+        ),
+      };
+    },
+  );
 
   const segments = cleanSegments(withDistances);
 
@@ -78,5 +120,6 @@ export function analyzeGpx(gpx: GPXData, water: WaterBody[] = []): Analysis {
     segments,
     totals: calculateTotals(segments),
     strategies: results.map((r) => r.strategy),
+    conflicts: detectConflicts(results, trackpoints),
   };
 }
