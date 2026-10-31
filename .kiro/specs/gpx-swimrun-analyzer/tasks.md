@@ -157,7 +157,7 @@ Implement a client-server swimrun GPX analysis tool using Deno with TypeScript. 
     - Create `test/server/request-validation.test.ts`
     - **Validates: Requirements 15.3, 15.4, 15.8**
 
-- [ ] 9. Implement landscape-based detection (Strategy 3) and strategy combination
+- [x] 9. Implement landscape-based detection (Strategy 3) and strategy combination
   - [x] 9.1 Implement landscape client
     - Create `src/client/landscape-client.ts` with `sampleCoordinates`, `queryTerrain`, `detectByLandscape`, `calculateLandscapeConfidence`
     - Sample at intervals ≤ 50m, always include first and last trackpoint
@@ -167,13 +167,13 @@ Implement a client-server swimrun GPX analysis tool using Deno with TypeScript. 
     - Confidence = agreeing points / total points, boosted to ≥0.9 for road data, reduced by 0.1 per unknown point
     - _Requirements: 14.1, 14.2, 14.3, 14.4, 14.5, 14.6, 14.7, 14.8, 14.9_
 
-  - [ ] 9.2 Write property tests for landscape detection
+  - [x] 9.2 Write property tests for landscape detection
     - **Property 17: Coordinate sampling interval constraint**
     - **Property 18: Landscape segment creation from terrain data**
     - Create `test/client/landscape-client.test.ts`
     - **Validates: Requirements 14.2, 14.3, 14.4, 14.5, 14.8, 14.9**
 
-  - [ ] 9.3 Implement strategy combiner
+  - [x] 9.3 Implement strategy combiner
     - Create `src/client/strategy-combiner.ts` with `detectApplicableStrategies`, `combineStrategies`, `detectConflicts`
     - Auto-detect applicable strategies from GPXData (waypoints → waypoint strategy, timestamps → speed strategy, coordinates → landscape always)
     - Combine by highest confidence per region
@@ -182,13 +182,13 @@ Implement a client-server swimrun GPX analysis tool using Deno with TypeScript. 
     - Ensure complete, contiguous coverage in output
     - _Requirements: 16.1, 16.2, 16.3, 16.5, 16.9_
 
-  - [ ] 9.4 Write property tests for strategy combiner
+  - [x] 9.4 Write property tests for strategy combiner
     - **Property 20: Strategy combination resolves by highest confidence**
     - **Property 21: Strategy applicability auto-detection**
     - Create `test/client/strategy-combiner.test.ts`
     - **Validates: Requirements 16.1, 16.2, 16.3, 16.5, 16.9**
 
-- [ ] 10. Checkpoint - All analysis logic complete
+- [x] 10. Checkpoint - All analysis logic complete
   - Ensure all tests pass, ask the user if questions arise.
 
 - [ ] 11. Implement frontend UI layer
