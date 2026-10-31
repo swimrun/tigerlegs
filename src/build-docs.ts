@@ -28,8 +28,12 @@ const page = `<!DOCTYPE html>
   <link rel="icon" href="img/tigerlegs-logo.png">
   <style>
     body { font-family: system-ui, sans-serif; line-height: 1.6; color: #1c1917; margin: 0; }
-    header { background: #1c1917; padding: 0.75rem 1rem; }
+    header { background: #1c1917; padding: 0.75rem 1rem; display: flex; gap: 1.5rem; align-items: center; }
+    header nav { display: flex; gap: 1rem; }
     header a { color: #fbbf24; font-weight: 700; text-decoration: none; }
+    header nav a { font-weight: 500; }
+    header nav a[aria-current] { border-bottom: 2px solid #fbbf24; }
+    .intro { background: #fffbeb; border-left: 4px solid #f59e0b; padding: 0.75rem 1rem; }
     main { max-width: 52rem; margin: 0 auto; padding: 1rem 1rem 4rem; }
     h1, h2, h3 { line-height: 1.2; }
     h1 { border-bottom: 4px solid #f59e0b; padding-bottom: 0.25rem; }
@@ -44,8 +48,16 @@ const page = `<!DOCTYPE html>
   </style>
 </head>
 <body>
-  <header><a href="./">TigerLegs</a></header>
+  <header>
+    <a href="./">TigerLegs</a>
+    <nav>
+      <a href="./">Extractorrr</a>
+      <a href="about.html">About</a>
+      <a href="guidebook.html" aria-current="page">Guidebook</a>
+    </nav>
+  </header>
   <main>
+    <p class="intro"><strong>For tech heads.</strong> This guidebook describes how TigerLegs is built: context, domain model, glossary, design and GPX conventions. It is <strong>under construction</strong> and will change. Just want to try the app? Go to the <a href="./">Extractorrr</a>.</p>
 ${body}
   </main>
   <script type="module">
