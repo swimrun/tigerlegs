@@ -14,3 +14,8 @@ Thumbs.db
 # Environment
 .env
 .env.local
+public/app.js
+public/app.js.map
+.cache/
+node_modules/
+public/styles.css

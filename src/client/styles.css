@@ -1,0 +1,26 @@
+@import "tailwindcss";
+@source "../../public/index.html";
+@source "./app.ts";
+
+/* Tiger palette: Tailwind's built-in amber (accent) and stone (neutral) scales. */
+
+@layer components {
+  #segments {
+    @apply w-full text-sm;
+  }
+  #segments th {
+    @apply sticky top-0 bg-stone-100 px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-stone-600;
+  }
+  #segments td {
+    @apply border-t border-stone-100 px-3 py-1.5;
+  }
+  #segments tr.active td {
+    @apply bg-amber-100;
+  }
+  #segments tfoot td {
+    @apply sticky bottom-0 border-t-2 border-stone-300 bg-stone-100 font-semibold;
+  }
+  #segments tbody td:nth-child(2) {
+    @apply font-medium;
+  }
+}
