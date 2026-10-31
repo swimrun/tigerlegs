@@ -1,13 +1,19 @@
 import denoConfig from "../../deno.json" with { type: "json" };
 
-type Lang = "en" | "nl";
+const LANGS = ["en", "nl", "fr", "de"] as const;
+type Lang = typeof LANGS[number];
 
 const STORAGE_KEY = "tigerlegs-lang";
 
+function isLang(value: string | null): value is Lang {
+  return LANGS.some((lang) => lang === value);
+}
+
 function initialLang(): Lang {
   const saved = localStorage.getItem(STORAGE_KEY);
-  if (saved === "en" || saved === "nl") return saved;
-  return navigator.language.toLowerCase().startsWith("nl") ? "nl" : "en";
+  if (isLang(saved)) return saved;
+  const browser = navigator.language.toLowerCase().slice(0, 2);
+  return isLang(browser) ? browser : "en";
 }
 
 function setLang(lang: Lang): void {
