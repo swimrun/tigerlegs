@@ -5,12 +5,16 @@ import { calculateTotals, formatSegmentDistance } from "./segment-builder.ts";
 import { fetchWater, refineWithWater, type WaterBody } from "./water.ts";
 import { haversineDistance } from "../shared/distance-calculator.ts";
 import type { Segment, Trackpoint } from "../shared/types.ts";
+import denoConfig from "../../deno.json" with { type: "json" };
 
 // Leaflet is loaded from a CDN <script> tag and exposed as a global.
 // deno-lint-ignore no-explicit-any
 declare const L: any;
 
 const COLORS = { swim: "#1e88e5", run: "#2e7d32", unclassified: "#757575" };
+
+const versionLabel = document.getElementById("app-version");
+if (versionLabel) versionLabel.textContent = `v${denoConfig.version}`;
 
 const input = document.getElementById("gpx-input") as HTMLInputElement;
 const message = document.getElementById("message") as HTMLElement;

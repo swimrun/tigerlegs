@@ -1,6 +1,6 @@
 {
   "name": "@swimrun/tigerlegs",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "exports": "./mod.ts",
   "tasks": {
     "build": "deno task build:js && deno task build:css",
