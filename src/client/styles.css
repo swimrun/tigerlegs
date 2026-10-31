@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @source "../../public/index.html";
+@source "../../public/about.html";
 @source "./app.ts";
 
 /* Tiger palette: Tailwind's built-in amber (accent) and stone (neutral) scales. */
