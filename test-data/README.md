@@ -11,6 +11,25 @@ GPX files for testing and demonstration purposes.
 | `swimrun-troll-enez.gpx` | SwimRun Troll (Enez, FR) | Run | Long swims | swimruntroll.com |
 | `het-rondje-elanden-vinkeveen.gpx` | Het Rondje Elanden | Run | 11 segments, 6.5km total | hetrondjeelanden.nl |
 | `running-only-afstandmeten.gpx` | (no race, just a run) | Run | 0 swim (edge case) | afstandmeten.nl |
+| `rhederlaag-swimrun.gpx` | Swimrun Rhederlaag (2025-10-11) | n/a | Not verified yet | Strava export |
+| `Rondje_Eilanden_lintjes_opruimen.gpx` | Rondje Eilanden: lintjes opruimen (2026-07-19) | n/a | Not verified yet | Strava export |
+| `Twiske_Backyard_SwimRun_Experience.gpx` | Twiske Backyard Ultra SwimRun Experience (2026-06-20) | n/a | Not verified yet; many laps | Strava export |
+
+## Sample tracks on the website
+
+`deno task build:samples` (part of `deno task build`) copies three files from
+this folder to `public/samples/`, where the extractor page offers them as
+sample links. The mapping lives in `src/build-samples.ts`.
+
+| File here | Sample name on the site | Track points |
+|-----------|-------------------------|--------------|
+| `rhederlaag-swimrun.gpx` | Rhederlaag SwimRun | 5769 |
+| `Rondje_Eilanden_lintjes_opruimen.gpx` | Rondje Eilanden | 2892 |
+| `Twiske_Backyard_SwimRun_Experience.gpx` | Twiske Backyard SwimRun | 9228 |
+
+`rhederlaag-swimrun.gpx` is also used by the integration tests
+(`test/client/rhederlaag.integration.test.ts` and `test/client/water.test.ts`),
+so do not rename or replace it without updating them.
 
 ## Expected segment distances
 

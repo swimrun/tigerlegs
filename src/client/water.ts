@@ -1,6 +1,5 @@
-import type { Coordinate, Segment, Trackpoint } from "../shared/types.ts";
+import type { Coordinate, StrategyResult, Trackpoint } from "../shared/types.ts";
 import { calculateTrackDistance } from "../shared/distance-calculator.ts";
-import { cleanSegments } from "./segment-cleaner.ts";
 
 export interface WaterBody {
   name?: string;
@@ -168,52 +167,20 @@ export function waterSpans(points: Trackpoint[], water: WaterBody[]): [number, n
   return spans;
 }
 
+export const LANDSCAPE_SWIM_CONFIDENCE = 0.8;
+
 /**
- * Split run segments where the track passes through mapped water, so a "run" that
- * is really part swim becomes run, swim, run. Neighbouring swims are merged afterwards.
+ * Landscape strategy: stretches of the track inside mapped water are swims.
+ * It only claims swims; the other strategies decide everything else.
  */
-export function refineWithWater(
-  segments: Segment[],
-  points: Trackpoint[],
-  water: WaterBody[],
-): Segment[] {
-  const spans = waterSpans(points, water);
-  if (spans.length === 0) return segments;
-
-  const pieces: Segment[] = [];
-  for (const seg of segments) {
-    if (seg.type !== "run") {
-      pieces.push(seg);
-      continue;
-    }
-    let cursor = seg.startTrackpointIndex;
-    const push = (type: Segment["type"], from: number, to: number) => {
-      if (to < from) return;
-      pieces.push({
-        ...seg,
-        type,
-        startTrackpointIndex: from,
-        endTrackpointIndex: to,
-        detectedBy: type === "swim" ? [...new Set([...seg.detectedBy, "landscape" as const])] : seg.detectedBy,
-        confidenceScore: type === "swim" ? Math.max(seg.confidenceScore, 0.8) : seg.confidenceScore,
-      });
-    };
-    for (const [s, e] of spans) {
-      const from = Math.max(s, seg.startTrackpointIndex), to = Math.min(e, seg.endTrackpointIndex);
-      if (to < from) continue;
-      push("run", cursor, from - 1);
-      push("swim", from, to);
-      cursor = to + 1;
-    }
-    push("run", cursor, seg.endTrackpointIndex);
-  }
-
-  const withDistances = pieces.map((seg, i, all) => {
-    const end = i < all.length - 1 ? seg.endTrackpointIndex + 2 : seg.endTrackpointIndex + 1;
-    return {
-      ...seg,
-      distanceKm: calculateTrackDistance(points.slice(seg.startTrackpointIndex, end)),
-    };
-  });
-  return cleanSegments(withDistances);
+export function detectByWater(points: Trackpoint[], water: WaterBody[]): StrategyResult {
+  return {
+    strategy: "landscape",
+    segments: waterSpans(points, water).map(([start, end]) => ({
+      type: "swim" as const,
+      startTrackpointIndex: start,
+      endTrackpointIndex: end,
+      confidenceScore: LANDSCAPE_SWIM_CONFIDENCE,
+    })),
+  };
 }

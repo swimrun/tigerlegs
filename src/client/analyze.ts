@@ -8,6 +8,7 @@ import {
 } from "./strategy-combiner.ts";
 import { calculateTotals } from "./segment-builder.ts";
 import { cleanSegments } from "./segment-cleaner.ts";
+import { detectByWater, type WaterBody } from "./water.ts";
 
 export interface Analysis {
   trackName: string;
@@ -34,11 +35,10 @@ function medianSampleSeconds(points: Trackpoint[]): number | null {
 }
 
 /**
- * Analyse parsed GPX data using the strategies that need no network access
- * (waypoint and speed). The landscape strategy requires the terrain API and
- * is not used here.
+ * Analyse parsed GPX data with the waypoint and speed strategies. When OpenStreetMap
+ * water bodies are supplied (fetched in the browser), the landscape strategy joins in.
  */
-export function analyzeGpx(gpx: GPXData): Analysis {
+export function analyzeGpx(gpx: GPXData, water: WaterBody[] = []): Analysis {
   const track = gpx.tracks.find((t) => t.trackpoints.length > 0) ?? gpx.tracks[0];
   const trackpoints = track.trackpoints;
   const applicable = detectApplicableStrategies(gpx);
@@ -56,6 +56,10 @@ export function analyzeGpx(gpx: GPXData): Analysis {
       minConsecutive: points,
       swimThresholdKph: SWIM_THRESHOLD_KPH,
     }));
+  }
+
+  if (applicable.includes("landscape") && water.length > 0) {
+    results.push(detectByWater(trackpoints, water));
   }
 
   const withDistances = combineStrategies(results, trackpoints.length).map((seg, i, all) => {

@@ -1,8 +1,8 @@
 import { parseGPX } from "./gpx-parser.ts";
 import { readFileAsText, validateFile } from "./file-upload.ts";
 import { analyzeGpx } from "./analyze.ts";
-import { calculateTotals, formatSegmentDistance } from "./segment-builder.ts";
-import { fetchWater, refineWithWater, type WaterBody } from "./water.ts";
+import { formatSegmentDistance } from "./segment-builder.ts";
+import { fetchWater, type WaterBody } from "./water.ts";
 import { haversineDistance } from "../shared/distance-calculator.ts";
 import type { Segment, Trackpoint } from "../shared/types.ts";
 import denoConfig from "../../deno.json" with { type: "json" };
@@ -121,13 +121,8 @@ function show(file: string, xml: string) {
   const parsed = parseGPX(xml);
   if (!parsed.ok) return fail(parsed.error);
 
-  const analysis = analyzeGpx(parsed.value);
+  const analysis = analyzeGpx(parsed.value, current?.water);
   const track = parsed.value.tracks.find((t) => t.trackpoints.length > 0)!;
-  if (current?.water) {
-    analysis.segments = refineWithWater(analysis.segments, track.trackpoints, current.water);
-    analysis.totals = calculateTotals(analysis.segments);
-    analysis.strategies = [...analysis.strategies, "landscape"];
-  }
   const latLngs = track.trackpoints.map((p) => [p.coordinate.lat, p.coordinate.lon]);
   const includeBreaks = breaksToggle.checked;
 
@@ -199,17 +194,21 @@ function fail(error: string) {
   message.textContent = error;
 }
 
-document.getElementById("sample-button")!.addEventListener("click", async () => {
-  try {
-    const response = await fetch("samples/rhederlaag-swimrun.gpx");
-    if (!response.ok) throw new Error("Could not load the sample track");
-    current = { file: "rhederlaag-swimrun.gpx", xml: await response.text() };
-    waterLayer.clearLayers();
-    show(current.file, current.xml);
-    await loadWater(current);
-  } catch (e) {
-    fail(e instanceof Error ? e.message : String(e));
-  }
+document.querySelectorAll<HTMLElement>("[data-sample]").forEach((link) => {
+  link.addEventListener("click", async (event) => {
+    event.preventDefault();
+    const name = link.dataset.sample!;
+    try {
+      const response = await fetch(`samples/${name}`);
+      if (!response.ok) throw new Error("Could not load the sample track");
+      current = { file: name, xml: await response.text() };
+      waterLayer.clearLayers();
+      show(current.file, current.xml);
+      await loadWater(current);
+    } catch (e) {
+      fail(e instanceof Error ? e.message : String(e));
+    }
+  });
 });
 
 input.addEventListener("change", async () => {

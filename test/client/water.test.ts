@@ -1,8 +1,7 @@
 import { assert, assertEquals } from "@std/assert";
 import { parseGPX } from "../../src/client/gpx-parser.ts";
 import { analyzeGpx } from "../../src/client/analyze.ts";
-import { assembleRings, parseWater, pointInRing, pointInWater, refineWithWater } from "../../src/client/water.ts";
-import { calculateTotals } from "../../src/client/segment-builder.ts";
+import { assembleRings, parseWater, pointInRing, pointInWater } from "../../src/client/water.ts";
 
 const c = (lat: number, lon: number) => ({ lat, lon });
 
@@ -32,17 +31,18 @@ Deno.test("pointInWater treats inner rings as holes", () => {
 
 Deno.test("Rhederlaag with OSM water: terrain splits the speed-only runs", () => {
   const parsed = parseGPX(
-    Deno.readTextFileSync(new URL("../../public/samples/rhederlaag-swimrun.gpx", import.meta.url)),
+    Deno.readTextFileSync(new URL("../../test-data/rhederlaag-swimrun.gpx", import.meta.url)),
   );
   assert(parsed.ok);
   const analysis = analyzeGpx(parsed.value);
-  const points = parsed.value.tracks[0].trackpoints;
   const water = parseWater(
     JSON.parse(Deno.readTextFileSync(new URL("../fixtures/rhederlaag-overpass.json", import.meta.url))),
   );
   assert(water.length > 0);
 
-  const refined = refineWithWater(analysis.segments, points, water);
+  const withLandscape = analyzeGpx(parsed.value, water);
+  assert(withLandscape.strategies.includes("landscape"));
+  const refined = withLandscape.segments;
   const swims = refined.filter((s) => s.type === "swim");
   assert(swims.length > analysis.segments.filter((s) => s.type === "swim").length);
 
@@ -55,5 +55,5 @@ Deno.test("Rhederlaag with OSM water: terrain splits the speed-only runs", () =>
     assert(refined[i].type !== refined[i - 1].type);
     assertEquals(refined[i].startTrackpointIndex, refined[i - 1].endTrackpointIndex + 1);
   }
-  assert(Number(calculateTotals(refined).totalSwimM) > Number(analysis.totals.totalSwimM));
+  assert(Number(withLandscape.totals.totalSwimM) > Number(analysis.totals.totalSwimM));
 });

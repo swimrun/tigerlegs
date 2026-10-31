@@ -4,7 +4,7 @@ import { analyzeGpx } from "../../src/client/analyze.ts";
 import { formatSegmentDistance } from "../../src/client/segment-builder.ts";
 
 // Strava recording, 1 s sampling, no waypoints: only the speed strategy applies.
-const FILE = new URL("../../public/samples/rhederlaag-swimrun.gpx", import.meta.url);
+const FILE = new URL("../../test-data/rhederlaag-swimrun.gpx", import.meta.url);
 
 function analyse() {
   const parsed = parseGPX(Deno.readTextFileSync(FILE));
