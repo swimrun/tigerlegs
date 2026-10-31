@@ -35,7 +35,7 @@ TIGERLegs stands for *Terrain-Informed Gpx Extractor: Lets Go Swimrun*. The tige
 
 | Task | Command |
 | --- | --- |
-| Bundle the browser code into `public/app.js` | `deno task build` |
+| Bundle the browser code into `public/app.js` and `public/about.js` | `deno task build` |
 | Run all tests | `deno task test` |
 | Lint the code | `deno task lint` |
 | Format the code | `deno task fmt` |

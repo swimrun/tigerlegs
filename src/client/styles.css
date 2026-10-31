@@ -18,6 +18,10 @@
 /* Tiger palette: Tailwind's built-in amber (accent) and stone (neutral) scales. */
 
 @layer components {
+  html[data-lang="en"] [lang="nl"],
+  html[data-lang="nl"] [lang="en"] {
+    display: none;
+  }
   .tiger-stripes {
     @apply h-2;
     background: repeating-linear-gradient(135deg, #0c0a09 0 12px, #fbbf24 12px 32px);

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -12,66 +12,159 @@
   <header class="border-b border-amber-500 bg-gradient-to-b from-amber-300 to-amber-400 shadow-sm">
     <div class="mx-auto flex max-w-3xl items-center justify-between px-4 py-4">
       <a href="./"><img src="img/tigerlegs-logo-web.png" alt="TigerLegs logo" class="h-16 w-auto mix-blend-multiply"></a>
-      <nav aria-label="Main menu" class="flex gap-4 text-sm font-medium">
-        <a href="./" class="text-stone-800 hover:underline">Extractorrr</a>
-        <a href="about.html" aria-current="page" class="border-b-2 border-stone-900 text-stone-950">About</a>
-      </nav>
+      <div class="flex items-center gap-3 text-sm">
+        <span class="rounded bg-stone-950 px-2 py-0.5 text-xs font-semibold uppercase tracking-wider text-amber-400">Beta</span>
+        <span id="app-version" class="text-xs text-stone-700"></span>
+        <nav aria-label="Main menu" class="flex gap-4 font-medium">
+          <a href="./" class="text-stone-800 hover:underline">Extractorrr</a>
+          <a href="about.html" aria-current="page" class="border-b-2 border-stone-900 text-stone-950">About</a>
+        </nav>
+        <span class="text-stone-500">|</span>
+        <nav aria-label="Language" class="flex gap-2 font-medium">
+          <a href="#" data-set-lang="en" class="lang-link">EN</a>
+          <a href="#" data-set-lang="nl" class="lang-link">NL</a>
+        </nav>
+      </div>
     </div>
     <div class="tiger-stripes"></div>
   </header>
 
   <main class="mx-auto max-w-3xl space-y-6 px-4 py-8 leading-relaxed">
-    <h1 class="font-display text-4xl uppercase tracking-wider">About TigerLegs</h1>
+    <div class="flex items-start justify-between gap-4">
+      <div>
+        <h1 lang="en" class="font-display text-4xl uppercase tracking-wider">About TigerLegs</h1>
+        <h1 lang="nl" class="font-display text-4xl uppercase tracking-wider">Over TigerLegs</h1>
+        <p class="mt-1 text-sm font-semibold text-amber-700">
+          <span lang="en">Still in beta: expect rough edges.</span>
+          <span lang="nl">Nog in beta: verwacht oneffenheden.</span>
+        </p>
+      </div>
+      <img src="img/tigerlegs-icon.png" alt="" class="h-24 w-24 shrink-0 rounded-full border-2 border-stone-950 object-cover">
+    </div>
+
+    <div lang="en" class="space-y-6">
+      <section class="space-y-2">
+        <h2 class="border-l-4 border-amber-500 pl-3 text-lg font-semibold">What it does</h2>
+        <p>TigerLegs splits a swimrun course into its swim and run legs. Upload a GPX file and you get the course on a map and a table with the distance of every swim (in metres) and every run (in kilometres), with totals at the bottom.</p>
+        <p>TIGERLegs stands for <em>Terrain-Informed Gpx Extractor: Lets Go Swimrun</em>. A tiger is amphibious and a good swimmer, and the name nods to Team Groot Rondje Eilanden.</p>
+      </section>
+
+      <section class="space-y-2">
+        <h2 class="border-l-4 border-amber-500 pl-3 text-lg font-semibold">How to use it</h2>
+        <ol class="list-decimal space-y-1 pl-6">
+          <li>Choose a <code>.gpx</code> file, or try the Rhederlaag sample track.</li>
+          <li>Read the segments in the table. Hover over a row to highlight it on the map.</li>
+          <li>Switch <em>Include breaks</em> on to see pauses as separate rows. Off by default.</li>
+        </ol>
+      </section>
+
+      <section class="space-y-2">
+        <h2 class="border-l-4 border-amber-500 pl-3 text-lg font-semibold">How it finds swims and runs</h2>
+        <p>TigerLegs combines several strategies and shows which one found each segment in the <em>Detected by</em> column:</p>
+        <ul class="list-disc space-y-1 pl-6">
+          <li><strong>Waypoints:</strong> course makers sometimes mark swim entries and exits in the file.</li>
+          <li><strong>Speed:</strong> swimming is usually slower than running, but the difference is small, so speed alone is often not enough.</li>
+          <li><strong>Landscape:</strong> OpenStreetMap water areas show where the track is actually in water. This is what makes it terrain-informed.</li>
+        </ul>
+        <p>Segments of 0 m are dropped, and two swims in a row are merged into one.</p>
+      </section>
+
+      <section class="space-y-2">
+        <h2 class="border-l-4 border-amber-500 pl-3 text-lg font-semibold">Limits you should know about</h2>
+        <ul class="list-disc space-y-1 pl-6">
+          <li>The result is an estimate. Check it against the official course description.</li>
+          <li>Tracks with few points (sparse tracks) can hide short swims or runs, because points far apart do not show what happened in between.</li>
+          <li>Only lakes and rivers drawn as areas in OpenStreetMap are recognised. Sea and coast are not handled yet.</li>
+          <li>If the water lookup is unavailable, TigerLegs falls back to speed and waypoints only.</li>
+        </ul>
+      </section>
+
+      <section class="space-y-2">
+        <h2 class="border-l-4 border-amber-500 pl-3 text-lg font-semibold">Your data</h2>
+        <p>Your GPX file is analysed in your browser and is not uploaded. To find water, TigerLegs sends only the rough area of the track (a bounding box, about 300 m wider than the track) to the <a class="underline" href="https://overpass-api.de">Overpass API</a>, which serves OpenStreetMap data. Overpass can see your IP address, like any website. Your device location is never read.</p>
+      </section>
+
+      <section class="space-y-2">
+        <h2 class="border-l-4 border-amber-500 pl-3 text-lg font-semibold">Learn more</h2>
+        <p>The <a class="underline" href="https://github.com/swimrun/tigerlegs/blob/main/docs/software-guidebook.md">software guidebook</a> describes the domain terms, the design and the GPX conventions. The source is on <a class="underline" href="https://github.com/swimrun/tigerlegs">GitHub</a>.</p>
+      </section>
+    </div>
+
+    <div lang="nl" class="space-y-6">
+      <section class="space-y-2">
+        <h2 class="border-l-4 border-amber-500 pl-3 text-lg font-semibold">Wat het doet</h2>
+        <p>TigerLegs knipt een swimrun-parcours op in zwem- en loopdelen. Upload een GPX-bestand en je krijgt het parcours op een kaart en een tabel met de afstand van elke zwemsectie (in meters) en elke loopsectie (in kilometers), met totalen onderaan.</p>
+        <p>TIGERLegs staat voor <em>Terrain-Informed Gpx Extractor: Lets Go Swimrun</em>. Een tijger is amfibisch en een goede zwemmer, en de naam knipoogt naar Team Groot Rondje Eilanden.</p>
+      </section>
+
+      <section class="space-y-2">
+        <h2 class="border-l-4 border-amber-500 pl-3 text-lg font-semibold">Hoe gebruik je het</h2>
+        <ol class="list-decimal space-y-1 pl-6">
+          <li>Kies een <code>.gpx</code>-bestand, of probeer het voorbeeldparcours Rhederlaag.</li>
+          <li>Lees de segmenten in de tabel. Beweeg over een rij om die op de kaart te markeren.</li>
+          <li>Zet <em>Include breaks</em> aan om pauzes als aparte rijen te zien. Standaard uit.</li>
+        </ol>
+      </section>
+
+      <section class="space-y-2">
+        <h2 class="border-l-4 border-amber-500 pl-3 text-lg font-semibold">Hoe het zwemmen en lopen vindt</h2>
+        <p>TigerLegs combineert meerdere strategieën en toont in de kolom <em>Detected by</em> welke elk segment vond:</p>
+        <ul class="list-disc space-y-1 pl-6">
+          <li><strong>Waypoints:</strong> parcoursmakers markeren soms zwem-in en zwem-uit in het bestand.</li>
+          <li><strong>Snelheid:</strong> zwemmen gaat meestal langzamer dan lopen, maar het verschil is klein, dus snelheid alleen is vaak niet genoeg.</li>
+          <li><strong>Landschap:</strong> OpenStreetMap-wateroppervlakken laten zien waar het spoor echt in het water ligt. Dat maakt het terrain-informed.</li>
+        </ul>
+        <p>Segmenten van 0 m worden weggelaten en twee zwemmen achter elkaar worden samengevoegd.</p>
+      </section>
+
+      <section class="space-y-2">
+        <h2 class="border-l-4 border-amber-500 pl-3 text-lg font-semibold">Beperkingen</h2>
+        <ul class="list-disc space-y-1 pl-6">
+          <li>Het resultaat is een schatting. Controleer het met de officiële parcoursbeschrijving.</li>
+          <li>Sporen met weinig punten (sparse tracks) kunnen korte zwemmen of loopjes verbergen, omdat punten ver uit elkaar niet laten zien wat ertussen gebeurde.</li>
+          <li>Alleen meren en rivieren die als vlak in OpenStreetMap staan worden herkend. Zee en kust nog niet.</li>
+          <li>Als het opzoeken van water niet lukt, valt TigerLegs terug op alleen snelheid en waypoints.</li>
+        </ul>
+      </section>
+
+      <section class="space-y-2">
+        <h2 class="border-l-4 border-amber-500 pl-3 text-lg font-semibold">Jouw gegevens</h2>
+        <p>Je GPX-bestand wordt in je browser geanalyseerd en niet geüpload. Om water te vinden stuurt TigerLegs alleen het grove gebied van het spoor (een bounding box, ongeveer 300 m ruimer dan het spoor) naar de <a class="underline" href="https://overpass-api.de">Overpass API</a>, die OpenStreetMap-data levert. Overpass kan je IP-adres zien, zoals elke website. Je apparaatlocatie wordt nooit uitgelezen.</p>
+      </section>
+
+      <section class="space-y-2">
+        <h2 class="border-l-4 border-amber-500 pl-3 text-lg font-semibold">Meer weten</h2>
+        <p>Het <a class="underline" href="https://github.com/swimrun/tigerlegs/blob/main/docs/software-guidebook.md">software guidebook</a> beschrijft de domeintermen, het ontwerp en de GPX-conventies (in het Engels). De broncode staat op <a class="underline" href="https://github.com/swimrun/tigerlegs">GitHub</a>.</p>
+      </section>
+    </div>
 
     <section class="space-y-2">
-      <h2 class="border-l-4 border-amber-500 pl-3 text-lg font-semibold">What it does</h2>
-      <p>TigerLegs splits a swimrun course into its swim and run legs. Upload a GPX file and you get the course on a map and a table with the distance of every swim (in metres) and every run (in kilometres), with totals at the bottom.</p>
-      <p>TIGERLegs stands for <em>Terrain-Informed Gpx Extractor: Lets Go Swimrun</em>. A tiger is amphibious and a good swimmer, and the name nods to Team Groot Rondje Eilanden.</p>
+      <h2 class="border-l-4 border-amber-500 pl-3 text-lg font-semibold">
+        <span lang="en">Swimrun Rhederlaag</span><span lang="nl">Swimrun Rhederlaag</span>
+      </h2>
+      <p>
+        <span lang="en">The sample track comes from the Rhederlaag swimrun. Videos and photos are on Instagram.</span>
+        <span lang="nl">Het voorbeeldspoor komt van de swimrun bij de Rhederlaag. Video's en foto's staan op Instagram.</span>
+      </p>
+      <div id="instagram-slot" class="rounded border border-stone-300 bg-white p-4 text-center">
+        <button type="button" id="instagram-load" class="rounded bg-amber-500 px-4 py-2 font-medium text-stone-950 hover:bg-amber-400">
+          <span lang="en">Show @swimrunrhederlaag from Instagram</span>
+          <span lang="nl">Toon @swimrunrhederlaag van Instagram</span>
+        </button>
+        <p class="mt-2 text-xs text-stone-500">
+          <span lang="en">Loading this contacts Instagram (Meta), which can see your IP address.</span>
+          <span lang="nl">Hiermee maak je verbinding met Instagram (Meta), dat je IP-adres kan zien.</span>
+        </p>
+        <p class="mt-1 text-sm"><a class="underline" href="https://www.instagram.com/swimrunrhederlaag/">instagram.com/swimrunrhederlaag</a></p>
+      </div>
     </section>
 
-    <section class="space-y-2">
-      <h2 class="border-l-4 border-amber-500 pl-3 text-lg font-semibold">How to use it</h2>
-      <ol class="list-decimal space-y-1 pl-6">
-        <li>Choose a <code>.gpx</code> file, or try the Rhederlaag sample track.</li>
-        <li>Read the segments in the table. Hover over a row to highlight it on the map.</li>
-        <li>Switch <em>Include breaks</em> on to see pauses as separate rows. Off by default.</li>
-      </ol>
-    </section>
-
-    <section class="space-y-2">
-      <h2 class="border-l-4 border-amber-500 pl-3 text-lg font-semibold">How it finds swims and runs</h2>
-      <p>TigerLegs combines several strategies and shows which one found each segment in the <em>Detected by</em> column:</p>
-      <ul class="list-disc space-y-1 pl-6">
-        <li><strong>Waypoints:</strong> course makers sometimes mark swim entries and exits in the file.</li>
-        <li><strong>Speed:</strong> swimming is usually slower than running, but the difference is small, so speed alone is often not enough.</li>
-        <li><strong>Landscape:</strong> OpenStreetMap water areas show where the track is actually in water. This is what makes it terrain-informed.</li>
-      </ul>
-      <p>Segments of 0 m are dropped, and two swims in a row are merged into one.</p>
-    </section>
-
-    <section class="space-y-2">
-      <h2 class="border-l-4 border-amber-500 pl-3 text-lg font-semibold">Limits you should know about</h2>
-      <ul class="list-disc space-y-1 pl-6">
-        <li>The result is an estimate. Check it against the official course description.</li>
-        <li>Tracks with few points (sparse tracks) can hide short swims or runs, because points far apart do not show what happened in between.</li>
-        <li>Only lakes and rivers drawn as areas in OpenStreetMap are recognised. Sea and coast are not handled yet.</li>
-        <li>If the water lookup is unavailable, TigerLegs falls back to speed and waypoints only.</li>
-      </ul>
-    </section>
-
-    <section class="space-y-2">
-      <h2 class="border-l-4 border-amber-500 pl-3 text-lg font-semibold">Your data</h2>
-      <p>Your GPX file is analysed in your browser and is not uploaded. To find water, TigerLegs sends only the rough area of the track (a bounding box, about 300 m wider than the track) to the <a class="underline" href="https://overpass-api.de">Overpass API</a>, which serves OpenStreetMap data. Overpass can see your IP address, like any website. Your device location is never read.</p>
-    </section>
-
-    <section class="space-y-2">
-      <h2 class="border-l-4 border-amber-500 pl-3 text-lg font-semibold">Learn more</h2>
-      <p>The <a class="underline" href="https://github.com/swimrun/tigerlegs/blob/main/docs/software-guidebook.md">software guidebook</a> describes the domain terms, the design and the GPX conventions. The source is on <a class="underline" href="https://github.com/swimrun/tigerlegs">GitHub</a>.</p>
-    </section>
+    <img src="img/tiger-swim-terrain.jpg" alt="" class="ml-auto w-full rounded-lg border-2 border-stone-950 shadow-md sm:w-4/5">
   </main>
 
   <footer class="mx-auto max-w-3xl px-4 pb-8 text-xs text-stone-500">
     &copy; 2026 IT Off the Wall BV · Map data &copy; <a class="underline" href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors</a>
   </footer>
+  <script src="about.js"></script>
 </body>
 </html>
