@@ -243,6 +243,11 @@ The backend serves the static files and answers terrain requests.
 It checks the `Origin` header on every API route except the health check, and it caches terrain answers on disk.
 The frontend and the backend currently share port 8123, which `src/server/config.ts` defines.
 
+The dashed watch data field is planned, not built ([spec](../specs/001-garmin-datafield/spec.md), roadmap M4).
+It stays a container inside the TigerLegs system rather than a system of its own: in C4 terms a container is a separately deployable unit of one system, and the data field is deployed separately (through the Connect IQ store) but belongs to the same product, team and course model.
+Garmin Connect appears as an external system, like Overpass, because it only transports the exported course to the watch.
+A separate guidebook or a system landscape diagram becomes worthwhile only if a part grows into its own system with its own team or release cycle, for example the accounts backend of roadmap M9.
+
 ### 6.2 Components
 
 Figure 4 shows the components of the browser app and how they depend on each other.
@@ -290,6 +295,7 @@ classDiagram
 A GPX file holds tracks and waypoints, and a track holds trackpoints.
 A strategy reads the file and produces segments, each covering consecutive trackpoints and labelled swim, run or unclassified.
 A `DisplaySegmentPair` groups a run and a swim for the compact table.
+The planned watch data field adds two runtime types to this model: a `LegProgress` that tracks the current leg and its remaining distance, and a transition detector with hysteresis, so that one noisy GPS fix near a transition cannot advance and regress the leg repeatedly ([spec](../specs/001-garmin-datafield/spec.md), FR-004).
 Appendix A defines each term.
 
 ## 7. Code
@@ -421,6 +427,7 @@ Table 9 lists the terms in the order in which you meet them when you follow a GP
 | Segment | Consecutive trackpoints that are all swim or all run, with a distance | Swim of 400 m |
 | Swim, run, unclassified | The three labels a segment can have | Run of 2.1 km |
 | Transition | The point where one segment ends and the next begins | The beach exit after a swim |
+| Hysteresis | Memory in a threshold decision: once a transition counts as passed, nearby noisy GPS fixes cannot un-pass it | The watch advances to leg 5 once, even when swim-degraded GPS jitters around the transition radius |
 | Distance to next transition | Distance along the track from a position to the next transition | "Next transition in 1.2 km" |
 | Strategy | A method to detect segments: waypoint, speed or landscape | Waypoint strategy |
 | Confidence | How sure a strategy is about a trackpoint; the combiner keeps the highest | 0.9 from waypoints beats 0.4 from speed |
