@@ -197,7 +197,7 @@ This chapter lists the rules that guide design choices when no constraint decide
 - **Analyse on the client.** The server proxies terrain data and nothing more.
 - **One source of truth for configuration.** Ports and origins live in `src/server/config.ts`, so changing a port touches one line.
 - **Use the domain language.** Names in code follow the glossary in Appendix A.
-- **Navigate with links, not buttons.** Every page shares a header menu with links to *Extractor* and *About*, and the current page is marked. Pages have no "back to" buttons. Buttons trigger actions on the current page, links move between pages.
+- **Navigate with links, not buttons.** Every page shares a header menu with links to *Extractorrr* (with the tiger growl) and *About*, and the current page is marked. Pages have no "back to" buttons. Buttons trigger actions on the current page, links move between pages.
 - **Document decisions.** Significant choices get an ADR, and the team writes documentation in English.
 
 ### 5.1 Documentation approach
