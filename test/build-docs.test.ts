@@ -1,4 +1,4 @@
-import { assertEquals, assertStringIncludes } from "@std/assert";
+import { assertEquals, assertMatch, assertStringIncludes } from "@std/assert";
 import { DOMParser } from "@xmldom/xmldom";
 import { renderGuidebook } from "../src/build-docs.ts";
 
@@ -40,9 +40,10 @@ Deno.test("site pages share navigation and styling with the correct active page"
     const tagline = Array.from(doc.getElementsByTagName("div"))
       .find((element) => element.getAttribute("class") === "site-tagline")!;
     assertEquals(tagline.parentNode?.nodeName, "header");
-    assertStringIncludes(
-      page,
-      "Terrain-Informed Gpx Extractor: LEts Go Swimrun!",
+    const image = tagline.getElementsByTagName("img")[0];
+    assertMatch(
+      image?.getAttribute("alt") ?? tagline.textContent ?? "",
+      /Terrain[- ]Informed Gpx Extractor: LEts Go Swimrun!/i,
     );
   }
 });
