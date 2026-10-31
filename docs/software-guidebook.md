@@ -56,10 +56,17 @@ Each way below is a user story with one acceptance criterion in Given/When/Then 
    - Given I opened the page, when I choose a GPX file, then the map shows the track with swim and run segments in different colours.
 2. **See distances.** As an athlete, I see the distance per segment and the totals so that I can prepare my race.
    - Given a GPX file with two swims and two runs, when the analysis finishes, then the table shows four distances and a swim and run total.
-3. **Link map and table.** As an athlete, I hover a table row or a map line so that I see the matching segment highlighted.
-   - Given a segment is shown on the map and in the table, when I hover its table row, then its map line is highlighted.
-4. **Read a compact table.** As an athlete, I see one row per run and swim pair so that I can write the numbers on a paddle (planned, [ADR-0007](./adr/0007-compact-segment-table-format.md)).
+3. **Link map and table.** As an athlete, I select a map line or a distance in the table so that both views highlight the same segment.
+   - Given a segment is shown on the map and in the table, when I click its distance or select its button with Enter or Space, then its map line and table row are highlighted; selecting it again deselects it.
+4. **Read a compact table.** As an athlete, I see one row per run and swim pair so that I can write the numbers on a paddle ([ADR-0007](./adr/0007-compact-segment-table-format.md)).
    - Given a course that starts with a run, when the table is shown run-first, then each row shows a run distance and the swim that follows it.
+
+The table defaults to run-first; **Swim first** changes both the pairing and column order.
+Each distance is an independently selectable segment, even when two segments share a row.
+Map selections scroll the corresponding row into view; Escape clears selection.
+Hover still previews a segment when no selection is pinned.
+**Cumulative distance** sums the unrounded distances of the displayed segments and shows the result to one decimal place; displayed breaks contribute only when **Include breaks** is enabled.
+Incomplete pairs use a dash for the missing distance, and boundary disagreements include a conflict label identifying the resolving strategy.
 
 Behind these stories, the system detects segments with three strategies, which Table 1 lists.
 
@@ -96,6 +103,25 @@ Table 2 lists the six use cases, who uses them and which user story and Kiro req
 
 Use cases UC-2 and UC-3 include UC-1, because both need an uploaded file.
 UC-4, UC-5 and UC-6 extend the use case they build on: highlighting and aid stations extend the map, and track selection extends the upload.
+
+In Cockburn's goal levels these six sit below sea level: uploading a file is a subfunction (fish level), and the others are features inside one larger goal (Cockburn, 2001).
+The sea-level goals — one sitting, after which the user goes away satisfied — are: **analyse a swimrun course** (upload, map and distances together), **prepare paddle race notes** ([ADR-0007](./adr/0007-compact-segment-table-format.md)), **verify a designed course** (the organiser's goal) and, planned, **follow the course mid-race** on a watch ([spec 001](../specs/001-garmin-datafield/spec.md)).
+Figure 2 shows these sea-level use cases with their actors; Overpass and Garmin Connect appear as supporting actors, which replaces the single "Uses" arrow of the context diagram with one arrow per goal.
+
+*Figure 2*: Sea-level use case diagram.
+
+![Use case diagram: athlete and organiser with four sea-level goals; Overpass and Garmin Connect support two of them.](diagrams/use-cases.svg)
+
+Figures 3 and 4 give a system sequence diagram for the two central goals, following Larman (2005): the system stays a black box and only the system events of the main success scenario appear, so these diagrams belong here with the requirements.
+Design-level interaction diagrams, which open the black box, belong in chapter 7 once the components they show exist.
+
+*Figure 3*: System sequence diagram of *Analyse a swimrun course*.
+
+![System sequence diagram: the athlete uploads a course, optionally enables terrain which queries Overpass, and selects a segment.](diagrams/ssd-analyse-course.svg)
+
+*Figure 4*: System sequence diagram of *Follow the course mid-race* (planned).
+
+![System sequence diagram: the athlete exports the course, loads it through Garmin Connect onto the watch, and reads leg progress every GPS fix.](diagrams/ssd-follow-course.svg)
 The Kiro specs number these stories and requirements.
 Two further stories, US-2 (waypoint classification) and US-7 (GPX round-trip integrity), are internal processing steps that no user starts, so they are not use cases.
 Accessibility (Req 10) and performance (Req 11) are quality attributes and apply to all use cases; chapter 3 covers them.
@@ -141,9 +167,9 @@ Table 4 shows the same course in that form, with the swim first.
 | **Total** | 6100 | 24.8 |
 
 A course that starts with a run would show the run first by default, and a toggle would swap the order.
-Figure 2 shows the paddles that the organisers published for this course.
+Figure 5 shows the paddles that the organisers published for this course.
 
-*Figure 2*: Swimrun paddles with the segment distances of the Laffrey course.
+*Figure 5*: Swimrun paddles with the segment distances of the Laffrey course.
 
 ![Swimrun paddles with segment distances](../assets/swimrun-paddles-laffrey-vertical-2026.png)
 
@@ -232,9 +258,9 @@ This chapter shows the structure of the system in three levels: containers (6.1)
 
 ### 6.1 Containers
 
-Figure 3 shows the two containers and how they communicate.
+Figure 6 shows the two containers and how they communicate.
 
-*Figure 3*: C4 container diagram.
+*Figure 6*: C4 container diagram.
 
 ![Container diagram: the browser app talks to the Deno backend, which uses a disk cache and the Overpass API.](diagrams/container.svg)
 
@@ -244,16 +270,17 @@ It checks the `Origin` header on every API route except the health check, and it
 The frontend and the backend currently share port 8123, which `src/server/config.ts` defines.
 
 The dashed watch data field is planned, not built ([spec](../specs/001-garmin-datafield/spec.md), roadmap M4).
+It would build on the Connect IQ SDK and its Monkey C language; Garmin's developer documentation explains the app types and the simulator (Garmin, n.d.).
 It stays a container inside the TigerLegs system rather than a system of its own: in C4 terms a container is a separately deployable unit of one system, and the data field is deployed separately (through the Connect IQ store) but belongs to the same product, team and course model.
 Garmin Connect appears as an external system, like Overpass, because it only transports the exported course to the watch.
 A separate guidebook or a system landscape diagram becomes worthwhile only if a part grows into its own system with its own team or release cycle, for example the accounts backend of roadmap M9.
 
 ### 6.2 Components
 
-Figure 4 shows the components of the browser app and how they depend on each other.
+Figure 7 shows the components of the browser app and how they depend on each other.
 Table 6 lists each component and the file that holds it.
 
-*Figure 4*: C4 component diagram of the browser app.
+*Figure 7*: C4 component diagram of the browser app.
 
 ![Component diagram of the browser app: the UI uses the parser, the analysis and the segment builder; the analysis runs three strategies and the combiner.](diagrams/component.svg)
 
@@ -276,9 +303,9 @@ The combiner leaves `distanceKm` at 0; the analysis component fills it in.
 
 ### 6.3 Domain model
 
-Figure 5 shows the main domain types, which `src/shared/types.ts` defines.
+Figure 8 shows the main domain types, which `src/shared/types.ts` defines.
 
-*Figure 5*: Domain model.
+*Figure 8*: Domain model.
 
 ```mermaid
 classDiagram
@@ -398,11 +425,17 @@ Brown, S. (n.d.-b). *The C4 model for visualising software architecture*. https:
 
 Cavoukian, A. (2011). *Privacy by design: The 7 foundational principles*. Information and Privacy Commissioner of Ontario. https://www.ipc.on.ca/wp-content/uploads/resources/7foundationalprinciples.pdf
 
-Gruber, T. (2008). Ontology. In L. Liu & M. T. Özsu (Eds.), *Encyclopedia of Database Systems*. Springer. https://tomgruber.org/writing/definition-of-ontology
+Cockburn, A. (2001). *Writing effective use cases*. Addison-Wesley.
 
 file-extensions.com. (n.d.). *GPX file format*. Retrieved June 15, 2026, from https://file-extensions.com/docs/gpx
 
+Garmin. (n.d.). *Connect IQ basics*. Retrieved November 1, 2026, from https://developer.garmin.com/connect-iq/connect-iq-basics/
+
+Gruber, T. (2008). Ontology. In L. Liu & M. T. Özsu (Eds.), *Encyclopedia of Database Systems*. Springer. https://tomgruber.org/writing/definition-of-ontology
+
 Knuth, D. E. (1984). Literate programming. *The Computer Journal, 27*(2), 97–111. https://doi.org/10.1093/comjnl/27.2.97
+
+Larman, C. (2005). *Applying UML and patterns: An introduction to object-oriented analysis and design and iterative development* (3rd ed.). Prentice Hall.
 
 Preston-Werner, T. (2010, August 23). *Readme Driven Development*. https://tom.preston-werner.com/2010/08/23/readme-driven-development.html
 

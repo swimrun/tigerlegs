@@ -1,0 +1,19 @@
+@startuml ssd-follow-course
+title System sequence diagram: Follow the course mid-race (planned)
+
+actor Athlete as athlete
+participant ":TigerLegs browser app" as web
+participant ":Garmin Connect" as gc << external >>
+participant ":TigerLegs watch data field" as watch
+
+athlete -> web : exportCourse()
+web --> athlete : versioned course file
+athlete -> gc : loadCourse(file)
+gc -> watch : syncCourse()
+loop every GPS fix during the activity
+  watch --> athlete : leg n of total, remaining distance, next leg
+  opt athlete passes within the transition radius
+    watch --> athlete : next leg (advance once, with hysteresis)
+  end
+end
+@enduml
