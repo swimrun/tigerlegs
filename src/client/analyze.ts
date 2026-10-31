@@ -7,6 +7,7 @@ import {
   detectApplicableStrategies,
 } from "./strategy-combiner.ts";
 import { calculateTotals } from "./segment-builder.ts";
+import { cleanSegments } from "./segment-cleaner.ts";
 
 export interface Analysis {
   trackName: string;
@@ -57,7 +58,7 @@ export function analyzeGpx(gpx: GPXData): Analysis {
     }));
   }
 
-  const segments = combineStrategies(results, trackpoints.length).map((seg, i, all) => {
+  const withDistances = combineStrategies(results, trackpoints.length).map((seg, i, all) => {
     // Include the step to the next segment's first point so distances add up.
     const end = i < all.length - 1 ? seg.endTrackpointIndex + 2 : seg.endTrackpointIndex + 1;
     return {
@@ -65,6 +66,8 @@ export function analyzeGpx(gpx: GPXData): Analysis {
       distanceKm: calculateTrackDistance(trackpoints.slice(seg.startTrackpointIndex, end)),
     };
   });
+
+  const segments = cleanSegments(withDistances);
 
   return {
     trackName: track.name,
