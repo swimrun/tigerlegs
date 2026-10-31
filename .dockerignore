@@ -1,0 +1,9 @@
+node_modules
+.cache
+.git
+public
+docs
+test
+test-data
+assets
+.kiro

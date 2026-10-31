@@ -1,0 +1,15 @@
+# Local run: `docker compose up --build`  (API on http://localhost:8123)
+# On the VPS, run the same image behind Caddy (see docs/deployment.md).
+services:
+  api:
+    build: .
+    ports:
+      - "8123:8123"
+    environment:
+      ALLOWED_ORIGINS: "https://swimrun.group,http://localhost:8123"
+    volumes:
+      - terrain-cache:/data
+    restart: unless-stopped
+
+volumes:
+  terrain-cache:
