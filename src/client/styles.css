@@ -115,7 +115,7 @@
   }
   /* Tiger picture fixed at the bottom, centred; the sides are the same picture, stretched and blurred, so the colours match. A circular reveal grows from the bottom centre with scroll progress (--reveal, 0..1, set in about.ts). */
   .tiger-fade {
-    --reveal: 0.25;
+    --reveal: 0.12;
     --tiger-w: min(100vw, 56rem);
     position: fixed;
     left: 0;
