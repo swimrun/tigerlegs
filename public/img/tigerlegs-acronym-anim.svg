@@ -26,7 +26,7 @@
     #underline {
       animation: underline 9s infinite both;
       transform: scaleX(0.2131);
-      transform-origin: 603.3px 0;
+      transform-origin: 1178.7px 0;
     }
     @keyframes underline {
       0%, 10% { transform: scaleX(0.2131); animation-timing-function: cubic-bezier(.65,0,.35,1); }
@@ -36,11 +36,11 @@
     @media (prefers-reduced-motion: reduce) {
       g.seg, .filler, #underline { animation: none; }
     }
-    #seg0 { animation-name: slide0; transform: translateX(480.8px); }
+    #seg0 { animation-name: slide0; transform: translateX(933.5px); }
     @keyframes slide0 {
-      0%, 10% { transform: translateX(480.8px); animation-timing-function: cubic-bezier(.65,0,.35,1); }
+      0%, 10% { transform: translateX(933.5px); animation-timing-function: cubic-bezier(.65,0,.35,1); }
       40%, 85% { transform: translateX(28.0px); animation-timing-function: cubic-bezier(.65,0,.35,1); }
-      100% { transform: translateX(480.8px); }
+      100% { transform: translateX(933.5px); }
     }
     #fil0 { animation-name: out0; }
     @keyframes out0 {
@@ -48,11 +48,11 @@
       40%, 85% { transform: translateX(0); opacity: 0.8; animation-timing-function: cubic-bezier(.65,0,.35,1); }
       98%, 100% { transform: translateX(-26.2px); opacity: 0; }
     }
-    #seg1 { animation-name: slide1; transform: translateX(509.0px); }
+    #seg1 { animation-name: slide1; transform: translateX(961.7px); }
     @keyframes slide1 {
-      0%, 10% { transform: translateX(509.0px); animation-timing-function: cubic-bezier(.65,0,.35,1); }
+      0%, 10% { transform: translateX(961.7px); animation-timing-function: cubic-bezier(.65,0,.35,1); }
       40%, 85% { transform: translateX(209.4px); animation-timing-function: cubic-bezier(.65,0,.35,1); }
-      100% { transform: translateX(509.0px); }
+      100% { transform: translateX(961.7px); }
     }
     #fil1 { animation-name: out1; }
     @keyframes out1 {
@@ -60,11 +60,11 @@
       40%, 85% { transform: translateX(0); opacity: 0.8; animation-timing-function: cubic-bezier(.65,0,.35,1); }
       98%, 100% { transform: translateX(-13.8px); opacity: 0; }
     }
-    #seg2 { animation-name: slide2; transform: translateX(524.8px); }
+    #seg2 { animation-name: slide2; transform: translateX(977.5px); }
     @keyframes slide2 {
-      0%, 10% { transform: translateX(524.8px); animation-timing-function: cubic-bezier(.65,0,.35,1); }
+      0%, 10% { transform: translateX(977.5px); animation-timing-function: cubic-bezier(.65,0,.35,1); }
       40%, 85% { transform: translateX(435.3px); animation-timing-function: cubic-bezier(.65,0,.35,1); }
-      100% { transform: translateX(524.8px); }
+      100% { transform: translateX(977.5px); }
     }
     #fil2 { animation-name: out2; }
     @keyframes out2 {
@@ -72,11 +72,11 @@
       40%, 85% { transform: translateX(0); opacity: 0.8; animation-timing-function: cubic-bezier(.65,0,.35,1); }
       98%, 100% { transform: translateX(-28.2px); opacity: 0; }
     }
-    #seg3 { animation-name: slide3; transform: translateX(554.9px); }
+    #seg3 { animation-name: slide3; transform: translateX(1007.7px); }
     @keyframes slide3 {
-      0%, 10% { transform: translateX(554.9px); animation-timing-function: cubic-bezier(.65,0,.35,1); }
+      0%, 10% { transform: translateX(1007.7px); animation-timing-function: cubic-bezier(.65,0,.35,1); }
       40%, 85% { transform: translateX(530.5px); animation-timing-function: cubic-bezier(.65,0,.35,1); }
-      100% { transform: translateX(554.9px); }
+      100% { transform: translateX(1007.7px); }
     }
     #fil3 { animation-name: out3; }
     @keyframes out3 {
@@ -84,11 +84,11 @@
       40%, 85% { transform: translateX(0); opacity: 0.8; animation-timing-function: cubic-bezier(.65,0,.35,1); }
       98%, 100% { transform: translateX(-26.1px); opacity: 0; }
     }
-    #seg4 { animation-name: slide4; transform: translateX(583.1px); }
+    #seg4 { animation-name: slide4; transform: translateX(1035.8px); }
     @keyframes slide4 {
-      0%, 10% { transform: translateX(583.1px); animation-timing-function: cubic-bezier(.65,0,.35,1); }
+      0%, 10% { transform: translateX(1035.8px); animation-timing-function: cubic-bezier(.65,0,.35,1); }
       40%, 85% { transform: translateX(728.3px); animation-timing-function: cubic-bezier(.65,0,.35,1); }
-      100% { transform: translateX(583.1px); }
+      100% { transform: translateX(1035.8px); }
     }
     #fil4 { animation-name: out4; }
     @keyframes out4 {
@@ -96,17 +96,17 @@
       40%, 85% { transform: translateX(0); opacity: 0.8; animation-timing-function: cubic-bezier(.65,0,.35,1); }
       98%, 100% { transform: translateX(-29.0px); opacity: 0; }
     }
-    #seg5 { animation-name: slide5; transform: translateX(614.1px); }
+    #seg5 { animation-name: slide5; transform: translateX(1066.8px); }
     @keyframes slide5 {
-      0%, 10% { transform: translateX(614.1px); animation-timing-function: cubic-bezier(.65,0,.35,1); }
+      0%, 10% { transform: translateX(1066.8px); animation-timing-function: cubic-bezier(.65,0,.35,1); }
       40%, 85% { transform: translateX(783.7px); animation-timing-function: cubic-bezier(.65,0,.35,1); }
-      100% { transform: translateX(614.1px); }
+      100% { transform: translateX(1066.8px); }
     }
-    #seg6 { animation-name: slide6; transform: translateX(640.9px); }
+    #seg6 { animation-name: slide6; transform: translateX(1093.6px); }
     @keyframes slide6 {
-      0%, 10% { transform: translateX(640.9px); animation-timing-function: cubic-bezier(.65,0,.35,1); }
+      0%, 10% { transform: translateX(1093.6px); animation-timing-function: cubic-bezier(.65,0,.35,1); }
       40%, 85% { transform: translateX(808.4px); animation-timing-function: cubic-bezier(.65,0,.35,1); }
-      100% { transform: translateX(640.9px); }
+      100% { transform: translateX(1093.6px); }
     }
     #fil6 { animation-name: out6; }
     @keyframes out6 {
@@ -114,11 +114,11 @@
       40%, 85% { transform: translateX(0); opacity: 0.8; animation-timing-function: cubic-bezier(.65,0,.35,1); }
       98%, 100% { transform: translateX(-26.1px); opacity: 0; }
     }
-    #seg7 { animation-name: slide7; transform: translateX(669.0px); }
+    #seg7 { animation-name: slide7; transform: translateX(1121.7px); }
     @keyframes slide7 {
-      0%, 10% { transform: translateX(669.0px); animation-timing-function: cubic-bezier(.65,0,.35,1); }
+      0%, 10% { transform: translateX(1121.7px); animation-timing-function: cubic-bezier(.65,0,.35,1); }
       40%, 85% { transform: translateX(891.5px); animation-timing-function: cubic-bezier(.65,0,.35,1); }
-      100% { transform: translateX(669.0px); }
+      100% { transform: translateX(1121.7px); }
     }
     #fil7 { animation-name: out7; }
     @keyframes out7 {
@@ -126,11 +126,11 @@
       40%, 85% { transform: translateX(0); opacity: 0.8; animation-timing-function: cubic-bezier(.65,0,.35,1); }
       98%, 100% { transform: translateX(-28.2px); opacity: 0; }
     }
-    #seg8 { animation-name: slide8; transform: translateX(699.1px); }
+    #seg8 { animation-name: slide8; transform: translateX(1151.9px); }
     @keyframes slide8 {
-      0%, 10% { transform: translateX(699.1px); animation-timing-function: cubic-bezier(.65,0,.35,1); }
+      0%, 10% { transform: translateX(1151.9px); animation-timing-function: cubic-bezier(.65,0,.35,1); }
       40%, 85% { transform: translateX(959.5px); animation-timing-function: cubic-bezier(.65,0,.35,1); }
-      100% { transform: translateX(699.1px); }
+      100% { transform: translateX(1151.9px); }
     }
     #fil8 { animation-name: out8; }
     @keyframes out8 {

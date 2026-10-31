@@ -2,6 +2,11 @@
 
 <img src="./public/img/tigerlegs-logo.png" alt="TIGERLegs logo: a tiger head with a blue and green GPS route in its stripes, next to the name" width="240">
 
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="./public/img/tigerlegs-acronym-anim-dark.svg">
+  <img src="./public/img/tigerlegs-acronym-anim.svg" alt="Animation expanding TIGERLEGS into its backronym: Terrain Informed Gpx ExtractoR: LEts Go Swimrun!" width="800">
+</picture>
+
 ![TigerLegs: a tiger swims across a bay and runs along the coast, following a GPS route](./public/img/tigerlegs-promo.png)
 
 TigerLegs splits a swimrun course into its swim and run legs. You upload a GPX file, and the tool shows the course on an interactive map next to a table with the distance of every swim (in metres) and run (in kilometres).

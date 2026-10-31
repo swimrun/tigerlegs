@@ -85,8 +85,8 @@ def build(suffix: str, dark: str, green: str) -> None:
     vb_h = 132
     baseline = 92
 
-    # center both states
-    c_off = pad + (expanded_w - compact_w) / 2
+    # compact state anchored at the right edge; it spreads out leftward
+    c_off = pad + expanded_w - compact_w
     e_off = pad
 
     cap_b64 = base64.b64encode(open(CAP_FONT_PATH, "rb").read()).decode()
@@ -121,7 +121,7 @@ def build(suffix: str, dark: str, green: str) -> None:
     #underline {{
       animation: underline 9s infinite both;
       transform: scaleX({scale_compact:.4f});
-      transform-origin: {pad + expanded_w / 2:.1f}px 0;
+      transform-origin: {pad + expanded_w:.1f}px 0;
     }}
     @keyframes underline {{
       0%, {k_hold1}% {{ transform: scaleX({scale_compact:.4f}); animation-timing-function: cubic-bezier(.65,0,.35,1); }}
