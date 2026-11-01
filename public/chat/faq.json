@@ -1,5 +1,5 @@
 {
-  "fallback": "Sorry I am not functional yet, just an idea. Please ask the static questions via the labels for now.",
+  "fallback": "There is no actual LLM integration yet.. Please use the static options through the labels for now..",
   "entries": [
     {
       "id": "what-is-swimrun",
@@ -19,7 +19,7 @@
     {
       "id": "distances",
       "question": "What are the distances in swimrun?",
-      "answer": "There are no standard distances. Every course is different: the swims can be a few hundred metres or several kilometres, and the runs anything from a short stretch of beach to long trails. That is exactly why measuring segments per course is useful."
+      "answer": "There are no standard distances, and that is on purpose: a course follows whatever islands, rivers or lake crossings are possible and pleasant in an area. Wikipedia lists categories of short and long courses, but those are relatively arbitrary. The Ötillö World Championship in Sweden (Stockholm archipelago) is about 60 km of running and 9 km of swimming, definitely one of the longer courses. Het Rondje Eilanden is far shorter, with about 1,500 m of swimming and running in total. Courses with 10 run and 10 swim segments are common. That is exactly why measuring segments per course is useful."
     },
     {
       "id": "gear",

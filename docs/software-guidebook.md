@@ -381,7 +381,7 @@ We use a small script because browser support for that property is not yet unive
 ### 7.2 Front end: the prototype chatbot
 
 The main page has a prototype chatbot, *Ask the tiger*, with clickable FAQ labels (what is swimrun, can tigers swim, segment counts, distances).
-It is not an LLM: it answers the fixed questions and replies "Sorry I am not functional yet" to anything else.
+It is not an LLM: it answers the fixed questions and replies "There is no actual LLM integration yet" to anything else.
 
 The component `src/components/Chatbot.tsx` depends only on the `ChatAgent` interface in `src/client/chat-agent.ts`.
 An agent returns a stream of events (`run-started`, `text`, `run-finished`), a small subset of the AG-UI event types.

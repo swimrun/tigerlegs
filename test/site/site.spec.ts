@@ -160,7 +160,7 @@ test("chatbot loads the FAQ, shows a typing indicator and answers", async ({ pag
   await expect(chat.getByRole("status")).toHaveCount(0);
   await page.getByLabel("Your question").fill("Which wetsuit?");
   await page.getByRole("button", { name: "Ask", exact: true }).click();
-  await expect(page.getByRole("log")).toContainText("Sorry I am not functional yet");
+  await expect(page.getByRole("log")).toContainText("There is no actual LLM integration yet");
 });
 
 test("About translations and mobile layout survive the shared shell", async ({ page }) => {
