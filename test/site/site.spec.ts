@@ -149,6 +149,20 @@ test("drop uses the same track chooser and mapped terrain refines local results"
   await expect(page.locator(".leaflet-control-layers")).toHaveCount(1);
 });
 
+test("chatbot loads the FAQ, shows a typing indicator and answers", async ({ page }) => {
+  await page.goto("./");
+  await page.locator("#chat-title").scrollIntoViewIfNeeded();
+  const label = "But can tigers actually swim?";
+  await page.getByRole("button", { name: label }).click();
+  const chat = page.getByRole("region", { name: /Ask the tiger/ });
+  await expect(chat.getByRole("status")).toContainText("typing");
+  await expect(page.getByRole("log")).toContainText("Tigers are among the few big cats");
+  await expect(chat.getByRole("status")).toHaveCount(0);
+  await page.getByLabel("Your question").fill("Which wetsuit?");
+  await page.getByRole("button", { name: "Ask", exact: true }).click();
+  await expect(page.getByRole("log")).toContainText("Sorry I am not functional yet");
+});
+
 test("About translations and mobile layout survive the shared shell", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("about.html");

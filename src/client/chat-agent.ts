@@ -1,6 +1,6 @@
 /**
  * Chat boundary between the UI and whatever answers. The UI only knows `ChatAgent`, so the
- * static FAQ below can later be replaced by an LLM behind AG-UI without touching the component.
+ * FAQ agent below can later be replaced by an LLM behind AG-UI without touching the component.
  * The event names are a small subset of the AG-UI event types (RUN_STARTED, TEXT_MESSAGE_CONTENT,
  * RUN_FINISHED); tool calls and state deltas can be added the same way when agents drive the UI.
  */
@@ -15,7 +15,8 @@ export interface ChatSuggestion {
 }
 
 export interface ChatAgent {
-  suggestions(): ChatSuggestion[];
+  /** Async, because an agent may have to load its suggestions. */
+  suggestions(): Promise<ChatSuggestion[]>;
   /** Answers one user message as a stream of events. */
   run(message: string): AsyncIterable<ChatEvent>;
 }
@@ -26,57 +27,63 @@ export interface FaqEntry {
   answer: string;
 }
 
-export const FALLBACK_ANSWER =
-  "Sorry I am not functional yet, just an idea. Please ask the static questions via the labels for now.";
+/** Shape of `public/chat/faq.json`. */
+export interface FaqData {
+  fallback: string;
+  entries: FaqEntry[];
+}
 
-export const FAQ: FaqEntry[] = [
-  {
-    id: "what-is-swimrun",
-    question: "What is swimrun?",
-    answer: "Swim, run, repeat. Teams (or soloists) move over a course that alternates between open-water swimming and trail running, in one go, with the same shoes and gear all the way.",
-  },
-  {
-    id: "tigers-swim",
-    question: "But can tigers actually swim?",
-    answer: "Yes, and well. Tigers are among the few big cats that enjoy water: they cool off in it and swim across rivers. That is why a tiger is our swimrun mascot, and why the tiger in the logo is mid-swim.",
-  },
-  {
-    id: "segment-count",
-    question: "How many segments does a swimrun have?",
-    answer: "It depends on the race. A short course may have a handful of swims and runs, a big island-hopping race has dozens. TigerLegs counts them for you: upload a GPX and it lists every swim and run segment.",
-  },
-  {
-    id: "distances",
-    question: "What are the distances in swimrun?",
-    answer: "There are no standard distances. Every course is different: the swims can be a few hundred metres or several kilometres, and the runs anything from a short stretch of beach to long trails. That is exactly why measuring segments per course is useful.",
-  },
-  {
-    id: "gear",
-    question: "Do you swim in your running shoes?",
-    answer: "Usually yes. Most swimrunners keep their shoes on and often use paddles and a pull buoy while swimming, plus a wetsuit that is easy to run in. More in our Substack series 'From zero till Ötillö': https://from0tillotillo.substack.com/",
-  },
-  {
-    id: "tigerlegs-name",
-    question: "What does TigerLegs stand for?",
-    answer: "Terrain Informed Gpx ExtractoR: LEts Go Swimrun!",
-  },
-  {
-    id: "privacy",
-    question: "Is my GPX file uploaded?",
-    answer: "No. The analysis runs in your browser. Terrain data from OpenStreetMap is opt-in, and then only a coarse bounding box is sent, never your trackpoints. See the About page for details.",
-  },
-];
+const isText = (value: unknown): value is string => typeof value === "string" && value.length > 0;
+
+/** Validates untrusted JSON; throws a readable error for anything that is not `FaqData`. */
+export function parseFaq(json: unknown): FaqData {
+  const data = json as Partial<FaqData> | null;
+  if (!data || !isText(data.fallback) || !Array.isArray(data.entries)) {
+    throw new Error("FAQ must have a fallback text and a list of entries");
+  }
+  for (const entry of data.entries) {
+    if (!entry || !isText(entry.id) || !isText(entry.question) || !isText(entry.answer)) {
+      throw new Error("Every FAQ entry needs an id, a question and an answer");
+    }
+  }
+  return { fallback: data.fallback, entries: data.entries };
+}
 
 const normalize = (text: string) => text.toLowerCase().replace(/[^\p{L}\p{N}]+/gu, " ").trim();
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-/** Offline agent: answers only the known questions and says so for anything else. */
-export function createFaqAgent(entries: FaqEntry[] = FAQ): ChatAgent {
-  const byQuestion = new Map(entries.map((entry) => [normalize(entry.question), entry]));
+export interface FaqAgentOptions {
+  /** Pause before answering so the chat feels like a conversation. */
+  delayMs?: number;
+  fetcher?: typeof fetch;
+}
+
+/**
+ * Agent that answers the questions in a FAQ JSON file and says so for anything else.
+ * The file is fetched on first use, so the page does not wait for it.
+ */
+export function createFaqAgent(url: string, { delayMs = 700, fetcher = fetch }: FaqAgentOptions = {}): ChatAgent {
+  let loaded: Promise<FaqData> | undefined;
+  const load = () => {
+    loaded ??= fetcher(url).then(async (response) => {
+      if (!response.ok) throw new Error(`FAQ request failed with status ${response.status}`);
+      return parseFaq(await response.json());
+    });
+    // A failed load is not cached, so the next attempt can retry.
+    return loaded.catch((error) => {
+      loaded = undefined;
+      throw error;
+    });
+  };
+
   return {
-    suggestions: () => entries.map(({ id, question }) => ({ id, label: question })),
+    suggestions: async () => (await load()).entries.map(({ id, question }) => ({ id, label: question })),
     async *run(message: string) {
       yield { type: "run-started" };
-      yield { type: "text", text: byQuestion.get(normalize(message))?.answer ?? FALLBACK_ANSWER };
+      const faq = await load();
+      await sleep(delayMs);
+      const entry = faq.entries.find((candidate) => normalize(candidate.question) === normalize(message));
+      yield { type: "text", text: entry?.answer ?? faq.fallback };
       yield { type: "run-finished" };
     },
   };

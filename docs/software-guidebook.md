@@ -245,6 +245,7 @@ This chapter lists the rules that guide design choices when no constraint decide
 - **Navigate with links, not buttons.** Every page shares a header menu with links to *Extractorrr* (with the tiger growl) and *About*, and the current page is marked. Pages have no "back to" buttons. Buttons trigger actions on the current page, links move between pages.
 - **Fake it till you make it.** Before building an expensive feature, we may show a believable prototype of it to see whether anyone cares (a fake-door test). Today the chatbot (section 7.2) answers a fixed FAQ and the profile page (section 7.3) has a fake login with one static profile. Rules: a fake is labelled as a prototype in the interface, it never collects real personal data, it hides behind a replaceable interface so the real implementation drops in later, and we measure its usage (planned, issue #11) before deciding to build the real thing.
 - **Scroll-linked effects never hijack scrolling.** Visual effects may follow the scroll position, but the page always scrolls natively and the effect is decoration only (see section 7.1). Content stays readable without it.
+- **Show system status.** Whenever the system is working and the user waits, the interface shows it. This is Nielsen's first usability heuristic, *visibility of system status* (Nielsen, 1994). In the chat it takes the form of a *typing indicator* (section 7.2). The indicator is also announced to screen readers, and it does not animate for people who prefer reduced motion.
 - **Document decisions.** Significant choices get an ADR, and the team writes documentation in English.
 
 ### 5.1 Documentation approach
@@ -384,7 +385,9 @@ It is not an LLM: it answers the fixed questions and replies "Sorry I am not fun
 
 The component `src/components/Chatbot.tsx` depends only on the `ChatAgent` interface in `src/client/chat-agent.ts`.
 An agent returns a stream of events (`run-started`, `text`, `run-finished`), a small subset of the AG-UI event types.
-`createFaqAgent` is the static implementation.
+`createFaqAgent` is the static implementation. It fetches `public/chat/faq.json` (the fallback text and the list of questions and answers) on first use, validates it with `parseFaq`, and waits a short moment (700 ms) before answering so the chat feels like a conversation.
+Changing a question or answer is a JSON edit, not a code change.
+While the file loads and while the agent works, the UI shows a *typing indicator* (three bouncing dots, the "somebody is typing" pattern). It follows the principle "Show system status" (chapter 5), has a text alternative for screen readers (`role="status"`), and uses `motion-safe:` so it stands still for people who prefer reduced motion.
 A later agent that talks to an LLM over AG-UI can replace it by passing it as the `agent` prop, and tool-call or state events can be added to `ChatEvent` when an agent should drive the UI (issue #10).
 Free text from the user is already passed to the agent, so the UI does not change for that either.
 
@@ -529,6 +532,8 @@ Gruber, T. (2008). Ontology. In L. Liu & M. T. Özsu (Eds.), *Encyclopedia of Da
 Knuth, D. E. (1984). Literate programming. *The Computer Journal, 27*(2), 97–111. https://doi.org/10.1093/comjnl/27.2.97
 
 Larman, C. (2005). *Applying UML and patterns: An introduction to object-oriented analysis and design and iterative development* (3rd ed.). Prentice Hall.
+
+Nielsen, J. (1994). *10 usability heuristics for user interface design*. Nielsen Norman Group. https://www.nngroup.com/articles/ten-usability-heuristics/
 
 Preston-Werner, T. (2010, August 23). *Readme Driven Development*. https://tom.preston-werner.com/2010/08/23/readme-driven-development.html
 
