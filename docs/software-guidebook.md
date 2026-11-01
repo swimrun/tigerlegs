@@ -395,7 +395,7 @@ How it works:
 Its CSS mask is a `radial-gradient` that is opaque inside a radius and transparent outside it, so the picture seems to grow out of a corner.
 - The gradient is centred on the bottom-right corner of the picture, where the tiger swims: `at calc(50% + var(--tiger-w) / 2) 100%`.
 The circle uses `farthest-corner`, so it reaches the right side of the picture sooner than the far left side.
-- `src/client/about.ts` computes scroll progress (`scrollY` divided by the scrollable height) and writes it to the custom property `--reveal` on every scroll event.
+- `src/client/about.ts` computes scroll progress (`scrollY` divided by the scrollable height), eases it with `progress ** 2.5` (slow at first, fast near the end, so the picture stays small over the text halfway down) and writes it to the custom property `--reveal` on every scroll event.
 The mask radius is a percentage of `--reveal`.
 - `::before` is the same photo, stretched and blurred, to fill the sides next to the centred picture so the colours match.
 `::after` is the sharp picture; its own horizontal mask fades the left edge over 14% and the right edge over only 6%, so the tiger at the right edge stays visible.

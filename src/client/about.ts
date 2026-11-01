@@ -4,7 +4,7 @@ const updateReveal = () => {
   if (!tiger) return;
   const max = document.documentElement.scrollHeight - globalThis.innerHeight;
   const progress = max > 0 ? Math.min(1, globalThis.scrollY / max) : 1;
-  tiger.style.setProperty("--reveal", String(0.12 + 0.98 * progress));
+  tiger.style.setProperty("--reveal", String(0.05 + 1.05 * progress ** 2.5));
 };
 globalThis.addEventListener("scroll", updateReveal, { passive: true });
 globalThis.addEventListener("resize", updateReveal);
