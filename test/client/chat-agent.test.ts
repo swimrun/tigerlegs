@@ -1,7 +1,9 @@
 import { assertEquals, assertRejects } from "@std/assert";
+import { LANGS } from "../../src/client/language.ts";
 import { type ChatEvent, createFaqAgent, type FaqData, parseFaq } from "../../src/client/chat-agent.ts";
 
-const faq = parseFaq(JSON.parse(await Deno.readTextFile("public/chat/faq.json")));
+const loadFaq = async (lang: string) => parseFaq(JSON.parse(await Deno.readTextFile(`public/chat/faq.${lang}.json`)));
+const faq = await loadFaq("en");
 
 function stubFetch(body: unknown, status = 200) {
   let calls = 0;
@@ -20,7 +22,15 @@ async function collect(agent: ReturnType<typeof createFaqAgent>, message: string
 
 const agentFor = (data: unknown = faq) => createFaqAgent("faq.json", { delayMs: 0, fetcher: stubFetch(data).fetcher });
 
-Deno.test("the shipped faq.json is valid and has entries", () => {
+Deno.test("every language has the same entries, with a longer answer in the same places", async () => {
+  for (const lang of LANGS) {
+    const other = await loadFaq(lang);
+    assertEquals(other.language, lang);
+    assertEquals(other.entries.map((e) => [e.id, e.more !== undefined]), faq.entries.map((e) => [e.id, e.more !== undefined]));
+  }
+});
+
+Deno.test("the shipped English faq is valid and has entries", () => {
   assertEquals(faq.entries.length > 0, true);
   assertEquals(new Set(faq.entries.map((e) => e.id)).size, faq.entries.length);
 });
@@ -41,7 +51,7 @@ Deno.test("an answer with a longer version offers 'Tell me more'", async () => {
   const entry = faq.entries.find((e) => e.more)!;
   const first = (await collect(agent, entry.question))[1];
   const followUp = first.type === "text" ? first.followUps?.[0] : undefined;
-  assertEquals(followUp?.label, "Tell me more");
+  assertEquals(followUp?.label, faq.tellMore);
   assertEquals((await collect(agent, followUp!.prompt!))[1], { type: "text", text: entry.more! });
 });
 

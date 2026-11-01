@@ -150,9 +150,11 @@ test("drop uses the same track chooser and mapped terrain refines local results"
 });
 
 test("chatbot loads the FAQ, shows a typing indicator and answers", async ({ page }) => {
+  const label = "But can tigers actually swim?";
   await page.goto("./");
   await page.locator("#chat-title").scrollIntoViewIfNeeded();
-  const label = "But can tigers actually swim?";
+  await expect(page.getByRole("button", { name: label })).toHaveCount(0);
+  await page.getByRole("button", { name: /Ask the tiger/ }).click();
   await page.getByRole("button", { name: label }).click();
   const chat = page.getByRole("region", { name: /Ask the tiger/ });
   await expect(chat.getByRole("status")).toContainText("typing");
@@ -166,6 +168,14 @@ test("chatbot loads the FAQ, shows a typing indicator and answers", async ({ pag
   await page.getByLabel("Your question").fill("Which wetsuit?");
   await page.getByRole("button", { name: "Ask", exact: true }).click();
   await expect(page.getByRole("log")).toContainText("There is no actual LLM integration yet");
+});
+
+test("chatbot follows the page language", async ({ page }) => {
+  await page.goto("./");
+  await page.locator("#chat-title").scrollIntoViewIfNeeded();
+  await page.locator('[data-set-lang="nl"]').first().click();
+  await page.getByRole("button", { name: /Vraag het de tijger/ }).click();
+  await expect(page.getByRole("list", { name: "Voorgestelde vragen" })).toBeVisible();
 });
 
 test("About translations and mobile layout survive the shared shell", async ({ page }) => {

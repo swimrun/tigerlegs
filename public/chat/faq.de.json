@@ -1,0 +1,47 @@
+{
+  "language": "de",
+  "tellMore": "Erzähl mir mehr",
+  "fallback": "Es gibt noch keine echte LLM-Anbindung.. Bitte nutze vorerst die festen Optionen über die Labels..",
+  "entries": [
+    {
+      "id": "what-is-swimrun",
+      "question": "Was ist Swimrun?",
+      "answer": "Schwimmen, laufen, wiederholen: ein Wettkampf, der in einem Zug zwischen Freiwasserschwimmen und Traillauf wechselt, mit derselben Ausrüstung die ganze Zeit.",
+      "more": "Zweierteams (oder Einzelstarter) bewältigen eine Strecke, die in einem Zug zwischen Freiwasserschwimmen und Traillauf wechselt, die ganze Zeit mit denselben Schuhen und derselben Ausrüstung."
+    },
+    {
+      "id": "tigers-swim",
+      "question": "Aber können Tiger überhaupt schwimmen?",
+      "answer": "Ja, und zwar gut. Tiger gehören zu den wenigen Großkatzen, die Wasser mögen.",
+      "more": "Sie kühlen sich darin ab und durchschwimmen Flüsse. Deshalb ist der Tiger unser Swimrun-Maskottchen, und deshalb schwimmt der Tiger im Logo mitten im Zug."
+    },
+    {
+      "id": "segment-count",
+      "question": "Wie viele Segmente hat ein Swimrun?",
+      "answer": "Das hängt vom Rennen ab: von einer Handvoll Schwimm- und Laufabschnitten bis zu Dutzenden.",
+      "more": "Eine kurze Strecke hat ein paar Segmente, ein großes Inselrennen Dutzende. TigerLegs zählt sie für dich: Lade eine GPX-Datei hoch und es listet jedes Schwimm- und Laufsegment auf."
+    },
+    {
+      "id": "distances",
+      "question": "Welche Distanzen gibt es beim Swimrun?",
+      "answer": "Es gibt keine Standarddistanzen, und das ist Absicht: Eine Strecke folgt den Inseln, Flüssen oder Seen, die sich in einer Gegend sinnvoll und angenehm durchqueren lassen.",
+      "more": "Wikipedia nennt Kategorien für kurze und lange Strecken, aber die sind relativ willkürlich. Die Ötillö-Weltmeisterschaft in Schweden (Stockholmer Schären) hat etwa 60 km Laufen und 9 km Schwimmen, eindeutig eine der längeren Strecken. Het Rondje Eilanden ist deutlich kürzer, mit etwa 1.500 m Schwimmen und Laufen zusammen. Strecken mit 10 Lauf- und 10 Schwimmsegmenten sind häufig. Genau deshalb ist es nützlich, die Segmente pro Strecke zu messen."
+    },
+    {
+      "id": "gear",
+      "question": "Schwimmt man in den Laufschuhen?",
+      "answer": "Meistens ja. Die meisten Swimrunner behalten beim Schwimmen ihre Schuhe an.",
+      "more": "Oft benutzen sie dazu Paddles und einen Pullbuoy sowie einen Neoprenanzug, in dem man gut laufen kann. Mehr in unserer Substack-Serie „From zero till Ötillö“: https://from0tillotillo.substack.com/"
+    },
+    {
+      "id": "tigerlegs-name",
+      "question": "Wofür steht TigerLegs?",
+      "answer": "Terrain Informed Gpx ExtractoR: LEts Go Swimrun!"
+    },
+    {
+      "id": "privacy",
+      "question": "Wird meine GPX-Datei hochgeladen?",
+      "answer": "Nein. Die Analyse läuft in deinem Browser. Geländedaten von OpenStreetMap sind optional, und dann wird nur ein grober Kartenausschnitt gesendet, nie deine Trackpunkte. Details findest du auf der Über-Seite."
+    }
+  ]
+}

@@ -1,4 +1,6 @@
 {
+  "language": "en",
+  "tellMore": "Tell me more",
   "fallback": "There is no actual LLM integration yet.. Please use the static options through the labels for now..",
   "entries": [
     {

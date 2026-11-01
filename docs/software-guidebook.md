@@ -348,6 +348,31 @@ A `DisplaySegmentPair` groups a run and a swim for the compact table.
 The planned watch data field adds two runtime types to this model: a `LegProgress` that tracks the current leg and its remaining distance, and a transition detector with hysteresis, so that one noisy GPS fix near a transition cannot advance and regress the leg repeatedly ([spec](../specs/001-garmin-datafield/spec.md), FR-004).
 Appendix A defines each term.
 
+### 6.4 Chat domain model
+
+Figure 9 shows the concepts of the prototype chatbot, separate from the course model above.
+
+*Figure 9*: Chat domain model.
+
+```mermaid
+classDiagram
+    FaqCatalog "1" o-- "*" Question
+    FaqCatalog "1" --> "1" Language : written in
+    FaqCatalog "1" --> "1" Fallback
+    Question "1" --> "1" StaticAnswer
+    StaticAnswer "1" *-- "1" BriefAnswer
+    StaticAnswer "1" *-- "0..1" More
+    Question ..> DynamicAnswer : free text (planned)
+    ChatAgent <|.. FaqAgent
+    ChatAgent <|.. LlmAgent : planned
+    FaqAgent ..> FaqCatalog : loads
+    FaqAgent ..> Fallback : replies with
+    LlmAgent ..> DynamicAnswer : produces
+```
+
+A *question* is a clickable label or free text. The FAQ catalog holds one question per label, each with a static answer: a brief answer, and optionally *more*, which the user asks for with the *Tell me more* follow-up.
+There is one catalog per language. Free text gets the fallback today, and a dynamic answer from an LLM agent later. Both agent kinds sit behind the `ChatAgent` interface.
+
 ## 7. Code
 
 This chapter explains how the source code is organised.
@@ -385,9 +410,11 @@ It is not an LLM: it answers the fixed questions and replies "There is no actual
 
 The component `src/components/Chatbot.tsx` depends only on the `ChatAgent` interface in `src/client/chat-agent.ts`.
 An agent returns a stream of events (`run-started`, `text`, `run-finished`), a small subset of the AG-UI event types.
-`createFaqAgent` is the static implementation. It fetches `public/chat/faq.json` (the fallback text and the list of questions and answers) on first use, validates it with `parseFaq`, and waits a short moment (700 ms) before answering so the chat feels like a conversation.
+`createFaqAgent` is the static implementation. It fetches `public/chat/faq.<lang>.json` (language, *Tell me more* label, fallback text, and the questions and answers) on first use, validates it with `parseFaq`, and waits a short moment (700 ms) before answering so the chat feels like a conversation.
 Changing a question or answer is a JSON edit, not a code change.
 Each entry has a short `answer` and an optional longer `more`. When `more` exists, the answer comes with a *Tell me more* follow-up button that stays until it is used. A question label leaves the list only once all its answers have been given, so the short answer alone does not remove it.
+There is one file per language (`en`, `nl`, `fr`, `de`) with the same entry ids; a unit test checks this parity. The chat follows the page language (the `lang` attribute of `<html>`), has its own typed UI dictionary for strings needed before the JSON loads, and restarts when the language changes.
+The chat starts collapsed as a small header button (`aria-expanded`); the FAQ is fetched on the first opening.
 While the file loads and while the agent works, the UI shows a *typing indicator* (three bouncing dots, the "somebody is typing" pattern). It follows the principle "Show system status" (chapter 5), has a text alternative for screen readers (`role="status"`), and uses `motion-safe:` so it stands still for people who prefer reduced motion.
 A later agent that talks to an LLM over AG-UI can replace it by passing it as the `agent` prop, and tool-call or state events can be added to `ChatEvent` when an agent should drive the UI (issue #10).
 Free text from the user is already passed to the agent, so the UI does not change for that either.
@@ -561,6 +588,13 @@ Table 9 lists the terms in the order in which you meet them when you follow a GP
 | Transition | The point where one segment ends and the next begins | The beach exit after a swim |
 | Hysteresis | Memory in a threshold decision: once a transition counts as passed, nearby noisy GPS fixes cannot un-pass it | The watch advances to leg 5 once, even when swim-degraded GPS jitters around the transition radius |
 | Distance to next transition | Distance along the track from a position to the next transition | "Next transition in 1.2 km" |
+| Question | A prompt the athlete sends to the chat, by clicking a label or typing | "But can tigers actually swim?" |
+| Static answer | A fixed answer from the FAQ catalog, consisting of a brief answer and optionally more | The tiger answer in `faq.en.json` |
+| Brief answer | The short first reply to a question | "Yes. Tigers are among the few big cats that like water." |
+| More | The longer second reply, offered through the *Tell me more* follow-up | Why swimrun courses vary in distance |
+| Dynamic answer | An answer an LLM generates for a free-text question (planned, issue #10) | A reply about a specific wetsuit |
+| Fallback | The reply to free text while no LLM is integrated | "There is no actual LLM integration yet.." |
+| Language | One of English, Dutch, French or German; each has its own FAQ catalog | `faq.nl.json` |
 | Strategy | A method to detect segments: waypoint, speed or landscape | Waypoint strategy |
 | Confidence | How sure a strategy is about a trackpoint; the combiner keeps the highest | 0.9 from waypoints beats 0.4 from speed |
 | Terrain | Land or water at a coordinate, from OpenStreetMap | A lake point returns water |

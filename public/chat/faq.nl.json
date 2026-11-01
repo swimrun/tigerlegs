@@ -1,0 +1,47 @@
+{
+  "language": "nl",
+  "tellMore": "Vertel me meer",
+  "fallback": "Er is nog geen echte LLM-koppeling.. Gebruik voorlopig de vaste opties via de labels..",
+  "entries": [
+    {
+      "id": "what-is-swimrun",
+      "question": "Wat is swimrun?",
+      "answer": "Zwemmen, rennen, herhalen: een wedstrijd die in één keer wisselt tussen zwemmen in open water en trailrunning, met steeds dezelfde uitrusting.",
+      "more": "Teams van twee (of soloërs) leggen een parcours af dat wisselt tussen zwemmen in open water en trailrunning, in één keer, de hele tijd met dezelfde schoenen en uitrusting."
+    },
+    {
+      "id": "tigers-swim",
+      "question": "Maar kunnen tijgers eigenlijk zwemmen?",
+      "answer": "Ja, en goed ook. Tijgers zijn een van de weinige grote katten die van water houden.",
+      "more": "Ze koelen er in af en zwemmen door rivieren. Daarom is een tijger onze swimrun-mascotte, en daarom zwemt de tijger in het logo midden in een slag."
+    },
+    {
+      "id": "segment-count",
+      "question": "Hoeveel segmenten heeft een swimrun?",
+      "answer": "Dat hangt van de wedstrijd af: van een handvol zwem- en loopsegmenten tot tientallen.",
+      "more": "Een kort parcours heeft een handvol segmenten, een grote eilandenwedstrijd tientallen. TigerLegs telt ze voor je: upload een GPX en je krijgt elk zwem- en loopsegment op een rij."
+    },
+    {
+      "id": "distances",
+      "question": "Wat zijn de afstanden in swimrun?",
+      "answer": "Er zijn geen standaardafstanden, en dat is bewust: een parcours volgt de eilanden, rivieren of meren die in een gebied mogelijk en prettig zijn om over te steken.",
+      "more": "Wikipedia noemt categorieën voor korte en lange parcoursen, maar die zijn tamelijk willekeurig. Het WK Ötillö in Zweden (Stockholmse archipel) is ongeveer 60 km hardlopen en 9 km zwemmen, zeker een van de langere parcoursen. Het Rondje Eilanden is veel korter, met ongeveer 1500 m zwemmen en lopen samen. Parcoursen met 10 loop- en 10 zwemsegmenten komen vaak voor. Juist daarom is het handig om segmenten per parcours te meten."
+    },
+    {
+      "id": "gear",
+      "question": "Zwem je in je hardloopschoenen?",
+      "answer": "Meestal wel. De meeste swimrunners houden hun schoenen aan tijdens het zwemmen.",
+      "more": "Vaak gebruiken ze ook paddles en een pullbuoy, plus een wetsuit waarin je makkelijk rent. Meer in onze Substack-serie 'From zero till Ötillö': https://from0tillotillo.substack.com/"
+    },
+    {
+      "id": "tigerlegs-name",
+      "question": "Waar staat TigerLegs voor?",
+      "answer": "Terrain Informed Gpx ExtractoR: LEts Go Swimrun!"
+    },
+    {
+      "id": "privacy",
+      "question": "Wordt mijn GPX-bestand geüpload?",
+      "answer": "Nee. De analyse draait in je browser. Terreingegevens van OpenStreetMap zijn opt-in, en dan wordt alleen een grof kader verstuurd, nooit je trackpunten. Zie de Over-pagina voor details."
+    }
+  ]
+}

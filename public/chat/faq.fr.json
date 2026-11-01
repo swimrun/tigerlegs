@@ -1,0 +1,47 @@
+{
+  "language": "fr",
+  "tellMore": "Dis-m'en plus",
+  "fallback": "Il n'y a pas encore de véritable intégration LLM.. Utilise pour l'instant les options prédéfinies via les étiquettes..",
+  "entries": [
+    {
+      "id": "what-is-swimrun",
+      "question": "Qu'est-ce que le swimrun ?",
+      "answer": "Nager, courir, recommencer : une course qui alterne nage en eau libre et trail, d'une traite, avec le même équipement tout du long.",
+      "more": "Des équipes de deux (ou des solistes) parcourent un tracé qui alterne nage en eau libre et trail, d'une traite, avec les mêmes chaussures et le même équipement du début à la fin."
+    },
+    {
+      "id": "tigers-swim",
+      "question": "Mais les tigres savent-ils vraiment nager ?",
+      "answer": "Oui, et très bien. Les tigres font partie des rares grands félins qui aiment l'eau.",
+      "more": "Ils s'y rafraîchissent et traversent des rivières à la nage. C'est pourquoi le tigre est notre mascotte du swimrun, et pourquoi le tigre du logo est en pleine nage."
+    },
+    {
+      "id": "segment-count",
+      "question": "Combien de segments compte un swimrun ?",
+      "answer": "Cela dépend de la course : d'une poignée de nages et de courses à plusieurs dizaines.",
+      "more": "Un parcours court a quelques segments, une grande course entre îles en a des dizaines. TigerLegs les compte pour toi : envoie un GPX et il liste chaque segment de nage et de course."
+    },
+    {
+      "id": "distances",
+      "question": "Quelles sont les distances en swimrun ?",
+      "answer": "Il n'y a pas de distances standard, et c'est voulu : un parcours suit les îles, rivières ou lacs qu'il est possible et agréable de traverser dans une région.",
+      "more": "Wikipédia propose des catégories de parcours courts et longs, mais elles sont assez arbitraires. Les championnats du monde Ötillö en Suède (archipel de Stockholm) font environ 60 km de course à pied et 9 km de nage, clairement l'un des parcours les plus longs. Het Rondje Eilanden est bien plus court, avec environ 1 500 m de nage et de course au total. Les parcours avec 10 segments de course et 10 de nage sont courants. C'est précisément pourquoi mesurer les segments de chaque parcours est utile."
+    },
+    {
+      "id": "gear",
+      "question": "Nage-t-on avec ses chaussures de course ?",
+      "answer": "Généralement oui. La plupart des swimrunners gardent leurs chaussures pendant la nage.",
+      "more": "Ils utilisent souvent des plaquettes et un pull-buoy, ainsi qu'une combinaison facile à porter en courant. Plus de détails dans notre série Substack « From zero till Ötillö » : https://from0tillotillo.substack.com/"
+    },
+    {
+      "id": "tigerlegs-name",
+      "question": "Que signifie TigerLegs ?",
+      "answer": "Terrain Informed Gpx ExtractoR: LEts Go Swimrun!"
+    },
+    {
+      "id": "privacy",
+      "question": "Mon fichier GPX est-il envoyé en ligne ?",
+      "answer": "Non. L'analyse se fait dans ton navigateur. Les données de terrain d'OpenStreetMap sont optionnelles, et seule une zone approximative est alors envoyée, jamais tes points de trace. Voir la page À propos pour les détails."
+    }
+  ]
+}

@@ -33,8 +33,11 @@ export interface FaqEntry {
   more?: string;
 }
 
-/** Shape of `public/chat/faq.json`. */
+/** Shape of `public/chat/faq.<lang>.json`. */
 export interface FaqData {
+  language: string;
+  /** Label of the follow-up button that reveals the longer answer. */
+  tellMore: string;
   fallback: string;
   entries: FaqEntry[];
 }
@@ -44,8 +47,8 @@ const isText = (value: unknown): value is string => typeof value === "string" &&
 /** Validates untrusted JSON; throws a readable error for anything that is not `FaqData`. */
 export function parseFaq(json: unknown): FaqData {
   const data = json as Partial<FaqData> | null;
-  if (!data || !isText(data.fallback) || !Array.isArray(data.entries)) {
-    throw new Error("FAQ must have a fallback text and a list of entries");
+  if (!data || !isText(data.language) || !isText(data.tellMore) || !isText(data.fallback) || !Array.isArray(data.entries)) {
+    throw new Error("FAQ must have a language, a tellMore label, a fallback text and a list of entries");
   }
   for (const entry of data.entries) {
     if (!entry || !isText(entry.id) || !isText(entry.question) || !isText(entry.answer)) {
@@ -53,7 +56,7 @@ export function parseFaq(json: unknown): FaqData {
     }
     if (entry.more !== undefined && !isText(entry.more)) throw new Error("An FAQ 'more' text must not be empty");
   }
-  return { fallback: data.fallback, entries: data.entries };
+  return { language: data.language, tellMore: data.tellMore, fallback: data.fallback, entries: data.entries };
 }
 
 const normalize = (text: string) => text.toLowerCase().replace(/[^\p{L}\p{N}]+/gu, " ").trim();
@@ -97,7 +100,7 @@ export function createFaqAgent(url: string, { delayMs = 700, fetcher = fetch }: 
         const entry = faq.entries.find((candidate) => normalize(candidate.question) === normalize(message));
         const text = entry?.answer ?? faq.fallback;
         yield entry?.more
-          ? { type: "text", text, followUps: [{ id: `${entry.id}-more`, label: "Tell me more", prompt: MORE_PREFIX + entry.id, completes: entry.id }] }
+          ? { type: "text", text, followUps: [{ id: `${entry.id}-more`, label: faq.tellMore, prompt: MORE_PREFIX + entry.id, completes: entry.id }] }
           : { type: "text", text };
       }
       yield { type: "run-finished" };
