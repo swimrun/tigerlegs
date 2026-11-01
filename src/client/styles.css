@@ -108,11 +108,8 @@
   .guidebook blockquote {
     @apply border-l-4 border-amber-500 pl-4 text-stone-600;
   }
-  .lang-link {
-    @apply rounded px-1 font-medium no-underline;
-  }
-  .lang-link[aria-current="true"] {
-    @apply border-b-2 border-stone-900 font-bold;
+  .lang-select {
+    @apply rounded border border-stone-900 bg-white px-2 py-1 text-sm font-medium text-stone-900;
   }
   html[data-lang="en"] :is([lang="nl"], [lang="fr"], [lang="de"]),
   html[data-lang="nl"] :is([lang="en"], [lang="fr"], [lang="de"]),

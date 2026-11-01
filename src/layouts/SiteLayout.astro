@@ -48,9 +48,9 @@ const links = [
           <nav id="main-menu" aria-label="Main menu" class="site-menu">
             {links.map(link => <a href={link.href} aria-current={active === link.key ? "page" : undefined}>{link.text}</a>)}
           </nav>
-          <nav id="language-switch" aria-label="Language" class="flex gap-2 text-sm">
-            {languages.map(l => <a href="#" data-set-lang={l.code} hreflang={l.code} title={l.name} aria-label={l.name} class="lang-link"><span aria-hidden="true">{l.flag}</span> {l.code.toUpperCase()}</a>)}
-          </nav>
+          <select id="language-switch" aria-label="Language" class="lang-select">
+            {languages.map(l => <option value={l.code} lang={l.code}>{l.flag} {l.code.toUpperCase()} · {l.name}</option>)}
+          </select>
           <a id="profile-link" href={`${base}profile.html`} class="text-sm font-medium underline" aria-current={active === "profile" ? "page" : undefined}>Profile</a>
         </div>
       </div>

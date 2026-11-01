@@ -1,21 +1,16 @@
 import { isLang, type Lang, resolveLang, STORAGE_KEY } from "./language.ts";
 
+const select = document.querySelector<HTMLSelectElement>("#language-switch");
+
 function setLang(lang: Lang): void {
   document.documentElement.dataset.lang = lang;
   document.documentElement.lang = lang;
-  document.querySelectorAll<HTMLElement>("[data-set-lang]").forEach((link) => {
-    if (link.dataset.setLang === lang) link.setAttribute("aria-current", "true");
-    else link.removeAttribute("aria-current");
-  });
+  if (select) select.value = lang;
 }
 
-document.querySelectorAll<HTMLElement>("[data-set-lang]").forEach((link) => {
-  link.addEventListener("click", (event) => {
-    event.preventDefault();
-    const lang = link.dataset.setLang;
-    if (!isLang(lang)) return;
-    localStorage.setItem(STORAGE_KEY, lang);
-    setLang(lang);
-  });
+select?.addEventListener("change", () => {
+  if (!isLang(select.value)) return;
+  localStorage.setItem(STORAGE_KEY, select.value);
+  setLang(select.value);
 });
 setLang(resolveLang(localStorage.getItem(STORAGE_KEY), navigator.language));

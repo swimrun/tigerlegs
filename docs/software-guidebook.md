@@ -427,12 +427,12 @@ A real identity provider can replace it later without changing the profile compo
 
 ### 7.4 Front end: language switch
 
-The language switch (flag and code for English, Dutch, French and German) sits in the shared header in `src/layouts/SiteLayout.astro`, so it is on every page.
+The language switch is a native `<select>` (flag, code and name for English, Dutch, French and German), which takes less header space than four links. It sits in the shared header in `src/layouts/SiteLayout.astro`, so it is on every page.
 `src/client/language-switch.ts` stores the choice in `localStorage` (`tigerlegs-lang`) and sets `data-lang` and `lang` on `<html>`.
 `resolveLang` in `src/client/language.ts` picks the saved choice, else the browser language, else English.
 Translated content carries a `lang` attribute, and a CSS rule hides every language except the active one.
 Pages without translations (the extractor, chatbot and profile) stay English for now.
-The flag is decoration (`aria-hidden`); the link has a text code and an `aria-label` with the language name, because a flag is a country and not a language.
+Each option also shows the code and the language name, because a flag is a country and not a language; the select has an `aria-label`.
 Flag emoji do not render on Windows, where the two-letter code shows instead.
 
 ## 8. Data

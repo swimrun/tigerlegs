@@ -31,13 +31,13 @@ test("static pages and every ADR have shared navigation, direct links and reload
 
 test("language choice is in the header on every page and persists across pages", async ({ page }) => {
   await page.goto("./");
-  await expect(page.locator("#language-switch a")).toHaveCount(4);
-  await page.locator('#language-switch [data-set-lang="nl"]').click();
+  await expect(page.locator("#language-switch option")).toHaveCount(4);
+  await page.locator("#language-switch").selectOption("nl");
   await expect(page.locator("html")).toHaveAttribute("lang", "nl");
   await page.goto("about.html");
   await expect(page.locator("html")).toHaveAttribute("lang", "nl");
   await expect(page.locator("h1[lang=nl]")).toBeVisible();
-  await expect(page.locator('#language-switch [aria-current="true"]')).toHaveAttribute("data-set-lang", "nl");
+  await expect(page.locator("#language-switch")).toHaveValue("nl");
 });
 
 test("fake login shows the static profile and logging out returns to the form", async ({ page }) => {
@@ -173,7 +173,7 @@ test("chatbot loads the FAQ, shows a typing indicator and answers", async ({ pag
 test("chatbot follows the page language", async ({ page }) => {
   await page.goto("./");
   await page.locator("#chat-title").scrollIntoViewIfNeeded();
-  await page.locator('[data-set-lang="nl"]').first().click();
+  await page.locator("#language-switch").selectOption("nl");
   await page.getByRole("button", { name: /Vraag het de tijger/ }).click();
   await expect(page.getByRole("list", { name: "Voorgestelde vragen" })).toBeVisible();
 });
@@ -181,7 +181,7 @@ test("chatbot follows the page language", async ({ page }) => {
 test("About translations and mobile layout survive the shared shell", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("about.html");
-  await page.locator('[data-set-lang="nl"]').click();
+  await page.locator("#language-switch").selectOption("nl");
   await expect(page.locator("html")).toHaveAttribute("lang", "nl");
   await expect(page.getByRole("heading", { name: "Over TigerLegs" })).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
