@@ -67,8 +67,10 @@ Deno.test("Property 7: haversineDistance - triangle inequality", () => {
         const dAB = haversineDistance(a, b);
         const dBC = haversineDistance(b, c);
         // Tolerance accounts for floating-point rounding in near-antipodal cases
-        // where distances approach half Earth circumference (~20,000 km)
-        const tolerance = 1e-6;
+        // where distances approach half Earth circumference (~20,000 km) and the
+        // haversine error grows to sqrt(machine epsilon) × circumference ≈ 0.3 m,
+        // so allow 1 m (CI seed 1099221529 produced a ~7 cm violation).
+        const tolerance = 1e-3;
         return dAC <= dAB + dBC + tolerance;
       },
     ),

@@ -1,4 +1,8 @@
-import type { Coordinate, StrategyResult, Trackpoint } from "../shared/types.ts";
+import type {
+  Coordinate,
+  StrategyResult,
+  Trackpoint,
+} from "../shared/types.ts";
 import { calculateTrackDistance } from "../shared/distance-calculator.ts";
 
 export interface WaterBody {
@@ -32,8 +36,10 @@ const MAX_LAND_GAP_POINTS = 10;
 const MAX_SWIM_KPH = 7;
 const SPEED_WINDOW_SECONDS = 40;
 
-const toCoords = (g: OverpassPoint[]): Coordinate[] => g.map((p) => ({ lat: p.lat, lon: p.lon }));
-const same = (a: Coordinate, b: Coordinate) => a.lat === b.lat && a.lon === b.lon;
+const toCoords = (g: OverpassPoint[]): Coordinate[] =>
+  g.map((p) => ({ lat: p.lat, lon: p.lon }));
+const same = (a: Coordinate, b: Coordinate) =>
+  a.lat === b.lat && a.lon === b.lon;
 
 /** Join open way pieces end to end into closed rings; pieces that never close are dropped. */
 export function assembleRings(pieces: Coordinate[][]): Coordinate[][] {
@@ -48,20 +54,25 @@ export function assembleRings(pieces: Coordinate[][]): Coordinate[][] {
         const p = open[i];
         const end = ring[ring.length - 1];
         if (same(p[0], end)) ring = ring.concat(p.slice(1));
-        else if (same(p[p.length - 1], end)) ring = ring.concat(p.slice(0, -1).reverse());
-        else continue;
+        else if (same(p[p.length - 1], end)) {
+          ring = ring.concat(p.slice(0, -1).reverse());
+        } else continue;
         open.splice(i, 1);
         extended = true;
         break;
       }
     }
-    if (ring.length >= 4 && same(ring[0], ring[ring.length - 1])) rings.push(ring);
+    if (ring.length >= 4 && same(ring[0], ring[ring.length - 1])) {
+      rings.push(ring);
+    }
   }
   return rings;
 }
 
 /** Convert an Overpass `out geom` response into water bodies with outer and inner rings. */
-export function parseWater(json: { elements?: OverpassElement[] }): WaterBody[] {
+export function parseWater(
+  json: { elements?: OverpassElement[] },
+): WaterBody[] {
   const bodies: WaterBody[] = [];
   for (const el of json.elements ?? []) {
     const name = el.tags?.name;
@@ -73,7 +84,9 @@ export function parseWater(json: { elements?: OverpassElement[] }): WaterBody[] 
     } else if (el.type === "relation" && el.members) {
       const part = (role: string) =>
         assembleRings(
-          el.members!.filter((m) => m.role === role && m.geometry).map((m) => toCoords(m.geometry!)),
+          el.members!.filter((m) => m.role === role && m.geometry).map((m) =>
+            toCoords(m.geometry!)
+          ),
         );
       const outer = part("outer");
       if (outer.length > 0) bodies.push({ name, outer, inner: part("inner") });
@@ -96,7 +109,8 @@ export function pointInRing(p: Coordinate, ring: Coordinate[]): boolean {
 
 export function pointInWater(p: Coordinate, water: WaterBody[]): boolean {
   return water.some((w) =>
-    w.outer.some((r) => pointInRing(p, r)) && !w.inner.some((r) => pointInRing(p, r))
+    w.outer.some((r) => pointInRing(p, r)) &&
+    !w.inner.some((r) => pointInRing(p, r))
   );
 }
 
@@ -107,21 +121,39 @@ export const BBOX_GRID_DEG = 0.05;
  * Query area for Overpass: the track's extent grown outward to a coarse grid, so the
  * request reveals the neighbourhood of the track instead of its exact extent.
  */
-export function coarseBbox(points: Trackpoint[]): [number, number, number, number] {
-  const lats = points.map((p) => p.coordinate.lat), lons = points.map((p) => p.coordinate.lon);
+export function coarseBbox(
+  points: Trackpoint[],
+): [number, number, number, number] {
+  if (points.length === 0) {
+    throw new RangeError("Terrain lookup requires trackpoints");
+  }
+  let minLat = Infinity,
+    maxLat = -Infinity,
+    minLon = Infinity,
+    maxLon = -Infinity;
+  for (const { coordinate: { lat, lon } } of points) {
+    minLat = Math.min(minLat, lat);
+    maxLat = Math.max(maxLat, lat);
+    minLon = Math.min(minLon, lon);
+    maxLon = Math.max(maxLon, lon);
+  }
   const down = (v: number) => Math.floor(v / BBOX_GRID_DEG) * BBOX_GRID_DEG;
   const up = (v: number) => Math.ceil(v / BBOX_GRID_DEG) * BBOX_GRID_DEG;
   const round = (v: number) => Number(v.toFixed(4));
   return [
-    round(down(Math.min(...lats)) - BBOX_GRID_DEG),
-    round(down(Math.min(...lons)) - BBOX_GRID_DEG),
-    round(up(Math.max(...lats)) + BBOX_GRID_DEG),
-    round(up(Math.max(...lons)) + BBOX_GRID_DEG),
+    round(down(minLat) - BBOX_GRID_DEG),
+    round(down(minLon) - BBOX_GRID_DEG),
+    round(up(maxLat) + BBOX_GRID_DEG),
+    round(up(maxLon) + BBOX_GRID_DEG),
   ];
 }
 
 /** Fetch lakes, ponds and riverbanks around the track from OpenStreetMap (Overpass). */
-export async function fetchWater(points: Trackpoint[], signal?: AbortSignal): Promise<WaterBody[]> {
+export async function fetchWater(
+  points: Trackpoint[],
+  signal?: AbortSignal,
+): Promise<WaterBody[]> {
+  signal?.throwIfAborted();
   const bbox = coarseBbox(points).join(",");
   const query = `[out:json][timeout:25];(way["natural"="water"](${bbox});` +
     `relation["natural"="water"](${bbox});way["waterway"="riverbank"](${bbox}););out geom;`;
@@ -150,26 +182,40 @@ export async function fetchWater(points: Trackpoint[], signal?: AbortSignal): Pr
 /** Speed in km/h around point i over about SPEED_WINDOW_SECONDS, or null without timestamps. */
 function localSpeedKph(points: Trackpoint[], i: number): number | null {
   let a = i, b = i;
-  const t = (k: number) => (points[k].timestamp ? Date.parse(points[k].timestamp!) : NaN);
+  const t = (
+    k: number,
+  ) => (points[k].timestamp ? Date.parse(points[k].timestamp!) : NaN);
   while (a > 0 && t(i) - t(a) < (SPEED_WINDOW_SECONDS / 2) * 1000) a--;
-  while (b < points.length - 1 && t(b) - t(i) < (SPEED_WINDOW_SECONDS / 2) * 1000) b++;
+  while (
+    b < points.length - 1 && t(b) - t(i) < (SPEED_WINDOW_SECONDS / 2) * 1000
+  ) b++;
   const dt = (t(b) - t(a)) / 1000;
   if (!(dt > 0)) return null;
   return (calculateTrackDistance(points.slice(a, b + 1)) / dt) * 3600;
 }
 
 /** Index ranges [start, end] of trackpoints in water, bridging short gaps and dropping short spans. */
-export function waterSpans(points: Trackpoint[], water: WaterBody[]): [number, number][] {
+export function waterSpans(
+  points: Trackpoint[],
+  water: WaterBody[],
+): [number, number][] {
   const spans: [number, number][] = [];
   let start = -1, lastIn = -1;
   const flush = () => {
-    if (start >= 0 && calculateTrackDistance(points.slice(start, lastIn + 1)) >= MIN_SWIM_SPAN_KM) {
+    if (
+      start >= 0 &&
+      calculateTrackDistance(points.slice(start, lastIn + 1)) >=
+        MIN_SWIM_SPAN_KM
+    ) {
       spans.push([start, lastIn]);
     }
     start = -1;
   };
   for (let i = 0; i < points.length; i++) {
-    if (pointInWater(points[i].coordinate, water) && (localSpeedKph(points, i) ?? 0) < MAX_SWIM_KPH) {
+    if (
+      pointInWater(points[i].coordinate, water) &&
+      (localSpeedKph(points, i) ?? 0) < MAX_SWIM_KPH
+    ) {
       if (start < 0) start = i;
       lastIn = i;
     } else if (start >= 0 && i - lastIn > MAX_LAND_GAP_POINTS) {
@@ -186,7 +232,10 @@ export const LANDSCAPE_SWIM_CONFIDENCE = 0.8;
  * Landscape strategy: stretches of the track inside mapped water are swims.
  * It only claims swims; the other strategies decide everything else.
  */
-export function detectByWater(points: Trackpoint[], water: WaterBody[]): StrategyResult {
+export function detectByWater(
+  points: Trackpoint[],
+  water: WaterBody[],
+): StrategyResult {
   return {
     strategy: "landscape",
     segments: waterSpans(points, water).map(([start, end]) => ({

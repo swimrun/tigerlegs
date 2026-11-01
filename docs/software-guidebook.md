@@ -56,10 +56,36 @@ Each way below is a user story with one acceptance criterion in Given/When/Then 
    - Given I opened the page, when I choose a GPX file, then the map shows the track with swim and run segments in different colours.
 2. **See distances.** As an athlete, I see the distance per segment and the totals so that I can prepare my race.
    - Given a GPX file with two swims and two runs, when the analysis finishes, then the table shows four distances and a swim and run total.
-3. **Link map and table.** As an athlete, I hover a table row or a map line so that I see the matching segment highlighted.
-   - Given a segment is shown on the map and in the table, when I hover its table row, then its map line is highlighted.
-4. **Read a compact table.** As an athlete, I see one row per run and swim pair so that I can write the numbers on a paddle (planned, [ADR-0007](./adr/0007-compact-segment-table-format.md)).
+3. **Link map and table.** As an athlete, I select a map line or a distance in the table so that both views highlight the same segment.
+   - Given a segment is shown on the map and in the table, when I click its distance or select its button with Enter or Space, then its map line and table row are highlighted; selecting it again deselects it.
+4. **Read a compact table.** As an athlete, I see one row per run and swim pair so that I can write the numbers on a paddle ([ADR-0007](./adr/0007-compact-segment-table-format.md)).
    - Given a course that starts with a run, when the table is shown run-first, then each row shows a run distance and the swim that follows it.
+
+The table defaults to run-first; **Swim first** changes both the pairing and column order.
+Each distance is an independently selectable segment, even when two segments share a row.
+Map selections scroll the corresponding row into view; Escape clears selection.
+Hover still previews a segment when no selection is pinned.
+**Cumulative distance** sums the unrounded distances of the displayed segments and shows the result to one decimal place; displayed breaks contribute only when **Include breaks** is enabled.
+Incomplete pairs use a dash for the missing distance, and boundary disagreements include a conflict label identifying the resolving strategy.
+
+### Upload and analysis controls
+
+Choose a GPX file or drop exactly one file onto the upload area; both paths use the same validation and analysis pipeline.
+For a file with several tracks, the selector lists track names and point counts, and analysis waits for the athlete to choose a non-empty track.
+Only that track supplies coordinates, timestamps, distances and the terrain query area.
+**Waypoints** and **Speed** are enabled by default; **Use terrain data** remains off until explicitly enabled.
+Strategies without usable data are reported in the status area.
+Disabling the last local strategy is rejected with a message and retains the results.
+Terrain can always be switched off: if it was the only enabled strategy, local speed analysis is re-enabled instead of forcing terrain back on.
+Changing the file or track, or disabling terrain, cancels the pending terrain request; late replies cannot overwrite the current selection.
+
+The GPX parser runs in a Web Worker so parsing itself does not block the page.
+Analysis also runs in the worker for a selected track with more than 10,000 points.
+Files with more than 50,000 points across all tracks require confirmation before analysis; cancelling retains the previous results.
+More than 100 waypoints produces a warning but does not block analysis.
+The status area reports analysis duration and worker usage, while the large-file notice remains visible during and after processing.
+These controls require no backend; GitHub Pages serves the worker bundle alongside the app.
+External Overpass response time is separate from local analysis time, and an unavailable service produces a visible error while retaining local results.
 
 Behind these stories, the system detects segments with three strategies, which Table 1 lists.
 
@@ -96,6 +122,25 @@ Table 2 lists the six use cases, who uses them and which user story and Kiro req
 
 Use cases UC-2 and UC-3 include UC-1, because both need an uploaded file.
 UC-4, UC-5 and UC-6 extend the use case they build on: highlighting and aid stations extend the map, and track selection extends the upload.
+
+In Cockburn's goal levels these six sit below sea level: uploading a file is a subfunction (fish level), and the others are features inside one larger goal (Cockburn, 2001).
+The sea-level goals — one sitting, after which the user goes away satisfied — are: **analyse a swimrun course** (upload, map and distances together), **prepare paddle race notes** ([ADR-0007](./adr/0007-compact-segment-table-format.md)), **verify a designed course** (the organiser's goal) and, planned, **follow the course mid-race** on a watch ([spec 001](../specs/001-garmin-datafield/spec.md)).
+Figure 2 shows these sea-level use cases with their actors; Overpass and Garmin Connect appear as supporting actors, which replaces the single "Uses" arrow of the context diagram with one arrow per goal.
+
+*Figure 2*: Sea-level use case diagram.
+
+![Use case diagram: athlete and organiser with four sea-level goals; Overpass and Garmin Connect support two of them.](diagrams/use-cases.svg)
+
+Figures 3 and 4 give a system sequence diagram for the two central goals, following Larman (2005): the system stays a black box and only the system events of the main success scenario appear, so these diagrams belong here with the requirements.
+Design-level interaction diagrams, which open the black box, belong in chapter 7 once the components they show exist.
+
+*Figure 3*: System sequence diagram of *Analyse a swimrun course*.
+
+![System sequence diagram: the athlete uploads a course, optionally enables terrain which queries Overpass, and selects a segment.](diagrams/ssd-analyse-course.svg)
+
+*Figure 4*: System sequence diagram of *Follow the course mid-race* (planned).
+
+![System sequence diagram: the athlete exports the course, loads it through Garmin Connect onto the watch, and reads leg progress every GPS fix.](diagrams/ssd-follow-course.svg)
 The Kiro specs number these stories and requirements.
 Two further stories, US-2 (waypoint classification) and US-7 (GPX round-trip integrity), are internal processing steps that no user starts, so they are not use cases.
 Accessibility (Req 10) and performance (Req 11) are quality attributes and apply to all use cases; chapter 3 covers them.
@@ -141,9 +186,9 @@ Table 4 shows the same course in that form, with the swim first.
 | **Total** | 6100 | 24.8 |
 
 A course that starts with a run would show the run first by default, and a toggle would swap the order.
-Figure 2 shows the paddles that the organisers published for this course.
+Figure 5 shows the paddles that the organisers published for this course.
 
-*Figure 2*: Swimrun paddles with the segment distances of the Laffrey course.
+*Figure 5*: Swimrun paddles with the segment distances of the Laffrey course.
 
 ![Swimrun paddles with segment distances](../assets/swimrun-paddles-laffrey-vertical-2026.png)
 
@@ -194,10 +239,12 @@ The following constraints apply:
 This chapter lists the rules that guide design choices when no constraint decides.
 
 - **Analyse on the client.** The server proxies terrain data and nothing more.
-- **Privacy by design.** Privacy is a design rule, not a setting added later (Cavoukian, 2011). Concretely: (1) the GPX file is analysed in the browser and never uploaded; (2) the default is the most private mode, speed-only analysis with no network call about the track; (3) terrain data is opt-in, behind a toggle that warns the user before anything is sent; (4) what is sent is minimal and coarse, a bounding box snapped outward to a grid of about 5 km (`BBOX_GRID_DEG` in `src/client/water.ts`), never the trackpoints, and the device location is never read; (5) the third party that receives the request (Overpass) also sees the IP address, and the interface says so; (6) no accounts, cookies or analytics exist, and the only stored value is the language choice in `localStorage`. A bounding box still reveals roughly where the track is, because it comes from the track. A bigger margin would not change that, so the opt-in and the coarse grid carry the protection.
+- **Privacy by design.** Privacy is a design rule, not a setting added later (Cavoukian, 2011). Concretely: (1) the GPX file is analysed in the browser and never uploaded; (2) the default is the most private mode, speed-only analysis with no network call about the track; (3) terrain data is opt-in, behind a toggle that warns the user before anything is sent; (4) what is sent is minimal and coarse, a bounding box snapped outward to a grid of about 5 km (`BBOX_GRID_DEG` in `src/client/water.ts`), never the trackpoints, and the device location is never read; (5) the third party that receives the request (Overpass) also sees the IP address, and the interface says so; (6) no real accounts, cookies or analytics exist, and the only stored values are the language choice in `localStorage` and the flag of the prototype's fake login in `sessionStorage` (see "Fake it till you make it"). Planned privacy-friendly analytics (issue #11) will change this point and must be opt-in or cookieless and documented here first. A bounding box still reveals roughly where the track is, because it comes from the track. A bigger margin would not change that, so the opt-in and the coarse grid carry the protection.
 - **One source of truth for configuration.** Ports and origins live in `src/server/config.ts`, so changing a port touches one line.
 - **Use the domain language.** Names in code follow the glossary in Appendix A.
 - **Navigate with links, not buttons.** Every page shares a header menu with links to *Extractorrr* (with the tiger growl) and *About*, and the current page is marked. Pages have no "back to" buttons. Buttons trigger actions on the current page, links move between pages.
+- **Fake it till you make it.** Before building an expensive feature, we may show a believable prototype of it to see whether anyone cares (a fake-door test). Today the chatbot (section 7.2) answers a fixed FAQ and the profile page (section 7.3) has a fake login with one static profile. Rules: a fake is labelled as a prototype in the interface, it never collects real personal data, it hides behind a replaceable interface so the real implementation drops in later, and we measure its usage (planned, issue #11) before deciding to build the real thing.
+- **Scroll-linked effects never hijack scrolling.** Visual effects may follow the scroll position, but the page always scrolls natively and the effect is decoration only (see section 7.1). Content stays readable without it.
 - **Document decisions.** Significant choices get an ADR, and the team writes documentation in English.
 
 ### 5.1 Documentation approach
@@ -207,6 +254,8 @@ Preston-Werner (2010) advises: "Write your Readme first."
 That part is done here: the README describes the tool, so what remains is keeping it true.
 We call the practice of maintaining the documents together with the code *continuous documentation*; this is our own term and has no external source.
 Documentation is part of the definition of done: a change is finished when the README, guidebook or ADR that it affects is up to date.
+The full checklist is in [DEFINITION_OF_DONE.md](./DEFINITION_OF_DONE.md) and is repeated as checkboxes in the GitHub issue and pull request templates.
+Task descriptions live in GitHub issues, not in the repository.
 
 Table 5 lists the documents and the question each one answers.
 
@@ -232,23 +281,28 @@ This chapter shows the structure of the system in three levels: containers (6.1)
 
 ### 6.1 Containers
 
-Figure 3 shows the two containers and how they communicate.
+Figure 6 shows the two containers and how they communicate.
 
-*Figure 3*: C4 container diagram.
+*Figure 6*: C4 container diagram.
 
 ![Container diagram: the browser app talks to the Deno backend, which uses a disk cache and the Overpass API.](diagrams/container.svg)
 
-The browser app does the analysis and draws the map.
-The backend serves the static files and answers terrain requests.
-It checks the `Origin` header on every API route except the health check, and it caches terrain answers on disk.
-The frontend and the backend currently share port 8123, which `src/server/config.ts` defines.
+The browser app does the analysis and draws the map. Astro generates static HTML during the build; React owns the interactive extractor. GitHub Pages serves the resulting assets without a runtime application backend. The current Pages app requests terrain directly from Overpass only after opt-in.
+
+The diagram also shows the optional Deno terrain API, not a requirement of the Pages deployment. That API checks the `Origin` header on every API route except the health check and caches terrain answers on disk. The Astro development server uses port 8123; run the optional API separately if testing it, rather than starting both on the same port.
+
+The dashed watch data field is planned, not built ([spec](../specs/001-garmin-datafield/spec.md), roadmap M4).
+It would build on the Connect IQ SDK and its Monkey C language; Garmin's developer documentation explains the app types and the simulator (Garmin, n.d.).
+It stays a container inside the TigerLegs system rather than a system of its own: in C4 terms a container is a separately deployable unit of one system, and the data field is deployed separately (through the Connect IQ store) but belongs to the same product, team and course model.
+Garmin Connect appears as an external system, like Overpass, because it only transports the exported course to the watch.
+A separate guidebook or a system landscape diagram becomes worthwhile only if a part grows into its own system with its own team or release cycle, for example the accounts backend of roadmap M9.
 
 ### 6.2 Components
 
-Figure 4 shows the components of the browser app and how they depend on each other.
+Figure 7 shows the components of the browser app and how they depend on each other.
 Table 6 lists each component and the file that holds it.
 
-*Figure 4*: C4 component diagram of the browser app.
+*Figure 7*: C4 component diagram of the browser app.
 
 ![Component diagram of the browser app: the UI uses the parser, the analysis and the segment builder; the analysis runs three strategies and the combiner.](diagrams/component.svg)
 
@@ -263,7 +317,7 @@ Table 6 lists each component and the file that holds it.
 | Strategy combiner | `src/client/strategy-combiner.ts` | Picks the best strategy per trackpoint |
 | Analysis | `src/client/analyze.ts` | Runs the pipeline and adds distances |
 | Segment builder | `src/client/segment-builder.ts` | Totals, rounding and paired table rows |
-| UI | `src/client/app.ts` | Upload, map, table and highlighting |
+| UI | `src/components/Extractor.tsx`, `CourseMap.tsx`, `SegmentTable.tsx` | React upload, map, table and highlighting |
 
 The analysis component is the entry point for the UI: it runs the strategies that apply, combines them and computes each segment's distance.
 The current page skips the landscape strategy, because it needs the backend.
@@ -271,9 +325,9 @@ The combiner leaves `distanceKm` at 0; the analysis component fills it in.
 
 ### 6.3 Domain model
 
-Figure 5 shows the main domain types, which `src/shared/types.ts` defines.
+Figure 8 shows the main domain types, which `src/shared/types.ts` defines.
 
-*Figure 5*: Domain model.
+*Figure 8*: Domain model.
 
 ```mermaid
 classDiagram
@@ -290,6 +344,7 @@ classDiagram
 A GPX file holds tracks and waypoints, and a track holds trackpoints.
 A strategy reads the file and produces segments, each covering consecutive trackpoints and labelled swim, run or unclassified.
 A `DisplaySegmentPair` groups a run and a swim for the compact table.
+The planned watch data field adds two runtime types to this model: a `LegProgress` that tracks the current leg and its remaining distance, and a transition detector with hysteresis, so that one noisy GPS fix near a transition cannot advance and regress the leg repeatedly ([spec](../specs/001-garmin-datafield/spec.md), FR-004).
 Appendix A defines each term.
 
 ## 7. Code
@@ -300,6 +355,54 @@ The source lives in three folders: `src/client` for the browser, `src/server` fo
 Tests sit next to the code (`*.test.ts`) or in `test/`.
 Most tests are property-based: they state a rule that must hold for generated inputs, such as the maximum gap between samples.
 `deno task build` bundles the browser code into `public/app.js` with `deno bundle`, which is an experimental Deno command.
+
+### 7.1 Front end: the scroll-linked tiger reveal
+
+The About page shows a tiger photo that appears while the reader scrolls down.
+This is called a *scroll-linked* (or scroll-driven) animation: an animation whose progress follows the scroll position instead of time.
+It is often called *scrolljacking*, but that word strictly speakings means something else: taking over the scroll behaviour of the page, for example by snapping sections or blocking normal scrolling.
+We do not do that, because the page scrolls natively and only a visual property changes.
+
+How it works:
+
+- `.tiger-fade` in `src/client/styles.css` is a fixed element at the bottom of the viewport.
+Its CSS mask is a `radial-gradient` that is opaque inside a radius and transparent outside it, so the picture seems to grow out of a corner.
+- The gradient is centred on the bottom-right corner of the picture, where the tiger swims: `at calc(50% + var(--tiger-w) / 2) 100%`.
+The circle uses `farthest-corner`, so it reaches the right side of the picture sooner than the far left side.
+- `src/client/about.ts` computes scroll progress (`scrollY` divided by the scrollable height) and writes it to the custom property `--reveal` on every scroll event.
+The mask radius is a percentage of `--reveal`.
+- `::before` is the same photo, stretched and blurred, to fill the sides next to the centred picture so the colours match.
+`::after` is the sharp picture; its own horizontal mask fades the left edge over 14% and the right edge over only 6%, so the tiger at the right edge stays visible.
+
+CSS can do the scroll link without JavaScript through `animation-timeline: scroll()`.
+We use a small script because browser support for that property is not yet universal.
+
+### 7.2 Front end: the prototype chatbot
+
+The main page has a prototype chatbot, *Ask the tiger*, with clickable FAQ labels (what is swimrun, can tigers swim, segment counts, distances).
+It is not an LLM: it answers the fixed questions and replies "Sorry I am not functional yet" to anything else.
+
+The component `src/components/Chatbot.tsx` depends only on the `ChatAgent` interface in `src/client/chat-agent.ts`.
+An agent returns a stream of events (`run-started`, `text`, `run-finished`), a small subset of the AG-UI event types.
+`createFaqAgent` is the static implementation.
+A later agent that talks to an LLM over AG-UI can replace it by passing it as the `agent` prop, and tool-call or state events can be added to `ChatEvent` when an agent should drive the UI (issue #10).
+Free text from the user is already passed to the agent, so the UI does not change for that either.
+
+### 7.3 Front end: the prototype profile
+
+`/profile.html` shows a fake login. Any input logs you in as one static profile (`BART` in `src/client/fake-session.ts`); no data is sent.
+The only state is a flag in `sessionStorage`, kept behind the small `SessionStore` interface so tests can use an in-memory store.
+A real identity provider can replace it later without changing the profile component's layout.
+
+### 7.4 Front end: language switch
+
+The language switch (flag and code for English, Dutch, French and German) sits in the shared header in `src/layouts/SiteLayout.astro`, so it is on every page.
+`src/client/language-switch.ts` stores the choice in `localStorage` (`tigerlegs-lang`) and sets `data-lang` and `lang` on `<html>`.
+`resolveLang` in `src/client/language.ts` picks the saved choice, else the browser language, else English.
+Translated content carries a `lang` attribute, and a CSS rule hides every language except the active one.
+Pages without translations (the extractor, chatbot and profile) stay English for now.
+The flag is decoration (`aria-hidden`); the link has a text code and an `aria-label` with the language name, because a flag is a country and not a language.
+Flag emoji do not render on Windows, where the two-letter code shows instead.
 
 ## 8. Data
 
@@ -337,31 +440,53 @@ Support for other conventions, such as the files from racedaymap.com that ÖTILL
 
 This chapter describes where the system runs.
 
-[ADR-0004](./adr/0004-host-deno-backend-on-eu-vps.md) chooses a Deno process on an EU VPS.
-A reverse proxy such as Caddy or nginx would add HTTPS in front of it; the team has not chosen one.
-Local development needs no proxy.
+The frontend is a static GitHub Pages site at `https://swimrun.group/tigerlegs/`. Astro and Node run during the build, not on the hosting platform. GPX processing runs on the visitor's device.
+
+[ADR-0004](./adr/0004-host-deno-backend-on-eu-vps.md) records an EU VPS option for a future backend. It is not the current frontend infrastructure. A reverse proxy such as Caddy or nginx would add HTTPS in front of that optional service; local static development needs no proxy.
 
 ## 10. Deployment
 
 This chapter describes how the system reaches production.
 
-Deployment is not yet automated, and no production environment exists.
-The `README.md` in the repository root holds the "how to run" steps; chapter 12 covers the local setup.
+`.github/workflows/pages.yml` installs npm dependencies, runs Deno tests, builds the Worker/assets and Astro pages, checks site types, and runs Playwright browser tests on pull requests and pushes to `main`. Only `main` publishes `dist/` to GitHub Pages. Feature branches do not deploy automatically.
+
+The build generates `index.html`, `about.html`, `guidebook.html` and one HTML page per ADR. Public links and assets use the `/tigerlegs/` base path; direct navigation does not require a backend router or a 404 SPA fallback. The `README.md` in the repository root holds the build/preview commands.
 
 ## 11. Operation and support
 
 This chapter describes how to monitor the system.
 
-Only a health endpoint exists: `GET /api/v1/health`.
-It needs no `Origin` header, so a monitor can call it.
+The static frontend has no application-server health endpoint. GitHub Actions reports build/test/deployment status.
+
+The optional Deno API exposes `GET /api/v1/health`; it needs no `Origin` header, so a monitor can call it when that service is deployed.
 
 ## 12. Development environment
 
 This chapter lists what you need to work on the code.
 
-You need Deno.
-`deno task dev` builds the bundle and starts the server on the port in `src/server/config.ts`; open that address in a browser to try the upload page.
-`deno test -A` runs all tests.
+You need Deno, npm and Node.js 22.23.4 or newer; `.nvmrc` pins Node 24, which CI also uses (`nvm use` picks it up). Run `npm ci` first; npm manages the dependency tree used by both the site build and Deno tests.
+
+`deno task dev` prepares the Worker, samples and styling, then starts Astro at `http://localhost:8123/tigerlegs/`. `deno task build` generates the production site in `dist/`; `npm run preview` serves that build locally. No API service is needed for these workflows.
+
+`deno test -A` runs analysis and documentation unit/integration tests. `npm run check` checks the Astro/React code. After building and installing Chromium with `npx playwright install chromium`, `npm run test:site` checks static deep links, ADR publication, React imports/selection, Worker thresholds, terrain consent and mobile layout on a plain static server.
+
+### 12.1 Test strategy
+
+Tests follow the test pyramid: many fast tests at the bottom, few slow ones at the top.
+
+| Level | Tool | Location | What it covers |
+|---|---|---|---|
+| Unit and property-based | Deno test runner, `@std/assert`, fast-check | `test/client/`, `test/shared/` | Pure domain functions: GPX parsing, classification, confidence, chat agent, session store, language resolution |
+| Integration (back end) | Deno test runner | `test/server/` | The Overpass proxy and its cache |
+| End-to-end | Playwright on the built static site | `test/site/` | Deep links, menu, language switch, fake login, terrain consent, mobile layout |
+
+Rules:
+
+- Put logic in pure functions under `src/client/` so that it is tested at the bottom of the pyramid; keep React components thin.
+- Property-based tests use representative GPX fixtures from `test-data/`.
+- Add an end-to-end test only for behaviour that needs a real browser.
+- Known gap: there is no component test layer for React. If it becomes needed, add Vitest with Testing Library for components only; Deno keeps running the pure TypeScript.
+- A change is done only when `deno task test`, `deno task build` and (for site changes) `npm run test:site` pass; see [DEFINITION_OF_DONE.md](./DEFINITION_OF_DONE.md).
 
 ## 13. Decision log
 
@@ -375,14 +500,15 @@ Table 8 lists the ADRs and what each decides.
 | --- | --- |
 | [0001](./adr/0001-record-architecture-decisions.md) | Record architecture decisions |
 | [0002](./adr/0002-use-deno-with-typescript.md) | Use Deno with TypeScript |
-| [0003](./adr/0003-gpx-analysis-execution-location.md) | Choose where the GPX analysis runs (status: proposed) |
+| [0003](./adr/0003-gpx-analysis-execution-location.md) | Choose where the GPX analysis runs |
 | [0004](./adr/0004-host-deno-backend-on-eu-vps.md) | Host the backend on an EU VPS |
 | [0005](./adr/0005-rest-json-api-for-multi-client-support.md) | Offer a REST/JSON API |
 | [0006](./adr/0006-open-source-gis-stack.md) | Use an open-source GIS stack |
 | [0007](./adr/0007-compact-segment-table-format.md) | Show a compact paired segment table |
+| [0008](./adr/0008-astro-static-site-with-react-islands.md) | Astro static pages with a React-based interactive frontend; compare alternatives using multi-criteria decision making |
+| [0009](./adr/0009-react-for-interactive-frontend.md) | Use React for the interactive frontend; owner familiarity and learning goals, compared with Vue, Angular and other options |
 
-ADR-0003 still has the status *proposed*, while this guidebook and the code already analyse on the client.
-The team should either accept the ADR or revisit the choice.
+ADR-0008 implements a shared Astro layout and directly linkable HTML pages, with the interactive extractor implemented in React and no runtime backend. Astro itself is not React-based; it supplies static page composition around the React application. Existing TypeScript analysis modules remain reusable. All ADRs are built into HTML pages and linked from this chapter. The ADR includes a provisional weighted comparison of the previous Deno-only site build, Astro, Next.js static export, Vite + React SPA and Eleventy, following the [ICT Research Methods multi-criteria decision making method](https://ictresearchmethods.nl/workshop/multi-criteria-decision-making/).
 
 ## References
 
@@ -392,11 +518,17 @@ Brown, S. (n.d.-b). *The C4 model for visualising software architecture*. https:
 
 Cavoukian, A. (2011). *Privacy by design: The 7 foundational principles*. Information and Privacy Commissioner of Ontario. https://www.ipc.on.ca/wp-content/uploads/resources/7foundationalprinciples.pdf
 
-Gruber, T. (2008). Ontology. In L. Liu & M. T. Özsu (Eds.), *Encyclopedia of Database Systems*. Springer. https://tomgruber.org/writing/definition-of-ontology
+Cockburn, A. (2001). *Writing effective use cases*. Addison-Wesley.
 
 file-extensions.com. (n.d.). *GPX file format*. Retrieved June 15, 2026, from https://file-extensions.com/docs/gpx
 
+Garmin. (n.d.). *Connect IQ basics*. Retrieved November 1, 2026, from https://developer.garmin.com/connect-iq/connect-iq-basics/
+
+Gruber, T. (2008). Ontology. In L. Liu & M. T. Özsu (Eds.), *Encyclopedia of Database Systems*. Springer. https://tomgruber.org/writing/definition-of-ontology
+
 Knuth, D. E. (1984). Literate programming. *The Computer Journal, 27*(2), 97–111. https://doi.org/10.1093/comjnl/27.2.97
+
+Larman, C. (2005). *Applying UML and patterns: An introduction to object-oriented analysis and design and iterative development* (3rd ed.). Prentice Hall.
 
 Preston-Werner, T. (2010, August 23). *Readme Driven Development*. https://tom.preston-werner.com/2010/08/23/readme-driven-development.html
 
@@ -421,6 +553,7 @@ Table 9 lists the terms in the order in which you meet them when you follow a GP
 | Segment | Consecutive trackpoints that are all swim or all run, with a distance | Swim of 400 m |
 | Swim, run, unclassified | The three labels a segment can have | Run of 2.1 km |
 | Transition | The point where one segment ends and the next begins | The beach exit after a swim |
+| Hysteresis | Memory in a threshold decision: once a transition counts as passed, nearby noisy GPS fixes cannot un-pass it | The watch advances to leg 5 once, even when swim-degraded GPS jitters around the transition radius |
 | Distance to next transition | Distance along the track from a position to the next transition | "Next transition in 1.2 km" |
 | Strategy | A method to detect segments: waypoint, speed or landscape | Waypoint strategy |
 | Confidence | How sure a strategy is about a trackpoint; the combiner keeps the highest | 0.9 from waypoints beats 0.4 from speed |

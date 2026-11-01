@@ -3,16 +3,25 @@
 
 title Container diagram of TigerLegs
 
+AddElementTag("planned", $bgColor="#7a7a7a", $borderStyle="dashed", $legendText="planned (roadmap M3-M4)")
+
 Person(athlete, "Athlete or organiser")
 System_Boundary(tigerlegs, "TigerLegs") {
   Container(browser, "Browser app", "TypeScript, Leaflet", "Parses the GPX file, detects segments, draws the map and the table")
   Container(backend, "Backend", "Deno", "Serves static files, answers terrain requests, checks the Origin header")
   ContainerDb(cache, "Terrain cache", "Files on disk (.cache)", "Cached Overpass answers")
+  Container(watch, "Watch data field", "Monkey C, Connect IQ SDK", "Shows current leg, remaining distance and next leg during a race", $tags="planned")
 }
 System_Ext(overpass, "OpenStreetMap, Overpass API", "Water and land data")
+System_Ext(garmin, "Garmin Connect", "Transfers the exported course to the watch", $tags="planned")
 
 Rel(athlete, browser, "Uses")
+Rel(athlete, watch, "Glances at mid-race", $tags="planned")
 Rel(browser, backend, "Requests terrain", "REST, JSON, port 8123")
 Rel(backend, cache, "Reads and writes")
 Rel(backend, overpass, "Queries terrain", "HTTPS")
+Rel(browser, garmin, "Exports course to", "versioned course format", $tags="planned")
+Rel(garmin, watch, "Syncs course to", $tags="planned")
+
+SHOW_LEGEND()
 @enduml

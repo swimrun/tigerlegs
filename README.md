@@ -25,30 +25,43 @@ TIGERLegs stands for *Terrain-Informed Gpx Extractor: LEts Go Swimrun!* (TIGE-R 
    cd gpx-to-swimrun-segments
    ```
 
-3. Build the browser code and start the server:
+3. Install site dependencies (Node.js 22.23.4 or newer is required), then start the Astro development server:
 
    ```sh
+   npm ci
    deno task dev
    ```
 
-4. Open <http://localhost:8123> in your browser.
+4. Open <http://localhost:8123/tigerlegs/> in your browser.
 5. Upload a GPX file, for example one from the `test-data/` folder.
 
-`src/server/config.ts` sets the port.
+This serves the frontend only; GPX analysis stays in the browser. The optional Deno API is separate and is not required by the site.
 
 ## Build and test
 
 | Task | Command |
 | --- | --- |
-| Bundle the browser code into `public/app.js` and `public/about.js` | `deno task build` |
-| Run all tests | `deno task test` |
+| Build the Astro static site into `dist/`, including the Worker, samples and all ADRs | `deno task build` |
+| Check Astro and React types | `npm run check` |
+| Run analysis and documentation unit tests | `deno task test` |
+| Install the browser for site tests (once) | `npx playwright install chromium` |
+| Test built static routes and React interactions | `npm run test:site` |
+| Preview the production build | `npm run preview` |
 | Lint the code | `deno task lint` |
 | Format the code | `deno task fmt` |
+
+Astro supplies the shared layout and static HTML pages; React supplies the interactive extractor. Pure TypeScript analysis modules remain tested with Deno. npm owns `node_modules/` and `package-lock.json`; Deno uses that installed dependency tree (`nodeModulesDir: manual`), so run `npm ci` before Deno commands on a fresh checkout.
+
+GitHub Actions tests and builds the site, then publishes `dist/` to GitHub Pages. No Astro or Node process runs in production. Existing `about.html` and `guidebook.html` URLs and chapter anchors are preserved; chapter 13 links to each generated `adr/*.html` page. See [ADR-0008](./docs/adr/0008-astro-static-site-with-react-islands.md) and [ADR-0009](./docs/adr/0009-react-for-interactive-frontend.md).
 
 ## Roadmap
 
 The roadmap shows what is done and what is planned. Checked items are done.
 For the longer horizon — terrain milestones, the Garmin Connect IQ data field and Apple Watch/Coros export — see the [milestone roadmap](./docs/ROADMAP.md) and the [product vision](./docs/PRODUCT_VISION.md).
+
+![Mock-up of the planned Garmin Connect IQ data field: current leg "RUN 4/12", 620 m to the next swim, and the next swim is 1.4 km](./img/garmin-datafield-mock.png)
+
+![Aerial photo of swimrunners swimming along a rocky shore](./img/swimrunners-aerial-swim.png)
 
 - [x] GPX parsing with swim and run segment detection
 - [x] Interactive Leaflet map with colour-coded segments

@@ -58,6 +58,7 @@ export interface Segment {
   detectedBy: StrategyName[];
   confidenceScore: number; // 0.0 to 1.0
   gpsFiltered: boolean;
+  restDurationSeconds?: number;
 }
 
 /** Strategy detection result for a track region */

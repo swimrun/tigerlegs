@@ -45,7 +45,9 @@ candidate encodings: FIT course, JSON. Builds on ADR-0005 and ADR-0007.
 Monkey C data field showing: current leg number / total (e.g. 3/15),
 swim or run, remaining distance of the current leg. Feasibility and
 constraints (HTTPS, makeWebRequest, phone proxy) are documented in
-[ADR-0005](./adr/0005-rest-json-api-for-multi-client-support.md).
+[ADR-0005](./adr/0005-rest-json-api-for-multi-client-support.md); the
+feature specification lives in
+[specs/001-garmin-datafield/spec.md](../specs/001-garmin-datafield/spec.md).
 
 > Given a loaded TigerLegs course, when I pass a transition during an
 > activity, then the data field advances to the next leg within one

@@ -1,0 +1,18 @@
+@startuml ssd-analyse-course
+title System sequence diagram: Analyse a swimrun course
+
+actor Athlete as athlete
+participant ":TigerLegs" as system
+participant ":Overpass API" as overpass << external >>
+
+athlete -> system : uploadCourse(gpxFile)
+system --> athlete : course map and paired segment table
+opt Use terrain data enabled
+  athlete -> system : enableTerrain()
+  system -> overpass : queryWater(boundingBox)
+  overpass --> system : water and land polygons
+  system --> athlete : refined segments with strategy and confidence
+end
+athlete -> system : selectSegment(segment)
+system --> athlete : highlighted map line and table row
+@enduml

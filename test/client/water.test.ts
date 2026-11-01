@@ -68,3 +68,23 @@ Deno.test("Rhederlaag with OSM water: terrain splits the speed-only runs", () =>
   }
   assert(Number(withLandscape.totals.totalSwimM) > Number(analysis.totals.totalSwimM));
 });
+
+Deno.test("Rhederlaag: recorded terrain finds multiple crossings inside the 2.7 km speed-only run", () => {
+  const parsed = parseGPX(Deno.readTextFileSync(new URL("../../test-data/rhederlaag-swimrun.gpx", import.meta.url)));
+  assert(parsed.ok);
+  const baseline = analyzeGpx(parsed.value);
+  const longRun = baseline.segments.find(segment =>
+    segment.type === "run" && segment.distanceKm > 2.6 && segment.distanceKm < 2.8
+  );
+  assert(longRun, "the reported 2.7 km region should exist in the speed-only baseline");
+  const water = parseWater(JSON.parse(Deno.readTextFileSync(new URL("../fixtures/rhederlaag-overpass.json", import.meta.url))));
+  const refined = analyzeGpx(parsed.value, water).segments.filter(segment =>
+    segment.endTrackpointIndex >= longRun.startTrackpointIndex &&
+    segment.startTrackpointIndex <= longRun.endTrackpointIndex
+  );
+  assert(refined.filter(segment => segment.type === "swim").length >= 2);
+  for (let i = 1; i < refined.length; i++) {
+    assert(refined[i].type !== refined[i - 1].type);
+    assertEquals(refined[i].startTrackpointIndex, refined[i - 1].endTrackpointIndex + 1);
+  }
+});
