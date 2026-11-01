@@ -1,0 +1,10 @@
+---
+import SiteLayout from "../layouts/SiteLayout.astro";
+import Profile from "../components/Profile.tsx";
+---
+<SiteLayout title="Profile – TigerLegs" description="Prototype profile page with a fake login." active="profile">
+  <main class="mx-auto max-w-3xl space-y-6 px-4 py-8 leading-relaxed">
+    <h1 class="text-3xl font-bold">Profile</h1>
+    <Profile client:load />
+  </main>
+</SiteLayout>

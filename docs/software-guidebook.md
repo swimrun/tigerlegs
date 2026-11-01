@@ -239,10 +239,12 @@ The following constraints apply:
 This chapter lists the rules that guide design choices when no constraint decides.
 
 - **Analyse on the client.** The server proxies terrain data and nothing more.
-- **Privacy by design.** Privacy is a design rule, not a setting added later (Cavoukian, 2011). Concretely: (1) the GPX file is analysed in the browser and never uploaded; (2) the default is the most private mode, speed-only analysis with no network call about the track; (3) terrain data is opt-in, behind a toggle that warns the user before anything is sent; (4) what is sent is minimal and coarse, a bounding box snapped outward to a grid of about 5 km (`BBOX_GRID_DEG` in `src/client/water.ts`), never the trackpoints, and the device location is never read; (5) the third party that receives the request (Overpass) also sees the IP address, and the interface says so; (6) no accounts, cookies or analytics exist, and the only stored value is the language choice in `localStorage`. A bounding box still reveals roughly where the track is, because it comes from the track. A bigger margin would not change that, so the opt-in and the coarse grid carry the protection.
+- **Privacy by design.** Privacy is a design rule, not a setting added later (Cavoukian, 2011). Concretely: (1) the GPX file is analysed in the browser and never uploaded; (2) the default is the most private mode, speed-only analysis with no network call about the track; (3) terrain data is opt-in, behind a toggle that warns the user before anything is sent; (4) what is sent is minimal and coarse, a bounding box snapped outward to a grid of about 5 km (`BBOX_GRID_DEG` in `src/client/water.ts`), never the trackpoints, and the device location is never read; (5) the third party that receives the request (Overpass) also sees the IP address, and the interface says so; (6) no real accounts, cookies or analytics exist, and the only stored values are the language choice in `localStorage` and the flag of the prototype's fake login in `sessionStorage` (see "Fake it till you make it"). Planned privacy-friendly analytics (issue #11) will change this point and must be opt-in or cookieless and documented here first. A bounding box still reveals roughly where the track is, because it comes from the track. A bigger margin would not change that, so the opt-in and the coarse grid carry the protection.
 - **One source of truth for configuration.** Ports and origins live in `src/server/config.ts`, so changing a port touches one line.
 - **Use the domain language.** Names in code follow the glossary in Appendix A.
 - **Navigate with links, not buttons.** Every page shares a header menu with links to *Extractorrr* (with the tiger growl) and *About*, and the current page is marked. Pages have no "back to" buttons. Buttons trigger actions on the current page, links move between pages.
+- **Fake it till you make it.** Before building an expensive feature, we may show a believable prototype of it to see whether anyone cares (a fake-door test). Today the chatbot (section 7.2) answers a fixed FAQ and the profile page (section 7.3) has a fake login with one static profile. Rules: a fake is labelled as a prototype in the interface, it never collects real personal data, it hides behind a replaceable interface so the real implementation drops in later, and we measure its usage (planned, issue #11) before deciding to build the real thing.
+- **Scroll-linked effects never hijack scrolling.** Visual effects may follow the scroll position, but the page always scrolls natively and the effect is decoration only (see section 7.1). Content stays readable without it.
 - **Document decisions.** Significant choices get an ADR, and the team writes documentation in English.
 
 ### 5.1 Documentation approach
@@ -252,6 +254,8 @@ Preston-Werner (2010) advises: "Write your Readme first."
 That part is done here: the README describes the tool, so what remains is keeping it true.
 We call the practice of maintaining the documents together with the code *continuous documentation*; this is our own term and has no external source.
 Documentation is part of the definition of done: a change is finished when the README, guidebook or ADR that it affects is up to date.
+The full checklist is in [DEFINITION_OF_DONE.md](./DEFINITION_OF_DONE.md) and is repeated as checkboxes in the GitHub issue and pull request templates.
+Task descriptions live in GitHub issues, not in the repository.
 
 Table 5 lists the documents and the question each one answers.
 
@@ -352,6 +356,54 @@ Tests sit next to the code (`*.test.ts`) or in `test/`.
 Most tests are property-based: they state a rule that must hold for generated inputs, such as the maximum gap between samples.
 `deno task build` bundles the browser code into `public/app.js` with `deno bundle`, which is an experimental Deno command.
 
+### 7.1 Front end: the scroll-linked tiger reveal
+
+The About page shows a tiger photo that appears while the reader scrolls down.
+This is called a *scroll-linked* (or scroll-driven) animation: an animation whose progress follows the scroll position instead of time.
+It is often called *scrolljacking*, but that word strictly speakings means something else: taking over the scroll behaviour of the page, for example by snapping sections or blocking normal scrolling.
+We do not do that, because the page scrolls natively and only a visual property changes.
+
+How it works:
+
+- `.tiger-fade` in `src/client/styles.css` is a fixed element at the bottom of the viewport.
+Its CSS mask is a `radial-gradient` that is opaque inside a radius and transparent outside it, so the picture seems to grow out of a corner.
+- The gradient is centred on the bottom-right corner of the picture, where the tiger swims: `at calc(50% + var(--tiger-w) / 2) 100%`.
+The circle uses `farthest-corner`, so it reaches the right side of the picture sooner than the far left side.
+- `src/client/about.ts` computes scroll progress (`scrollY` divided by the scrollable height) and writes it to the custom property `--reveal` on every scroll event.
+The mask radius is a percentage of `--reveal`.
+- `::before` is the same photo, stretched and blurred, to fill the sides next to the centred picture so the colours match.
+`::after` is the sharp picture; its own horizontal mask fades the left edge over 14% and the right edge over only 6%, so the tiger at the right edge stays visible.
+
+CSS can do the scroll link without JavaScript through `animation-timeline: scroll()`.
+We use a small script because browser support for that property is not yet universal.
+
+### 7.2 Front end: the prototype chatbot
+
+The main page has a prototype chatbot, *Ask the tiger*, with clickable FAQ labels (what is swimrun, can tigers swim, segment counts, distances).
+It is not an LLM: it answers the fixed questions and replies "Sorry I am not functional yet" to anything else.
+
+The component `src/components/Chatbot.tsx` depends only on the `ChatAgent` interface in `src/client/chat-agent.ts`.
+An agent returns a stream of events (`run-started`, `text`, `run-finished`), a small subset of the AG-UI event types.
+`createFaqAgent` is the static implementation.
+A later agent that talks to an LLM over AG-UI can replace it by passing it as the `agent` prop, and tool-call or state events can be added to `ChatEvent` when an agent should drive the UI (issue #10).
+Free text from the user is already passed to the agent, so the UI does not change for that either.
+
+### 7.3 Front end: the prototype profile
+
+`/profile.html` shows a fake login. Any input logs you in as one static profile (`BART` in `src/client/fake-session.ts`); no data is sent.
+The only state is a flag in `sessionStorage`, kept behind the small `SessionStore` interface so tests can use an in-memory store.
+A real identity provider can replace it later without changing the profile component's layout.
+
+### 7.4 Front end: language switch
+
+The language switch (flag and code for English, Dutch, French and German) sits in the shared header in `src/layouts/SiteLayout.astro`, so it is on every page.
+`src/client/language-switch.ts` stores the choice in `localStorage` (`tigerlegs-lang`) and sets `data-lang` and `lang` on `<html>`.
+`resolveLang` in `src/client/language.ts` picks the saved choice, else the browser language, else English.
+Translated content carries a `lang` attribute, and a CSS rule hides every language except the active one.
+Pages without translations (the extractor, chatbot and profile) stay English for now.
+The flag is decoration (`aria-hidden`); the link has a text code and an `aria-label` with the language name, because a flag is a country and not a language.
+Flag emoji do not render on Windows, where the two-letter code shows instead.
+
 ## 8. Data
 
 This chapter describes where the system keeps data.
@@ -412,11 +464,29 @@ The optional Deno API exposes `GET /api/v1/health`; it needs no `Origin` header,
 
 This chapter lists what you need to work on the code.
 
-You need Deno, npm and Node.js 22.23.4 or newer. Run `npm ci` first; npm manages the dependency tree used by both the site build and Deno tests.
+You need Deno, npm and Node.js 22.23.4 or newer; `.nvmrc` pins Node 24, which CI also uses (`nvm use` picks it up). Run `npm ci` first; npm manages the dependency tree used by both the site build and Deno tests.
 
 `deno task dev` prepares the Worker, samples and styling, then starts Astro at `http://localhost:8123/tigerlegs/`. `deno task build` generates the production site in `dist/`; `npm run preview` serves that build locally. No API service is needed for these workflows.
 
 `deno test -A` runs analysis and documentation unit/integration tests. `npm run check` checks the Astro/React code. After building and installing Chromium with `npx playwright install chromium`, `npm run test:site` checks static deep links, ADR publication, React imports/selection, Worker thresholds, terrain consent and mobile layout on a plain static server.
+
+### 12.1 Test strategy
+
+Tests follow the test pyramid: many fast tests at the bottom, few slow ones at the top.
+
+| Level | Tool | Location | What it covers |
+|---|---|---|---|
+| Unit and property-based | Deno test runner, `@std/assert`, fast-check | `test/client/`, `test/shared/` | Pure domain functions: GPX parsing, classification, confidence, chat agent, session store, language resolution |
+| Integration (back end) | Deno test runner | `test/server/` | The Overpass proxy and its cache |
+| End-to-end | Playwright on the built static site | `test/site/` | Deep links, menu, language switch, fake login, terrain consent, mobile layout |
+
+Rules:
+
+- Put logic in pure functions under `src/client/` so that it is tested at the bottom of the pyramid; keep React components thin.
+- Property-based tests use representative GPX fixtures from `test-data/`.
+- Add an end-to-end test only for behaviour that needs a real browser.
+- Known gap: there is no component test layer for React. If it becomes needed, add Vitest with Testing Library for components only; Deno keeps running the pure TypeScript.
+- A change is done only when `deno task test`, `deno task build` and (for site changes) `npm run test:site` pass; see [DEFINITION_OF_DONE.md](./DEFINITION_OF_DONE.md).
 
 ## 13. Decision log
 

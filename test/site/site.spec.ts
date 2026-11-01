@@ -29,6 +29,27 @@ test("static pages and every ADR have shared navigation, direct links and reload
   expect((await request.get("not-a-route.html")).status()).toBe(404);
 });
 
+test("language choice is in the header on every page and persists across pages", async ({ page }) => {
+  await page.goto("./");
+  await expect(page.locator("#language-switch a")).toHaveCount(4);
+  await page.locator('#language-switch [data-set-lang="nl"]').click();
+  await expect(page.locator("html")).toHaveAttribute("lang", "nl");
+  await page.goto("about.html");
+  await expect(page.locator("html")).toHaveAttribute("lang", "nl");
+  await expect(page.locator("h1[lang=nl]")).toBeVisible();
+  await expect(page.locator('#language-switch [aria-current="true"]')).toHaveAttribute("data-set-lang", "nl");
+});
+
+test("fake login shows the static profile and logging out returns to the form", async ({ page }) => {
+  await page.goto("profile.html");
+  await page.getByRole("button", { name: "Log in" }).click();
+  await expect(page.getByRole("heading", { name: "Bart van der Wal" })).toBeVisible();
+  await page.reload();
+  await expect(page.getByRole("heading", { name: "Bart van der Wal" })).toBeVisible();
+  await page.getByRole("button", { name: "Log out" }).click();
+  await expect(page.getByRole("button", { name: "Log in" })).toBeVisible();
+});
+
 test("documentation works without JavaScript", async ({ browser }) => {
   const context = await browser.newContext({ javaScriptEnabled: false });
   const page = await context.newPage();

@@ -3,10 +3,16 @@ import config from "../../deno.json";
 interface Props {
   title: string;
   description: string;
-  active: "extractor" | "about" | "guidebook";
+  active: "extractor" | "about" | "guidebook" | "profile";
 }
 const { title, description, active } = Astro.props;
 const base = import.meta.env.BASE_URL.replace(/\/?$/, "/");
+const languages = [
+  { code: "en", flag: "🇬🇧", name: "English" },
+  { code: "nl", flag: "🇳🇱", name: "Nederlands" },
+  { code: "fr", flag: "🇫🇷", name: "Français" },
+  { code: "de", flag: "🇩🇪", name: "Deutsch" },
+];
 const links = [
   { key: "extractor", href: base, text: "Extractorrr" },
   { key: "about", href: `${base}about.html`, text: "About" },
@@ -42,12 +48,17 @@ const links = [
           <nav id="main-menu" aria-label="Main menu" class="site-menu">
             {links.map(link => <a href={link.href} aria-current={active === link.key ? "page" : undefined}>{link.text}</a>)}
           </nav>
+          <nav id="language-switch" aria-label="Language" class="flex gap-2 text-sm">
+            {languages.map(l => <a href="#" data-set-lang={l.code} hreflang={l.code} title={l.name} aria-label={l.name} class="lang-link"><span aria-hidden="true">{l.flag}</span> {l.code.toUpperCase()}</a>)}
+          </nav>
+          <a id="profile-link" href={`${base}profile.html`} class="text-sm font-medium underline" aria-current={active === "profile" ? "page" : undefined}>Profile</a>
         </div>
       </div>
       <div class="site-tagline"><img src={`${base}img/tigerlegs-acronym-anim-dark.svg`} alt="TIGERLEGS: Terrain Informed Gpx ExtractoR: LEts Go Swimrun!" /></div>
       <div class="tiger-stripes"></div>
     </header>
     <slot />
+    <script>import "../client/language-switch.ts";</script>
     <footer class="mx-auto max-w-7xl px-4 pb-8 text-xs text-stone-600">
       &copy; 2026 IT Off the Wall BV · <a class="underline" href={`${base}about.html`}>About</a>
       · Map data &copy; <a class="underline" href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors</a>

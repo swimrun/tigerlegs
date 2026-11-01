@@ -108,13 +108,19 @@
   .guidebook blockquote {
     @apply border-l-4 border-amber-500 pl-4 text-stone-600;
   }
+  .lang-link {
+    @apply rounded px-1 font-medium no-underline;
+  }
+  .lang-link[aria-current="true"] {
+    @apply border-b-2 border-stone-900 font-bold;
+  }
   html[data-lang="en"] :is([lang="nl"], [lang="fr"], [lang="de"]),
   html[data-lang="nl"] :is([lang="en"], [lang="fr"], [lang="de"]),
   html[data-lang="fr"] :is([lang="en"], [lang="nl"], [lang="de"]),
   html[data-lang="de"] :is([lang="en"], [lang="nl"], [lang="fr"]) {
     display: none;
   }
-  /* Tiger picture fixed at the bottom, centred; the sides are the same picture, stretched and blurred, so the colours match. A circular reveal grows from the bottom centre with scroll progress (--reveal, 0..1, set in about.ts). */
+  /* Tiger picture fixed at the bottom, centred; the sides are the same picture, stretched and blurred, so the colours match. A circular reveal grows from the picture's bottom-right corner, where the tiger swims, with scroll progress (--reveal, 0..1, set in about.ts). */
   .tiger-fade {
     --reveal: 0.12;
     --tiger-w: min(100vw, 56rem);
@@ -125,8 +131,10 @@
     z-index: -1;
     height: calc(var(--tiger-w) * 2 / 3);
     pointer-events: none;
-    -webkit-mask-image: radial-gradient(ellipse 70% 100% at 50% 100%, #000 calc(var(--reveal) * 75%), transparent calc(var(--reveal) * 100%));
-    mask-image: radial-gradient(ellipse 70% 100% at 50% 100%, #000 calc(var(--reveal) * 75%), transparent calc(var(--reveal) * 100%));
+    -webkit-mask-image: radial-gradient(circle farthest-corner at calc(50% + var(--tiger-w) / 2) 100%, #000 calc(var(--reveal) * 75%), transparent calc(var(--reveal) * 100%)), linear-gradient(to bottom, transparent, #000 25%);
+    -webkit-mask-composite: source-in;
+    mask-image: radial-gradient(circle farthest-corner at calc(50% + var(--tiger-w) / 2) 100%, #000 calc(var(--reveal) * 75%), transparent calc(var(--reveal) * 100%)), linear-gradient(to bottom, transparent, #000 25%);
+    mask-composite: intersect;
   }
   .tiger-fade::before,
   .tiger-fade::after {
@@ -145,8 +153,8 @@
     right: auto;
     width: var(--tiger-w);
     transform: translateX(-50%);
-    -webkit-mask-image: linear-gradient(to right, transparent, #000 12%, #000 88%, transparent);
-    mask-image: linear-gradient(to right, transparent, #000 12%, #000 88%, transparent);
+    -webkit-mask-image: linear-gradient(to right, transparent, #000 14%, #000 94%, transparent);
+    mask-image: linear-gradient(to right, transparent, #000 14%, #000 94%, transparent);
   }
   .tiger-stripes {
     @apply h-2;
