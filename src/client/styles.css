@@ -129,7 +129,7 @@
     right: 0;
     bottom: 0;
     z-index: -1;
-    height: calc(var(--tiger-w) * 2 / 3);
+    height: calc(var(--tiger-w) * 1 / 2);
     pointer-events: none;
     -webkit-mask-image: radial-gradient(circle farthest-corner at calc(50% + var(--tiger-w) / 2) 100%, #000 calc(var(--reveal) * 75%), transparent calc(var(--reveal) * 100%)), linear-gradient(to bottom, transparent, #000 25%);
     -webkit-mask-composite: source-in;
