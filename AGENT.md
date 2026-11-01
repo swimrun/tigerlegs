@@ -101,6 +101,9 @@ Bending without resistance erodes trust in the agent's output. But defending a c
 - README.md and user-facing docs: English
 - Code comments: English
 - Commit messages: English, imperative mood
+- Definition of Done: [docs/DEFINITION_OF_DONE.md](./docs/DEFINITION_OF_DONE.md).
+  Create issues with `gh issue create --template user-story.md` and keep
+  the Definition of Done checkboxes; do not store task descriptions as files
 
 ### Markdown formatting: soft wraps, no hard line breaks
 
