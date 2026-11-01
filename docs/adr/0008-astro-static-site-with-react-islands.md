@@ -4,17 +4,19 @@ Date: 2026-11-01
 
 ## Status
 
-Proposed. No Astro migration has been implemented or authorised by this record.
+Accepted for implementation on 2026-11-01 following the project owner's request to implement this ADR on a feature branch.
 
 ## Context
 
-TigerLegs currently builds static HTML, CSS and browser JavaScript with Deno tasks. The extractor, About page and generated Markdown guidebook share visual conventions, but their page shells are maintained separately (see `public/index.html`, `public/about.html` and `src/build-docs.ts`). The requested direction is one consistent layout and navigation, with directly linkable pages rather than a different menu on every page.
+Before this migration, TigerLegs built static HTML, CSS and browser JavaScript with Deno tasks. The extractor, About page and generated Markdown guidebook shared visual conventions, but their page shells were maintained separately. The requested direction is one consistent layout and navigation, with directly linkable pages rather than a different menu on every page.
 
 The website is deployed under `https://swimrun.group/tigerlegs/` on GitHub Pages. GPX parsing and analysis must remain browser-local; terrain requests remain opt-in. A frontend framework must not introduce GPX uploads, require a production application server, or move analysis into build-time rendering.
 
 This choice concerns site composition and routing, not the analysis algorithms. The Deno analysis modules, tests and Web Worker remain independent of the site framework. Accounts, authentication and online route storage are separate future decisions, not reasons to add a backend now.
 
 The project owner explicitly requires a **React-based interactive frontend**, not merely the possibility of adding React later. Astro itself is not React-based: it is the proposed static page framework, with React providing the extractor UI. Static prose can remain Markdown and Astro templates; this does not mean replacing React with Astro for application state and interaction.
+
+[ADR-0009](./0009-react-for-interactive-frontend.md) records the separate React framework choice, its familiarity and learning rationale, and alternatives. This ADR compares site frameworks under that UI constraint; its matrix is not evidence that React is superior to Vue or Angular.
 
 ## Research method: Multi-criteria decision making
 
@@ -91,7 +93,7 @@ Astro's lead comes from native static page composition and selective interactivi
 
 **Sensitivity check:** if avoiding migration becomes the dominant priority, moving 20 percentage points to migration simplicity (35%) from shared layouts (10%) and selective interactivity (10%) changes Deno's score to **3.90** and Astro's to **3.95**; Deno remains ineligible without a React migration. Among eligible variants, moving 15 percentage points from selective interactivity (5%) to React integration (25%) reduces Astro's lead over Next.js from **0.50** to **0.20**. These overlapping criteria should also be reviewed for double counting; a demand for React-based page composition throughout, rather than only the interactive application, would warrant revisiting the choice.
 
-## Proposed decision
+## Decision
 
 Prefer **B: Astro static output with a React-based interactive frontend**, subject to stakeholder review and a successful migration prototype.
 
@@ -111,7 +113,13 @@ Use ordinary static navigation initially. SPA-like navigation is optional later 
 - Verify mobile and desktop navigation, keyboard behaviour, analysis/Worker equivalence and no GPX upload. Do not fetch terrain during a build or without user consent.
 - Compare emitted JavaScript and build complexity with the current baseline before acceptance. Do not claim bundle-size, responsiveness or battery improvements without measurement.
 
-Until that evidence exists, keep the current deployment and this ADR's **Proposed** status. This record neither implements migration nor supersedes the browser-local analysis decision in [ADR-0003](./0003-gpx-analysis-execution-location.md).
+Merge and deployment remain gated by the validation above. This decision does not supersede the browser-local analysis decision in [ADR-0003](./0003-gpx-analysis-execution-location.md).
+
+## Implementation
+
+The feature branch introduces Astro static file-format routes, a shared `src/layouts/SiteLayout.astro`, and a coordinated React extractor in `src/components/`. Deno builds the analysis Worker and prepares sample/image assets; npm builds the site into `dist/`. GitHub Actions publishes that directory only after analysis, type and browser tests pass. All nine ADRs are generated at `adr/*.html`, including links between ADRs and chapter 13.
+
+The site build uses npm-managed dependencies and Node.js 22.23.4 or newer; Deno retains its analysis/test responsibilities with a manually installed `node_modules/` tree. Astro telemetry is disabled in the site scripts. React, Leaflet and parser code add browser JavaScript; this migration makes no claim of a smaller extractor bundle than the previous implementation.
 
 ## References
 

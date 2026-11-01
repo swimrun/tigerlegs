@@ -1,0 +1,10 @@
+---
+import SiteLayout from "../layouts/SiteLayout.astro";
+import Extractor from "../components/Extractor.tsx";
+import "leaflet/dist/leaflet.css";
+---
+<SiteLayout title="TigerLegs – split swimrun GPX tracks into swim and run segments" description="Terrain-informed GPX extractor: split a swimrun course into swim and run segments." active="extractor">
+  <main class="mx-auto max-w-7xl px-4 py-6">
+    <Extractor client:load base={import.meta.env.BASE_URL.replace(/\/?$/, "/")} />
+  </main>
+</SiteLayout>

@@ -22,6 +22,10 @@ public/about.js
 public/about.js.map
 .cache/
 node_modules/
+dist/
+.astro/
+playwright-report/
+test-results/
 public/styles.css
 public/guidebook.html
 public/img/swimrun-paddles-laffrey-vertical-2026.png

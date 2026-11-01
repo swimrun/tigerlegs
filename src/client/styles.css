@@ -1,7 +1,8 @@
 @import "tailwindcss";
-@source "../../public/index.html";
-@source "../../public/about.html";
-@source "../../public/guidebook.html";
+@source "../pages/";
+@source "../layouts/";
+@source "../components/";
+@source "../../docs/software-guidebook.md";
 
 @font-face {
   font-family: "Bebas Neue";
@@ -14,7 +15,7 @@
 @theme {
   --font-display: "Bebas Neue", Impact, sans-serif;
 }
-@source "./app.ts";
+@source "./table-renderer.ts";
 
 /* Tiger palette: Tailwind's built-in amber (accent) and stone (neutral) scales. */
 

@@ -283,10 +283,9 @@ Figure 6 shows the two containers and how they communicate.
 
 ![Container diagram: the browser app talks to the Deno backend, which uses a disk cache and the Overpass API.](diagrams/container.svg)
 
-The browser app does the analysis and draws the map.
-The backend serves the static files and answers terrain requests.
-It checks the `Origin` header on every API route except the health check, and it caches terrain answers on disk.
-The frontend and the backend currently share port 8123, which `src/server/config.ts` defines.
+The browser app does the analysis and draws the map. Astro generates static HTML during the build; React owns the interactive extractor. GitHub Pages serves the resulting assets without a runtime application backend. The current Pages app requests terrain directly from Overpass only after opt-in.
+
+The diagram also shows the optional Deno terrain API, not a requirement of the Pages deployment. That API checks the `Origin` header on every API route except the health check and caches terrain answers on disk. The Astro development server uses port 8123; run the optional API separately if testing it, rather than starting both on the same port.
 
 The dashed watch data field is planned, not built ([spec](../specs/001-garmin-datafield/spec.md), roadmap M4).
 It would build on the Connect IQ SDK and its Monkey C language; Garmin's developer documentation explains the app types and the simulator (Garmin, n.d.).
@@ -314,7 +313,7 @@ Table 6 lists each component and the file that holds it.
 | Strategy combiner | `src/client/strategy-combiner.ts` | Picks the best strategy per trackpoint |
 | Analysis | `src/client/analyze.ts` | Runs the pipeline and adds distances |
 | Segment builder | `src/client/segment-builder.ts` | Totals, rounding and paired table rows |
-| UI | `src/client/app.ts` | Upload, map, table and highlighting |
+| UI | `src/components/Extractor.tsx`, `CourseMap.tsx`, `SegmentTable.tsx` | React upload, map, table and highlighting |
 
 The analysis component is the entry point for the UI: it runs the strategies that apply, combines them and computes each segment's distance.
 The current page skips the landscape strategy, because it needs the backend.
@@ -389,31 +388,35 @@ Support for other conventions, such as the files from racedaymap.com that ÖTILL
 
 This chapter describes where the system runs.
 
-[ADR-0004](./adr/0004-host-deno-backend-on-eu-vps.md) chooses a Deno process on an EU VPS.
-A reverse proxy such as Caddy or nginx would add HTTPS in front of it; the team has not chosen one.
-Local development needs no proxy.
+The frontend is a static GitHub Pages site at `https://swimrun.group/tigerlegs/`. Astro and Node run during the build, not on the hosting platform. GPX processing runs on the visitor's device.
+
+[ADR-0004](./adr/0004-host-deno-backend-on-eu-vps.md) records an EU VPS option for a future backend. It is not the current frontend infrastructure. A reverse proxy such as Caddy or nginx would add HTTPS in front of that optional service; local static development needs no proxy.
 
 ## 10. Deployment
 
 This chapter describes how the system reaches production.
 
-Deployment is not yet automated, and no production environment exists.
-The `README.md` in the repository root holds the "how to run" steps; chapter 12 covers the local setup.
+`.github/workflows/pages.yml` installs npm dependencies, runs Deno tests, builds the Worker/assets and Astro pages, checks site types, and runs Playwright browser tests before publishing `dist/` to GitHub Pages on a push to `main`. Feature branches do not deploy automatically.
+
+The build generates `index.html`, `about.html`, `guidebook.html` and one HTML page per ADR. Public links and assets use the `/tigerlegs/` base path; direct navigation does not require a backend router or a 404 SPA fallback. The `README.md` in the repository root holds the build/preview commands.
 
 ## 11. Operation and support
 
 This chapter describes how to monitor the system.
 
-Only a health endpoint exists: `GET /api/v1/health`.
-It needs no `Origin` header, so a monitor can call it.
+The static frontend has no application-server health endpoint. GitHub Actions reports build/test/deployment status.
+
+The optional Deno API exposes `GET /api/v1/health`; it needs no `Origin` header, so a monitor can call it when that service is deployed.
 
 ## 12. Development environment
 
 This chapter lists what you need to work on the code.
 
-You need Deno.
-`deno task dev` builds the bundle and starts the server on the port in `src/server/config.ts`; open that address in a browser to try the upload page.
-`deno test -A` runs all tests.
+You need Deno, npm and Node.js 22.23.4 or newer. Run `npm ci` first; npm manages the dependency tree used by both the site build and Deno tests.
+
+`deno task dev` prepares the Worker, samples and styling, then starts Astro at `http://localhost:8123/tigerlegs/`. `deno task build` generates the production site in `dist/`; `npm run preview` serves that build locally. No API service is needed for these workflows.
+
+`deno test -A` runs analysis and documentation unit/integration tests. `npm run check` checks the Astro/React code. After building and installing Chromium with `npx playwright install chromium`, `npm run test:site` checks static deep links, ADR publication, React imports/selection, Worker thresholds, terrain consent and mobile layout on a plain static server.
 
 ## 13. Decision log
 
@@ -432,9 +435,10 @@ Table 8 lists the ADRs and what each decides.
 | [0005](./adr/0005-rest-json-api-for-multi-client-support.md) | Offer a REST/JSON API |
 | [0006](./adr/0006-open-source-gis-stack.md) | Use an open-source GIS stack |
 | [0007](./adr/0007-compact-segment-table-format.md) | Show a compact paired segment table |
-| [0008](./adr/0008-astro-static-site-with-react-islands.md) | **Proposed:** Astro static pages with a React-based interactive frontend; compare alternatives using multi-criteria decision making |
+| [0008](./adr/0008-astro-static-site-with-react-islands.md) | Astro static pages with a React-based interactive frontend; compare alternatives using multi-criteria decision making |
+| [0009](./adr/0009-react-for-interactive-frontend.md) | Use React for the interactive frontend; owner familiarity and learning goals, compared with Vue, Angular and other options |
 
-ADR-0008 proposes a shared static layout and directly linkable HTML pages, with the interactive extractor implemented in React and no runtime backend. Astro itself is not React-based; it supplies static page composition around the React application. Existing TypeScript analysis modules remain reusable. The ADR includes a provisional weighted comparison of the current Deno build, Astro, Next.js static export, Vite + React SPA and Eleventy, following the [ICT Research Methods multi-criteria decision making method](https://ictresearchmethods.nl/workshop/multi-criteria-decision-making/). The migration has not been implemented.
+ADR-0008 implements a shared Astro layout and directly linkable HTML pages, with the interactive extractor implemented in React and no runtime backend. Astro itself is not React-based; it supplies static page composition around the React application. Existing TypeScript analysis modules remain reusable. All ADRs are built into HTML pages and linked from this chapter. The ADR includes a provisional weighted comparison of the previous Deno-only site build, Astro, Next.js static export, Vite + React SPA and Eleventy, following the [ICT Research Methods multi-criteria decision making method](https://ictresearchmethods.nl/workshop/multi-criteria-decision-making/).
 
 ## References
 

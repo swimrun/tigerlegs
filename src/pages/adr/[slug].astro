@@ -1,0 +1,22 @@
+---
+import { readFile, readdir } from "node:fs/promises";
+import SiteLayout from "../../layouts/SiteLayout.astro";
+import { renderDocument } from "../../build-docs.ts";
+export async function getStaticPaths() {
+  const directory = "docs/adr";
+  const names = (await readdir(directory)).filter(name => name.endsWith(".md")).sort();
+  return Promise.all(names.map(async name => ({
+    params: { slug: name.slice(0, -3) },
+    props: { source: await readFile(`${directory}/${name}`, "utf8") },
+  })));
+}
+const { source } = Astro.props;
+const title = source.split("\n")[0].replace(/^#\s*/, "");
+const base = import.meta.env.BASE_URL.replace(/\/?$/, "/");
+---
+<SiteLayout title={`${title} — TigerLegs ADR`} description="TigerLegs architecture decision record." active="guidebook">
+  <main class="guidebook">
+    <a href={`${base}guidebook.html#13-decision-log`}>Back to the software guidebook</a>
+    <Fragment set:html={renderDocument(source, base, true)} />
+  </main>
+</SiteLayout>

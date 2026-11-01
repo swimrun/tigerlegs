@@ -22,14 +22,25 @@ jobs:
       - uses: denoland/setup-deno@v2
         with:
           deno-version: v2.x
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
       - name: Test
         run: deno task test
       - name: Build site
         run: deno task build
+      - name: Check site types
+        run: npm run check
+      - name: Install browser for site tests
+        run: npx playwright install --with-deps chromium
+      - name: Test static pages and React extractor
+        run: npm run test:site
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: public
+          path: dist
 
   deploy:
     needs: build
