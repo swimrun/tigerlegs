@@ -4,6 +4,7 @@ import { type ChatAgent, type ChatSuggestion, createFaqAgent } from "../client/c
 interface Message {
   role: "user" | "assistant";
   text: string;
+  followUps?: ChatSuggestion[];
 }
 
 const bubble = "w-fit max-w-[85%] rounded px-3 py-2 text-sm";
@@ -27,6 +28,7 @@ export default function Chatbot({ agent, faqUrl = "chat/faq.json" }: { agent?: C
   const [loadFailed, setLoadFailed] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
+  const [asked, setAsked] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
   const [typing, setTyping] = useState(false);
   const log = useRef<HTMLDivElement>(null);
@@ -46,18 +48,21 @@ export default function Chatbot({ agent, faqUrl = "chat/faq.json" }: { agent?: C
     log.current?.scrollTo({ top: log.current.scrollHeight });
   }, [messages, typing]);
 
-  async function ask(text: string) {
-    const question = text.trim();
+  async function ask(text: string, { id, prompt, shown, completes }: { id?: string; prompt?: string; shown?: boolean; completes?: string } = {}) {
+    const question = (prompt ?? text).trim();
     if (!question || busy) return;
     setBusy(true);
     setInput("");
-    setMessages((m) => [...m, { role: "user", text: question }]);
+    // A follow-up is used up when chosen; a suggestion only once all its answers have been given.
+    if (completes) setAsked((a) => [...a, completes, ...(id ? [id] : [])]);
+    setMessages((m) => [...m, { role: "user", text: shown ? text : question }]);
     try {
       for await (const event of chat.run(question)) {
         if (event.type === "run-started") setTyping(true);
         if (event.type === "text") {
           setTyping(false);
-          setMessages((m) => [...m, { role: "assistant", text: event.text }]);
+          if (id && !completes && !event.followUps) setAsked((a) => [...a, id]);
+          setMessages((m) => [...m, { role: "assistant", text: event.text, followUps: event.followUps }]);
         }
       }
     } catch {
@@ -77,9 +82,9 @@ export default function Chatbot({ agent, faqUrl = "chat/faq.json" }: { agent?: C
         ? <div className="mt-3"><TypingIndicator /></div>
         : (
           <ul aria-label="Suggested questions" className="mt-3 flex flex-wrap gap-2">
-            {suggestions.map((s) => (
+            {suggestions.filter((s) => !asked.includes(s.id)).map((s) => (
               <li key={s.id}>
-                <button type="button" disabled={busy} onClick={() => ask(s.label)}
+                <button type="button" disabled={busy} onClick={() => ask(s.label, { id: s.id })}
                   className="rounded-full border border-stone-900 bg-amber-200 px-3 py-1 text-sm font-medium hover:bg-amber-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-stone-950">
                   {s.label}
                 </button>
@@ -89,9 +94,18 @@ export default function Chatbot({ agent, faqUrl = "chat/faq.json" }: { agent?: C
         )}
       <div ref={log} role="log" aria-live="polite" className="mt-3 max-h-80 space-y-2 overflow-y-auto">
         {messages.map((m, i) => (
-          <p key={i} className={m.role === "user" ? `${bubble} ml-auto bg-stone-900 text-white` : `${bubble} bg-white`}>
-            {m.text}
-          </p>
+          <div key={i} className="space-y-1">
+            <p className={m.role === "user" ? `${bubble} ml-auto bg-stone-900 text-white` : `${bubble} bg-white`}>
+              {m.text}
+            </p>
+            {m.followUps?.filter((f) => !asked.includes(f.id)).map((f) => (
+              <button key={f.id} type="button" disabled={busy}
+                onClick={() => ask(f.label, { id: f.id, prompt: f.prompt, shown: true, completes: f.completes })}
+                className="rounded-full border border-stone-900 bg-amber-200 px-3 py-1 text-sm font-medium hover:bg-amber-300">
+                {f.label}
+              </button>
+            ))}
+          </div>
         ))}
         {typing && <TypingIndicator />}
       </div>

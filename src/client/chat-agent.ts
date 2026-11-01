@@ -6,12 +6,16 @@
  */
 export type ChatEvent =
   | { type: "run-started" }
-  | { type: "text"; text: string }
+  | { type: "text"; text: string; followUps?: ChatSuggestion[] }
   | { type: "run-finished" };
 
 export interface ChatSuggestion {
   id: string;
   label: string;
+  /** What is sent to the agent when the label is chosen; defaults to the label. */
+  prompt?: string;
+  /** Id of the suggestion that counts as fully answered once this one is chosen. */
+  completes?: string;
 }
 
 export interface ChatAgent {
@@ -25,6 +29,8 @@ export interface FaqEntry {
   id: string;
   question: string;
   answer: string;
+  /** Longer answer, offered through a "Tell me more" follow-up. */
+  more?: string;
 }
 
 /** Shape of `public/chat/faq.json`. */
@@ -45,11 +51,13 @@ export function parseFaq(json: unknown): FaqData {
     if (!entry || !isText(entry.id) || !isText(entry.question) || !isText(entry.answer)) {
       throw new Error("Every FAQ entry needs an id, a question and an answer");
     }
+    if (entry.more !== undefined && !isText(entry.more)) throw new Error("An FAQ 'more' text must not be empty");
   }
   return { fallback: data.fallback, entries: data.entries };
 }
 
 const normalize = (text: string) => text.toLowerCase().replace(/[^\p{L}\p{N}]+/gu, " ").trim();
+const MORE_PREFIX = "more:";
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 export interface FaqAgentOptions {
@@ -82,8 +90,16 @@ export function createFaqAgent(url: string, { delayMs = 700, fetcher = fetch }: 
       yield { type: "run-started" };
       const faq = await load();
       await sleep(delayMs);
-      const entry = faq.entries.find((candidate) => normalize(candidate.question) === normalize(message));
-      yield { type: "text", text: entry?.answer ?? faq.fallback };
+      if (message.startsWith(MORE_PREFIX)) {
+        const more = faq.entries.find((candidate) => candidate.id === message.slice(MORE_PREFIX.length))?.more;
+        yield { type: "text", text: more ?? faq.fallback };
+      } else {
+        const entry = faq.entries.find((candidate) => normalize(candidate.question) === normalize(message));
+        const text = entry?.answer ?? faq.fallback;
+        yield entry?.more
+          ? { type: "text", text, followUps: [{ id: `${entry.id}-more`, label: "Tell me more", prompt: MORE_PREFIX + entry.id, completes: entry.id }] }
+          : { type: "text", text };
+      }
       yield { type: "run-finished" };
     },
   };

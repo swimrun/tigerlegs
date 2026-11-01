@@ -158,6 +158,11 @@ test("chatbot loads the FAQ, shows a typing indicator and answers", async ({ pag
   await expect(chat.getByRole("status")).toContainText("typing");
   await expect(page.getByRole("log")).toContainText("Tigers are among the few big cats");
   await expect(chat.getByRole("status")).toHaveCount(0);
+  await expect(chat.getByRole("button", { name: label })).toBeVisible();
+  await chat.getByRole("button", { name: "Tell me more" }).click();
+  await expect(page.getByRole("log")).toContainText("They cool off in it");
+  await expect(chat.getByRole("button", { name: label })).toHaveCount(0);
+  await expect(chat.getByRole("button", { name: "Tell me more" })).toHaveCount(0);
   await page.getByLabel("Your question").fill("Which wetsuit?");
   await page.getByRole("button", { name: "Ask", exact: true }).click();
   await expect(page.getByRole("log")).toContainText("There is no actual LLM integration yet");

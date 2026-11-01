@@ -29,17 +29,25 @@ Deno.test("every suggestion label is answered with its FAQ answer", async () => 
   const agent = agentFor();
   for (const { label } of await agent.suggestions()) {
     const entry = faq.entries.find((e) => e.question === label)!;
-    assertEquals(await collect(agent, label), [
-      { type: "run-started" },
-      { type: "text", text: entry.answer },
-      { type: "run-finished" },
-    ]);
+    const events = await collect(agent, label);
+    assertEquals(events[0], { type: "run-started" });
+    assertEquals(events[1].type === "text" && events[1].text, entry.answer);
+    assertEquals(events[2], { type: "run-finished" });
   }
+});
+
+Deno.test("an answer with a longer version offers 'Tell me more'", async () => {
+  const agent = agentFor();
+  const entry = faq.entries.find((e) => e.more)!;
+  const first = (await collect(agent, entry.question))[1];
+  const followUp = first.type === "text" ? first.followUps?.[0] : undefined;
+  assertEquals(followUp?.label, "Tell me more");
+  assertEquals((await collect(agent, followUp!.prompt!))[1], { type: "text", text: entry.more! });
 });
 
 Deno.test("matching ignores case and punctuation", async () => {
   const events = await collect(agentFor(), "  but can TIGERS actually swim  ");
-  assertEquals(events[1], { type: "text", text: faq.entries[1].answer });
+  assertEquals(events[1].type === "text" && events[1].text, faq.entries[1].answer);
 });
 
 Deno.test("free-text questions get the fallback from the JSON", async () => {

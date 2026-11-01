@@ -4,27 +4,32 @@
     {
       "id": "what-is-swimrun",
       "question": "What is swimrun?",
-      "answer": "Swim, run, repeat. Teams (or soloists) move over a course that alternates between open-water swimming and trail running, in one go, with the same shoes and gear all the way."
+      "answer": "Swim, run, repeat: a race that alternates between open-water swimming and trail running, in one go, with the same gear all the way.",
+      "more": "Teams of two (or soloists) move over a course that alternates between open-water swimming and trail running, in one go, with the same shoes and gear all the way."
     },
     {
       "id": "tigers-swim",
       "question": "But can tigers actually swim?",
-      "answer": "Yes, and well. Tigers are among the few big cats that enjoy water: they cool off in it and swim across rivers. That is why a tiger is our swimrun mascot, and why the tiger in the logo is mid-swim."
+      "answer": "Yes, and well. Tigers are among the few big cats that enjoy water.",
+      "more": "They cool off in it and swim across rivers. That is why a tiger is our swimrun mascot, and why the tiger in the logo is mid-swim."
     },
     {
       "id": "segment-count",
       "question": "How many segments does a swimrun have?",
-      "answer": "It depends on the race. A short course may have a handful of swims and runs, a big island-hopping race has dozens. TigerLegs counts them for you: upload a GPX and it lists every swim and run segment."
+      "answer": "It depends on the race: from a handful of swims and runs to dozens.",
+      "more": "A short course may have a handful of segments, a big island-hopping race has dozens. TigerLegs counts them for you: upload a GPX and it lists every swim and run segment."
     },
     {
       "id": "distances",
       "question": "What are the distances in swimrun?",
-      "answer": "There are no standard distances, and that is on purpose: a course follows whatever islands, rivers or lake crossings are possible and pleasant in an area. Wikipedia lists categories of short and long courses, but those are relatively arbitrary. The Ötillö World Championship in Sweden (Stockholm archipelago) is about 60 km of running and 9 km of swimming, definitely one of the longer courses. Het Rondje Eilanden is far shorter, with about 1,500 m of swimming and running in total. Courses with 10 run and 10 swim segments are common. That is exactly why measuring segments per course is useful."
+      "answer": "There are no standard distances, and that is on purpose: a course follows whatever islands, rivers or lake crossings are possible and pleasant in an area.",
+      "more": "Wikipedia lists categories of short and long courses, but those are relatively arbitrary. The Ötillö World Championship in Sweden (Stockholm archipelago) is about 60 km of running and 9 km of swimming, definitely one of the longer courses. Het Rondje Eilanden is far shorter, with about 1,500 m of swimming and running in total. Courses with 10 run and 10 swim segments are common. That is exactly why measuring segments per course is useful."
     },
     {
       "id": "gear",
       "question": "Do you swim in your running shoes?",
-      "answer": "Usually yes. Most swimrunners keep their shoes on and often use paddles and a pull buoy while swimming, plus a wetsuit that is easy to run in. More in our Substack series 'From zero till Ötillö': https://from0tillotillo.substack.com/"
+      "answer": "Usually yes. Most swimrunners keep their shoes on while swimming.",
+      "more": "They often use paddles and a pull buoy, plus a wetsuit that is easy to run in. More in our Substack series 'From zero till Ötillö': https://from0tillotillo.substack.com/"
     },
     {
       "id": "tigerlegs-name",

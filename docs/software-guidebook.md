@@ -387,6 +387,7 @@ The component `src/components/Chatbot.tsx` depends only on the `ChatAgent` inter
 An agent returns a stream of events (`run-started`, `text`, `run-finished`), a small subset of the AG-UI event types.
 `createFaqAgent` is the static implementation. It fetches `public/chat/faq.json` (the fallback text and the list of questions and answers) on first use, validates it with `parseFaq`, and waits a short moment (700 ms) before answering so the chat feels like a conversation.
 Changing a question or answer is a JSON edit, not a code change.
+Each entry has a short `answer` and an optional longer `more`. When `more` exists, the answer comes with a *Tell me more* follow-up button that stays until it is used. A question label leaves the list only once all its answers have been given, so the short answer alone does not remove it.
 While the file loads and while the agent works, the UI shows a *typing indicator* (three bouncing dots, the "somebody is typing" pattern). It follows the principle "Show system status" (chapter 5), has a text alternative for screen readers (`role="status"`), and uses `motion-safe:` so it stands still for people who prefer reduced motion.
 A later agent that talks to an LLM over AG-UI can replace it by passing it as the `agent` prop, and tool-call or state events can be added to `ChatEvent` when an agent should drive the UI (issue #10).
 Free text from the user is already passed to the agent, so the UI does not change for that either.
