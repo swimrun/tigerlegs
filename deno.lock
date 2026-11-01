@@ -2508,11 +2508,16 @@
         "npm:@astrojs/check@~0.9.4",
         "npm:@astrojs/react@^7.1.2",
         "npm:@playwright/test@^1.58.0",
+        "npm:@storybook/addon-a11y@^10.6.5",
+        "npm:@storybook/addon-vitest@^10.6.5",
+        "npm:@storybook/react-vite@^10.6.5",
         "npm:@tailwindcss/cli@^4.3.3",
+        "npm:@tailwindcss/vite@^4.3.3",
         "npm:@types/leaflet@^1.9.21",
         "npm:@types/node@^24.19.2",
         "npm:@types/react-dom@^19.2.0",
         "npm:@types/react@^19.2.0",
+        "npm:@vitest/browser-playwright@^5.0.5",
         "npm:@xmldom/xmldom@0.9",
         "npm:astro@^7.4.4",
         "npm:fast-check@^3.22.0",
@@ -2520,8 +2525,10 @@
         "npm:marked@15",
         "npm:react-dom@^19.2.0",
         "npm:react@^19.2.0",
+        "npm:storybook@^10.6.5",
         "npm:tailwindcss@^4.3.3",
-        "npm:typescript@^5.9.3"
+        "npm:typescript@^5.9.3",
+        "npm:vitest@^5.0.5"
       ]
     }
   }

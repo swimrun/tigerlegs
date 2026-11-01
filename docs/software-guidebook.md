@@ -516,7 +516,9 @@ Rules:
 - Put logic in pure functions under `src/client/` so that it is tested at the bottom of the pyramid; keep React components thin.
 - Property-based tests use representative GPX fixtures from `test-data/`.
 - Add an end-to-end test only for behaviour that needs a real browser.
-- Known gap: there is no component test layer for React. If it becomes needed, add Vitest with Testing Library for components only; Deno keeps running the pure TypeScript.
+- React components have stories in Storybook (`npm run storybook`, files `src/components/*.stories.tsx`). Each story is also a component test: `npm run test:a11y` runs every story in Chromium through Vitest and fails on any axe accessibility violation (`a11y.test: "error"` in `.storybook/preview.ts`). The *Accessibility* panel in Storybook shows the same findings while developing.
+- Automated checks find only part of the accessibility problems (roughly a third to a half). Keyboard use, focus order and screen-reader wording still need a manual check.
+- Not yet covered: `Extractor` and `CourseMap` (Leaflet, web worker and map tiles need mocks), and the Astro pages and layout, which Storybook does not render.
 - A change is done only when `deno task test`, `deno task build` and (for site changes) `npm run test:site` pass; see [DEFINITION_OF_DONE.md](./DEFINITION_OF_DONE.md).
 
 ## 13. Decision log
