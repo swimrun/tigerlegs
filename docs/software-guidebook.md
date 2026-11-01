@@ -396,7 +396,7 @@ The frontend is a static GitHub Pages site at `https://swimrun.group/tigerlegs/`
 
 This chapter describes how the system reaches production.
 
-`.github/workflows/pages.yml` installs npm dependencies, runs Deno tests, builds the Worker/assets and Astro pages, checks site types, and runs Playwright browser tests before publishing `dist/` to GitHub Pages on a push to `main`. Feature branches do not deploy automatically.
+`.github/workflows/pages.yml` installs npm dependencies, runs Deno tests, builds the Worker/assets and Astro pages, checks site types, and runs Playwright browser tests on pull requests and pushes to `main`. Only `main` publishes `dist/` to GitHub Pages. Feature branches do not deploy automatically.
 
 The build generates `index.html`, `about.html`, `guidebook.html` and one HTML page per ADR. Public links and assets use the `/tigerlegs/` base path; direct navigation does not require a backend router or a 404 SPA fallback. The `README.md` in the repository root holds the build/preview commands.
 
