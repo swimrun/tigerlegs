@@ -82,6 +82,67 @@ Saving and sharing analysed routes requires a real backend and a privacy
 review first (stored routes reveal home locations) — see the README.
 Commercial distribution remains an option, not a commitment.
 
+## M10 — Training plans towards goal events
+
+Build a training plan towards goal events (A races) with intermediate
+B/C races, covering the four swimrun capacities: trail running,
+open-water swimming, strength, and static and dynamic flexibility.
+LLM-assisted drafting keeps the coach in control: drafts need explicit
+coach approval. Design issue: #20. These goals are ideation only and are
+deliberately kept out of the software guidebook until committed to;
+the figure below shows them with their actors.
+
+![Ideation use case diagram: swimrunner and coach with four dashed ideation goals; Strava and an MCP client support them.](diagrams/use-cases-training-ideation.svg)
+
+> **Plan towards goal events.** As a swimrunner, I want to build a
+> training plan towards my goal events, so that I can structure my
+> fitness build-up and perform at my best.
+> Given I have set an A race and its date, when I generate a plan, then
+> the plan shows progressive weekly swim, run, strength and flexibility
+> sessions from today to race day, with a taper before the race.
+
+> **Plan intermediate races.** As a swimrunner, I want to plan
+> intermediate B and C races, so that I can rehearse A-race skills such
+> as transitions and my nutrition plan without fully easing off or
+> tapering.
+> Given a plan towards an A race, when I add a B race six weeks before
+> it, then the plan keeps building load through the B race with at most
+> a short easing, and marks the B race as a rehearsal for transitions
+> and nutrition.
+
+> **Draft a plan with LLM support.** As a swimrun coach, I want to draft
+> training plans with LLM support, so that I spend less time while
+> keeping enough grip for a programme genuinely tuned to the swimrunner,
+> with a sound build-up and no sessions that are too hard or too light.
+> Given an athlete profile and goal events, when I ask the assistant for
+> a draft plan, then I receive an editable draft that I must explicitly
+> approve before the athlete sees it.
+
+## M11 — TigerLegs MCP server and Strava integration
+
+"Talk to your training data" from a swimrun perspective: a TigerLegs
+MCP server that any MCP client (Claude, ChatGPT, …) can connect to,
+with Strava as an activity data source — the pattern Stryd ships for
+running. Depends on M9 (accounts, OAuth token storage, privacy review)
+and on Strava's API agreement, which since November 2024 restricts
+showing a user's data to anyone but that user and restricts AI-model
+training on API data. See the draft
+[ADR-0010](./adr/0010-tigerlegs-mcp-server-and-strava-integration.md)
+and issue #20.
+
+> **Talk to your training data.** As a swimrunner, I want to make my
+> Strava data available for analysis in TigerLegs and query it through a
+> custom TigerLegs MCP server from any MCP client, so that I can talk to
+> my training plan and propose adjustments to my coach.
+> Given I connected Strava and an MCP client to the TigerLegs MCP
+> server, when I ask about last week's sessions, then the answer uses
+> only my own activities, and a proposed session change goes to my coach
+> for approval instead of silently changing the plan.
+
+These goals follow the same evidence rule as segment detection: activity
+data is evidence for how training went, and an LLM draft is evidence for
+what a plan could be; the athlete and the coach keep the final say.
+
 ## Technical uncertainties
 
 - Quality and coverage of OSM water polygons for race venues.
@@ -90,3 +151,9 @@ Commercial distribution remains an option, not a commitment.
 - Apple/Coros: no public API may exist for custom leg-by-leg display;
   export may be limited to plain route files.
 - GPS noise during swims: transition detection needs hysteresis.
+- Strava API terms: data display limited to the athlete themself and
+  restrictions on AI-model training (November 2024 update); how the
+  coach-approval flow fits these terms needs legal reading.
+- MCP server hosting: OAuth, rate limits and token storage imply a real
+  backend in the EU (ADR-0004) and a privacy review before any training
+  data is stored.
