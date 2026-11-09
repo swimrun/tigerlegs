@@ -3,7 +3,7 @@ import config from "../../deno.json";
 interface Props {
   title: string;
   description: string;
-  active: "extractor" | "about" | "guidebook" | "profile";
+  active: "extractor" | "training" | "about" | "guidebook" | "profile";
 }
 const { title, description, active } = Astro.props;
 const base = import.meta.env.BASE_URL.replace(/\/?$/, "/");
@@ -15,6 +15,7 @@ const languages = [
 ];
 const links = [
   { key: "extractor", href: base, text: "Extractorrr" },
+  { key: "training", href: `${base}training.html`, text: "Training" },
   { key: "about", href: `${base}about.html`, text: "About" },
   { key: "guidebook", href: `${base}guidebook.html`, text: "Guidebook" },
 ];

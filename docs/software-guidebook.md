@@ -243,7 +243,7 @@ This chapter lists the rules that guide design choices when no constraint decide
 - **One source of truth for configuration.** Ports and origins live in `src/server/config.ts`, so changing a port touches one line.
 - **Use the domain language.** Names in code follow the glossary in Appendix A.
 - **Navigate with links, not buttons.** Every page shares a header menu with links to *Extractorrr* (with the tiger growl) and *About*, and the current page is marked. Pages have no "back to" buttons. Buttons trigger actions on the current page, links move between pages.
-- **Fake it till you make it.** Before building an expensive feature, we may show a believable prototype of it to see whether anyone cares (a fake-door test). Today the chatbot (section 7.2) answers a fixed FAQ and the profile page (section 7.3) has a fake login with one static profile. Rules: a fake is labelled as a prototype in the interface, it never collects real personal data, it hides behind a replaceable interface so the real implementation drops in later, and we measure its usage (planned, issue #11) before deciding to build the real thing.
+- **Fake it till you make it.** Before building an expensive feature, we may show a believable prototype of it to see whether anyone cares (a fake-door test). Today the chatbot (section 7.2) answers a fixed FAQ, the profile page (section 7.3) has a fake login with one static profile, and the training week (section 7.5) rearranges a hardcoded week without a server. Rules: a fake is labelled as a prototype in the interface, it never collects real personal data, it hides behind a replaceable interface so the real implementation drops in later, and we measure its usage (planned, issue #11) before deciding to build the real thing.
 - **Scroll-linked effects never hijack scrolling.** Visual effects may follow the scroll position, but the page always scrolls natively and the effect is decoration only (see section 7.1). Content stays readable without it.
 - **Show system status.** Whenever the system is working and the user waits, the interface shows it. This is Nielsen's first usability heuristic, *visibility of system status* (Nielsen, 1994). In the chat it takes the form of a *typing indicator* (section 7.2). The indicator is also announced to screen readers, and it does not animate for people who prefer reduced motion.
 - **Document decisions.** Significant choices get an ADR, and the team writes documentation in English.
@@ -434,6 +434,22 @@ Translated content carries a `lang` attribute, and a CSS rule hides every langua
 Pages without translations (the extractor, chatbot and profile) stay English for now.
 Each option also shows the code and the language name, because a flag is a country and not a language; the select has an `aria-label`.
 Flag emoji do not render on Windows, where the two-letter code shows instead.
+
+### 7.5 Front end: the prototype training week
+
+`/training.html` shows a prototype training week: six hardcoded sessions covering the four swimrun capacities (trail running, open-water swimming, strength, and static and dynamic flexibility).
+It explores the training-plan ideation (issue #20, [ADR-0010](./adr/0010-tigerlegs-mcp-server-and-strava-integration.md)); the feature specification lives in [specs/002-training-week-assistant/spec.md](../specs/002-training-week-assistant/spec.md).
+The page is labelled as a prototype, nothing is sent anywhere, and confirming a week only keeps it in component state.
+
+The domain lives in `src/client/training-week.ts` as pure, tested functions: `applyMoves` returns a new week and never mutates its input (the GPX rule applied to plans), `changedSessions` diffs a draft against the confirmed baseline, and `parseProposal` validates a model response, dropping moves that name unknown sessions or invalid days.
+
+The week can always be rearranged by hand with a day selector per session — **AI-assisted, not AI-dependent**, the training twin of "terrain-informed, not terrain-dependent".
+On top of that, `src/client/prompt-api.ts` wraps Chrome's built-in Prompt API (Gemini Nano): `TrainingWeek.tsx` checks `LanguageModel.availability()` and walks the fallback ladder — no API or `unavailable` shows a note that hand rearranging always works, `downloadable` offers an opt-in download with progress, and `available` shows an instruction field.
+A proposal is requested with a JSON-schema `responseConstraint` (move an existing session to another day, with a reason) and shown as a diff the athlete applies or dismisses; the athlete confirms the week explicitly.
+The proposal is evidence; the confirmation is the label.
+The schedule never leaves the device: the model runs locally and Chrome owns its download and updates.
+The UI follows the page language in all four site languages, but the model itself understands English, French and German, not Dutch (ADR-0010), so the interface says so.
+The component takes the model as an optional prop, so tests and Storybook stories inject a fake and the real browser API stays at the edge.
 
 ## 8. Data
 

@@ -1,0 +1,10 @@
+---
+import SiteLayout from "../layouts/SiteLayout.astro";
+import TrainingWeek from "../components/TrainingWeek.tsx";
+---
+<SiteLayout title="Training – TigerLegs" description="Prototype training week: rearrange sessions by hand or with on-device AI." active="training">
+  <main class="mx-auto max-w-7xl space-y-6 px-4 py-8 leading-relaxed">
+    <h1 class="text-3xl font-bold">Training <span class="rounded bg-stone-950 px-2 py-0.5 align-middle text-xs font-semibold uppercase tracking-wider text-amber-400">Prototype</span></h1>
+    <TrainingWeek client:load />
+  </main>
+</SiteLayout>
