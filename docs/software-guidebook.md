@@ -410,7 +410,7 @@ It is not an LLM: it answers the fixed questions and replies "There is no actual
 
 The component `src/components/Chatbot.tsx` depends only on the `ChatAgent` interface in `src/client/chat-agent.ts`.
 An agent returns a stream of events (`run-started`, `text`, `run-finished`), a small subset of the AG-UI event types.
-`createFaqAgent` is the static implementation. It fetches `public/chat/faq.<lang>.json` (language, *Tell me more* label, fallback text, and the questions and answers) on first use, validates it with `parseFaq`, and waits a short moment (700 ms) before answering so the chat feels like a conversation.
+`createFaqAgent` is the static implementation. It fetches `public/chat/faq.<lang>.json` (language, *Tell me more* label, fallback text, and the questions and answers) on first use, validates it with `parseFaq`, and pauses before answering so the chat feels like a conversation: the pause grows with the length of the answer, from 0.7 s up to 2.1 s, while the typing indicator shows.
 Changing a question or answer is a JSON edit, not a code change.
 Each entry has a short `answer` and an optional longer `more`. When `more` exists, the answer comes with a *Tell me more* follow-up button that stays until it is used. A question label leaves the list only once all its answers have been given, so the short answer alone does not remove it.
 There is one file per language (`en`, `nl`, `fr`, `de`) with the same entry ids; a unit test checks this parity. The chat follows the page language (the `lang` attribute of `<html>`), has its own typed UI dictionary for strings needed before the JSON loads, and restarts when the language changes.

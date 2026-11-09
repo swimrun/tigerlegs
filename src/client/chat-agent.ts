@@ -63,6 +63,12 @@ const normalize = (text: string) => text.toLowerCase().replace(/[^\p{L}\p{N}]+/g
 const MORE_PREFIX = "more:";
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
+/**
+ * Typing pause: grows with the answer length, so long answers "take longer to type",
+ * capped at three times the base delay. A zero base (tests) stays zero.
+ */
+const typingTime = (base: number, text: string) => Math.min(base * 3, base + text.length * 15);
+
 export interface FaqAgentOptions {
   /** Pause before answering so the chat feels like a conversation. */
   delayMs?: number;
@@ -92,17 +98,20 @@ export function createFaqAgent(url: string, { delayMs = 700, fetcher = fetch }: 
     async *run(message: string) {
       yield { type: "run-started" };
       const faq = await load();
-      await sleep(delayMs);
+      let reply: ChatEvent;
       if (message.startsWith(MORE_PREFIX)) {
         const more = faq.entries.find((candidate) => candidate.id === message.slice(MORE_PREFIX.length))?.more;
-        yield { type: "text", text: more ?? faq.fallback };
+        reply = { type: "text", text: more ?? faq.fallback };
       } else {
         const entry = faq.entries.find((candidate) => normalize(candidate.question) === normalize(message));
         const text = entry?.answer ?? faq.fallback;
-        yield entry?.more
+        reply = entry?.more
           ? { type: "text", text, followUps: [{ id: `${entry.id}-more`, label: faq.tellMore, prompt: MORE_PREFIX + entry.id, completes: entry.id }] }
           : { type: "text", text };
       }
+      // The typing indicator shows during this pause, so the chat feels like a conversation.
+      await sleep(typingTime(delayMs, reply.type === "text" ? reply.text : ""));
+      yield reply;
       yield { type: "run-finished" };
     },
   };
