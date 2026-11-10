@@ -40,9 +40,19 @@ What this means for us:
 - **Project Valhalla.** Value classes (JEP 401), the Java counterpart of structs that flatten data in memory, are integrated as a *preview* feature in JDK 28 (March 2027), disabled by default, and not expected to be final even in JDK 29, the next LTS (InfoQ, 2026). They are not in Java 25 and cannot be relied upon for this decision; like everything in OpenJDK they will come to all builds.
 - **.NET 10.** The .NET runtime is licensed under MIT and is a .NET Foundation project (.NET Foundation, n.d.); .NET 10 is LTS until 14 November 2028 (Microsoft, n.d.). That ASP.NET Core was far behind Java servers such as Jetty is an old picture: for years it has been at or near the top of the TechEmpower results. Those results were archived (see below), so no current neutral comparison exists for .NET 10 against Java 25, and we measure ourselves.
 
+### Server-side analysis for weak devices
+
+An option to keep open: let the back end do some of the GPX analysis for devices that are too slow, such as old phones or simple browsers, as a premium or fallback service.
+That bends ADR-0003 (analysis in the browser, the GPX file stays on the device): the file would be uploaded, so it must be opt-in, processed in the EU and not stored, and the privacy review of roadmap M9 applies.
+First find out whether the need is real: today the analysis of the Rügen recording (19,771 points) runs in about a tenth of a second on a laptop in a Web Worker; measure a low-end phone before building anything.
+If the back end does run the analysis, TypeScript decides it: a Node.js (or Deno) back end runs the very code the browser runs, one implementation with one set of tests, while every other language needs a second implementation that must stay equal to the first (the official-split tests of the Cannes and Rondje Eilanden recordings would be the parity check).
+Weighing this in C4 is a decision of the owner; the sensitivity below shows what it does to the totals.
+
 ### Does Astro put pressure on the choice?
 
 Little. The site is Astro in its default static mode on GitHub Pages: "By default, your entire Astro site will be prerendered, and static HTML pages will be sent to the browser", and an adapter (Node.js, Cloudflare, Netlify, Vercel) is only needed for pages rendered on demand (Astro, n.d.-a). A static site that calls a separate API needs no adapter, and in static mode Astro endpoints only run at build time (Astro, n.d.-b). So the back end is a separate service behind a REST/JSON contract (ADR-0005), and Astro does not care what it is written in.
+
+Two related questions are tracked in #64. Astro itself now belongs to Cloudflare: its company joined Cloudflare on 16 January 2026, and Astro stays MIT-licensed with a public roadmap and open governance (heise online, 2026), the same pattern as Deno. And Next.js, the usual alternative for an app-like front end, is governed by Vercel but can be self-hosted: as a Node server or Docker container with standalone output, as a static export, and since version 16.2 through a stable Adapter API (Next.js, 2026). A Next.js front end with server code would pull the back end toward Node.js, which is the one real pressure from a framework on this decision; it does not follow from the current static site.
 
 Where pressure could appear:
 
@@ -93,7 +103,7 @@ Only supported releases are considered: Java 25 is an LTS release, available fro
 | C2  | Fit with external HTTP APIs such as Overpass                         | 5      | HTTP client, JSON, retry and cache libraries (every option has them, so little separates the options)                                                           |
 | C3  | Light on a small VPS                                                 | 15     | Image size, idle memory, start time                                                                                                                             |
 | C4  | Shares code with the front end                                       | 10     | Reuse of the TypeScript client, types and analysis code (weight 0 if the back end never analyses GPX)                                                           |
-| C5  | Ecosystem for accounts and payments                                  | 5      | Sign-in, OAuth for Strava and MCP, payments                                                                                                                     |
+| C5  | Ecosystem for accounts, payments and jobs                            | 5      | Sign-in, OAuth for Strava, payments, e-mail, background jobs, the MCP server (see the list below)                                                               |
 | C6  | Tooling and testing                                                  | 5      | Tests, lint, format, container workflow                                                                                                                         |
 | C7  | Security and supply chain                                            | 10     | Permissions, and how exposed the ecosystem is to poisoned dependencies                                                                                          |
 | C8  | Autonomy                                                             | 15     | Self-hostable in the EU on our own infrastructure; no lock-in to one vendor's platform services; open licence and governance not controlled by a single company |
@@ -101,6 +111,19 @@ Only supported releases are considered: Java 25 is an LTS release, available fro
 | C10 | Database and geodata                                                 | 10     | PostgreSQL with PostGIS: drivers, migrations, an ORM or query builder, spatial types                                                                            |
 
 C8 is named *autonomy* here. *Sovereignty* is also used for this idea, but the word has other uses; what is meant is the ability to run, move and fix our own service without asking a vendor.
+
+### C5: what the roadmap will ask of the ecosystem
+
+The weight of C5 is low now and will grow with the roadmap (M9 to M12):
+
+- accounts, sign-in and sharing (M9), with the privacy review first;
+- OAuth against Strava and token storage (M11, ADR-0010) and an MCP server (M11);
+- payments for the premium service (M9, M12): iDEAL, Apple Pay and cards through a payment provider; Mollie, for example, offers iDEAL, Apple Pay and others through one REST API with webhooks for payment status, official client libraries for JavaScript, PHP, .NET, Python and Ruby, and community libraries for Java and Go (Mollie, n.d.); Wero is announced as the successor of iDEAL, and is available in Germany and Belgium through the same API. Garmin Pay is a payment method for paying with a watch in a shop; we found nothing to suggest it is something a web service integrates, and assume it is not relevant;
+- e-mail for sign-in and receipts, scheduled and background jobs (refreshing Overpass data, calendar feeds for training plans, M10) and webhooks;
+- storage of files and a database (C10).
+
+A payment provider is a REST and webhook integration, so every option can do it; what differs is whether an official client library exists in our language and how much of the work we write ourselves (a small surface: create a payment, receive a webhook, check the status).
+Node.js, .NET and Python have official libraries; Java, Go and Rust would use a community library or direct HTTP calls.
 
 ### C7: supply chain
 
@@ -167,6 +190,8 @@ If the owner rates Spring Boot 5 and Node.js 3 on C1, the totals are 385 and 410
 
 - If the back end never analyses GPX (C4 weight 0, its 10 points to C1), the TypeScript options lose their edge and the owner's preference decides between Node.js, Go, Axum, ASP.NET Core and the Java frameworks.
 - If memory on the VPS must stay very small (C3 weight 25), Go, Axum and Deno gain and the JVM options lose unless the measured numbers say otherwise.
+- If server-side analysis for weak devices is planned (C4 weight 25), the TypeScript options (Node.js and Deno) gain strongly, because they run the same analysis code as the browser.
+- If payments, e-mail and background jobs matter more (C5 weight 15), Spring Boot, ASP.NET Core, Node.js and FastAPI gain.
 - If supply chain weighs as much as autonomy (C7 weight 15), Node.js loses another 10 and the gap to Go and Axum closes.
 - If autonomy and governance are weighed even higher (C8 and C9 together 30), Deno falls further.
 
@@ -200,6 +225,8 @@ GraalVM. (n.d.). *Downloads*. Retrieved November 10, 2026, from https://www.graa
 
 Halbritter, M. (2026, February). *Supercharge your JVM performance with Project Leyden and Spring Boot* [Slides]. https://mhalbritter.github.io/slides/2026-02%20-%20Supercharge%20your%20JVM%20performance%20with%20Project%20Leyden%20and%20Spring%20Boot.pdf
 
+heise online. (2026, January). *Web development: Cloudflare acquires Astro Technology Company*. https://heise.de/-11145912
+
 InfoQ. (2025, March). *Java 24 ships Project Leyden*. https://www.infoq.com/news/2025/03/java-24-leyden-ships
 
 InfoQ. (2026, August). *JEP 401 value objects preview*. https://infoq.com/news/2026/08/jep401-value-objects-preview
@@ -208,7 +235,11 @@ Javalin. (n.d.). *Javalin: A simple web framework for Java and Kotlin*. Retrieve
 
 Linuxiac. (2026). *Cloudflare acquires Deno JavaScript runtime, core development to end in 2027*. https://linuxiac.com/cloudflare-acquires-deno-javascript-runtime/
 
+Mollie. (n.d.). *API client libraries*. Retrieved November 11, 2026, from https://docs.mollie.com/docs/libraries
+
 .NET Foundation. (n.d.). *dotnet/runtime* [Repository and licence]. GitHub. Retrieved November 10, 2026, from https://github.com/dotnet/runtime
+
+Next.js. (2026, March 25). *Next.js across platforms* [Adapter API announcement]. https://nextjs.org/nextjs-across-platforms
 
 OpenLogic. (n.d.). *Java experts on OpenJDK vs. Oracle JDK*. https://www.openlogic.com/blog/java-experts-openjdk-vs-oracle-jdk
 
