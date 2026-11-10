@@ -1,0 +1,35 @@
+# Optional local Overpass server for development and for recording test fixtures, so that the
+# public servers are not hit (and we do not end up on their block list).
+# Short guide: docs/local-overpass.md.
+#
+#   docker compose -f docker-compose.overpass.yml up -d
+#
+# The first start downloads the extract and builds the database (a one-time job, follow it with
+# `docker compose -f docker-compose.overpass.yml logs -f`). When it is done the same container serves
+# http://127.0.0.1:8081/api/interpreter; later starts skip the import.
+#
+# Settings, all optional (a git-ignored .env file or exported variables):
+#   REGION       name of the data folder, default "netherlands"
+#   EXTRACT_URL  a Geofabrik extract, default the Netherlands
+# The data lives in ./overpass-data/<REGION>/, which is git-ignored.
+#
+# The image is wiktorn/overpass-api because it has a native arm64 build (Apple Silicon); the
+# b1tw153/overpass-api image from the upstream manual is amd64 only. Both document the same Overpass
+# API: https://github.com/b1tw153/Overpass-API/blob/main/README.md
+services:
+  overpass:
+    image: wiktorn/overpass-api:latest
+    container_name: tigerlegs-overpass
+    ports:
+      - "127.0.0.1:8081:80"
+    volumes:
+      - ./overpass-data/${REGION:-netherlands}:/db
+    environment:
+      OVERPASS_MODE: init
+      OVERPASS_PLANET_URL: ${EXTRACT_URL:-https://download.geofabrik.de/europe/netherlands-latest.osm.pbf}
+      # We query by bounding box and need no history or author data, so the derived "area" objects
+      # and the metadata are left out: less import time and disk space. No updates are applied, so
+      # it is a fixed snapshot, which also keeps recorded fixtures reproducible.
+      OVERPASS_META: "no"
+      OVERPASS_USE_AREAS: "false"
+    restart: unless-stopped

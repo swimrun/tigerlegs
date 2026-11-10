@@ -32,3 +32,6 @@ public/img/swimrun-paddles-laffrey-vertical-2026.png
 public/samples/
 storybook-static/
 *.log
+
+# Local Overpass server data (docker-compose.overpass.yml), several GB
+overpass-data/
