@@ -609,6 +609,8 @@ Table 8 lists the ADRs and what each decides.
 | [0008](./adr/0008-astro-static-site-with-react-islands.md) | Astro static pages with a React-based interactive frontend; compare alternatives using multi-criteria decision making |
 | [0009](./adr/0009-react-for-interactive-frontend.md) | Use React for the interactive frontend; owner familiarity and learning goals, compared with Vue, Angular and other options |
 | [0010](./adr/0010-tigerlegs-mcp-server-and-strava-integration.md) | Draft: expose training data through a TigerLegs MCP server with Strava as a data source; no decision yet |
+| [0011](./adr/0011-model-lifecycle-and-think-thread-for-on-device-chat.md) | Draft: separate the one-off model download from the per-prompt think thread in the on-device chat; no decision |
+| [0012](./adr/0012-persistent-chat-across-pages.md) | Proposed: keep the chat across pages with Astro view transitions and a persisted island |
 | [0013](./adr/0013-back-end-is-optional.md) | Draft: the back end is optional and a premium feature; the front end works without it; no decision |
 | [0014](./adr/0014-back-end-technology.md) | Draft: back-end technology compared with multi-criteria decision making (Deno, Node.js, Python, Java 25, .NET 10, Go); no decision |
 
