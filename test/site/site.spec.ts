@@ -32,6 +32,10 @@ test("static pages and every ADR have shared navigation, direct links and reload
 test("language choice is in the header on every page and persists across pages", async ({ page }) => {
   await page.goto("./");
   await expect(page.locator("#language-switch option")).toHaveCount(4);
+  // Regression: the language-hiding CSS must not hide the dropdown's own options.
+  const optionDisplays = await page.locator("#language-switch option")
+    .evaluateAll(options => options.map(option => getComputedStyle(option).display));
+  for (const display of optionDisplays) expect(display).not.toBe("none");
   await page.locator("#language-switch").selectOption("nl");
   await expect(page.locator("html")).toHaveAttribute("lang", "nl");
   await page.goto("about.html");
