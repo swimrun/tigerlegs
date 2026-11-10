@@ -425,7 +425,7 @@ export default function TrainingWeek({ languageModel }: Props) {
       >
         <h2 id="assist-title" className="text-lg font-bold">
           {t.assistTitle}{" "}
-          <span className="rounded bg-stone-950 px-2 py-0.5 text-xs font-semibold uppercase tracking-wider text-amber-400">
+          <span aria-hidden="true" className="rounded bg-stone-950 px-2 py-0.5 text-xs font-semibold uppercase tracking-wider text-amber-400">
             {availability === "available" ? "Gemini Nano" : "AI"}
           </span>
         </h2>

@@ -39,7 +39,10 @@ interface CreateMonitor {
 }
 
 export interface LanguageModelStatic {
-  availability(): Promise<Exclude<AssistAvailability, "absent">>;
+  availability(options?: {
+    expectedInputs?: { type: "text"; languages: string[] }[];
+    expectedOutputs?: { type: "text"; languages: string[] }[];
+  }): Promise<Exclude<AssistAvailability, "absent">>;
   create(options?: {
     expectedInputs?: { type: "text"; languages: string[] }[];
     expectedOutputs?: { type: "text"; languages: string[] }[];
@@ -60,7 +63,13 @@ export async function assistAvailability(
   model: LanguageModelStatic | null,
 ): Promise<AssistAvailability> {
   if (!model) return "absent";
-  return await model.availability();
+  try {
+    // Chrome wants the language expectations on every request, availability() included.
+    return await model.availability({ expectedInputs: LANGUAGES, expectedOutputs: LANGUAGES });
+  } catch {
+    // Older API versions do not take options yet.
+    return await model.availability();
+  }
 }
 
 /** Model languages shared with the site: English, French and German (no Dutch). */
