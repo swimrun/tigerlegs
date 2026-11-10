@@ -79,9 +79,12 @@ const SYSTEM_PROMPT = "You rearrange a weekly swimrun training schedule. " +
   "Never add, remove or alter sessions; only move them between days. " +
   "Propose exactly one move: the single most logical session for the athlete's instruction. " +
   "Only propose several moves when the instruction explicitly names more than one session to move. " +
-  "Never place two runs on the same day; leave every session you were not asked about where it is.";
+  "Never place two runs on the same day; leave every session you were not asked about where it is. " +
+  "When the instruction does not identify exactly one session (for example 'move the run' while " +
+  "several runs exist), do not guess: return an empty moves array and a clarification with a short " +
+  "question and one option per candidate session, labelling each with its name and current day.";
 
-const MOVES_SCHEMA = {
+const REPLY_SCHEMA = {
   type: "object",
   properties: {
     moves: {
@@ -96,9 +99,62 @@ const MOVES_SCHEMA = {
         required: ["id", "toDay", "reason"],
       },
     },
+    clarification: {
+      type: "object",
+      properties: {
+        question: { type: "string" },
+        options: {
+          type: "array",
+          items: {
+            type: "object",
+            properties: {
+              id: { type: "string" },
+              label: { type: "string" },
+            },
+            required: ["id", "label"],
+          },
+        },
+      },
+      required: ["question", "options"],
+    },
   },
   required: ["moves"],
 };
+
+/** A follow-up question with candidate sessions, shown as suggestion chips. */
+export interface Clarification {
+  question: string;
+  options: { id: string; label: string }[];
+}
+
+/** The assistant either proposes moves or asks which session is meant. */
+export type AssistantReply =
+  | { kind: "moves"; moves: Move[] }
+  | { kind: "clarification"; clarification: Clarification };
+
+/**
+ * Parses a model response into a reply. A clarification wins when it carries a
+ * question and at least two options naming real sessions; otherwise the moves
+ * are parsed as before. Throws on malformed JSON.
+ */
+export function parseReply(json: string, week: readonly TrainingSession[]): AssistantReply {
+  const parsed: unknown = JSON.parse(json);
+  const clarification = (parsed as { clarification?: unknown })?.clarification as
+    | Partial<Clarification>
+    | undefined;
+  if (clarification && typeof clarification.question === "string" && Array.isArray(clarification.options)) {
+    const known = new Map(week.map((session) => [session.id, session]));
+    const options = clarification.options.flatMap((option: unknown) => {
+      const { id, label } = (option ?? {}) as Record<string, unknown>;
+      if (typeof id !== "string" || !known.has(id)) return [];
+      return [{ id, label: typeof label === "string" && label ? label : known.get(id)!.title }];
+    });
+    if (options.length >= 2) {
+      return { kind: "clarification", clarification: { question: clarification.question, options } };
+    }
+  }
+  return { kind: "moves", moves: parseProposal(json, week) };
+}
 
 /**
  * Creates and immediately destroys a session, which triggers the one-off
@@ -123,14 +179,15 @@ export async function warmUp(
 
 /**
  * Creates a session (which triggers the one-off model download when needed,
- * reporting progress as 0..1), asks for moves and returns the valid ones.
+ * reporting progress as 0..1) and asks for a reply: either moves or a
+ * clarification question when the instruction is ambiguous.
  */
-export async function proposeMoves(
+export async function proposeChange(
   model: LanguageModelStatic,
   week: readonly TrainingSession[],
   instruction: string,
   onDownloadProgress?: (loaded: number) => void,
-): Promise<Move[]> {
+): Promise<AssistantReply> {
   const session = await model.create({
     expectedInputs: LANGUAGES,
     expectedOutputs: LANGUAGES,
@@ -150,9 +207,9 @@ export async function proposeMoves(
     }));
     const response = await session.prompt(
       `Schedule: ${JSON.stringify(schedule)}. ${instruction} Propose moves.`,
-      { responseConstraint: MOVES_SCHEMA },
+      { responseConstraint: REPLY_SCHEMA },
     );
-    return parseProposal(response, week);
+    return parseReply(response, week);
   } finally {
     session.destroy();
   }
