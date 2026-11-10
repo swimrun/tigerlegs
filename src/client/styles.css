@@ -119,9 +119,10 @@
   html[data-lang="de"] :is([lang="en"], [lang="nl"], [lang="fr"]):not(option) {
     display: none;
   }
-  /* Tiger picture fixed at the bottom, centred; the sides are the same picture, stretched and blurred, so the colours match. A circular reveal grows from the picture's bottom-right corner, where the tiger swims, with scroll progress (--reveal, 0..1, set in about.ts). */
+  /* Tiger picture fixed at the bottom, centred; the sides are the same picture, stretched and blurred, so the colours match. A circular reveal grows from the picture's bottom-right corner, where the tiger swims, with scroll progress (--reveal, 0..1, set in about.ts); the sharp picture grows slightly with it (--zoom). */
   .tiger-fade {
     --reveal: 0.05;
+    --zoom: 0.8;
     --tiger-w: min(100vw, 36rem);
     position: fixed;
     left: 0;
@@ -151,7 +152,9 @@
     left: 50%;
     right: auto;
     width: var(--tiger-w);
-    transform: translateX(-50%);
+    /* Grows with the reveal around the bottom-right corner, so the circle keeps growing out of the same spot. */
+    transform: translateX(-50%) scale(var(--zoom));
+    transform-origin: 100% 100%;
     -webkit-mask-image: linear-gradient(to right, transparent, #000 14%, #000 94%, transparent);
     mask-image: linear-gradient(to right, transparent, #000 14%, #000 94%, transparent);
   }
