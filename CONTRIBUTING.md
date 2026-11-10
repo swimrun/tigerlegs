@@ -8,7 +8,7 @@ Message Bart in the SwimRun huiskamer group. Once you are introduced there, you 
 
 ## Working agreements
 
-- Read [AGENT.md](./AGENT.md) first. It holds the working agreements.
+- Read [AGENTS.md](./AGENTS.md) first. It holds the working agreements.
 - Run `deno task test` and `deno task build` before you push.
 - Write commit messages in the imperative mood ("Add ...", "Fix ...").
 - Documentation is in English. Change the README, the [software guidebook](./docs/software-guidebook.md) or an ADR in the same commit as the behaviour it describes.
