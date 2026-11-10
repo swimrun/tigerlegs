@@ -33,3 +33,6 @@ public/samples/
 public/diagrams/
 storybook-static/
 *.log
+
+# Local Overpass server data (docker-compose.overpass.yml), several GB
+overpass-data/
