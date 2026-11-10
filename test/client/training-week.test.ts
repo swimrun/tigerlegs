@@ -3,7 +3,9 @@ import {
   applyMoves,
   changedSessions,
   type Day,
+  fitsInstruction,
   isDay,
+  mentionedDisciplines,
   parseProposal,
   PROTOTYPE_WEEK,
   type TrainingSession,
@@ -81,4 +83,20 @@ Deno.test("PROTOTYPE_WEEK - has unique ids and covers the four swimrun capacitie
       `missing ${needed}`,
     );
   }
+});
+
+Deno.test("mentionedDisciplines - finds the discipline in the four site languages", () => {
+  assertEquals([...mentionedDisciplines("I want to run every other day")], ["run"]);
+  assertEquals([...mentionedDisciplines("ik wil vaker zwemmen")], ["swim"]);
+  assertEquals([...mentionedDisciplines("Ich möchte weniger laufen")], ["run"]);
+  assertEquals([...mentionedDisciplines("je veux nager plus")], ["swim"]);
+  assertEquals([...mentionedDisciplines("I am travelling Thursday")], []);
+});
+
+Deno.test("fitsInstruction - a swimrun session fits both a run and a swim instruction", () => {
+  const brick = PROTOTYPE_WEEK.find((session) => session.id === "brick")!;
+  const swim = PROTOTYPE_WEEK.find((session) => session.id === "ow-swim")!;
+  assertEquals(fitsInstruction(brick, new Set(["run"])), true);
+  assertEquals(fitsInstruction(swim, new Set(["run"])), false);
+  assertEquals(fitsInstruction(swim, new Set()), true);
 });

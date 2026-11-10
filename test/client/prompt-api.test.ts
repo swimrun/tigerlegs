@@ -4,6 +4,7 @@ import {
   getLanguageModel,
   type LanguageModelSession,
   type LanguageModelStatic,
+  narrowByDiscipline,
   parseReply,
   proposeChange,
 } from "../../src/client/prompt-api.ts";
@@ -130,4 +131,53 @@ Deno.test("parseReply - moves win when no usable clarification is present", () =
     kind: "moves",
     moves: [{ id: "trail", toDay: "Fri", reason: "empty day" }],
   });
+});
+
+const MIXED: TrainingSession[] = [
+  ...WEEK,
+  { id: "ow-swim", day: "Tue", title: "Open-water swim", discipline: "swim" },
+];
+const clarify = (...ids: string[]) =>
+  JSON.stringify({
+    moves: [],
+    clarification: { question: "Move which run?", options: ids.map((id) => ({ id, label: id })) },
+  });
+
+Deno.test("narrowByDiscipline - a run instruction never offers the swim", () => {
+  const reply = parseReply(clarify("trail", "intervals", "ow-swim"), MIXED);
+  assertEquals(narrowByDiscipline(reply, MIXED, "I want to run every other day"), {
+    kind: "clarification",
+    clarification: {
+      question: "Move which run?",
+      options: [{ id: "trail", label: "trail" }, { id: "intervals", label: "intervals" }],
+    },
+  });
+});
+
+Deno.test("narrowByDiscipline - leaves the model's options alone when no discipline is named", () => {
+  const reply = parseReply(clarify("trail", "intervals", "ow-swim"), MIXED);
+  assertEquals(narrowByDiscipline(reply, MIXED, "I am travelling Thursday"), reply);
+});
+
+Deno.test("proposeChange - one candidate left after narrowing is used without asking", async () => {
+  const answers = [
+    clarify("trail", "ow-swim"),
+    JSON.stringify({ moves: [{ id: "trail", toDay: "Mon", reason: "Runs spread out." }] }),
+  ];
+  const prompts: string[] = [];
+  const model: LanguageModelStatic = {
+    availability: () => Promise.resolve("available"),
+    create: () =>
+      Promise.resolve({
+        prompt(input) {
+          prompts.push(input);
+          return Promise.resolve(answers.shift()!);
+        },
+        destroy() {},
+      }),
+  };
+  const reply = await proposeChange(model, MIXED, "Move my run to Monday");
+  assertEquals(reply.kind, "moves");
+  assertEquals(prompts.length, 2);
+  assertEquals(prompts[1].includes('session id "trail"'), true);
 });
