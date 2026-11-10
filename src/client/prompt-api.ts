@@ -76,7 +76,10 @@ export async function assistAvailability(
 const LANGUAGES = [{ type: "text" as const, languages: ["en", "fr", "de"] }];
 
 const SYSTEM_PROMPT = "You rearrange a weekly swimrun training schedule. " +
-  "Never add, remove or alter sessions; only move them between days.";
+  "Never add, remove or alter sessions; only move them between days. " +
+  "Propose exactly one move: the single most logical session for the athlete's instruction. " +
+  "Only propose several moves when the instruction explicitly names more than one session to move. " +
+  "Never place two runs on the same day; leave every session you were not asked about where it is.";
 
 const MOVES_SCHEMA = {
   type: "object",

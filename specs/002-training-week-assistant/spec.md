@@ -109,6 +109,39 @@ applies, adjusts or dismisses it and confirms the week explicitly.
   German only.
 - **FR-010**: The schedule and instruction MUST NOT leave the device; the
   assistant runs locally and the page makes no network call for it.
+- **FR-011**: A proposal MUST move exactly one session by default. Several
+  moves are only acceptable when the instruction explicitly names more
+  than one session to move ("move the Monday run and the strength
+  session…"). Naming a current (IST) and a desired (SOLL) state of the
+  same session — "move the Monday run to Wednesday" — counts as one.
+- **FR-012**: A proposal MUST NOT place two runs on the same day.
+
+### Iteration 2 (planned, not yet implemented)
+
+Field-testing Gemini Nano (10 November 2026) showed it eagerly rearranges
+half the week for a one-session instruction; FR-011/FR-012 now constrain
+the system prompt, and the following deepen the interaction model:
+
+- **IST/SOLL vocabulary.** An instruction mostly names the desired (SOLL)
+  state and assumes the current (IST) week as context. The domain model
+  gains this distinction so prompts, clarifications and tests can speak
+  about "which session" (IST) and "where to" (SOLL) separately.
+- **Clarify instead of guess.** When several sessions match ("run on
+  Friday" with two runs in the week), the assistant asks which one,
+  offering the candidates as **suggestion chips** (quick replies), the
+  same pattern as the chatbot's FAQ labels.
+- **Diff in the schedule, not as prose.** Show the proposed move directly
+  in the week grid (ghost card on the target day, highlighted source),
+  with a move animation that respects `prefers-reduced-motion`; the text
+  list remains as the accessible description.
+- **Undo/redo.** Every applied change — manual or proposed — becomes a
+  reversible command (GoF Command pattern), giving undo/redo across the
+  drafting session.
+- **Follow-up moves as chips.** When the model sees further sensible
+  moves (e.g. spreading two runs that ended up adjacent), it offers them
+  as new quick-chat suggestions instead of bundling them into the first
+  proposal; impact-aware ordering (long runs and hard intervals first)
+  makes these suggestions genuinely coach-like.
 
 ### Non-Functional Requirements
 
@@ -144,8 +177,11 @@ applies, adjusts or dismisses it and confirms the week explicitly.
 ## Execution Status
 
 - [x] User scenarios defined (BDD Given/When/Then per project convention)
-- [x] Requirements generated (FR-001…FR-010, NFR-001…NFR-003)
+- [x] Requirements generated (FR-001…FR-012, NFR-001…NFR-003)
 - [x] Entities identified
-- [x] Prototype implemented on `/training.html` (guidebook §7.5)
+- [x] Prototype implemented on `/training.html` (guidebook §7.5);
+      FR-011/FR-012 enforced through the system prompt
+- [ ] Iteration 2 (IST/SOLL model, clarification chips, in-grid diff,
+      undo/redo, follow-up chips) not yet designed in detail
 - [ ] Chat-style conversational layer over the schedule (relation to the
       chatbot's `ChatAgent`/AG-UI interface, issue #10) not yet designed
