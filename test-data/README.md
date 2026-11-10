@@ -15,7 +15,7 @@ GPX files for testing and demonstration purposes.
 | `Rondje_Eilanden_lintjes_opruimen.gpx` | Rondje Eilanden: lintjes opruimen (2026-07-19) | n/a | Not verified yet | Strava export |
 | `Twiske_Backyard_SwimRun_Experience.gpx` | Twiske Backyard Ultra SwimRun Experience (2026-06-20) | n/a | Not verified yet; many laps | Strava export |
 | `Ötillö_Rügen_met_Sander_SwimRun_World_Serious_.gpx` | ÖTILLÖ Rügen SwimRun World Series | n/a | Not verified yet | Strava export |
-| `Frankrijk_SwimRun_Coros.gpx` | Frankrijk SwimRun (2026-10-03), around Cannes / Lérins islands; exact event unconfirmed | n/a | Not verified yet; about 43.7 km | Coros export from a friend; heart rate stripped |
+| `Frankrijk_SwimRun_Coros.gpx` | ÖTILLÖ Cannes World Series (2026-10-03) | Run | Official: 12 run + 11 swim, run 33.10 km, swim 7.30 km, total 40.40 km (racedaymap.com); recorded 43.7 km. Test: `test/client/cannes.integration.test.ts` | Coros export from a friend; heart rate stripped |
 
 ## Sample tracks on the website
 
@@ -29,7 +29,7 @@ sample links. The mapping lives in `src/build-samples.ts`.
 | `Rondje_Eilanden_lintjes_opruimen.gpx` | Rondje Eilanden | 2892 |
 | `Twiske_Backyard_SwimRun_Experience.gpx` | Twiske Backyard SwimRun | 9228 |
 | `Ötillö_Rügen_met_Sander_SwimRun_World_Serious_.gpx` | Ötillö Rügen | 19771 |
-| `Frankrijk_SwimRun_Coros.gpx` | Frankrijk SwimRun | 18272 |
+| `Frankrijk_SwimRun_Coros.gpx` | Ötillö Cannes | 18272 |
 
 `rhederlaag-swimrun.gpx` is also used by the integration tests
 (`test/client/rhederlaag.integration.test.ts` and `test/client/water.test.ts`),
