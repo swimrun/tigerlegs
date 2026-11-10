@@ -40,6 +40,17 @@ What this means for us:
 - **Project Valhalla.** Value classes (JEP 401), the Java counterpart of structs that flatten data in memory, are integrated as a *preview* feature in JDK 28 (March 2027), disabled by default, and not expected to be final even in JDK 29, the next LTS (InfoQ, 2026). They are not in Java 25 and cannot be relied upon for this decision; like everything in OpenJDK they will come to all builds.
 - **.NET 10.** The .NET runtime is licensed under MIT and is a .NET Foundation project (.NET Foundation, n.d.); .NET 10 is LTS until 14 November 2028 (Microsoft, n.d.). That ASP.NET Core was far behind Java servers such as Jetty is an old picture: for years it has been at or near the top of the TechEmpower results. Those results were archived (see below), so no current neutral comparison exists for .NET 10 against Java 25, and we measure ourselves.
 
+### Does Astro put pressure on the choice?
+
+Little. The site is Astro in its default static mode on GitHub Pages: "By default, your entire Astro site will be prerendered, and static HTML pages will be sent to the browser", and an adapter (Node.js, Cloudflare, Netlify, Vercel) is only needed for pages rendered on demand (Astro, n.d.-a). A static site that calls a separate API needs no adapter, and in static mode Astro endpoints only run at build time (Astro, n.d.-b). So the back end is a separate service behind a REST/JSON contract (ADR-0005), and Astro does not care what it is written in.
+
+Where pressure could appear:
+
+- **If Astro were the back end** (on-demand rendering, endpoints or actions with a Node or Cloudflare adapter), a JavaScript runtime and a host for it would follow. That is not planned: the static site stays on GitHub Pages and the back end stays optional (ADR-0013).
+- **Types shared with the islands.** A TypeScript back end can share types with the React islands directly. Any other language needs the API described first, for example in OpenAPI (Javalin, Spring Boot, ASP.NET Core and FastAPI can all produce it), and the TypeScript client types generated from that description.
+- **Toolchains in the repository.** Astro and Playwright already need Node, and today Deno runs the tests. A Java, Kotlin or .NET back end adds a JDK or SDK and a build tool (Gradle or Maven) to every contributor's machine and to CI; a Node back end adds none. This is part of C4.
+- **Origins and cookies.** The site lives at `swimrun.group/tigerlegs`. A back end on a subdomain of the same site (for example `api.swimrun.group`) lets sign-in cookies work without cross-site settings, and CORS is already handled (`ALLOWED_ORIGINS`). This holds for every option.
+
 ## Method
 
 The comparison follows the [ICT Research Methods multi-criteria decision making method](https://ictresearchmethods.nl/workshop/multi-criteria-decision-making/), as ADR-0009 did: a preparation phase (alternatives, criteria, weights, the stakeholders involved) and an evaluation phase (judge each option per criterion), with time to iterate between judging the options and adjusting the criteria (ICT Research Methods, n.d.).
@@ -58,6 +69,7 @@ Only supported releases are considered: Java 25 is an LTS release, available fro
 | **Python (FastAPI)** | Readable, well known, strong for data work later |
 | **Java 25 LTS with Spring Boot** | Batteries for accounts, persistence and OAuth; the named alternative in #13; several independent OpenJDK vendors; the owner wants to get to know Java and Spring better |
 | **Java 25 LTS with Micronaut or Quarkus** | Java frameworks aimed at small services: dependency injection at build time, lower memory, native image support; smaller communities than Spring |
+| **Kotlin (or Java) with Javalin** | A small framework in the style of Express: few concepts, routes and handlers, on top of Jetty, Apache 2.0, equal support for Kotlin and Java, optional virtual threads and OpenAPI (Javalin, n.d.); you assemble accounts and persistence yourself |
 | **.NET 10 LTS with ASP.NET Core** | Mature web stack, strong tooling, open source; Native AOT for small and fast containers |
 | **Go** | Small static binary, very light on a small VPS |
 
@@ -88,6 +100,7 @@ Scores 1 to 5. C1 is left to the owner. The C3 score of Deno is measured; the ot
 | Python (FastAPI) | 4 | 3 | 1 | 4 | 4 | 3 | 5 | 5 | **295** |
 | Java 25 LTS with Spring Boot | 4 | 2 | 1 | 5 | 4 | 4 | 5 | 5 | **295** |
 | Java 25 LTS with Micronaut or Quarkus | 4 | 3 | 1 | 4 | 4 | 4 | 5 | 4 | **290** |
+| Kotlin (or Java) with Javalin | 4 | 3 | 1 | 3 | 4 | 4 | 5 | 4 | **280** |
 | .NET 10 LTS with ASP.NET Core | 4 | 3 | 1 | 5 | 4 | 4 | 4 | 5 | **295** |
 | Go | 4 | 5 | 1 | 3 | 5 | 4 | 4 | 5 | **310** |
 
@@ -133,6 +146,10 @@ Another option only passes Node.js if the owner rates it about three points high
 - Roden, G. (2026). *Commentary: Deno joins Cloudflare — judged by its own promises*. heise online. Retrieved November 10, 2026, from https://www.heise.de/en/blog/Commentary-Deno-joins-Cloudflare-judged-by-its-own-promises-11509407.html
 - Socket. (2026). *Deno goes the way of the dinosaur*. Retrieved November 10, 2026, from https://socket.dev/blog/deno-acquisition
 
+Astro. (n.d.-a). *On-demand rendering*. Retrieved November 10, 2026, from https://docs.astro.build/en/guides/on-demand-rendering/
+
+Astro. (n.d.-b). *Endpoints*. Retrieved November 10, 2026, from https://docs.astro.build/en/guides/endpoints/
+
 GraalVM. (n.d.). *Downloads*. Retrieved November 10, 2026, from https://www.graalvm.org/downloads/
 
 Halbritter, M. (2026, February). *Supercharge your JVM performance with Project Leyden and Spring Boot* [Slides]. https://mhalbritter.github.io/slides/2026-02%20-%20Supercharge%20your%20JVM%20performance%20with%20Project%20Leyden%20and%20Spring%20Boot.pdf
@@ -140,6 +157,8 @@ Halbritter, M. (2026, February). *Supercharge your JVM performance with Project 
 InfoQ. (2025, March). *Java 24 ships Project Leyden*. https://www.infoq.com/news/2025/03/java-24-leyden-ships
 
 InfoQ. (2026, August). *JEP 401 value objects preview*. https://infoq.com/news/2026/08/jep401-value-objects-preview
+
+Javalin. (n.d.). *Javalin: A simple web framework for Java and Kotlin*. Retrieved November 10, 2026, from https://javalin.io/
 
 Linuxiac. (2026). *Cloudflare acquires Deno JavaScript runtime, core development to end in 2027*. https://linuxiac.com/cloudflare-acquires-deno-javascript-runtime/
 
