@@ -4,9 +4,10 @@ import { analyzeGpx } from "../../src/client/analyze.ts";
 
 /**
  * Coros recording of the ÖTILLÖ Cannes World Series (2026-10-03). The expected values are the
- * official split from racedaymap.com, which is the reference we use; the event page
- * (otilloswimrun.com) lists slightly larger totals (run 33.47 km, swim 7.48 km).
+ * official split from RaceDayMap (n.d.), which is the reference we use; the event page (ÖTILLÖ, n.d.)
+ * lists slightly larger totals (run 33.47 km, swim 7.48 km). Full references: test-data/README.md.
  * https://app.racedaymap.com/otillo-swimrun-cannes/world-series
+ * https://otilloswimrun.com/races/cannes-france/cannes-world-series/
  */
 const EXPECTED_SEGMENTS: readonly (readonly ["run" | "swim", number])[] = [
   ["run", 2.59], ["swim", 0.83], ["run", 2.73], ["swim", 0.72], ["run", 2.75], ["swim", 0.80],
