@@ -1,5 +1,6 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { type ChatAgent, type ChatSuggestion, createFaqAgent } from "../client/chat-agent.ts";
+import { getPageChat, subscribePageChat } from "../client/chat-store.ts";
 import { freeformHint, isChromeBrowser, isNanoLanguage } from "../client/chat-hints.ts";
 import { isLang, type Lang } from "../client/language.ts";
 
@@ -123,6 +124,11 @@ function ChatPanel({ chat, t, id, placeholder }: { chat: ChatAgent; t: Strings; 
     };
   }, [chat]);
 
+  // Chips of an earlier agent (e.g. "Apply proposal" from another page) mean nothing to this one.
+  useEffect(() => {
+    setMessages((m) => m.some((x) => x.followUps) ? m.map(({ followUps: _, ...rest }) => rest) : m);
+  }, [chat]);
+
   useEffect(() => {
     log.current?.scrollTo({ top: log.current.scrollHeight });
   }, [messages, typing]);
@@ -218,12 +224,14 @@ export default function Chatbot(
   const t = STRINGS[lang];
   const [open, setOpen] = useState(defaultOpen);
   const [everOpened, setEverOpened] = useState(defaultOpen);
+  const pageChat = useSyncExternalStore(subscribePageChat, getPageChat, () => null);
   const chat = useMemo(() => {
     if (agent) return agent;
+    if (pageChat) return pageChat.agent;
     // The FAQ is static, but free questions are meant for Gemini Nano: where it cannot work, say why.
     const hint = isNanoLanguage(lang) ? undefined : freeformHint(lang, isChromeBrowser());
     return createFaqAgent(`${faqBase}.${lang}.json`, { fallback: hint });
-  }, [agent, faqBase, lang]);
+  }, [agent, pageChat, faqBase, lang]);
 
   return (
     <section aria-labelledby="chat-title" className="fixed bottom-4 right-4 z-40 w-[calc(100vw-2rem)] max-w-sm rounded border-2 border-stone-900 bg-amber-50 p-3 shadow-lg">
@@ -231,14 +239,14 @@ export default function Chatbot(
         <button type="button" aria-expanded={open} aria-controls="chat-panel" className="flex w-full items-center justify-between gap-2 text-left"
           onClick={() => { setOpen(!open); setEverOpened(true); }}>
           <span>
-            {title ?? t.title} <span className="text-xs font-normal uppercase tracking-wide text-stone-600">({t.prototype})</span>
+            {title ?? pageChat?.title ?? t.title} <span className="text-xs font-normal uppercase tracking-wide text-stone-600">({t.prototype})</span>
           </span>
           <span aria-hidden="true">{open ? "▾" : "▸"}</span>
         </button>
       </h2>
       {everOpened && (
         <div hidden={!open}>
-          <ChatPanel key={lang} chat={chat} t={t} id="chat-panel" placeholder={placeholder ?? t.placeholder} />
+          <ChatPanel key={lang} chat={chat} t={t} id="chat-panel" placeholder={placeholder ?? pageChat?.placeholder ?? t.placeholder} />
         </div>
       )}
     </section>

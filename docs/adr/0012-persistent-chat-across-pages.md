@@ -4,7 +4,7 @@ Date: 2026-11-10
 
 ## Status
 
-Draft. No decision has been taken; this record collects the options for issue #22. It builds on [ADR-0008](./0008-astro-static-site-with-react-islands.md) (Astro static site with React islands).
+Proposed: option B, after a successful spike (issue #22). It builds on [ADR-0008](./0008-astro-static-site-with-react-islands.md) (Astro static site with React islands).
 
 ## Context
 
@@ -28,14 +28,21 @@ Constraints: GitHub Pages serves static files only and has no rewrite rules; a m
 
 ## Decision
 
-None yet. The working hypothesis is **B**: it is the only option that keeps one conversation without giving up real static pages. Validate with a spike that navigates between `/` and `/training` with the chat open.
+Option **B**: Astro `ClientRouter` in the layout, the chat as one `transition:persist` island in the layout, and a small module-level store (`chat-store.ts`) through which the page-specific island registers its agent. A plain module store replaces nanostores: all islands on a page share one module instance, so no dependency is needed.
+
+Spike findings (all Playwright site tests pass, plus a new test that navigates `/` → `/training` → `/about` with the chat open):
+
+- The conversation survives navigation; the document is not reloaded; URLs stay `/`, `/training.html`, `/about.html`.
+- The training agent takes over on `/training` and withdraws when the page unmounts; chips from another agent are dropped on a switch.
+- Astro replaces the `<html>` attributes on a swap, which reset `lang` to `en` and would have reset the chat. A `astro:before-swap` handler copies the chosen language into the incoming document.
+- Bundled and inline module scripts run only once per page load, so three scripts needed work: the language switch and the About page script now bind on `astro:page-load`, and the Guidebook's Mermaid script uses `data-astro-rerun` and `mermaid.run()` (`startOnLoad` never fires after a swap).
 
 ## Consequences and validation
 
-- Spike for B: `ClientRouter` in `SiteLayout.astro`, `transition:persist` on the chat, a shared store holding the active agent. Check that messages survive, that the training agent sees the live week, and that the language switch still works.
+- Any new page script must bind on `astro:page-load` (or use `data-astro-rerun`); a plain module script runs only on the first page that includes it.
 - Verify direct visits and reloads of every route on GitHub Pages, and keyboard and screen-reader behaviour of the persisted chat (focus must not be lost on navigation).
 - Check that the Playwright site tests and the Storybook accessibility run still pass.
-- If B fails the spike, fall back to A with the chat in the same fixed position, and record why C was rejected.
+- Not yet verified: focus and screen-reader behaviour of the persisted chat across navigation, and the deployed GitHub Pages site.
 - Revisit when issue #15 (URL per language) is scheduled, since routing and language URLs interact.
 
 ## References

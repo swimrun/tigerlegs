@@ -182,6 +182,31 @@ test("chatbot follows the page language", async ({ page }) => {
   await expect(page.getByRole("list", { name: "Voorgestelde vragen" })).toBeVisible();
 });
 
+test("the chat keeps its conversation across pages and takes the agent of the page", async ({ page }) => {
+  await page.goto("./");
+  await page.evaluate(() => (globalThis as { __noReload?: boolean }).__noReload = true);
+  await page.getByRole("button", { name: /Ask the tiger/ }).click();
+  await page.getByRole("button", { name: "But can tigers actually swim?" }).click();
+  await expect(page.getByRole("log")).toContainText("Tigers are among the few big cats");
+
+  await page.getByRole("navigation", { name: "Main menu" }).getByRole("link", { name: "Training" }).click();
+  await expect(page).toHaveURL(/training\.html$/);
+  await expect(page.getByRole("heading", { name: "Training", level: 1 })).toBeVisible();
+  // Same document (no full reload), same conversation, but now the training agent.
+  expect(await page.evaluate(() => (globalThis as { __noReload?: boolean }).__noReload)).toBe(true);
+  await expect(page.getByRole("log")).toContainText("Tigers are among the few big cats");
+  await expect(page.getByRole("button", { name: /Rearrange with the tiger/ })).toBeVisible();
+  await expect(page.getByPlaceholder(/travelling/)).toBeVisible();
+
+  await page.getByRole("navigation", { name: "Main menu" }).getByRole("link", { name: "About" }).click();
+  await expect(page).toHaveURL(/about\.html$/);
+  await expect(page.getByRole("button", { name: /Ask the tiger/ })).toBeVisible();
+  await expect(page.getByRole("log")).toContainText("Tigers are among the few big cats");
+  // The language survives the swap and the language switch is still bound in the new header.
+  await page.locator("#language-switch").selectOption("nl");
+  await expect(page.getByRole("button", { name: /Vraag het de tijger/ })).toBeVisible();
+});
+
 test("About translations and mobile layout survive the shared shell", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("about.html");

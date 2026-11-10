@@ -11,7 +11,7 @@ import {
 } from "../client/training-week.ts";
 import { getLanguageModel, type LanguageModelStatic } from "../client/prompt-api.ts";
 import { createTrainingAgent } from "../client/training-agent.ts";
-import Chatbot from "./Chatbot.tsx";
+import { setPageChat } from "../client/chat-store.ts";
 
 interface Strings {
   prototypeNote: string;
@@ -306,6 +306,12 @@ export default function TrainingWeek({ languageModel }: Props) {
     setConfirmed(false);
   };
 
+  // The chat lives in the site layout; while this page is shown, it moves training sessions.
+  useEffect(() => {
+    setPageChat({ agent, title: t.chatTitle, placeholder: t.instructionPlaceholder });
+    return () => setPageChat(null);
+  }, [agent, t]);
+
   return (
     <div className="space-y-6">
       <p className="rounded border-2 border-stone-900 bg-amber-50 p-3 text-sm">
@@ -357,8 +363,6 @@ export default function TrainingWeek({ languageModel }: Props) {
           </li>
         ))}
       </ol>
-
-      <Chatbot agent={agent} title={t.chatTitle} placeholder={t.instructionPlaceholder} />
 
       <section aria-labelledby="changes-title" className="space-y-2">
         <h2 id="changes-title" className="text-lg font-bold">

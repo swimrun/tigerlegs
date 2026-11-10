@@ -1,11 +1,19 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, userEvent, within } from "storybook/test";
+import Chatbot from "./Chatbot.tsx";
 import TrainingWeek from "./TrainingWeek.tsx";
 import type { LanguageModelStatic } from "../client/prompt-api.ts";
 
 const meta = {
   title: "TrainingWeek",
   component: TrainingWeek,
+  // The chat lives in the site layout; the story mounts it beside the page like the layout does.
+  render: (args) => (
+    <>
+      <TrainingWeek {...args} />
+      <Chatbot />
+    </>
+  ),
 } satisfies Meta<typeof TrainingWeek>;
 export default meta;
 type Story = StoryObj<typeof meta>;
