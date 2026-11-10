@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "deny": [
+      "Edit(//tmp/**)",
+      "Edit(//private/tmp/**)",
+      "Edit(//var/folders/**)",
+      "Edit(//private/var/folders/**)"
+    ]
+  }
+}

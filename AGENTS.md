@@ -74,6 +74,7 @@ they know exactly what the source said and can verify it.
 
 Do not write data, scratch files, fixtures, screenshots, exports or one-off scripts to `/tmp`, `/private/tmp`, the operating system's temporary directory or an external session folder.
 This holds even when a tool or session suggests its own scratch folder; the rule of this repository wins.
+For Claude Code the file tools are blocked from these folders by `permissions.deny` in `.claude/settings.json`; Bash commands are not covered by that, so the rule still depends on you following it.
 
 - Save website images in `public/img/`, GPX sample data in `test-data/` and test fixtures in `test/fixtures/`.
 - Put ephemeral output that you only need to look at once (for example a screenshot to check a layout) in `test-results/`, which is git-ignored, and delete it before finishing.
