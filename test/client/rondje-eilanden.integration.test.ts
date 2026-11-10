@@ -1,7 +1,9 @@
 import { assert, assertEquals } from "@std/assert";
 import { parseGPX } from "../../src/client/gpx-parser.ts";
 import { analyzeGpx } from "../../src/client/analyze.ts";
-import type { Segment } from "../../src/shared/types.ts";
+import { parseWater } from "../../src/client/water.ts";
+import type { StrategyName } from "../../src/shared/types.ts";
+import { type ExpectedLeg, mismatch, sum, summarize } from "./oracle.ts";
 
 /**
  * Het Rondje Eilanden (Vinkeveen), recorded on 2025-07-19 with Strava (1 s sampling, no waypoints).
@@ -13,7 +15,7 @@ import type { Segment } from "../../src/shared/types.ts";
  *
  * Order along the course: the race starts with swim A, and the last run is island 1.
  */
-const EXPECTED: readonly (readonly ["run" | "swim", number, string])[] = [
+const OFFICIAL: readonly (readonly ["run" | "swim", number, string])[] = [
   ["swim", 400, "A"], ["run", 700, "2"], ["swim", 50, "B"], ["run", 550, "3"],
   ["swim", 250, "C"], ["run", 700, "4/5"], ["swim", 200, "D"], ["run", 200, "6"],
   ["swim", 100, "E"], ["run", 250, "7"], ["swim", 50, "F"], ["run", 800, "8"],
@@ -21,26 +23,28 @@ const EXPECTED: readonly (readonly ["run" | "swim", number, string])[] = [
   ["swim", 50, "I"], ["run", 150, "11"], ["swim", 50, "J"], ["run", 300, "12"],
   ["swim", 50, "K"], ["run", 350, "1"],
 ];
+const EXPECTED: readonly ExpectedLeg[] = OFFICIAL.map(([type, meters, name]) => ({ type, meters, name }));
 const EXPECTED_SWIM_M = 1500;
 const EXPECTED_RUN_M = 5000;
 
-const sum = (values: number[]) => values.reduce((total, value) => total + value, 0);
+/**
+ * Water around the track from OpenStreetMap (Overpass, snapshot 2026-06-01): natural=water and
+ * waterway=riverbank, cut down to the area of the track so the fixture stays small.
+ */
+const water = parseWater(JSON.parse(Deno.readTextFileSync("test/fixtures/rondje-eilanden-overpass.json")));
 
-function analyse() {
+/** The three ways the extractor can work on this recording (no waypoints in the file). */
+function analyse(strategies: readonly StrategyName[] = ["speed", "landscape"]) {
   const parsed = parseGPX(Deno.readTextFileSync("test-data/Rondje_Eilanden_2025.gpx"));
   assert(parsed.ok);
-  return analyzeGpx(parsed.value);
+  return analyzeGpx(parsed.value, water, { enabledStrategies: strategies });
 }
 
-/** One line per segment, for readable assertion messages. */
-const describe = (segments: Segment[]) =>
-  segments.map((s) => `${s.number}:${s.type[0]}${Math.round(s.distanceKm * 1000)}`).join(" ");
-
 Deno.test("Rondje Eilanden: the official swims add up to 1,500 m and the runs to 5,000 m", () => {
-  assertEquals(sum(EXPECTED.filter(([type]) => type === "swim").map(([, meters]) => meters)), EXPECTED_SWIM_M);
-  assertEquals(sum(EXPECTED.filter(([type]) => type === "run").map(([, meters]) => meters)), EXPECTED_RUN_M);
-  assertEquals(EXPECTED.filter(([type]) => type === "swim").length, 11);
-  assertEquals(EXPECTED.filter(([type]) => type === "run").length, 11);
+  assertEquals(sum(EXPECTED.filter((leg) => leg.type === "swim").map((leg) => leg.meters)), EXPECTED_SWIM_M);
+  assertEquals(sum(EXPECTED.filter((leg) => leg.type === "run").map((leg) => leg.meters)), EXPECTED_RUN_M);
+  assertEquals(EXPECTED.filter((leg) => leg.type === "swim").length, 11);
+  assertEquals(EXPECTED.filter((leg) => leg.type === "run").length, 11);
 });
 
 Deno.test("Rondje Eilanden: the segments cover the whole track without gaps", () => {
@@ -60,26 +64,38 @@ Deno.test("Rondje Eilanden: the segments stay within 10% of the official total d
   assert(Math.abs(total - expected) <= expected * 0.1, `total ${Math.round(total)} m, expected ${expected} m (±10%)`);
 });
 
-// Known gap (#35, #36, #37): the speed strategy alone finds 18 segments (9 swims, 9 runs) with the
-// swims far too short (the 400 m swim A comes out as 28 m plus 134 m). Enable this test when swim
-// detection on this track is fixed.
-Deno.test({
-  name: "Rondje Eilanden: 11 swims and 11 runs match the organiser's split",
-  ignore: true,
-  fn() {
-    const analysis = analyse();
-    const found = analysis.segments.filter((segment) => segment.type !== "unclassified");
-    const shown = describe(analysis.segments);
-    assertEquals(found.map((segment) => segment.type), EXPECTED.map(([type]) => type), `found: ${shown}`);
-    found.forEach((segment, i) => {
-      const [, meters, name] = EXPECTED[i];
-      const tolerance = name === "A" ? 250 : 100;
-      const actual = segment.distanceKm * 1000;
-      assert(Math.abs(actual - meters) <= tolerance, `${name}: ${Math.round(actual)} m, expected ${meters} m (±${tolerance}); found: ${shown}`);
-    });
-    const swim = sum(found.filter((s) => s.type === "swim").map((s) => s.distanceKm * 1000));
-    const run = sum(found.filter((s) => s.type === "run").map((s) => s.distanceKm * 1000));
-    assert(Math.abs(swim - EXPECTED_SWIM_M) <= 300, `swim ${Math.round(swim)} m, expected ${EXPECTED_SWIM_M} m; found: ${shown}`);
-    assert(Math.abs(run - EXPECTED_RUN_M) <= 400, `run ${Math.round(run)} m, expected ${EXPECTED_RUN_M} m; found: ${shown}`);
-  },
-});
+// One test per way of detecting, each against the same official split. They fail until that way of
+// detecting is accurate, so while it is not they are ignored, each pointing to the issue that tracks it.
+// Their current output is pinned in the ratchet tests below, so it cannot get worse unnoticed.
+const APPROACHES: [string, readonly StrategyName[], string][] = [
+  ["speed only", ["speed"], "#35"],
+  ["terrain only", ["landscape"], "#36"],
+  ["speed and terrain combined", ["speed", "landscape"], "#37"],
+];
+for (const [name, strategies, issue] of APPROACHES) {
+  Deno.test({
+    name: `Rondje Eilanden, ${name}: 11 swims and 11 runs match the organiser's split (${issue})`,
+    ignore: true,
+    fn() {
+      assertEquals(mismatch(analyse(strategies).segments, EXPECTED), null);
+    },
+  });
+}
+
+// Ratchets: today's error per approach, in metres off the official total. A change may make a number
+// smaller (better) but not larger. When an approach improves, lower its numbers here.
+const RATCHET: Record<string, { swimErrorM: number; runErrorM: number }> = {
+  "speed only": { swimErrorM: 930, runErrorM: 1390 },
+  "terrain only": { swimErrorM: 4710, runErrorM: 5000 },
+  "speed and terrain combined": { swimErrorM: 480, runErrorM: 940 },
+};
+for (const [name, strategies] of APPROACHES) {
+  Deno.test(`Rondje Eilanden, ${name}: no worse than the pinned error`, () => {
+    const result = summarize(analyse(strategies).segments);
+    const swimErrorM = Math.abs(result.swimM - EXPECTED_SWIM_M);
+    const runErrorM = Math.abs(result.runM - EXPECTED_RUN_M);
+    const pinned = RATCHET[name];
+    assert(swimErrorM <= pinned.swimErrorM, `swim off by ${swimErrorM} m, pinned ${pinned.swimErrorM} m; ${result.shown}`);
+    assert(runErrorM <= pinned.runErrorM, `run off by ${runErrorM} m, pinned ${pinned.runErrorM} m; ${result.shown}`);
+  });
+}
