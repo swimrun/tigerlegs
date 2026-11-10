@@ -2,7 +2,12 @@
 # public servers are not hit (and we do not end up on their block list).
 # Short guide: docs/local-overpass.md.
 #
-#   docker compose -f docker-compose.overpass.yml up -d
+#   EXTRACT_URL=$(curl -sI https://download.geofabrik.de/europe/netherlands-latest.osm.pbf \
+#     | awk 'tolower($1)=="location:"{print $2}' | tr -d '\r') \
+#     docker compose -f docker-compose.overpass.yml up -d
+#
+# Geofabrik answers "-latest" with a redirect to a dated file, and the importer does not follow
+# redirects, so the command above resolves the dated URL first (it also pins the snapshot).
 #
 # The first start downloads the extract and builds the database (a one-time job, follow it with
 # `docker compose -f docker-compose.overpass.yml logs -f`). When it is done the same container serves
@@ -10,7 +15,7 @@
 #
 # Settings, all optional (a git-ignored .env file or exported variables):
 #   REGION       name of the data folder, default "netherlands"
-#   EXTRACT_URL  a Geofabrik extract, default the Netherlands
+#   EXTRACT_URL  the dated URL of a Geofabrik extract (required for the first start)
 # The data lives in ./overpass-data/<REGION>/, which is git-ignored.
 #
 # The image is wiktorn/overpass-api because it has a native arm64 build (Apple Silicon); the
@@ -26,7 +31,7 @@ services:
       - ./overpass-data/${REGION:-netherlands}:/db
     environment:
       OVERPASS_MODE: init
-      OVERPASS_PLANET_URL: ${EXTRACT_URL:-https://download.geofabrik.de/europe/netherlands-latest.osm.pbf}
+      OVERPASS_PLANET_URL: ${EXTRACT_URL:?set EXTRACT_URL to the dated URL of a Geofabrik extract, see docs/local-overpass.md}
       # We query by bounding box and need no history or author data, so the derived "area" objects
       # and the metadata are left out: less import time and disk space. No updates are applied, so
       # it is a fixed snapshot, which also keeps recorded fixtures reproducible.

@@ -16,18 +16,24 @@ Expect the database to be several times the size of the download; the upstream m
 
 You need Docker.
 
+Geofabrik answers the `-latest` file of an extract with a redirect to a dated file, and the importer does not follow redirects, so resolve the dated URL first.
+The command below does that for the Netherlands and starts the server:
+
 ```sh
-docker compose -f docker-compose.overpass.yml up -d
+EXTRACT_URL=$(curl -sI https://download.geofabrik.de/europe/netherlands-latest.osm.pbf \
+  | awk 'tolower($1)=="location:"{print $2}' | tr -d '\r') \
+  docker compose -f docker-compose.overpass.yml up -d
 docker compose -f docker-compose.overpass.yml logs -f
 ```
 
-The first start downloads the Netherlands extract from Geofabrik and builds the database in `overpass-data/netherlands/`, which is git-ignored.
+The first start downloads that extract and builds the database in `overpass-data/netherlands/`, which is git-ignored; the dated URL also pins the snapshot (note its date in the fixture's test).
 When the log says the import is done, the same container serves `http://127.0.0.1:8081/api/interpreter`; later starts skip the import.
 
 Another region goes in its own folder, for example the area of the Cannes race, with a Geofabrik extract (Geofabrik, n.d.):
 
 ```sh
-REGION=cannes EXTRACT_URL=https://download.geofabrik.de/europe/france/provence-alpes-cote-d-azur-latest.osm.pbf \
+REGION=cannes EXTRACT_URL=$(curl -sI https://download.geofabrik.de/europe/france/provence-alpes-cote-d-azur-latest.osm.pbf \
+  | awk 'tolower($1)=="location:"{print $2}' | tr -d '\r') \
   docker compose -f docker-compose.overpass.yml up -d
 ```
 
