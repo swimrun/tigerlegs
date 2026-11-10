@@ -1,0 +1,28 @@
+@startuml use-cases-training-ideation
+left to right direction
+title Ideation use cases: training plans and talking to your data (M10/M11)
+
+actor SwimRunner as athlete
+actor Coach as coach
+actor "Strava" as strava << external >>
+actor "MCP client\n(Claude, ChatGPT, ...)" as mcpclient << external >>
+
+rectangle TigerLegs {
+  usecase "Plan training towards\ngoal events (ideation)" as UCT1 #line.dashed
+  usecase "Plan intermediate\nB/C races (ideation)" as UCT2 #line.dashed
+  usecase "Draft a plan with\nLLM support (ideation)" as UCT3 #line.dashed
+  usecase "Talk to your training\ndata (ideation)" as UCT4 #line.dashed
+}
+
+athlete --> UCT1
+athlete --> UCT2
+athlete --> UCT4
+coach --> UCT3
+
+UCT2 .> UCT1 : <<extend>>
+UCT3 .> UCT1 : <<include>>
+
+UCT1 <-- strava : activity data\n(OAuth, opt-in)
+UCT4 <-- strava : activity data\n(OAuth, opt-in)
+UCT4 <-- mcpclient : MCP tools\n(TigerLegs MCP server)
+@enduml

@@ -10,8 +10,11 @@ const body = renderDocument(source, import.meta.env.BASE_URL);
     <p class="rounded border-l-4 border-amber-500 bg-amber-50 p-4"><strong>For tech heads.</strong> This guidebook describes how TigerLegs is built. It is <strong>under construction</strong> and will change.</p>
     <Fragment set:html={body} />
   </main>
-  <script is:inline type="module">
+  <script is:inline type="module" data-astro-rerun>
     import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
-    mermaid.initialize({ startOnLoad: true });
+    // Module scripts run after the DOM is parsed, also after a view-transition swap (data-astro-rerun),
+    // where startOnLoad would never fire.
+    mermaid.initialize({ startOnLoad: false });
+    mermaid.run();
   </script>
 </SiteLayout>

@@ -11,9 +11,9 @@ test.beforeEach(async ({ page }) => {
 
 test("static pages and every ADR have shared navigation, direct links and reloads", async ({ page, request }) => {
   const names = (await readdir("docs/adr")).filter(name => name.endsWith(".md"));
-  for (const path of ["", "about.html", "guidebook.html", ...names.map(name => `adr/${name.slice(0, -3)}.html`)]) {
+  for (const path of ["", "training.html", "about.html", "guidebook.html", ...names.map(name => `adr/${name.slice(0, -3)}.html`)]) {
     await page.goto(path || "./");
-    await expect(page.locator("#main-menu a")).toHaveText(["Extractorrr", "About", "Guidebook"]);
+    await expect(page.locator("#main-menu a")).toHaveText(["Extractorrr", "Training", "About", "Guidebook"]);
     await expect(page.locator("#main-menu [aria-current=page]")).toHaveCount(1);
     await page.reload();
     await expect(page.locator("main")).toBeVisible();
@@ -31,13 +31,17 @@ test("static pages and every ADR have shared navigation, direct links and reload
 
 test("language choice is in the header on every page and persists across pages", async ({ page }) => {
   await page.goto("./");
-  await expect(page.locator("#language-switch a")).toHaveCount(4);
-  await page.locator('#language-switch [data-set-lang="nl"]').click();
+  await expect(page.locator("#language-switch option")).toHaveCount(4);
+  // Regression: the language-hiding CSS must not hide the dropdown's own options.
+  const optionDisplays = await page.locator("#language-switch option")
+    .evaluateAll(options => options.map(option => getComputedStyle(option).display));
+  for (const display of optionDisplays) expect(display).not.toBe("none");
+  await page.locator("#language-switch").selectOption("nl");
   await expect(page.locator("html")).toHaveAttribute("lang", "nl");
   await page.goto("about.html");
   await expect(page.locator("html")).toHaveAttribute("lang", "nl");
   await expect(page.locator("h1[lang=nl]")).toBeVisible();
-  await expect(page.locator('#language-switch [aria-current="true"]')).toHaveAttribute("data-set-lang", "nl");
+  await expect(page.locator("#language-switch")).toHaveValue("nl");
 });
 
 test("fake login shows the static profile and logging out returns to the form", async ({ page }) => {
@@ -149,10 +153,64 @@ test("drop uses the same track chooser and mapped terrain refines local results"
   await expect(page.locator(".leaflet-control-layers")).toHaveCount(1);
 });
 
+test("chatbot loads the FAQ, shows a typing indicator and answers", async ({ page }) => {
+  const label = "But can tigers actually swim?";
+  await page.goto("./");
+  await page.locator("#chat-title").scrollIntoViewIfNeeded();
+  await expect(page.getByRole("button", { name: label })).toHaveCount(0);
+  await page.getByRole("button", { name: /Ask the tiger/ }).click();
+  await page.getByRole("button", { name: label }).click();
+  const chat = page.getByRole("region", { name: /Ask the tiger/ });
+  await expect(chat.getByRole("status")).toContainText("typing");
+  await expect(page.getByRole("log")).toContainText("Tigers are among the few big cats");
+  await expect(chat.getByRole("status")).toHaveCount(0);
+  await expect(chat.getByRole("button", { name: label })).toBeVisible();
+  await chat.getByRole("button", { name: "Tell me more" }).click();
+  await expect(page.getByRole("log")).toContainText("They cool off in it");
+  await expect(chat.getByRole("button", { name: label })).toHaveCount(0);
+  await expect(chat.getByRole("button", { name: "Tell me more" })).toHaveCount(0);
+  await page.getByLabel("Your question").fill("Which wetsuit?");
+  await page.getByRole("button", { name: "Ask", exact: true }).click();
+  await expect(page.getByRole("log")).toContainText("There is no actual LLM integration yet");
+});
+
+test("chatbot follows the page language", async ({ page }) => {
+  await page.goto("./");
+  await page.locator("#chat-title").scrollIntoViewIfNeeded();
+  await page.locator("#language-switch").selectOption("nl");
+  await page.getByRole("button", { name: /Vraag het de tijger/ }).click();
+  await expect(page.getByRole("list", { name: "Voorgestelde vragen" })).toBeVisible();
+});
+
+test("the chat keeps its conversation across pages and takes the agent of the page", async ({ page }) => {
+  await page.goto("./");
+  await page.evaluate(() => (globalThis as { __noReload?: boolean }).__noReload = true);
+  await page.getByRole("button", { name: /Ask the tiger/ }).click();
+  await page.getByRole("button", { name: "But can tigers actually swim?" }).click();
+  await expect(page.getByRole("log")).toContainText("Tigers are among the few big cats");
+
+  await page.getByRole("navigation", { name: "Main menu" }).getByRole("link", { name: "Training" }).click();
+  await expect(page).toHaveURL(/training\.html$/);
+  await expect(page.getByRole("heading", { name: "Training", level: 1 })).toBeVisible();
+  // Same document (no full reload), same conversation, but now the training agent.
+  expect(await page.evaluate(() => (globalThis as { __noReload?: boolean }).__noReload)).toBe(true);
+  await expect(page.getByRole("log")).toContainText("Tigers are among the few big cats");
+  await expect(page.getByRole("button", { name: /Rearrange with the tiger/ })).toBeVisible();
+  await expect(page.getByPlaceholder(/travelling/)).toBeVisible();
+
+  await page.getByRole("navigation", { name: "Main menu" }).getByRole("link", { name: "About" }).click();
+  await expect(page).toHaveURL(/about\.html$/);
+  await expect(page.getByRole("button", { name: /Ask the tiger/ })).toBeVisible();
+  await expect(page.getByRole("log")).toContainText("Tigers are among the few big cats");
+  // The language survives the swap and the language switch is still bound in the new header.
+  await page.locator("#language-switch").selectOption("nl");
+  await expect(page.getByRole("button", { name: /Vraag het de tijger/ })).toBeVisible();
+});
+
 test("About translations and mobile layout survive the shared shell", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("about.html");
-  await page.locator('[data-set-lang="nl"]').click();
+  await page.locator("#language-switch").selectOption("nl");
   await expect(page.locator("html")).toHaveAttribute("lang", "nl");
   await expect(page.getByRole("heading", { name: "Over TigerLegs" })).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);

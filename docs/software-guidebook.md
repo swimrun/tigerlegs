@@ -243,8 +243,9 @@ This chapter lists the rules that guide design choices when no constraint decide
 - **One source of truth for configuration.** Ports and origins live in `src/server/config.ts`, so changing a port touches one line.
 - **Use the domain language.** Names in code follow the glossary in Appendix A.
 - **Navigate with links, not buttons.** Every page shares a header menu with links to *Extractorrr* (with the tiger growl) and *About*, and the current page is marked. Pages have no "back to" buttons. Buttons trigger actions on the current page, links move between pages.
-- **Fake it till you make it.** Before building an expensive feature, we may show a believable prototype of it to see whether anyone cares (a fake-door test). Today the chatbot (section 7.2) answers a fixed FAQ and the profile page (section 7.3) has a fake login with one static profile. Rules: a fake is labelled as a prototype in the interface, it never collects real personal data, it hides behind a replaceable interface so the real implementation drops in later, and we measure its usage (planned, issue #11) before deciding to build the real thing.
+- **Fake it till you make it.** Before building an expensive feature, we may show a believable prototype of it to see whether anyone cares (a fake-door test). Today the chatbot (section 7.2) answers a fixed FAQ, the profile page (section 7.3) has a fake login with one static profile, and the training week (section 7.5) rearranges a hardcoded week without a server. Rules: a fake is labelled as a prototype in the interface, it never collects real personal data, it hides behind a replaceable interface so the real implementation drops in later, and we measure its usage (planned, issue #11) before deciding to build the real thing.
 - **Scroll-linked effects never hijack scrolling.** Visual effects may follow the scroll position, but the page always scrolls natively and the effect is decoration only (see section 7.1). Content stays readable without it.
+- **Show system status.** Whenever the system is working and the user waits, the interface shows it. This is Nielsen's first usability heuristic, *visibility of system status* (Nielsen, 1994). In the chat it takes the form of a *typing indicator* (section 7.2). The indicator is also announced to screen readers, and it does not animate for people who prefer reduced motion.
 - **Document decisions.** Significant choices get an ADR, and the team writes documentation in English.
 
 ### 5.1 Documentation approach
@@ -347,6 +348,31 @@ A `DisplaySegmentPair` groups a run and a swim for the compact table.
 The planned watch data field adds two runtime types to this model: a `LegProgress` that tracks the current leg and its remaining distance, and a transition detector with hysteresis, so that one noisy GPS fix near a transition cannot advance and regress the leg repeatedly ([spec](../specs/001-garmin-datafield/spec.md), FR-004).
 Appendix A defines each term.
 
+### 6.4 Chat domain model
+
+Figure 9 shows the concepts of the prototype chatbot, separate from the course model above.
+
+*Figure 9*: Chat domain model.
+
+```mermaid
+classDiagram
+    FaqCatalog "1" o-- "*" Question
+    FaqCatalog "1" --> "1" Language : written in
+    FaqCatalog "1" --> "1" Fallback
+    Question "1" --> "1" StaticAnswer
+    StaticAnswer "1" *-- "1" BriefAnswer
+    StaticAnswer "1" *-- "0..1" More
+    Question ..> DynamicAnswer : free text (planned)
+    ChatAgent <|.. FaqAgent
+    ChatAgent <|.. LlmAgent : planned
+    FaqAgent ..> FaqCatalog : loads
+    FaqAgent ..> Fallback : replies with
+    LlmAgent ..> DynamicAnswer : produces
+```
+
+A *question* is a clickable label or free text. The FAQ catalog holds one question per label, each with a static answer: a brief answer, and optionally *more*, which the user asks for with the *Tell me more* follow-up.
+There is one catalog per language. Free text gets the fallback today, and a dynamic answer from an LLM agent later. Both agent kinds sit behind the `ChatAgent` interface.
+
 ## 7. Code
 
 This chapter explains how the source code is organised.
@@ -369,7 +395,7 @@ How it works:
 Its CSS mask is a `radial-gradient` that is opaque inside a radius and transparent outside it, so the picture seems to grow out of a corner.
 - The gradient is centred on the bottom-right corner of the picture, where the tiger swims: `at calc(50% + var(--tiger-w) / 2) 100%`.
 The circle uses `farthest-corner`, so it reaches the right side of the picture sooner than the far left side.
-- `src/client/about.ts` computes scroll progress (`scrollY` divided by the scrollable height) and writes it to the custom property `--reveal` on every scroll event.
+- `src/client/about.ts` computes scroll progress (`scrollY` divided by the scrollable height), eases it with `progress ** 2.5` (slow at first, fast near the end, so the picture stays small over the text halfway down) and writes it to the custom property `--reveal` on every scroll event.
 The mask radius is a percentage of `--reveal`.
 - `::before` is the same photo, stretched and blurred, to fill the sides next to the centred picture so the colours match.
 `::after` is the sharp picture; its own horizontal mask fades the left edge over 14% and the right edge over only 6%, so the tiger at the right edge stays visible.
@@ -380,11 +406,16 @@ We use a small script because browser support for that property is not yet unive
 ### 7.2 Front end: the prototype chatbot
 
 The main page has a prototype chatbot, *Ask the tiger*, with clickable FAQ labels (what is swimrun, can tigers swim, segment counts, distances).
-It is not an LLM: it answers the fixed questions and replies "Sorry I am not functional yet" to anything else.
+It is not an LLM: it answers the fixed questions and replies "There is no actual LLM integration yet" to anything else.
 
 The component `src/components/Chatbot.tsx` depends only on the `ChatAgent` interface in `src/client/chat-agent.ts`.
 An agent returns a stream of events (`run-started`, `text`, `run-finished`), a small subset of the AG-UI event types.
-`createFaqAgent` is the static implementation.
+`createFaqAgent` is the static implementation. It fetches `public/chat/faq.<lang>.json` (language, *Tell me more* label, fallback text, and the questions and answers) on first use, validates it with `parseFaq`, and pauses before answering so the chat feels like a conversation: the pause grows with the length of the answer, from 0.7 s up to 2.1 s, while the typing indicator shows.
+Changing a question or answer is a JSON edit, not a code change.
+Each entry has a short `answer` and an optional longer `more`. When `more` exists, the answer comes with a *Tell me more* follow-up button that stays until it is used. A question label leaves the list only once all its answers have been given, so the short answer alone does not remove it.
+There is one file per language (`en`, `nl`, `fr`, `de`) with the same entry ids; a unit test checks this parity. The chat follows the page language (the `lang` attribute of `<html>`), has its own typed UI dictionary for strings needed before the JSON loads, and restarts when the language changes.
+The chat starts collapsed as a small header button (`aria-expanded`); the FAQ is fetched on the first opening.
+While the file loads and while the agent works, the UI shows a *typing indicator* (three bouncing dots, the "somebody is typing" pattern). It follows the principle "Show system status" (chapter 5), has a text alternative for screen readers (`role="status"`), and uses `motion-safe:` so it stands still for people who prefer reduced motion.
 A later agent that talks to an LLM over AG-UI can replace it by passing it as the `agent` prop, and tool-call or state events can be added to `ChatEvent` when an agent should drive the UI (issue #10).
 Free text from the user is already passed to the agent, so the UI does not change for that either.
 
@@ -396,13 +427,29 @@ A real identity provider can replace it later without changing the profile compo
 
 ### 7.4 Front end: language switch
 
-The language switch (flag and code for English, Dutch, French and German) sits in the shared header in `src/layouts/SiteLayout.astro`, so it is on every page.
+The language switch is a native `<select>` (flag, code and name for English, Dutch, French and German), which takes less header space than four links. It sits in the shared header in `src/layouts/SiteLayout.astro`, so it is on every page.
 `src/client/language-switch.ts` stores the choice in `localStorage` (`tigerlegs-lang`) and sets `data-lang` and `lang` on `<html>`.
 `resolveLang` in `src/client/language.ts` picks the saved choice, else the browser language, else English.
 Translated content carries a `lang` attribute, and a CSS rule hides every language except the active one.
 Pages without translations (the extractor, chatbot and profile) stay English for now.
-The flag is decoration (`aria-hidden`); the link has a text code and an `aria-label` with the language name, because a flag is a country and not a language.
+Each option also shows the code and the language name, because a flag is a country and not a language; the select has an `aria-label`.
 Flag emoji do not render on Windows, where the two-letter code shows instead.
+
+### 7.5 Front end: the prototype training week
+
+`/training.html` shows a prototype training week: six hardcoded sessions covering the four swimrun capacities (trail running, open-water swimming, strength, and static and dynamic flexibility).
+It explores the training-plan ideation (issue #20, [ADR-0010](./adr/0010-tigerlegs-mcp-server-and-strava-integration.md)); the feature specification lives in [specs/002-training-week-assistant/spec.md](../specs/002-training-week-assistant/spec.md).
+The page is labelled as a prototype, nothing is sent anywhere, and confirming a week only keeps it in component state.
+
+The domain lives in `src/client/training-week.ts` as pure, tested functions: `applyMoves` returns a new week and never mutates its input (the GPX rule applied to plans), `changedSessions` diffs a draft against the confirmed baseline, and `parseProposal` validates a model response, dropping moves that name unknown sessions or invalid days.
+
+The week can always be rearranged by hand with a day selector per session — **AI-assisted, not AI-dependent**, the training twin of "terrain-informed, not terrain-dependent".
+On top of that, `src/client/prompt-api.ts` wraps Chrome's built-in Prompt API (Gemini Nano): `TrainingWeek.tsx` checks `LanguageModel.availability()` and walks the fallback ladder — no API or `unavailable` shows a note that hand rearranging always works, `downloadable` offers an opt-in download with progress, and `available` shows an instruction field.
+A proposal is requested with a JSON-schema `responseConstraint` (move an existing session to another day, with a reason) and shown as a diff the athlete applies or dismisses; the athlete confirms the week explicitly.
+The proposal is evidence; the confirmation is the label.
+The schedule never leaves the device: the model runs locally and Chrome owns its download and updates.
+The UI follows the page language in all four site languages, but the model itself understands English, French and German, not Dutch (ADR-0010), so the interface says so.
+The component takes the model as an optional prop, so tests and Storybook stories inject a fake and the real browser API stays at the edge.
 
 ## 8. Data
 
@@ -485,7 +532,9 @@ Rules:
 - Put logic in pure functions under `src/client/` so that it is tested at the bottom of the pyramid; keep React components thin.
 - Property-based tests use representative GPX fixtures from `test-data/`.
 - Add an end-to-end test only for behaviour that needs a real browser.
-- Known gap: there is no component test layer for React. If it becomes needed, add Vitest with Testing Library for components only; Deno keeps running the pure TypeScript.
+- React components have stories in Storybook (`npm run storybook`, files `src/components/*.stories.tsx`). Each story is also a component test: `npm run test:a11y` runs every story in Chromium through Vitest and fails on any axe accessibility violation (`a11y.test: "error"` in `.storybook/preview.ts`). The *Accessibility* panel in Storybook shows the same findings while developing.
+- Automated checks find only part of the accessibility problems (roughly a third to a half). Keyboard use, focus order and screen-reader wording still need a manual check.
+- Not yet covered: `Extractor` and `CourseMap` (Leaflet, web worker and map tiles need mocks), and the Astro pages and layout, which Storybook does not render.
 - A change is done only when `deno task test`, `deno task build` and (for site changes) `npm run test:site` pass; see [DEFINITION_OF_DONE.md](./DEFINITION_OF_DONE.md).
 
 ## 13. Decision log
@@ -507,6 +556,7 @@ Table 8 lists the ADRs and what each decides.
 | [0007](./adr/0007-compact-segment-table-format.md) | Show a compact paired segment table |
 | [0008](./adr/0008-astro-static-site-with-react-islands.md) | Astro static pages with a React-based interactive frontend; compare alternatives using multi-criteria decision making |
 | [0009](./adr/0009-react-for-interactive-frontend.md) | Use React for the interactive frontend; owner familiarity and learning goals, compared with Vue, Angular and other options |
+| [0010](./adr/0010-tigerlegs-mcp-server-and-strava-integration.md) | Draft: expose training data through a TigerLegs MCP server with Strava as a data source; no decision yet |
 
 ADR-0008 implements a shared Astro layout and directly linkable HTML pages, with the interactive extractor implemented in React and no runtime backend. Astro itself is not React-based; it supplies static page composition around the React application. Existing TypeScript analysis modules remain reusable. All ADRs are built into HTML pages and linked from this chapter. The ADR includes a provisional weighted comparison of the previous Deno-only site build, Astro, Next.js static export, Vite + React SPA and Eleventy, following the [ICT Research Methods multi-criteria decision making method](https://ictresearchmethods.nl/workshop/multi-criteria-decision-making/).
 
@@ -529,6 +579,8 @@ Gruber, T. (2008). Ontology. In L. Liu & M. T. Özsu (Eds.), *Encyclopedia of Da
 Knuth, D. E. (1984). Literate programming. *The Computer Journal, 27*(2), 97–111. https://doi.org/10.1093/comjnl/27.2.97
 
 Larman, C. (2005). *Applying UML and patterns: An introduction to object-oriented analysis and design and iterative development* (3rd ed.). Prentice Hall.
+
+Nielsen, J. (1994). *10 usability heuristics for user interface design*. Nielsen Norman Group. https://www.nngroup.com/articles/ten-usability-heuristics/
 
 Preston-Werner, T. (2010, August 23). *Readme Driven Development*. https://tom.preston-werner.com/2010/08/23/readme-driven-development.html
 
@@ -555,6 +607,13 @@ Table 9 lists the terms in the order in which you meet them when you follow a GP
 | Transition | The point where one segment ends and the next begins | The beach exit after a swim |
 | Hysteresis | Memory in a threshold decision: once a transition counts as passed, nearby noisy GPS fixes cannot un-pass it | The watch advances to leg 5 once, even when swim-degraded GPS jitters around the transition radius |
 | Distance to next transition | Distance along the track from a position to the next transition | "Next transition in 1.2 km" |
+| Question | A prompt the athlete sends to the chat, by clicking a label or typing | "But can tigers actually swim?" |
+| Static answer | A fixed answer from the FAQ catalog, consisting of a brief answer and optionally more | The tiger answer in `faq.en.json` |
+| Brief answer | The short first reply to a question | "Yes. Tigers are among the few big cats that like water." |
+| More | The longer second reply, offered through the *Tell me more* follow-up | Why swimrun courses vary in distance |
+| Dynamic answer | An answer an LLM generates for a free-text question (planned, issue #10) | A reply about a specific wetsuit |
+| Fallback | The reply to free text while no LLM is integrated | "There is no actual LLM integration yet.." |
+| Language | One of English, Dutch, French or German; each has its own FAQ catalog | `faq.nl.json` |
 | Strategy | A method to detect segments: waypoint, speed or landscape | Waypoint strategy |
 | Confidence | How sure a strategy is about a trackpoint; the combiner keeps the highest | 0.9 from waypoints beats 0.4 from speed |
 | Terrain | Land or water at a coordinate, from OpenStreetMap | A lake point returns water |

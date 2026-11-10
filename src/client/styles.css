@@ -108,28 +108,27 @@
   .guidebook blockquote {
     @apply border-l-4 border-amber-500 pl-4 text-stone-600;
   }
-  .lang-link {
-    @apply rounded px-1 font-medium no-underline;
+  .lang-select {
+    @apply rounded border border-stone-900 bg-white px-2 py-1 text-sm font-medium text-stone-900;
   }
-  .lang-link[aria-current="true"] {
-    @apply border-b-2 border-stone-900 font-bold;
-  }
-  html[data-lang="en"] :is([lang="nl"], [lang="fr"], [lang="de"]),
-  html[data-lang="nl"] :is([lang="en"], [lang="fr"], [lang="de"]),
-  html[data-lang="fr"] :is([lang="en"], [lang="nl"], [lang="de"]),
-  html[data-lang="de"] :is([lang="en"], [lang="nl"], [lang="fr"]) {
+  /* Hide every language except the active one — but never the options of the
+     language switch itself, which carry lang for correct pronunciation. */
+  html[data-lang="en"] :is([lang="nl"], [lang="fr"], [lang="de"]):not(option),
+  html[data-lang="nl"] :is([lang="en"], [lang="fr"], [lang="de"]):not(option),
+  html[data-lang="fr"] :is([lang="en"], [lang="nl"], [lang="de"]):not(option),
+  html[data-lang="de"] :is([lang="en"], [lang="nl"], [lang="fr"]):not(option) {
     display: none;
   }
   /* Tiger picture fixed at the bottom, centred; the sides are the same picture, stretched and blurred, so the colours match. A circular reveal grows from the picture's bottom-right corner, where the tiger swims, with scroll progress (--reveal, 0..1, set in about.ts). */
   .tiger-fade {
-    --reveal: 0.12;
-    --tiger-w: min(100vw, 56rem);
+    --reveal: 0.05;
+    --tiger-w: min(100vw, 36rem);
     position: fixed;
     left: 0;
     right: 0;
     bottom: 0;
     z-index: -1;
-    height: calc(var(--tiger-w) * 2 / 3);
+    height: calc(var(--tiger-w) * 1 / 2);
     pointer-events: none;
     -webkit-mask-image: radial-gradient(circle farthest-corner at calc(50% + var(--tiger-w) / 2) 100%, #000 calc(var(--reveal) * 75%), transparent calc(var(--reveal) * 100%)), linear-gradient(to bottom, transparent, #000 25%);
     -webkit-mask-composite: source-in;

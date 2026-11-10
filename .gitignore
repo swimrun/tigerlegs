@@ -30,3 +30,5 @@ public/styles.css
 public/guidebook.html
 public/img/swimrun-paddles-laffrey-vertical-2026.png
 public/samples/
+storybook-static/
+*.log
