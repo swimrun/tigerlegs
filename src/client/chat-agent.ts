@@ -6,6 +6,8 @@
  */
 export type ChatEvent =
   | { type: "run-started" }
+  /** Progress while the agent works, e.g. a model download; shown next to the typing dots. */
+  | { type: "status"; text: string }
   | { type: "text"; text: string; followUps?: ChatSuggestion[] }
   | { type: "run-finished" };
 
@@ -72,6 +74,8 @@ const typingTime = (base: number, text: string) => Math.min(base * 3, base + tex
 export interface FaqAgentOptions {
   /** Pause before answering so the chat feels like a conversation. */
   delayMs?: number;
+  /** Replaces the file's fallback text, e.g. with a hint about language or browser. */
+  fallback?: string;
   fetcher?: typeof fetch;
 }
 
@@ -79,7 +83,7 @@ export interface FaqAgentOptions {
  * Agent that answers the questions in a FAQ JSON file and says so for anything else.
  * The file is fetched on first use, so the page does not wait for it.
  */
-export function createFaqAgent(url: string, { delayMs = 700, fetcher = fetch }: FaqAgentOptions = {}): ChatAgent {
+export function createFaqAgent(url: string, { delayMs = 700, fetcher = fetch, fallback }: FaqAgentOptions = {}): ChatAgent {
   let loaded: Promise<FaqData> | undefined;
   const load = () => {
     loaded ??= fetcher(url).then(async (response) => {
@@ -98,13 +102,14 @@ export function createFaqAgent(url: string, { delayMs = 700, fetcher = fetch }: 
     async *run(message: string) {
       yield { type: "run-started" };
       const faq = await load();
+      const fallbackText = fallback ?? faq.fallback;
       let reply: ChatEvent;
       if (message.startsWith(MORE_PREFIX)) {
         const more = faq.entries.find((candidate) => candidate.id === message.slice(MORE_PREFIX.length))?.more;
-        reply = { type: "text", text: more ?? faq.fallback };
+        reply = { type: "text", text: more ?? fallbackText };
       } else {
         const entry = faq.entries.find((candidate) => normalize(candidate.question) === normalize(message));
-        const text = entry?.answer ?? faq.fallback;
+        const text = entry?.answer ?? fallbackText;
         reply = entry?.more
           ? { type: "text", text, followUps: [{ id: `${entry.id}-more`, label: faq.tellMore, prompt: MORE_PREFIX + entry.id, completes: entry.id }] }
           : { type: "text", text };

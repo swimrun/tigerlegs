@@ -46,21 +46,19 @@ const fakeNano: LanguageModelStatic = {
     }),
 };
 
-/** With a (fake) model: instruction → proposal diff → apply → confirm. */
+/** With a (fake) model: instruction → proposal → apply → confirm, all through the shared chat. */
 export const ProposeApplyConfirm: Story = {
   args: { languageModel: fakeNano },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await userEvent.type(
-      await canvas.findByLabelText("Your instruction"),
-      "I am travelling Thursday and Friday",
-    );
     await userEvent.click(
-      await canvas.findByRole("button", { name: "Propose moves" }),
+      await canvas.findByRole("button", { name: /Rearrange with the tiger/ }),
     );
-    await expect(await canvas.findByText("Proposed moves")).toBeVisible();
-    await expect(await canvas.findByText(/Travelling Thursday\./))
-      .toBeVisible();
+    await userEvent.type(
+      await canvas.findByLabelText("Your question"),
+      "I am travelling Thursday and Friday{enter}",
+    );
+    await expect(await canvas.findByText(/Travelling Thursday\./)).toBeVisible();
     await userEvent.click(
       await canvas.findByRole("button", { name: "Apply proposal" }),
     );

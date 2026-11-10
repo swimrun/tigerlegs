@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { isLang, type Lang } from "../client/language.ts";
 import {
   applyMoves,
@@ -6,35 +6,27 @@ import {
   type Day,
   DAYS,
   type Discipline,
-  type Move,
   PROTOTYPE_WEEK,
   type TrainingSession,
 } from "../client/training-week.ts";
-import {
-  type AssistAvailability,
-  assistAvailability,
-  getLanguageModel,
-  type LanguageModelStatic,
-  proposeMoves,
-  warmUp,
-} from "../client/prompt-api.ts";
+import { getLanguageModel, type LanguageModelStatic } from "../client/prompt-api.ts";
+import { createTrainingAgent } from "../client/training-agent.ts";
+import Chatbot from "./Chatbot.tsx";
 
 interface Strings {
   prototypeNote: string;
   weekTitle: string;
   dayLabel: string;
-  assistTitle: string;
   assistAbsent: string;
   assistUnavailable: string;
   assistDownloadable: string;
   assistEnable: string;
+  assistInstalled: string;
+  chatTitle: string;
+  applied: string;
+  dismissed: string;
   assistDownloading: string;
-  assistIntro: string;
-  assistLanguageHint: string;
-  instructionLabel: string;
   instructionPlaceholder: string;
-  propose: string;
-  proposing: string;
   proposalTitle: string;
   proposalEmpty: string;
   apply: string;
@@ -55,7 +47,6 @@ const STRINGS: Record<Lang, Strings> = {
       "Design prototype: a hardcoded training week. Changes stay in your browser; nothing is sent to a server or coach yet.",
     weekTitle: "Training week",
     dayLabel: "Day",
-    assistTitle: "Rearrange with on-device AI",
     assistAbsent:
       "The assistant only works in Google Chrome on a desktop computer; this browser does not offer it. Rearranging by hand always works.",
     assistUnavailable:
@@ -63,14 +54,12 @@ const STRINGS: Record<Lang, Strings> = {
     assistDownloadable:
       "Your Chrome can run Gemini Nano, but the model is not installed yet. Installing downloads it once (a few GB); Chrome requires about 22 GB of free disk space as headroom. Your schedule never leaves this device.",
     assistEnable: "Install Gemini Nano",
+    assistInstalled: "Gemini Nano is installed. Ask again.",
+    chatTitle: "Rearrange with the tiger",
+    applied: "Applied. Confirm the new week below when you are happy.",
+    dismissed: "Dismissed. Nothing was moved.",
     assistDownloading: "Downloading the model…",
-    assistIntro:
-      "Describe your week and the on-device model proposes which sessions to move. You decide: apply, adjust by hand, then confirm.",
-    assistLanguageHint: "The model understands English, French and German.",
-    instructionLabel: "Your instruction",
     instructionPlaceholder: "e.g. I am travelling Thursday and Friday",
-    propose: "Propose moves",
-    proposing: "The tiger is thinking…",
     proposalTitle: "Proposed moves",
     proposalEmpty: "The model proposed no moves for this instruction.",
     apply: "Apply proposal",
@@ -105,7 +94,6 @@ const STRINGS: Record<Lang, Strings> = {
       "Designprototype: een vaste trainingsweek. Wijzigingen blijven in je browser; er wordt nog niets naar een server of coach gestuurd.",
     weekTitle: "Trainingsweek",
     dayLabel: "Dag",
-    assistTitle: "Herschikken met AI op dit apparaat",
     assistAbsent:
       "De assistent werkt alleen in Google Chrome op een desktopcomputer; deze browser biedt hem niet. Handmatig herschikken werkt altijd.",
     assistUnavailable:
@@ -113,15 +101,12 @@ const STRINGS: Record<Lang, Strings> = {
     assistDownloadable:
       "Jouw Chrome kan Gemini Nano draaien, maar het model is nog niet geïnstalleerd. Installeren downloadt het eenmalig (enkele GB); Chrome eist zo'n 22 GB vrije schijfruimte als marge. Je schema verlaat dit apparaat nooit.",
     assistEnable: "Installeer Gemini Nano",
+    assistInstalled: "Gemini Nano is geïnstalleerd. Vraag het opnieuw.",
+    chatTitle: "Herschik met de tijger",
+    applied: "Toegepast. Bevestig de nieuwe week hieronder als je tevreden bent.",
+    dismissed: "Genegeerd. Er is niets verplaatst.",
     assistDownloading: "Model wordt gedownload…",
-    assistIntro:
-      "Beschrijf je week en het model op dit apparaat stelt voor welke sessies te verplaatsen. Jij beslist: toepassen, handmatig bijstellen, dan bevestigen.",
-    assistLanguageHint:
-      "Het model begrijpt Engels, Frans en Duits — schrijf je instructie in een van die talen.",
-    instructionLabel: "Jouw instructie",
     instructionPlaceholder: "bijv. I am travelling Thursday and Friday",
-    propose: "Stel verplaatsingen voor",
-    proposing: "De tijger denkt na…",
     proposalTitle: "Voorgestelde verplaatsingen",
     proposalEmpty:
       "Het model stelde voor deze instructie geen verplaatsingen voor.",
@@ -157,7 +142,6 @@ const STRINGS: Record<Lang, Strings> = {
       "Prototype de design : une semaine d'entraînement codée en dur. Les changements restent dans ton navigateur ; rien n'est encore envoyé à un serveur ou à un coach.",
     weekTitle: "Semaine d'entraînement",
     dayLabel: "Jour",
-    assistTitle: "Réorganiser avec l'IA sur l'appareil",
     assistAbsent:
       "L'assistant ne fonctionne que dans Google Chrome sur un ordinateur de bureau ; ce navigateur ne le propose pas. La réorganisation manuelle fonctionne toujours.",
     assistUnavailable:
@@ -165,15 +149,12 @@ const STRINGS: Record<Lang, Strings> = {
     assistDownloadable:
       "Ton Chrome peut exécuter Gemini Nano, mais le modèle n'est pas encore installé. L'installation le télécharge une seule fois (quelques Go) ; Chrome exige environ 22 Go d'espace disque libre en marge. Ton planning ne quitte jamais cet appareil.",
     assistEnable: "Installer Gemini Nano",
+    assistInstalled: "Gemini Nano est installé. Redemande.",
+    chatTitle: "Réorganise avec le tigre",
+    applied: "Appliqué. Confirme la nouvelle semaine ci-dessous quand tu es satisfait·e.",
+    dismissed: "Ignoré. Rien n'a été déplacé.",
     assistDownloading: "Téléchargement du modèle…",
-    assistIntro:
-      "Décris ta semaine et le modèle sur l'appareil propose quelles séances déplacer. Tu décides : appliquer, ajuster à la main, puis confirmer.",
-    assistLanguageHint:
-      "Le modèle comprend l'anglais, le français et l'allemand.",
-    instructionLabel: "Ton instruction",
     instructionPlaceholder: "p. ex. Je voyage jeudi et vendredi",
-    propose: "Proposer des déplacements",
-    proposing: "Le tigre réfléchit…",
     proposalTitle: "Déplacements proposés",
     proposalEmpty:
       "Le modèle n'a proposé aucun déplacement pour cette instruction.",
@@ -209,7 +190,6 @@ const STRINGS: Record<Lang, Strings> = {
       "Design-Prototyp: eine fest einprogrammierte Trainingswoche. Änderungen bleiben in deinem Browser; nichts wird bisher an einen Server oder Coach gesendet.",
     weekTitle: "Trainingswoche",
     dayLabel: "Tag",
-    assistTitle: "Mit KI auf dem Gerät umplanen",
     assistAbsent:
       "Der Assistent funktioniert nur in Google Chrome auf einem Desktop-Computer; dieser Browser bietet ihn nicht an. Manuelles Umplanen funktioniert immer.",
     assistUnavailable:
@@ -217,15 +197,12 @@ const STRINGS: Record<Lang, Strings> = {
     assistDownloadable:
       "Dein Chrome kann Gemini Nano ausführen, aber das Modell ist noch nicht installiert. Die Installation lädt es einmalig herunter (einige GB); Chrome verlangt rund 22 GB freien Speicherplatz als Reserve. Dein Plan verlässt dieses Gerät nie.",
     assistEnable: "Gemini Nano installieren",
+    assistInstalled: "Gemini Nano ist installiert. Frag noch einmal.",
+    chatTitle: "Mit dem Tiger umplanen",
+    applied: "Angewendet. Bestätige die neue Woche unten, wenn du zufrieden bist.",
+    dismissed: "Verworfen. Nichts wurde verschoben.",
     assistDownloading: "Modell wird heruntergeladen…",
-    assistIntro:
-      "Beschreibe deine Woche und das Modell auf dem Gerät schlägt vor, welche Einheiten zu verschieben sind. Du entscheidest: anwenden, von Hand anpassen, dann bestätigen.",
-    assistLanguageHint:
-      "Das Modell versteht Englisch, Französisch und Deutsch.",
-    instructionLabel: "Deine Anweisung",
     instructionPlaceholder: "z. B. Ich bin Donnerstag und Freitag unterwegs",
-    propose: "Verschiebungen vorschlagen",
-    proposing: "Der Tiger denkt nach…",
     proposalTitle: "Vorgeschlagene Verschiebungen",
     proposalEmpty:
       "Das Modell hat für diese Anweisung keine Verschiebungen vorgeschlagen.",
@@ -302,69 +279,31 @@ export default function TrainingWeek({ languageModel }: Props) {
     PROTOTYPE_WEEK,
   );
   const [week, setWeek] = useState<readonly TrainingSession[]>(PROTOTYPE_WEEK);
-  const [availability, setAvailability] = useState<AssistAvailability>(
-    "absent",
-  );
-  const [downloadProgress, setDownloadProgress] = useState<number | null>(null);
-  const [instruction, setInstruction] = useState("");
-  const [busy, setBusy] = useState(false);
-  const [proposal, setProposal] = useState<Move[] | null>(null);
-  const [assistError, setAssistError] = useState(false);
   const [confirmed, setConfirmed] = useState(false);
 
-  useEffect(() => {
-    let cancelled = false;
-    assistAvailability(model).then((value) => {
-      if (!cancelled) setAvailability(value);
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [model]);
+  // The agent reads the week through a ref, so it always sees manual changes without being recreated.
+  const weekRef = useRef(week);
+  weekRef.current = week;
+  const agent = useMemo(
+    () =>
+      createTrainingAgent({
+        model,
+        lang,
+        strings: t,
+        getWeek: () => weekRef.current,
+        onApply: (moves) => {
+          setWeek((current) => applyMoves(current, moves));
+          setConfirmed(false);
+        },
+      }),
+    [model, lang, t],
+  );
 
   const changes = changedSessions(baseline, week);
 
   const moveSession = (id: string, toDay: Day) => {
     setWeek((current) => applyMoves(current, [{ id, toDay, reason: "" }]));
     setConfirmed(false);
-  };
-
-  const runAssist = async (text: string) => {
-    if (!model) return;
-    setBusy(true);
-    setAssistError(false);
-    setProposal(null);
-    try {
-      const moves = await proposeMoves(model, week, text, (loaded) => {
-        setAvailability("downloading");
-        setDownloadProgress(loaded);
-      });
-      setProposal(moves);
-    } catch {
-      setAssistError(true);
-    } finally {
-      setDownloadProgress(null);
-      setBusy(false);
-      setAvailability(await assistAvailability(model));
-    }
-  };
-
-  const enableAssist = async () => {
-    if (!model) return;
-    setBusy(true);
-    setAssistError(false);
-    try {
-      await warmUp(model, (loaded) => {
-        setAvailability("downloading");
-        setDownloadProgress(loaded);
-      });
-    } catch {
-      setAssistError(true);
-    } finally {
-      setDownloadProgress(null);
-      setBusy(false);
-      setAvailability(await assistAvailability(model));
-    }
   };
 
   return (
@@ -419,135 +358,7 @@ export default function TrainingWeek({ languageModel }: Props) {
         ))}
       </ol>
 
-      <section
-        aria-labelledby="assist-title"
-        className="space-y-3 rounded border border-stone-300 bg-white p-4"
-      >
-        <h2 id="assist-title" className="text-lg font-bold">
-          {t.assistTitle}{" "}
-          <span aria-hidden="true" className="rounded bg-stone-950 px-2 py-0.5 text-xs font-semibold uppercase tracking-wider text-amber-400">
-            {availability === "available" ? "Gemini Nano" : "AI"}
-          </span>
-        </h2>
-        {availability === "absent" && (
-          <p className="text-sm text-stone-600">{t.assistAbsent}</p>
-        )}
-        {availability === "unavailable" && (
-          <p className="text-sm text-stone-600">{t.assistUnavailable}</p>
-        )}
-        {availability === "downloadable" && (
-          <>
-            <p className="text-sm">{t.assistDownloadable}</p>
-            <button
-              type="button"
-              className="rounded bg-stone-900 px-4 py-2 text-sm font-semibold text-white"
-              disabled={busy}
-              onClick={() => enableAssist()}
-            >
-              {t.assistEnable}
-            </button>
-          </>
-        )}
-        {availability === "downloading" && (
-          <p role="status" className="text-sm">
-            {t.assistDownloading} {downloadProgress !== null
-              ? `${Math.round(downloadProgress * 100)}%`
-              : ""}
-          </p>
-        )}
-        {availability === "available" && (
-          <form
-            className="space-y-3"
-            onSubmit={(event) => {
-              event.preventDefault();
-              if (instruction.trim()) runAssist(instruction.trim());
-            }}
-          >
-            <p className="text-sm">
-              {t.assistIntro}{" "}
-              <span className="text-stone-600">{t.assistLanguageHint}</span>
-            </p>
-            <label className="block text-sm font-medium">
-              {t.instructionLabel}
-              <input
-                type="text"
-                className="mt-1 w-full rounded border border-stone-900 bg-white px-3 py-2"
-                value={instruction}
-                placeholder={t.instructionPlaceholder}
-                onChange={(event) => setInstruction(event.target.value)}
-              />
-            </label>
-            <button
-              type="submit"
-              className="rounded bg-stone-900 px-4 py-2 text-sm font-semibold text-white"
-              disabled={busy || !instruction.trim()}
-            >
-              {t.propose}
-            </button>
-            {busy && <p role="status" className="text-sm">{t.proposing}</p>}
-          </form>
-        )}
-        {assistError && (
-          <p role="alert" className="text-sm text-red-700">{t.assistFailed}</p>
-        )}
-        {proposal !== null && !busy && (
-          <section
-            aria-labelledby="proposal-title"
-            className="space-y-2 rounded border-2 border-stone-900 bg-amber-50 p-3"
-          >
-            <h3 id="proposal-title" className="font-bold">{t.proposalTitle}</h3>
-            {proposal.length === 0
-              ? <p className="text-sm">{t.proposalEmpty}</p>
-              : (
-                <ul className="space-y-1 text-sm">
-                  {proposal.map((move) => {
-                    const session = week.find((candidate) =>
-                      candidate.id === move.id
-                    );
-                    return session && (
-                      <li key={move.id}>
-                        <strong>
-                          {t.movedFromTo(
-                            session.title,
-                            t.days[session.day],
-                            t.days[move.toDay],
-                          )}
-                        </strong>
-                        {move.reason && (
-                          <span className="text-stone-600">
-                            — {move.reason}
-                          </span>
-                        )}
-                      </li>
-                    );
-                  })}
-                </ul>
-              )}
-            <div className="flex gap-2">
-              {proposal.length > 0 && (
-                <button
-                  type="button"
-                  className="rounded bg-stone-900 px-4 py-2 text-sm font-semibold text-white"
-                  onClick={() => {
-                    setWeek((current) => applyMoves(current, proposal));
-                    setProposal(null);
-                    setConfirmed(false);
-                  }}
-                >
-                  {t.apply}
-                </button>
-              )}
-              <button
-                type="button"
-                className="rounded border border-stone-900 px-4 py-2 text-sm font-semibold"
-                onClick={() => setProposal(null)}
-              >
-                {t.dismiss}
-              </button>
-            </div>
-          </section>
-        )}
-      </section>
+      <Chatbot agent={agent} title={t.chatTitle} placeholder={t.instructionPlaceholder} />
 
       <section aria-labelledby="changes-title" className="space-y-2">
         <h2 id="changes-title" className="text-lg font-bold">

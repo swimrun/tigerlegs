@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { type ChatAgent, type ChatSuggestion, createFaqAgent } from "../client/chat-agent.ts";
+import { freeformHint, isChromeBrowser, isNanoLanguage } from "../client/chat-hints.ts";
 import { isLang, type Lang } from "../client/language.ts";
 
 interface Message {
@@ -87,11 +88,11 @@ function usePageLang(): Lang {
   return lang;
 }
 
-/** The "somebody is typing" dots. The text is for screen readers; the dots are decoration. */
-function TypingIndicator({ label }: { label: string }) {
+/** The "somebody is typing" dots. The label is for screen readers, unless a visible status text replaces it. */
+function TypingIndicator({ label, status }: { label: string; status?: string | null }) {
   return (
     <p role="status" className={`${bubble} flex items-center gap-1 bg-white`}>
-      <span className="sr-only">{label}</span>
+      <span className={status ? "mr-1" : "sr-only"}>{status ?? label}</span>
       {[0, 150, 300].map((delay) => (
         <span key={delay} aria-hidden="true" style={{ animationDelay: `${delay}ms` }}
           className="h-2 w-2 rounded-full bg-stone-500 motion-safe:animate-bounce" />
@@ -100,7 +101,7 @@ function TypingIndicator({ label }: { label: string }) {
   );
 }
 
-function ChatPanel({ chat, t, id }: { chat: ChatAgent; t: Strings; id: string }) {
+function ChatPanel({ chat, t, id, placeholder }: { chat: ChatAgent; t: Strings; id: string; placeholder: string }) {
   const [suggestions, setSuggestions] = useState<ChatSuggestion[] | null>(null);
   const [loadFailed, setLoadFailed] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -108,6 +109,7 @@ function ChatPanel({ chat, t, id }: { chat: ChatAgent; t: Strings; id: string })
   const [asked, setAsked] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
   const [typing, setTyping] = useState(false);
+  const [status, setStatus] = useState<string | null>(null);
   const log = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -136,8 +138,10 @@ function ChatPanel({ chat, t, id }: { chat: ChatAgent; t: Strings; id: string })
     try {
       for await (const event of chat.run(question)) {
         if (event.type === "run-started") setTyping(true);
+        if (event.type === "status") setStatus(event.text);
         if (event.type === "text") {
           setTyping(false);
+          setStatus(null);
           if (id && !completes && !event.followUps) setAsked((a) => [...a, id]);
           setMessages((m) => [...m, { role: "assistant", text: event.text, followUps: event.followUps }]);
         }
@@ -146,6 +150,7 @@ function ChatPanel({ chat, t, id }: { chat: ChatAgent; t: Strings; id: string })
       setMessages((m) => [...m, { role: "assistant", text: t.error }]);
     } finally {
       setTyping(false);
+      setStatus(null);
       setBusy(false);
     }
   }
@@ -156,6 +161,8 @@ function ChatPanel({ chat, t, id }: { chat: ChatAgent; t: Strings; id: string })
         ? <p className="text-sm">{t.loadFailed}</p>
         : suggestions === null
         ? <TypingIndicator label={t.typing} />
+        : suggestions.length === 0
+        ? null
         : (
           <ul aria-label={t.suggested} className="flex flex-wrap gap-2">
             {suggestions.filter((s) => !asked.includes(s.id)).map((s) => (
@@ -173,7 +180,7 @@ function ChatPanel({ chat, t, id }: { chat: ChatAgent; t: Strings; id: string })
             <p className={m.role === "user" ? `${bubble} ml-auto bg-stone-900 text-white` : `${bubble} bg-white`}>
               {m.text}
             </p>
-            {m.followUps?.filter((f) => !asked.includes(f.id)).map((f) => (
+            {i === messages.length - 1 && m.followUps?.filter((f) => !asked.includes(f.id)).map((f) => (
               <button key={f.id} type="button" disabled={busy} className={pill}
                 onClick={() => ask(f.label, { id: f.id, prompt: f.prompt, shown: true, completes: f.completes })}>
                 {f.label}
@@ -181,11 +188,11 @@ function ChatPanel({ chat, t, id }: { chat: ChatAgent; t: Strings; id: string })
             ))}
           </div>
         ))}
-        {typing && <TypingIndicator label={t.typing} />}
+        {typing && <TypingIndicator label={t.typing} status={status} />}
       </div>
       <form className="mt-3 flex gap-2" onSubmit={(e) => { e.preventDefault(); ask(input); }}>
         <label htmlFor={`${id}-input`} className="sr-only">{t.yourQuestion}</label>
-        <input id={`${id}-input`} value={input} onChange={(e) => setInput(e.target.value)} placeholder={t.placeholder}
+        <input id={`${id}-input`} value={input} onChange={(e) => setInput(e.target.value)} placeholder={placeholder}
           className="min-w-0 flex-1 rounded border border-stone-900 bg-white px-3 py-2 text-sm" />
         <button type="submit" disabled={busy} className="rounded bg-stone-900 px-4 py-2 text-sm font-semibold text-white">{t.ask}</button>
       </form>
@@ -197,27 +204,41 @@ function ChatPanel({ chat, t, id }: { chat: ChatAgent; t: Strings; id: string })
  * Collapsed until clicked. The FAQ is only fetched after the first opening, and the
  * conversation restarts when the page language changes, because the FAQ is per language.
  */
-export default function Chatbot({ agent, faqBase = "chat/faq" }: { agent?: ChatAgent; faqBase?: string }) {
+export default function Chatbot(
+  { agent, faqBase = "chat/faq", title, placeholder, defaultOpen = false }: {
+    /** Answers the questions; defaults to the FAQ agent. The look and feel is the same for every agent. */
+    agent?: ChatAgent;
+    faqBase?: string;
+    title?: string;
+    placeholder?: string;
+    defaultOpen?: boolean;
+  },
+) {
   const lang = usePageLang();
   const t = STRINGS[lang];
-  const [open, setOpen] = useState(false);
-  const [everOpened, setEverOpened] = useState(false);
-  const chat = useMemo(() => agent ?? createFaqAgent(`${faqBase}.${lang}.json`), [agent, faqBase, lang]);
+  const [open, setOpen] = useState(defaultOpen);
+  const [everOpened, setEverOpened] = useState(defaultOpen);
+  const chat = useMemo(() => {
+    if (agent) return agent;
+    // The FAQ is static, but free questions are meant for Gemini Nano: where it cannot work, say why.
+    const hint = isNanoLanguage(lang) ? undefined : freeformHint(lang, isChromeBrowser());
+    return createFaqAgent(`${faqBase}.${lang}.json`, { fallback: hint });
+  }, [agent, faqBase, lang]);
 
   return (
-    <section aria-labelledby="chat-title" className="mt-8 max-w-xl rounded border-2 border-stone-900 bg-amber-50 p-3">
+    <section aria-labelledby="chat-title" className="fixed bottom-4 right-4 z-40 w-[calc(100vw-2rem)] max-w-sm rounded border-2 border-stone-900 bg-amber-50 p-3 shadow-lg">
       <h2 id="chat-title" className="text-base font-bold">
         <button type="button" aria-expanded={open} aria-controls="chat-panel" className="flex w-full items-center justify-between gap-2 text-left"
           onClick={() => { setOpen(!open); setEverOpened(true); }}>
           <span>
-            {t.title} <span className="text-xs font-normal uppercase tracking-wide text-stone-600">({t.prototype})</span>
+            {title ?? t.title} <span className="text-xs font-normal uppercase tracking-wide text-stone-600">({t.prototype})</span>
           </span>
           <span aria-hidden="true">{open ? "▾" : "▸"}</span>
         </button>
       </h2>
       {everOpened && (
         <div hidden={!open}>
-          <ChatPanel key={lang} chat={chat} t={t} id="chat-panel" />
+          <ChatPanel key={lang} chat={chat} t={t} id="chat-panel" placeholder={placeholder ?? t.placeholder} />
         </div>
       )}
     </section>
