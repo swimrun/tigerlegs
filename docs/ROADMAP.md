@@ -163,9 +163,12 @@ quality of service the public services cannot: our own Overpass
 instance in the EU behind the back end, with a cache and without rate
 limits (#57), next to saved courses, sharing, the MCP server (M11) and
 training plans (M10). Depends on M9 (accounts and the privacy review)
-and on the back-end technology choice (#13, #6). The local Overpass
-setup ([docs/local-overpass.md](./local-overpass.md)) is the starting
-point, and the back end runs locally for development and tests.
+and on the back-end technology choice (#13, #6). Everything is container
+based (ADR-0004): the back end image and the Overpass server run with
+docker compose locally and as containers on the EU VPS. The local
+Overpass setup ([docs/local-overpass.md](./local-overpass.md)) is the
+starting point, and the back end runs locally for development and
+tests.
 
 > Given no back end is reachable, when I use TigerLegs, then every free
 > feature works and the premium features say what they need.

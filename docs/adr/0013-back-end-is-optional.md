@@ -32,7 +32,7 @@ The working hypothesis is **A**, with **C** for the reachability check once conn
 ## Consequences
 
 - Each back-end feature gets a test with the back end absent, slow and failing, as well as present.
-- The back end runs locally for development (`docker compose up --build`, API on http://localhost:8123), and Playwright runs against it and against no back end.
+- Everything behind the front end is container based: the back end ships as a Docker image (`Dockerfile`, as ADR-0004 requires) and runs locally with `docker compose up --build` (API on http://localhost:8123); the optional local Overpass server is a container too (`docker-compose.overpass.yml`). The same image runs on the EU VPS behind Caddy or nginx, so what we test locally is what we host. Playwright runs the site against the local container and against no back end.
 - Premium features are marked in the interface and say what they need; they never remove a free feature.
 - Hosting our own Overpass server (#57) sits behind the back end; the front end keeps the public servers as the fallback.
 - Whatever data the back end stores needs the privacy review of roadmap M9 first.
