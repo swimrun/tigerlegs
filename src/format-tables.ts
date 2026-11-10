@@ -32,7 +32,10 @@ export function splitRow(line: string): string[] {
 const isSeparator = (cells: string[]) => cells.length > 0 && cells.every((cell) => /^:?-+:?$/.test(cell));
 
 function alignTable(rows: string[][]): string[] {
-  const columns = Math.max(...rows.map((row) => row.length));
+  // A column exists when some row has content in it; cells that are only empty padding at the end of
+  // a row do not turn into columns of their own.
+  const used = (row: string[]) => row.reduce((last, cell, index) => (cell !== "" ? index + 1 : last), 0);
+  const columns = Math.max(...rows.filter((row) => !isSeparator(row)).map(used));
   const widths = Array.from({ length: columns }, (_, column) =>
     Math.max(3, ...rows.filter((row) => !isSeparator(row)).map((row) => [...(row[column] ?? "")].length)));
   return rows.map((row) => {

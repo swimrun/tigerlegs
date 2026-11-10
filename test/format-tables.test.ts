@@ -31,3 +31,8 @@ Deno.test("alignTables keeps alignment colons and leaves tables inside code fenc
 Deno.test("splitRow does not split on a pipe in a code span or an escaped pipe", () => {
   assertEquals(splitRow("| `a|b` | c\\|d | e |"), ["`a|b`", "c\\|d", "e"]);
 });
+
+Deno.test("alignTables drops empty padding cells beyond the header, but keeps a cell with content", () => {
+  assertEquals(alignTables("| A | B |\n| --- | --- |\n| 1 | 2 |  |  |").split("\n")[2], "| 1   | 2   |");
+  assertEquals(alignTables("| A | B |\n| --- | --- |\n| 1 | 2 | 3 |").split("\n")[0], "| A   | B   |     |");
+});
