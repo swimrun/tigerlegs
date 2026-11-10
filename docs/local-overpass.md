@@ -14,30 +14,41 @@ Expect the database to be several times the size of the download; the upstream m
 
 ## One-time setup
 
-You need Docker.
+You need Docker. The Overpass server is a service of the main `docker-compose.yml`, in the profile `overpass`, so the normal `docker compose up --build` (the API) does not start it or download anything.
 
-Geofabrik answers the `-latest` file of an extract with a redirect to a dated file, and the importer does not follow redirects, so resolve the dated URL first.
-The command below does that for the Netherlands and starts the server:
-
-```sh
-EXTRACT_URL=$(curl -sI https://download.geofabrik.de/europe/netherlands-latest.osm.pbf \
-  | awk 'tolower($1)=="location:"{print $2}' | tr -d '\r') \
-  docker compose -f docker-compose.overpass.yml up -d
-docker compose -f docker-compose.overpass.yml logs -f
-```
-
-The first start downloads that extract and builds the database in `overpass-data/netherlands/`, which is git-ignored; the dated URL also pins the snapshot (note its date in the fixture's test).
-When the log says the import is done, the same container serves `http://127.0.0.1:8081/api/interpreter`; later starts skip the import.
-
-Another region goes in its own folder, for example the area of the Cannes race, with a Geofabrik extract (Geofabrik, n.d.):
+First download the extract once on the host, resumable, into the git-ignored `overpass-data/downloads/` (a few GB; Geofabrik offers PBF files, Geofabrik, n.d.):
 
 ```sh
-REGION=cannes EXTRACT_URL=$(curl -sI https://download.geofabrik.de/europe/france/provence-alpes-cote-d-azur-latest.osm.pbf \
-  | awk 'tolower($1)=="location:"{print $2}' | tr -d '\r') \
-  docker compose -f docker-compose.overpass.yml up -d
+mkdir -p overpass-data/downloads
+curl -L -C - --retry 20 --retry-delay 10 --retry-all-errors \
+  -o overpass-data/downloads/netherlands-latest.osm.pbf \
+  https://download.geofabrik.de/europe/netherlands-latest.osm.pbf
 ```
 
-Stop it with `docker compose -f docker-compose.overpass.yml down`; the data stays in `overpass-data/`.
+Then start the server and follow the import:
+
+```sh
+docker compose --profile overpass up -d overpass
+docker compose logs -f overpass
+```
+
+The first start converts the PBF to the format the image imports and builds the database in `overpass-data/netherlands/`, also git-ignored; this takes a while and needs several times the size of the download in free disk space.
+When the log says the database is created, the same container serves `http://127.0.0.1:8081/api/interpreter`; later starts skip the import.
+Stop it with `docker compose --profile overpass down`; the data stays in `overpass-data/`.
+
+The API can use it: `OVERPASS_API_URL=http://overpass/api/interpreter docker compose --profile overpass up --build` (inside the compose network the service is `overpass` on port 80).
+
+Another region goes in its own folder, for example the area of the Cannes race (Geofabrik, n.d.):
+
+```sh
+curl -L -C - --retry 20 --retry-all-errors \
+  -o overpass-data/downloads/provence-alpes-cote-d-azur-latest.osm.pbf \
+  https://download.geofabrik.de/europe/france/provence-alpes-cote-d-azur-latest.osm.pbf
+REGION=cannes EXTRACT_FILE=provence-alpes-cote-d-azur-latest.osm.pbf \
+  DIFF_URL=https://download.geofabrik.de/europe/france/provence-alpes-cote-d-azur-updates/ \
+  docker compose --profile overpass up -d overpass
+```
+
 The compose file uses the `wiktorn/overpass-api` image because it has a native arm64 build for Apple Silicon (Wiktorn, n.d.); the `b1tw153/overpass-api` image from the manual below only exists for amd64.
 
 ## Record a fixture
