@@ -232,6 +232,18 @@ export default function Extractor({ base }: { base: string }) {
   const presentationChange = () => { setSelected(null); setHovered(null); };
   return <>
     <noscript><p>Enable JavaScript to analyse GPX files locally in your browser.</p></noscript>
+    <div className="lg:grid lg:grid-cols-[13rem_minmax(0,1fr)] lg:gap-6">
+    <nav aria-label="Sample swimruns" className="mb-6 lg:mb-0">
+      <h2 className="text-sm font-semibold uppercase tracking-wide text-stone-600">Try a sample</h2>
+      <ul className="mt-2 space-y-1">
+        {SAMPLES.map(([name, label]) => <li key={name}>
+          <a href={`${base}samples/${name}`} data-sample={name}
+            className="sample-link block rounded border border-stone-200 bg-white px-3 py-2 text-sm font-medium hover:border-amber-500 hover:bg-amber-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-stone-950"
+            onClick={event => { event.preventDefault(); void importSample(name); }}>{label}</a>
+        </li>)}
+      </ul>
+    </nav>
+    <div className="min-w-0">
     <section id="drop-zone" aria-label="GPX file drop zone"
       className={`mb-6 rounded-lg border border-stone-200 border-t-4 border-t-amber-500 bg-white p-4 shadow-sm${dragging ? " drop-active" : ""}`}
       onDragOver={event => { event.preventDefault(); setDragging(true); }}
@@ -256,9 +268,6 @@ export default function Extractor({ base }: { base: string }) {
           </option>)}
         </select>
       </div>}
-      <p className="mt-3 text-sm text-stone-700">Or try a sample: {SAMPLES.map(([name, label], index) =>
-        <span key={name}>{index > 0 && " · "}<a href={`${base}samples/${name}`} data-sample={name}
-          className="sample-link font-medium underline hover:text-amber-700" onClick={event => { event.preventDefault(); void importSample(name); }}>{label}</a></span>)}</p>
       <fieldset className="mt-3 space-y-2"><legend className="text-sm font-semibold">Detection strategies</legend>
         <div className="flex flex-wrap gap-4 text-sm">
           {(["waypoint", "speed"] as const).map(strategy => <label key={strategy}>
@@ -320,6 +329,8 @@ export default function Extractor({ base }: { base: string }) {
           conflicts={course?.analysis?.conflicts ?? []} config={{ swimFirst, showCumulative }}
           active={active} selected={selected} select={select} preview={setHovered} clear={() => { setSelected(null); setHovered(null); }} />
       </div>
+    </div>
+    </div>
     </div>
   </>;
 }
