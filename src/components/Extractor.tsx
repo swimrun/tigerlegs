@@ -24,6 +24,7 @@ const SAMPLES = [
   ["rondje-eilanden.gpx", "Rondje Eilanden"],
   ["twiske-backyard.gpx", "Twiske Backyard SwimRun"],
   ["ruegen-swimrun.gpx", "Ötillö Rügen"],
+  ["frankrijk-swimrun.gpx", "Frankrijk SwimRun"],
 ];
 
 function timeSummary(points: Trackpoint[]) {
