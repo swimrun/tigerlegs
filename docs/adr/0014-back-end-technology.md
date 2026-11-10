@@ -51,6 +51,15 @@ Where pressure could appear:
 - **Toolchains in the repository.** Astro and Playwright already need Node, and today Deno runs the tests. A Java, Kotlin or .NET back end adds a JDK or SDK and a build tool (Gradle or Maven) to every contributor's machine and to CI; a Node back end adds none. This is part of C4.
 - **Origins and cookies.** The site lives at `swimrun.group/tigerlegs`. A back end on a subdomain of the same site (for example `api.swimrun.group`) lets sign-in cookies work without cross-site settings, and CORS is already handled (`ALLOWED_ORIGINS`). This holds for every option.
 
+### If an LLM writes the code anyway
+
+Raw speed does not decide this back end, which will see few requests; the interesting question is what changes when a language model writes most of the code.
+It lowers the cost of writing in an unfamiliar language and so favours languages with a strong compiler (Rust, Go, Kotlin, C#, Java): the compiler catches many mistakes a model makes before they run.
+It does not lower the cost of *reading*, reviewing, debugging and operating the result, which stays with the owner, and C1 is about exactly that (and the wish to get to know a language better).
+Models also write best where the training data is richest, which favours TypeScript, Python, Java with Spring and C#.
+Rust frameworks such as Actix and Axum are reported among the fastest in blog comparisons of the last TechEmpower round; that is not verified here and does not matter at our load.
+What Rust offers at our scale is a very small image and memory use and a strict compiler; what it costs is a smaller batteries-included ecosystem for accounts and OAuth, a steeper language to review, and a library that is still pre-1.0.
+
 ## Method
 
 The comparison follows the [ICT Research Methods multi-criteria decision making method](https://ictresearchmethods.nl/workshop/multi-criteria-decision-making/), as ADR-0009 did: a preparation phase (alternatives, criteria, weights, the stakeholders involved) and an evaluation phase (judge each option per criterion), with time to iterate between judging the options and adjusting the criteria (ICT Research Methods, n.d.).
@@ -62,30 +71,33 @@ The stakeholder is the project owner (learning goals, own time, self-hosting in 
 Only supported releases are considered: Java 25 is an LTS release, available from Temurin from September 2025 until at least September 2031 (Adoptium, n.d.); .NET 10 is an LTS release of November 2025 with support until 14 November 2028 (Microsoft, n.d.).
 .NET 11 (STS) was released today and is left out for that reason.
 
-| Option | Reasons to consider |
-| --- | --- |
-| **Deno with TypeScript** (now) | Same language as the front end; already built, tested and containerised; MIT; but see above |
-| **Node.js with TypeScript** | Same language as the front end; the largest ecosystem; the site build already uses npm; OpenJS Foundation governance |
-| **Python (FastAPI)** | Readable, well known, strong for data work later |
-| **Java 25 LTS with Spring Boot** | Batteries for accounts, persistence and OAuth; the named alternative in #13; several independent OpenJDK vendors; the owner wants to get to know Java and Spring better |
-| **Java 25 LTS with Micronaut or Quarkus** | Java frameworks aimed at small services: dependency injection at build time, lower memory, native image support; smaller communities than Spring |
-| **Kotlin (or Java) with Javalin** | A small framework in the style of Express: few concepts, routes and handlers, on top of Jetty, Apache 2.0, equal support for Kotlin and Java, optional virtual threads and OpenAPI (Javalin, n.d.); you assemble accounts and persistence yourself |
-| **.NET 10 LTS with ASP.NET Core** | Mature web stack, strong tooling, open source; Native AOT for small and fast containers |
-| **Go** | Small static binary, very light on a small VPS |
+| Option           | Language and runtime          | Reasons to consider                                                                                                                                                                                                                                |     |     |     |     |     |     |         |
+| ---------------- | ----------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --- | --- | --- | --- | --- | --- | ------- |
+| **Deno** (now)   | TypeScript on Deno            | Same language as the front end; already built, tested and containerised; MIT; but see above                                                                                                                                                        |     |     |     |     |     |     |         |
+| **Node.js**      | TypeScript on Node.js         | Same language as the front end; the largest ecosystem; the site build already uses npm; OpenJS Foundation governance                                                                                                                               |     |     |     |     |     |     |         |
+| **FastAPI**      | Python                        | Readable, well known, strong for data work later                                                                                                                                                                                                   |     |     |     |     |     |     |         |
+| **Spring Boot**  | Java 25 LTS                   | Batteries for accounts, persistence and OAuth; the named alternative in #13; several independent OpenJDK vendors; the owner wants to get to know Java and Spring better                                                                            |     |     |     |     |     |     |         |
+| **Micronaut**    | Java 25 LTS                   | A framework aimed at small services: dependency injection at build time, lower memory, native image support; a smaller community than Spring                                                                                                       |     |     |     |     |     |     |         |
+| **Quarkus**      | Java 25 LTS                   | A framework aimed at small services and containers: build-time optimisation, fast start with native image or Leyden (Quarkus, n.d.); a smaller community than Spring                                                                               |     |     |     |     |     |     |         |
+| **Javalin**      | Kotlin or Java on Java 25 LTS | A small framework in the style of Express: few concepts, routes and handlers, on top of Jetty, Apache 2.0, equal support for Kotlin and Java, optional virtual threads and OpenAPI (Javalin, n.d.); you assemble accounts and persistence yourself |     |     |     |     |     |     |         |
+| **ASP.NET Core** | C# on .NET 10 LTS             | Mature web stack, strong tooling, open source; Native AOT for small and fast containers                                                                                                                                                            |     |     |     |     |     |     |         |
+| **Go**           | Go                            | Small static binary, very light on a small VPS                                                                                                                                                                                                     |     |     |     |     |     |     |         |
+| Axum             | 4                             | 5                                                                                                                                                                                                                                                  | 1   | 3   | 5   | 4   | 5   | 4   | **315** |
+| **Axum**         | Rust                          | A Rust web library on hyper and tower, MIT, maintained by the Tokio project; among the fastest web stacks, tiny memory and image; pre-1.0 (0.8 on crates.io) (Tokio, n.d.)                                                                         |     |     |     |     |     |     |         |
 
 ## Criteria and weights (draft)
 
-| # | Criterion | Weight | What it asks |
-| --- | --- | --- | --- |
-| C1 | Accessible language the owner knows or wants to learn or know better | 20 | Familiarity and learning value (the owner's own score) |
-| C2 | Fit with external HTTP APIs such as Overpass | 10 | HTTP client, JSON, retry and cache libraries |
-| C3 | Light on a small VPS | 15 | Image size, idle memory, start time |
-| C4 | Shares code with the front end | 10 | Reuse of the TypeScript client, types and analysis code (weight 0 if the back end never analyses GPX) |
-| C5 | Ecosystem for premium features | 10 | Accounts, OAuth for Strava and MCP, a database, payments |
-| C6 | Tooling and testing | 5 | Tests, lint, format, container workflow |
-| C7 | Security and supply chain | 5 | Permissions, dependency trust |
-| C8 | Autonomy | 15 | Self-hostable in the EU on our own infrastructure; no lock-in to one vendor's platform services; open licence and governance not controlled by a single company |
-| C9 | Long-term health | 10 | Support timeline, who maintains it, size of the community |
+| #   | Criterion                                                            | Weight | What it asks                                                                                                                                                    |
+| --- | -------------------------------------------------------------------- | ------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| C1  | Accessible language the owner knows or wants to learn or know better | 20     | Familiarity and learning value (the owner's own score)                                                                                                          |
+| C2  | Fit with external HTTP APIs such as Overpass                         | 10     | HTTP client, JSON, retry and cache libraries                                                                                                                    |
+| C3  | Light on a small VPS                                                 | 15     | Image size, idle memory, start time                                                                                                                             |
+| C4  | Shares code with the front end                                       | 10     | Reuse of the TypeScript client, types and analysis code (weight 0 if the back end never analyses GPX)                                                           |
+| C5  | Ecosystem for premium features                                       | 10     | Accounts, OAuth for Strava and MCP, a database, payments                                                                                                        |
+| C6  | Tooling and testing                                                  | 5      | Tests, lint, format, container workflow                                                                                                                         |
+| C7  | Security and supply chain                                            | 5      | Permissions, dependency trust                                                                                                                                   |
+| C8  | Autonomy                                                             | 15     | Self-hostable in the EU on our own infrastructure; no lock-in to one vendor's platform services; open licence and governance not controlled by a single company |
+| C9  | Long-term health                                                     | 10     | Support timeline, who maintains it, size of the community                                                                                                       |
 
 C8 is named *autonomy* here. *Sovereignty* is also used for this idea, but the word has other uses; what is meant is the ability to run, move and fix our own service without asking a vendor.
 
@@ -93,16 +105,17 @@ C8 is named *autonomy* here. *Sovereignty* is also used for this idea, but the w
 
 Scores 1 to 5. C1 is left to the owner. The C3 score of Deno is measured; the other C3 scores are estimates to be measured in a spike. The rest are judgements from the reasons above and open to challenge; C8 and C9 for Deno reflect the events of October 2026: the objective reason is not that Cloudflare owns it (the runtime stays MIT and forkable) but that its own maintainers stop developing it after October 2027 unless a foundation or a fork takes over. Until then Deno remains a usable choice with monthly security and bug-fix releases; the owner can weigh C9 lower.
 
-| Option | C2 (10) | C3 (15) | C4 (10) | C5 (10) | C6 (5) | C7 (5) | C8 (15) | C9 (10) | Subtotal (80) |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| Deno with TypeScript | 5 | 4 | 5 | 3 | 4 | 4 | 3 | 1 | **285** |
-| Node.js with TypeScript | 5 | 4 | 5 | 5 | 4 | 3 | 5 | 5 | **370** |
-| Python (FastAPI) | 4 | 3 | 1 | 4 | 4 | 3 | 5 | 5 | **295** |
-| Java 25 LTS with Spring Boot | 4 | 2 | 1 | 5 | 4 | 4 | 5 | 5 | **295** |
-| Java 25 LTS with Micronaut or Quarkus | 4 | 3 | 1 | 4 | 4 | 4 | 5 | 4 | **290** |
-| Kotlin (or Java) with Javalin | 4 | 3 | 1 | 3 | 4 | 4 | 5 | 4 | **280** |
-| .NET 10 LTS with ASP.NET Core | 4 | 3 | 1 | 5 | 4 | 4 | 4 | 5 | **295** |
-| Go | 4 | 5 | 1 | 3 | 5 | 4 | 4 | 5 | **310** |
+| Option       | C2 (10) | C3 (15) | C4 (10) | C5 (10) | C6 (5) | C7 (5) | C8 (15) | C9 (10) | Subtotal (80) |
+| ------------ | ------- | ------- | ------- | ------- | ------ | ------ | ------- | ------- | ------------- |
+| Deno         | 5       | 4       | 5       | 3       | 4      | 4      | 3       | 1       | **285**       |
+| Node.js      | 5       | 4       | 5       | 5       | 4      | 3      | 5       | 5       | **370**       |
+| FastAPI      | 4       | 3       | 1       | 4       | 4      | 3      | 5       | 5       | **295**       |
+| Spring Boot  | 4       | 2       | 1       | 5       | 4      | 4      | 5       | 5       | **295**       |
+| Micronaut    | 4       | 3       | 1       | 4       | 4      | 4      | 5       | 4       | **290**       |
+| Quarkus      | 4       | 3       | 1       | 4       | 4      | 4      | 5       | 4       | **290**       |
+| Javalin      | 4       | 3       | 1       | 3       | 4      | 4      | 5       | 4       | **280**       |
+| ASP.NET Core | 4       | 3       | 1       | 5       | 4      | 4      | 4       | 5       | **295**       |
+| Go           | 4       | 5       | 1       | 3       | 5      | 4      | 4       | 5       | **310**       |
 
 Measured for Deno on 2026-11-10: the API image is 117 MB and the idle container uses 21.7 MiB of memory (`docker stats`, no traffic, health endpoint answering).
 
@@ -165,3 +178,7 @@ Linuxiac. (2026). *Cloudflare acquires Deno JavaScript runtime, core development
 .NET Foundation. (n.d.). *dotnet/runtime* [Repository and licence]. GitHub. Retrieved November 10, 2026, from https://github.com/dotnet/runtime
 
 OpenLogic. (n.d.). *Java experts on OpenJDK vs. Oracle JDK*. https://www.openlogic.com/blog/java-experts-openjdk-vs-oracle-jdk
+
+Quarkus. (n.d.). *How we integrated Project Leyden into Quarkus*. Retrieved November 10, 2026, from https://quarkus.io/blog/leyden-2/
+
+Tokio. (n.d.). *axum* [Repository and README]. GitHub. Retrieved November 10, 2026, from https://github.com/tokio-rs/axum

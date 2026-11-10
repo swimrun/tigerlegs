@@ -122,6 +122,13 @@ Rationale:
 
 The one acceptable alternative to "one long line per paragraph" is **semantic line breaks** (one sentence per line). This gives clean diffs while keeping logical units together. Either approach is fine; hard wraps at a fixed column width are not.
 
+### Markdown tables: aligned columns
+
+Write every Markdown table with its columns padded with spaces, so that the table reads as a table in the source without a preview: each cell as wide as the widest cell of its column, and the separator row as wide as the column.
+After writing or editing a table, run `deno task tables <file>` on the file; it aligns all tables in it (and leaves tables inside code fences alone), and a second run changes nothing.
+Keep table cells short enough to scan: short option names in the first column, and the explanation in a later column.
+QuickMark has no rule that checks this (its table rules cover the pipe style, the column count and the blank lines around a table), so the check is this rule and the task.
+
 ### Markdown linting
 
 All markdown files must conform to **QuickMark** rules.

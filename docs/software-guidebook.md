@@ -612,7 +612,7 @@ Table 8 lists the ADRs and what each decides.
 | [0011](./adr/0011-model-lifecycle-and-think-thread-for-on-device-chat.md) | Draft: separate the one-off model download from the per-prompt think thread in the on-device chat; no decision |
 | [0012](./adr/0012-persistent-chat-across-pages.md) | Proposed: keep the chat across pages with Astro view transitions and a persisted island |
 | [0013](./adr/0013-back-end-is-optional.md) | Draft: the back end is optional and a premium feature; the front end works without it; no decision |
-| [0014](./adr/0014-back-end-technology.md) | Draft: back-end technology compared with multi-criteria decision making (Deno, Node.js, Python, Java 25 with Spring Boot, Micronaut, Quarkus or Javalin, .NET 10, Go); no decision |
+| [0014](./adr/0014-back-end-technology.md) | Draft: back-end technology compared with multi-criteria decision making (Deno, Node.js, Python, Java 25 with Spring Boot, Micronaut, Quarkus or Javalin, .NET 10, Go, Rust); no decision |
 
 ADR-0008 implements a shared Astro layout and directly linkable HTML pages, with the interactive extractor implemented in React and no runtime backend. Astro itself is not React-based; it supplies static page composition around the React application. Existing TypeScript analysis modules remain reusable. All ADRs are built into HTML pages and linked from this chapter. The ADR includes a provisional weighted comparison of the previous Deno-only site build, Astro, Next.js static export, Vite + React SPA and Eleventy, following the [ICT Research Methods multi-criteria decision making method](https://ictresearchmethods.nl/workshop/multi-criteria-decision-making/).
 
