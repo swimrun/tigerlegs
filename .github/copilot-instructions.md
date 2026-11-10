@@ -56,10 +56,10 @@ older Kiro specs use EARS.
 
 - Near-term feature checklist: README.md "Roadmap" section.
 - Milestones and platform strategy: [docs/ROADMAP.md](../docs/ROADMAP.md).
-- Working agreements and referencing style (APA 7): [AGENT.md](../AGENT.md).
-- File-location rules for agents: [AGENTS.md](../AGENTS.md).
-- If guidance in this file, AGENT.md, and AGENTS.md conflicts, follow this
-  file first, then AGENTS.md, then AGENT.md.
+- Working agreements, referencing style (APA 7) and file-location rules for
+  agents: [AGENTS.md](../AGENTS.md).
+- If guidance in this file and AGENTS.md conflicts, follow this file first,
+  then AGENTS.md.
 - When changing behaviour, update the relevant documentation in the same
   commit as the code change.
 

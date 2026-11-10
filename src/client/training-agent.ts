@@ -54,6 +54,8 @@ export function createTrainingAgent(
 ): ChatAgent {
   let pending: Move[] = [];
   let lastInstruction = "";
+  // The question that triggered the install offer, answered as soon as the model is installed.
+  let waitingInstruction: string | null = null;
   let round = 0;
 
   const proposalText = (moves: Move[]) =>
@@ -124,6 +126,7 @@ export function createTrainingAgent(
         } else if (message === INSTALL || availability === "downloadable" || availability === "downloading") {
           // A download is a multi-GB opt-in: ask first, then show its progress.
           if (message !== INSTALL && availability === "downloadable") {
+            waitingInstruction = message;
             yield text(t.assistDownloadable, [{ id: `install-${++round}`, label: t.assistEnable, prompt: INSTALL }]);
           } else {
             try {
@@ -137,7 +140,14 @@ export function createTrainingAgent(
                 await Promise.race([download.catch(() => {}), new Promise((resolve) => setTimeout(resolve, 500))]);
               }
               await download;
-              yield text(t.assistInstalled);
+              const resume = waitingInstruction;
+              waitingInstruction = null;
+              if (resume) {
+                lastInstruction = resume;
+                yield reply(await proposeChange(model!, getWeek(), resume));
+              } else {
+                yield text(t.assistInstalled);
+              }
             } catch {
               yield text(t.assistFailed);
             }
