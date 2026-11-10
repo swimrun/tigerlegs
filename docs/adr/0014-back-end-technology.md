@@ -70,6 +70,11 @@ Models also write best where the training data is richest, which favours TypeScr
 Rust frameworks such as Actix and Axum are reported among the fastest in blog comparisons of the last TechEmpower round; that is not verified here and does not matter at our load.
 What Rust offers at our scale is a very small image and memory use and a strict compiler; what it costs is a smaller batteries-included ecosystem for accounts and OAuth, a steeper language to review, and a library that is still pre-1.0.
 
+### What the owner has said (11 November 2026)
+
+Interest in Java and in getting to know it better, in Spring Boot or another Java microservice framework (Micronaut, Quarkus, Javalin), in Project Leyden for the start-up time, and in Spring Data JDBC for its support of the aggregate pattern; a long-standing interest in Domain-Driven Design.
+These are inputs for C1 and for C10, not scores; the C1 scores stay the owner's.
+
 ## Method
 
 The comparison follows the [ICT Research Methods multi-criteria decision making method](https://ictresearchmethods.nl/workshop/multi-criteria-decision-making/), as ADR-0009 did: a preparation phase (alternatives, criteria, weights, the stakeholders involved) and an evaluation phase (judge each option per criterion), with time to iterate between judging the options and adjusting the criteria (ICT Research Methods, n.d.).
@@ -107,7 +112,7 @@ Only supported releases are considered: Java 25 is an LTS release, available fro
 | C7  | Security and supply chain                                            | 10     | Permissions, and how exposed the ecosystem is to poisoned dependencies                                                                                          |
 | C8  | Autonomy                                                             | 15     | Self-hostable in the EU on our own infrastructure; no lock-in to one vendor's platform services; open licence and governance not controlled by a single company |
 | C9  | Long-term health                                                     | 5      | Support timeline, who maintains it, size of the community                                                                                                       |
-| C10 | Database and geodata                                                 | 10     | PostgreSQL with PostGIS: drivers, migrations, an ORM or query builder, spatial types                                                                            |
+| C10 | Database and geodata                                                 | 10     | PostgreSQL with PostGIS: drivers, migrations, spatial types, and persistence that fits a domain model with aggregates (the owner works in DDD)                  |
 
 C8 is named *autonomy* here. *Sovereignty* is also used for this idea, but the word has other uses; what is meant is the ability to run, move and fix our own service without asking a vendor.
 
@@ -141,6 +146,20 @@ The choice of database is independent of the language: every option below has a 
 Is the database the bottleneck? Not at our scale: the heavy computation stays in the browser (ADR-0003), the server does mostly small reads and writes, and the usual causes of slow queries (missing indexes, one query per row, no spatial index) are design matters, not language matters. Spatial queries need a GiST index, connections need a pool, and a small VPS must share its memory between the database and the service; we measure with realistic data in the spike instead of guessing. The slower dependency today is the shared public Overpass server, which is why #57 exists.
 A persistent-storage decision record (PostgreSQL with PostGIS, files, caches) follows this one (#63).
 
+### Persistence for a domain model with aggregates
+
+The owner works in Domain-Driven Design and values persistence that follows the aggregate pattern: one repository per aggregate root, consistency inside an aggregate, and references between aggregates by id.
+The model we expect has aggregates such as a course (with its variants and legs), a team or app group (with its members), a swimrunner profile and a recording, where a recording refers to a course by id instead of containing it.
+What each ecosystem offers for that:
+
+- **Java with Spring Data JDBC.** Built on exactly these ideas: "each aggregate has exactly one aggregate root", all entities reachable from the root belong to the aggregate, references across aggregates are not guaranteed to be consistent at all times but eventually, and there is no lazy loading, so an aggregate loads and saves as a whole; the price is that child entities of an aggregate are deleted and recreated when it is saved, so large aggregates are costly to write (Spring, n.d.). Spatial types are not mapped out of the box; PostGIS columns need converters or SQL functions, to be tried in the spike. Kotlin's immutable data classes suit value objects. Micronaut Data and Quarkus (Hibernate with Panache) offer repository-style access too, and I have not checked how close they come to the aggregate model.
+- **.NET with Entity Framework Core.** Microsoft's own guidance for DDD uses it: persistence-ignorant POCO entities, private fields and read-only collections that the aggregate root controls, value objects as owned types, one repository per aggregate and the `DbContext` as unit of work, with Dapper for queries in a CQRS split (Microsoft, 2021).
+- **Python with SQLAlchemy.** The imperative (classical) mapping lets the ORM depend on the domain model and not the other way round, so "our domain model classes stay blissfully unaware of the database" (Percival & Gregory, n.d.).
+- **TypeScript (Node.js or Deno).** The popular tools (Prisma, Drizzle) are schema and query builders and do not model aggregates; MikroORM, with an identity map and a unit of work, comes closest, to be checked. Repositories written by hand are common.
+- **Go and Rust.** No aggregate-aware mapper; the usual way is hand-written repositories over `pgx` or `sqlc` and `sqlx`, which is clear but is all code to write and test.
+
+So Java (Spring Data JDBC), .NET (EF Core) and Python (SQLAlchemy) have the best-documented fit with the aggregate pattern, and the scores for C10 reflect that.
+
 ## Evaluation (provisional)
 
 Scores 1 to 5. C1 is left to the owner. The C3 score of Deno is measured; the other C3 scores are estimates to be measured in a spike. The rest are judgements from the reasons above and open to challenge; they are mine, not the owner's, and the TypeScript options profit from C4. C8 and C9 for Deno reflect the events of October 2026: the objective reason is not that Cloudflare owns it (the runtime stays MIT and forkable) but that its own maintainers stop developing it after October 2027 unless a foundation or a fork takes over. Until then Deno remains a usable choice with monthly security and bug-fix releases; the owner can weigh C9 lower.
@@ -148,15 +167,15 @@ Scores 1 to 5. C1 is left to the owner. The C3 score of Deno is measured; the ot
 | Option       | C2 (5) | C3 (15) | C4 (10) | C5 (5) | C6 (5) | C7 (10) | C8 (15) | C9 (5) | C10 (10) | Subtotal (80) |
 | ------------ | ------ | ------- | ------- | ------ | ------ | ------- | ------- | ------ | -------- | ------------- |
 | Deno         | 5      | 4       | 5       | 3      | 4      | 4       | 3       | 1      | 3        | **290**       |
-| Node.js      | 5      | 4       | 5       | 5      | 4      | 2       | 5       | 5      | 5        | **350**       |
+| Node.js      | 5      | 4       | 5       | 5      | 4      | 2       | 5       | 5      | 4        | **340**       |
 | FastAPI      | 4      | 3       | 1       | 4      | 4      | 3       | 5       | 5      | 5        | **295**       |
 | Spring Boot  | 4      | 2       | 1       | 5      | 4      | 3       | 5       | 5      | 5        | **285**       |
 | Micronaut    | 4      | 3       | 1       | 4      | 4      | 3       | 5       | 4      | 4        | **280**       |
 | Quarkus      | 4      | 3       | 1       | 4      | 4      | 3       | 5       | 4      | 4        | **280**       |
 | Javalin      | 4      | 3       | 1       | 3      | 4      | 4       | 5       | 4      | 3        | **275**       |
 | ASP.NET Core | 4      | 3       | 1       | 5      | 4      | 4       | 4       | 5      | 5        | **295**       |
-| Go           | 4      | 5       | 1       | 3      | 5      | 4       | 4       | 5      | 4        | **310**       |
-| Axum         | 4      | 5       | 1       | 3      | 5      | 3       | 5       | 4      | 4        | **310**       |
+| Go           | 4      | 5       | 1       | 3      | 5      | 4       | 4       | 5      | 3        | **300**       |
+| Axum         | 4      | 5       | 1       | 3      | 5      | 3       | 5       | 4      | 3        | **300**       |
 
 Measured for Deno on 2026-11-10: the API image is 117 MB and the idle container uses 21.7 MiB of memory (`docker stats`, no traffic, health endpoint answering).
 
@@ -180,10 +199,10 @@ GraalVM does not by itself favour Java over Node.js: it narrows the memory gap a
 ### The total
 
 Total = subtotal + 20 × C1. A point of familiarity is worth 20 points, so the owner's scores can add 20 to 100 points to each option.
-On the provisional scores Node.js leads with 350; Go and Axum follow at 310, then FastAPI and ASP.NET Core at 295, Deno at 290 and the Java frameworks between 275 and 285.
-Node.js lost 20 points against the first version (supply chain, C7) and its lead over the best other option shrank from 60 to 40, but it is still ahead.
+On the provisional scores Node.js leads with 340; Go and Axum follow at 300, then FastAPI and ASP.NET Core at 295, Deno at 290 and the Java frameworks between 275 and 285.
+Node.js lost 30 points against the first version (supply chain, C7, and the database mapping, C10) and its lead over the best other option shrank from 60 to 40, but it is still ahead.
 The lead is mostly C4 (it shares code with the front end) and C8 and C9 (no vendor control, a healthy foundation).
-If the owner rates Spring Boot 5 and Node.js 3 on C1, the totals are 385 and 410; at Node.js 2 they are 385 and 390, close to a tie; a Java option passes Node.js when the owner's gap is about three points or more.
+If the owner rates Spring Boot 5 and Node.js 3 on C1, the totals are 385 and 400; at Node.js 2 they are 385 and 380, and Spring Boot passes Node.js; a Java option passes Node.js when the owner's gap is about two to three points or more.
 
 ## Sensitivity
 
@@ -203,32 +222,35 @@ If the owner rates Spring Boot 5 and Node.js 3 on C1, the totals are 385 and 410
 ## References
 
 - Adoptium. (n.d.). *Temurin support and roadmap*. Retrieved November 10, 2026, from https://adoptium.net/support/
-- Cloudflare. (2026, October 9). *Deno joins Cloudflare*. https://blog.cloudflare.com/deno-joins-cloudflare
-- Deno. (2026). *The state of Deno after the Cloudflare announcement* (Issue 37030) [Issue tracker]. GitHub. Retrieved November 10, 2026, from https://github.com/denoland/deno/issues/37030
-- Hacker News. (2026). *Cloudflare acquires Deno* [Discussion]. Retrieved November 10, 2026, from https://news.ycombinator.com/item?id=50019911
-- ICT Research Methods. (n.d.). *Multi-criteria decision making*. Retrieved November 10, 2026, from https://ictresearchmethods.nl/workshop/multi-criteria-decision-making/
-- Kalium. (2026). *TechEmpower Framework Benchmarks are now archived: What's next?* DEV Community. Retrieved November 10, 2026, from https://dev.to/kaliumhexacyanoferrat/techempower-framework-benchmarks-are-now-archived-whats-next-3l0a
-- Microsoft. (n.d.). *.NET and .NET Core official support policy*. Retrieved November 10, 2026, from https://dotnet.microsoft.com/en-us/platform/support/policy/dotnet-core
-- OpenStreetMap Wiki. (n.d.-a). *Overpass API*. Retrieved November 10, 2026, from https://wiki.openstreetmap.org/wiki/Overpass_API
-- OpenStreetMap Wiki. (n.d.-b). *Overpass API/Overpass QL*. Retrieved November 10, 2026, from https://wiki.openstreetmap.org/wiki/Overpass_API/Overpass_QL
-- Roden, G. (2026). *Commentary: Deno joins Cloudflare — judged by its own promises*. heise online. Retrieved November 10, 2026, from https://www.heise.de/en/blog/Commentary-Deno-joins-Cloudflare-judged-by-its-own-promises-11509407.html
-- Socket. (2026). *Deno goes the way of the dinosaur*. Retrieved November 10, 2026, from https://socket.dev/blog/deno-acquisition
 - Astro. (n.d.-a). *On-demand rendering*. Retrieved November 10, 2026, from https://docs.astro.build/en/guides/on-demand-rendering/
 - Astro. (n.d.-b). *Endpoints*. Retrieved November 10, 2026, from https://docs.astro.build/en/guides/endpoints/
+- Cloudflare. (2026, October 9). *Deno joins Cloudflare*. https://blog.cloudflare.com/deno-joins-cloudflare
+- Deno. (2026). *The state of Deno after the Cloudflare announcement* (Issue 37030) [Issue tracker]. GitHub. Retrieved November 10, 2026, from https://github.com/denoland/deno/issues/37030
 - eSecurity Planet. (2026). *GitHub account breach fuels Shai-Hulud npm supply chain attack*. https://esecurityplanet.com/threats/github-account-breach-fuels-shai-hulud-npm-supply-chain-attack/
 - GraalVM. (n.d.). *Downloads*. Retrieved November 10, 2026, from https://www.graalvm.org/downloads/
+- Hacker News. (2026). *Cloudflare acquires Deno* [Discussion]. Retrieved November 10, 2026, from https://news.ycombinator.com/item?id=50019911
 - Halbritter, M. (2026, February). *Supercharge your JVM performance with Project Leyden and Spring Boot* [Slides]. https://mhalbritter.github.io/slides/2026-02%20-%20Supercharge%20your%20JVM%20performance%20with%20Project%20Leyden%20and%20Spring%20Boot.pdf
 - heise online. (2026, January). *Web development: Cloudflare acquires Astro Technology Company*. https://heise.de/-11145912
+- ICT Research Methods. (n.d.). *Multi-criteria decision making*. Retrieved November 10, 2026, from https://ictresearchmethods.nl/workshop/multi-criteria-decision-making/
 - InfoQ. (2025, March). *Java 24 ships Project Leyden*. https://www.infoq.com/news/2025/03/java-24-leyden-ships
 - InfoQ. (2026, August). *JEP 401 value objects preview*. https://infoq.com/news/2026/08/jep401-value-objects-preview
 - Javalin. (n.d.). *Javalin: A simple web framework for Java and Kotlin*. Retrieved November 10, 2026, from https://javalin.io/
+- Kalium. (2026). *TechEmpower Framework Benchmarks are now archived: What's next?* DEV Community. Retrieved November 10, 2026, from https://dev.to/kaliumhexacyanoferrat/techempower-framework-benchmarks-are-now-archived-whats-next-3l0a
 - Linuxiac. (2026). *Cloudflare acquires Deno JavaScript runtime, core development to end in 2027*. https://linuxiac.com/cloudflare-acquires-deno-javascript-runtime/
+- Microsoft. (2021). *Implementing the infrastructure persistence layer with Entity Framework Core* [.NET microservices architecture]. Retrieved November 11, 2026, from https://learn.microsoft.com/en-us/dotnet/architecture/microservices/microservice-ddd-cqrs-patterns/infrastructure-persistence-layer-implementation-entity-framework-core
+- Microsoft. (n.d.). *.NET and .NET Core official support policy*. Retrieved November 10, 2026, from https://dotnet.microsoft.com/en-us/platform/support/policy/dotnet-core
 - Mollie. (n.d.). *API client libraries*. Retrieved November 11, 2026, from https://docs.mollie.com/docs/libraries
 - .NET Foundation. (n.d.). *dotnet/runtime* [Repository and licence]. GitHub. Retrieved November 10, 2026, from https://github.com/dotnet/runtime
 - Next.js. (2026, March 25). *Next.js across platforms* [Adapter API announcement]. https://nextjs.org/nextjs-across-platforms
 - OpenLogic. (n.d.). *Java experts on OpenJDK vs. Oracle JDK*. https://www.openlogic.com/blog/java-experts-openjdk-vs-oracle-jdk
+- OpenStreetMap Wiki. (n.d.-a). *Overpass API*. Retrieved November 10, 2026, from https://wiki.openstreetmap.org/wiki/Overpass_API
+- OpenStreetMap Wiki. (n.d.-b). *Overpass API/Overpass QL*. Retrieved November 10, 2026, from https://wiki.openstreetmap.org/wiki/Overpass_API/Overpass_QL
 - Oracle. (n.d.). *Reachability metadata* [GraalVM for JDK 25 documentation]. Retrieved November 11, 2026, from https://docs.oracle.com/en/graalvm/jdk/25/docs/reference-manual/native-image/metadata/
+- Percival, H., & Gregory, B. (n.d.). *Repository pattern* [Chapter 2]. In *Architecture patterns with Python*. Retrieved November 11, 2026, from https://www.cosmicpython.com/book/chapter_02_repository.html
 - Phoenix Security. (2026). *The acceleration: How supply chain attacks went industrial across npm, PyPI, VS Code, and AI agent tooling*. https://phoenix.security/accelerating-supply-chain-attacks-npm-pypi-vsx-ai-enabled-2026/
 - Quarkus. (n.d.). *How we integrated Project Leyden into Quarkus*. Retrieved November 10, 2026, from https://quarkus.io/blog/leyden-2/
+- Roden, G. (2026). *Commentary: Deno joins Cloudflare — judged by its own promises*. heise online. Retrieved November 10, 2026, from https://www.heise.de/en/blog/Commentary-Deno-joins-Cloudflare-judged-by-its-own-promises-11509407.html
+- Socket. (2026). *Deno goes the way of the dinosaur*. Retrieved November 10, 2026, from https://socket.dev/blog/deno-acquisition
+- Spring. (n.d.). *Domain-driven design and relational databases* [Spring Data JDBC reference]. Retrieved November 11, 2026, from https://docs.spring.io/spring-data/relational/reference/jdbc/domain-driven-design.html
 - Tech Holder. (2026, March). *How to optimize Spring Boot native image build times with GraalVM* [Blog post]. https://tech-holder.blogspot.com/2026/03/how-to-optimize-spring-boot-native.html
 - Tokio. (n.d.). *axum* [Repository and README]. GitHub. Retrieved November 10, 2026, from https://github.com/tokio-rs/axum
