@@ -266,12 +266,21 @@ export default function Extractor({ base }: { base: string }) {
               onChange={event => void toggleStrategy(strategy, event.target.checked)} /> {strategy === "waypoint" ? "Waypoints" : "Speed"}
           </label>)}
         </div>
-        <label className="flex cursor-pointer items-start gap-2 text-sm text-stone-700">
-          <input id="use-terrain" type="checkbox" className="mt-1" checked={strategies.includes("landscape")}
-            onChange={event => void toggleStrategy("landscape", event.target.checked)} />
-          <span><strong>Use terrain data</strong> (more accurate swims). Off by default: analysis uses available speed and waypoint data locally; your GPX file is not uploaded.</span>
-        </label>
-        {strategies.includes("landscape") && <p id="terrain-warning" className="mt-1 rounded border border-amber-300 bg-amber-50 p-2 text-xs text-stone-800">Warning: with terrain data on, the rough area of the track (a coarse bounding box, not the track itself) and your IP address are sent to OpenStreetMap's Overpass service to look up lakes and rivers. Your GPX file is never uploaded.</p>}
+        <div className="rounded border-2 border-stone-900 bg-amber-50 p-3 text-sm">
+          <label className="flex cursor-pointer items-start gap-2">
+            <input id="use-terrain" type="checkbox" className="mt-1 h-4 w-4" checked={strategies.includes("landscape")}
+              onChange={event => void toggleStrategy("landscape", event.target.checked)} />
+            <span><strong>Use terrain data</strong> <span className="rounded bg-stone-950 px-2 py-0.5 text-xs font-semibold uppercase tracking-wider text-amber-400">Recommended</span>
+              <span className="mt-1 block">This is what makes TigerLegs <em>terrain-informed</em>: lakes and rivers from OpenStreetMap show where your track is really in the water, for more accurate swims. Switched off, the analysis only uses speed and waypoints, locally.</span></span>
+          </label>
+          <p className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-stone-700">
+            <a href="https://overpass-api.de" className="inline-flex items-center" aria-label="Overpass API">
+              <img src={`${base}img/overpass-api-logo.svg`} alt="" width="60" height="24" className="h-6 w-auto" />
+            </a>
+            <span>Terrain data © <a className="underline" href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors</a> (ODbL), served by the <a className="underline" href="https://overpass-api.de">Overpass API</a>. Logo: <a className="underline" href="https://wiki.openstreetmap.org/wiki/File:Overpass_API_logo.svg">OpenStreetMap Wiki</a>, CC BY-SA 2.0.</span>
+          </p>
+        </div>
+        {strategies.includes("landscape") && <p id="terrain-warning" className="rounded border border-amber-300 bg-amber-50 p-2 text-xs text-stone-800">Warning: with terrain data on, the rough area of the track (a coarse bounding box, not the track itself) and your IP address are sent to OpenStreetMap's Overpass service to look up lakes and rivers. Your GPX file is never uploaded.</p>}
       </fieldset>
       <p id="analysis-status" role="status" className="mt-2 text-sm text-stone-700">{status}</p>
       {warning && <p id="point-warning" role="status" className="mt-2 rounded border border-amber-300 bg-amber-50 p-2 text-sm text-stone-800">{warning}</p>}
