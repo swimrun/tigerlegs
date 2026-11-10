@@ -383,17 +383,18 @@ export default function TrainingWeek({ languageModel }: Props) {
               ))}
             </ul>
           )}
-        <button
-          type="button"
-          className="rounded bg-stone-900 px-4 py-2 text-sm font-semibold text-white"
-          disabled={changes.length === 0}
-          onClick={() => {
-            setBaseline(week);
-            setConfirmed(true);
-          }}
-        >
-          {t.confirm}
-        </button>
+        {changes.length > 0 && (
+          <button
+            type="button"
+            className="rounded bg-stone-900 px-4 py-2 text-sm font-semibold text-white"
+            onClick={() => {
+              setBaseline(week);
+              setConfirmed(true);
+            }}
+          >
+            {t.confirm}
+          </button>
+        )}
         {confirmed && <p role="status" className="text-sm">{t.confirmed}</p>}
       </section>
     </div>
