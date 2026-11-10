@@ -66,12 +66,8 @@ If Astro is accepted, use its React integration for one coordinated extractor ap
 
 ## References
 
-Angular. (n.d.). *Deployment*. https://angular.dev/tools/cli/deployment
-
-Astro. (n.d.). *UI frameworks*. https://docs.astro.build/en/guides/framework-components/
-
-ICT Research Methods. (n.d.). *Multi-criteria decision making*. https://ictresearchmethods.nl/workshop/multi-criteria-decision-making/
-
-React. (n.d.). *Synchronizing with Effects*. https://react.dev/learn/synchronizing-with-effects
-
-Vue.js. (n.d.). *Single-file components*. https://vuejs.org/guide/scaling-up/sfc.html
+- Angular. (n.d.). *Deployment*. https://angular.dev/tools/cli/deployment
+- Astro. (n.d.). *UI frameworks*. https://docs.astro.build/en/guides/framework-components/
+- ICT Research Methods. (n.d.). *Multi-criteria decision making*. https://ictresearchmethods.nl/workshop/multi-criteria-decision-making/
+- React. (n.d.). *Synchronizing with Effects*. https://react.dev/learn/synchronizing-with-effects
+- Vue.js. (n.d.). *Single-file components*. https://vuejs.org/guide/scaling-up/sfc.html

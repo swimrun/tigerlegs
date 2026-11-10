@@ -41,11 +41,15 @@ Therefore:
 
 ### APA reference list format
 
-```markdown
-Author, A. A. (Year). *Title of work.* Publisher. https://doi.org/xxx
+Write each reference in APA 7 form, but lay the list out as a bullet list: one bullet per source and no blank line between sources.
+This departs from the APA layout, which separates references by a blank line and hangs the second line; bullets keep the Markdown source short, and the list still reads as a list.
+A reference that needs a second line continues on the next line, indented by two spaces.
+After writing or editing a `## References` section, run `deno task refs <file>`; it turns a section of blank-line separated paragraphs into bullets, leaves a list as it is, and a second run changes nothing.
 
-Author, A. A. (Year, Month Day). *Title of article*. Site Name.
-    https://domain.tld/path
+```markdown
+- Author, A. A. (Year). *Title of work.* Publisher. https://doi.org/xxx
+- Author, A. A. (Year, Month Day). *Title of article*. Site Name.
+  https://domain.tld/path
 ```
 
 ### Why quotes over paraphrasing
