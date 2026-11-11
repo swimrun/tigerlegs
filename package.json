@@ -7,6 +7,8 @@
     "dev": "ASTRO_TELEMETRY_DISABLED=1 astro dev",
     "preview": "ASTRO_TELEMETRY_DISABLED=1 astro preview",
     "check": "ASTRO_TELEMETRY_DISABLED=1 astro check",
+    "check:shared": "tsc -p tsconfig.shared.json",
+    "audit:prod": "npm audit --omit=dev",
     "test:site": "playwright test",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build -o storybook-static",

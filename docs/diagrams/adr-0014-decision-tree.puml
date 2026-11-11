@@ -1,0 +1,28 @@
+@startuml adr-0014-decision-tree
+title Decision tree: back-end technology (ADR-0014)
+
+start
+:Ten alternatives and ten weighted criteria,\nfixed before the scores were filled in;
+if (Knock-out: self-hostable in the EU on a small VPS,\nopen-source licence, a supported release?) then (all ten pass)
+  :Weighted sum, with the owner's C1 scores\nNode.js 400, Spring Boot 365, Go 360, Axum 360,\nASP.NET Core 355, Deno 350, Micronaut 340, Quarkus 340;
+else (fails)
+  :Drop the option;
+endif
+if (Is the lead larger than the error\nof the provisional scores?\n35 points is under two C1 points) then (yes)
+  :Choose the leader;
+else (no)
+  :Spike: measure C3 and C2 in containers\nNode.js 29 MiB idle, Spring Boot 173 MiB, Micronaut 135 MiB, ASP.NET Core 20 MiB\nbackoff tests pass in all four stacks;
+  if (Does the spike overturn the lead?) then (no)
+    :Sensitivity: which weight change flips it?\nC4 (shared code) at 0 gives Spring Boot 395, Node.js 380;
+    if (Is that weighting plausible?) then (no, server-side analysis stays open)
+      #palegreen:Decision: Node.js with TypeScript;
+    else (yes)
+      :Revisit: Spring Boot;
+    endif
+  else (yes)
+    :Take the better-measured option;
+  endif
+endif
+:Record, with the revisit triggers;
+stop
+@enduml
