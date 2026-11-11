@@ -24,7 +24,7 @@ Background, constraints, links to ADRs or the guidebook.
 See [docs/DEFINITION_OF_DONE.md](../blob/main/docs/DEFINITION_OF_DONE.md).
 
 - [ ] Acceptance criteria met
-- [ ] Tests added; `deno task test` and `deno task build` pass
+- [ ] Tests added; `npm test` and `deno task build` pass
 - [ ] Software guidebook updated in the same commit
 - [ ] README / About page updated if user-visible behaviour or privacy changes
 - [ ] ADR written if a significant design choice was made

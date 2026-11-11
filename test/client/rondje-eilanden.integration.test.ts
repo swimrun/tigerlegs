@@ -1,4 +1,5 @@
-import { assert, assertEquals } from "@std/assert";
+import { expect, it } from "vitest";
+import { readFileSync } from "node:fs";
 import { parseGPX } from "../../src/client/gpx-parser.ts";
 import { analyzeGpx } from "../../src/client/analyze.ts";
 import { parseWater } from "../../src/client/water.ts";
@@ -31,37 +32,37 @@ const EXPECTED_RUN_M = 5000;
  * Water around the track from OpenStreetMap (Overpass, snapshot 2026-06-01): natural=water and
  * waterway=riverbank, cut down to the area of the track so the fixture stays small.
  */
-const water = parseWater(JSON.parse(Deno.readTextFileSync("test/fixtures/rondje-eilanden-overpass.json")));
+const water = parseWater(JSON.parse(readFileSync("test/fixtures/rondje-eilanden-overpass.json", "utf8")));
 
 /** The three ways the extractor can work on this recording (no waypoints in the file). */
 function analyse(strategies: readonly StrategyName[] = ["speed", "landscape"]) {
-  const parsed = parseGPX(Deno.readTextFileSync("test-data/Rondje_Eilanden_2025.gpx"));
-  assert(parsed.ok);
+  const parsed = parseGPX(readFileSync("test-data/Rondje_Eilanden_2025.gpx", "utf8"));
+  expect(parsed.ok).toBeTruthy();
   return analyzeGpx(parsed.value, water, { enabledStrategies: strategies });
 }
 
-Deno.test("Rondje Eilanden: the official swims add up to 1,500 m and the runs to 5,000 m", () => {
-  assertEquals(sum(EXPECTED.filter((leg) => leg.type === "swim").map((leg) => leg.meters)), EXPECTED_SWIM_M);
-  assertEquals(sum(EXPECTED.filter((leg) => leg.type === "run").map((leg) => leg.meters)), EXPECTED_RUN_M);
-  assertEquals(EXPECTED.filter((leg) => leg.type === "swim").length, 11);
-  assertEquals(EXPECTED.filter((leg) => leg.type === "run").length, 11);
+it("Rondje Eilanden: the official swims add up to 1,500 m and the runs to 5,000 m", () => {
+  expect(sum(EXPECTED.filter((leg) => leg.type === "swim").map((leg) => leg.meters))).toEqual(EXPECTED_SWIM_M);
+  expect(sum(EXPECTED.filter((leg) => leg.type === "run").map((leg) => leg.meters))).toEqual(EXPECTED_RUN_M);
+  expect(EXPECTED.filter((leg) => leg.type === "swim").length).toEqual(11);
+  expect(EXPECTED.filter((leg) => leg.type === "run").length).toEqual(11);
 });
 
-Deno.test("Rondje Eilanden: the segments cover the whole track without gaps", () => {
+it("Rondje Eilanden: the segments cover the whole track without gaps", () => {
   const analysis = analyse();
-  assertEquals(analysis.segments[0].startTrackpointIndex, 0);
-  assertEquals(analysis.segments.at(-1)?.endTrackpointIndex, 4490);
+  expect(analysis.segments[0].startTrackpointIndex).toEqual(0);
+  expect(analysis.segments.at(-1)?.endTrackpointIndex).toEqual(4490);
   for (let i = 1; i < analysis.segments.length; i++) {
-    assertEquals(analysis.segments[i].startTrackpointIndex, analysis.segments[i - 1].endTrackpointIndex + 1);
+    expect(analysis.segments[i].startTrackpointIndex).toEqual(analysis.segments[i - 1].endTrackpointIndex + 1);
   }
 });
 
 // The recording is 6,958 m against 6,500 m official: it includes some warming up and cooling down, and
 // GPS noise in the water adds distance. A 10% margin documents that gap.
-Deno.test("Rondje Eilanden: the segments stay within 10% of the official total distance", () => {
+it("Rondje Eilanden: the segments stay within 10% of the official total distance", () => {
   const total = sum(analyse().segments.map((segment) => segment.distanceKm * 1000));
   const expected = EXPECTED_SWIM_M + EXPECTED_RUN_M;
-  assert(Math.abs(total - expected) <= expected * 0.1, `total ${Math.round(total)} m, expected ${expected} m (±10%)`);
+  expect(Math.abs(total - expected) <= expected * 0.1, `total ${Math.round(total)} m, expected ${expected} m (±10%)`).toBeTruthy();
 });
 
 // One test per way of detecting, each against the same official split. They fail until that way of
@@ -73,13 +74,9 @@ const APPROACHES: [string, readonly StrategyName[], string][] = [
   ["speed and terrain combined", ["speed", "landscape"], "#37"],
 ];
 for (const [name, strategies, issue] of APPROACHES) {
-  Deno.test({
-    name: `Rondje Eilanden, ${name}: 11 swims and 11 runs match the organiser's split (${issue})`,
-    ignore: true,
-    fn() {
-      assertEquals(mismatch(analyse(strategies).segments, EXPECTED), null);
-    },
-  });
+  it.skip(`Rondje Eilanden, ${name}: 11 swims and 11 runs match the organiser's split (${issue})`, () => {
+      expect(mismatch(analyse(strategies).segments, EXPECTED)).toEqual(null);
+    });
 }
 
 // Ratchets: today's error per approach, in metres off the official total. A change may make a number
@@ -90,12 +87,12 @@ const RATCHET: Record<string, { swimErrorM: number; runErrorM: number }> = {
   "speed and terrain combined": { swimErrorM: 480, runErrorM: 940 },
 };
 for (const [name, strategies] of APPROACHES) {
-  Deno.test(`Rondje Eilanden, ${name}: no worse than the pinned error`, () => {
+  it(`Rondje Eilanden, ${name}: no worse than the pinned error`, () => {
     const result = summarize(analyse(strategies).segments);
     const swimErrorM = Math.abs(result.swimM - EXPECTED_SWIM_M);
     const runErrorM = Math.abs(result.runM - EXPECTED_RUN_M);
     const pinned = RATCHET[name];
-    assert(swimErrorM <= pinned.swimErrorM, `swim off by ${swimErrorM} m, pinned ${pinned.swimErrorM} m; ${result.shown}`);
-    assert(runErrorM <= pinned.runErrorM, `run off by ${runErrorM} m, pinned ${pinned.runErrorM} m; ${result.shown}`);
+    expect(swimErrorM <= pinned.swimErrorM, `swim off by ${swimErrorM} m, pinned ${pinned.swimErrorM} m; ${result.shown}`).toBeTruthy();
+    expect(runErrorM <= pinned.runErrorM, `run off by ${runErrorM} m, pinned ${pinned.runErrorM} m; ${result.shown}`).toBeTruthy();
   });
 }

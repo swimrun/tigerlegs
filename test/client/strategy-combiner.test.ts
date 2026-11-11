@@ -4,7 +4,7 @@
  * **Validates: Requirements 16.1, 16.2, 16.3, 16.5, 16.9**
  */
 import fc from "fast-check";
-import { assert, assertEquals } from "@std/assert";
+import { expect, it } from "vitest";
 import {
   combineStrategies,
   detectApplicableStrategies,
@@ -78,34 +78,24 @@ function toResult(s: Scenario["perStrategy"][number]): StrategyResult {
 
 // --- Property 20: Strategy combination resolves by highest confidence ---
 
-Deno.test("Property 20.1: combined segments cover every trackpoint contiguously and are numbered sequentially", () => {
-  fc.assert(
-    fc.property(scenarios, (scenario) => {
+it("Property 20.1: combined segments cover every trackpoint contiguously and are numbered sequentially", () => {
+  fc.assert(fc.property(scenarios, (scenario) => {
       const results = scenario.perStrategy.map(toResult);
       const segments = combineStrategies(results, scenario.trackpointCount);
 
-      assertEquals(segments[0].startTrackpointIndex, 0);
-      assertEquals(
-        segments[segments.length - 1].endTrackpointIndex,
-        scenario.trackpointCount - 1,
-      );
+      expect(segments[0].startTrackpointIndex).toEqual(0);
+      expect(segments[segments.length - 1].endTrackpointIndex).toEqual(scenario.trackpointCount - 1);
       segments.forEach((segment, i) => {
-        assertEquals(segment.number, i + 1);
+        expect(segment.number).toEqual(i + 1);
         if (i > 0) {
-          assertEquals(
-            segment.startTrackpointIndex,
-            segments[i - 1].endTrackpointIndex + 1,
-          );
+          expect(segment.startTrackpointIndex).toEqual(segments[i - 1].endTrackpointIndex + 1);
         }
       });
-    }),
-    { numRuns: 200 },
-  );
+    }), { numRuns: 200 });
 });
 
-Deno.test("Property 20.2: each trackpoint takes the type of the highest-confidence strategy, or unclassified below 0.3", () => {
-  fc.assert(
-    fc.property(scenarios, (scenario) => {
+it("Property 20.2: each trackpoint takes the type of the highest-confidence strategy, or unclassified below 0.3", () => {
+  fc.assert(fc.property(scenarios, (scenario) => {
       const results = scenario.perStrategy.map(toResult);
       const segments = combineStrategies(results, scenario.trackpointCount);
 
@@ -124,25 +114,20 @@ Deno.test("Property 20.2: each trackpoint takes the type of the highest-confiden
         const segment = segments.find((seg) =>
           i >= seg.startTrackpointIndex && i <= seg.endTrackpointIndex
         );
-        assert(segment !== undefined);
-        assertEquals(segment.type, expected);
+        expect(segment !== undefined).toBeTruthy();
+        expect(segment.type).toEqual(expected);
       }
-    }),
-    { numRuns: 200 },
-  );
+    }), { numRuns: 200 });
 });
 
-Deno.test("Property 20.3: adjacent combined segments never share a type", () => {
-  fc.assert(
-    fc.property(scenarios, (scenario) => {
+it("Property 20.3: adjacent combined segments never share a type", () => {
+  fc.assert(fc.property(scenarios, (scenario) => {
       const results = scenario.perStrategy.map(toResult);
       const segments = combineStrategies(results, scenario.trackpointCount);
       for (let i = 1; i < segments.length; i++) {
-        assert(segments[i].type !== segments[i - 1].type);
+        expect(segments[i].type !== segments[i - 1].type).toBeTruthy();
       }
-    }),
-    { numRuns: 200 },
-  );
+    }), { numRuns: 200 });
 });
 
 // --- Property 21: Strategy applicability auto-detection ---
@@ -185,32 +170,26 @@ const waypointsArb: fc.Arbitrary<Waypoint[]> = fc.array(
   }))
 );
 
-Deno.test("Property 21.1: applicable strategies match the data that is present", () => {
-  fc.assert(
-    fc.property(trackpointsArb, waypointsArb, (trackpoints, waypoints) => {
+it("Property 21.1: applicable strategies match the data that is present", () => {
+  fc.assert(fc.property(trackpointsArb, waypointsArb, (trackpoints, waypoints) => {
       const gpx: GPXData = {
         waypoints,
         tracks: [{ name: "t", trackpoints }],
       };
       const applicable = detectApplicableStrategies(gpx);
 
-      assertEquals(applicable.includes("landscape"), trackpoints.length > 0);
+      expect(applicable.includes("landscape")).toEqual(trackpoints.length > 0);
 
       const hasConsecutiveTimestamps = trackpoints.some((tp, i) =>
         i > 0 && tp.timestamp !== null &&
         trackpoints[i - 1].timestamp !== null
       );
-      assertEquals(applicable.includes("speed"), hasConsecutiveTimestamps);
+      expect(applicable.includes("speed")).toEqual(hasConsecutiveTimestamps);
 
       const hasSwimWaypoint = waypoints.some((wp) =>
         wp.symbol === "200" || wp.symbol === "201" ||
         wp.name.startsWith("Début SWIM") || wp.name.startsWith("Fin SWIM")
       );
-      assertEquals(
-        applicable.includes("waypoint"),
-        trackpoints.length > 0 && hasSwimWaypoint,
-      );
-    }),
-    { numRuns: 200 },
-  );
+      expect(applicable.includes("waypoint")).toEqual(trackpoints.length > 0 && hasSwimWaypoint);
+    }), { numRuns: 200 });
 });

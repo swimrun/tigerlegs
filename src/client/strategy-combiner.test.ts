@@ -1,4 +1,4 @@
-import { assertEquals, assertArrayIncludes } from "@std/assert";
+import { expect, it } from "vitest";
 import {
   detectApplicableStrategies,
   combineStrategies,
@@ -40,35 +40,35 @@ function makeTrackpoints(count: number, withTimestamps = false): Trackpoint[] {
 
 // --- detectApplicableStrategies tests ---
 
-Deno.test("detectApplicableStrategies - landscape always applicable with trackpoints", () => {
+it("detectApplicableStrategies - landscape always applicable with trackpoints", () => {
   const gpxData: GPXData = {
     waypoints: [],
     tracks: [{ name: "Track", trackpoints: makeTrackpoints(5) }],
   };
   const strategies = detectApplicableStrategies(gpxData);
-  assertArrayIncludes(strategies, ["landscape"]);
+  expect(strategies).toEqual(expect.arrayContaining(["landscape"]));
 });
 
-Deno.test("detectApplicableStrategies - speed applicable with consecutive timestamps", () => {
+it("detectApplicableStrategies - speed applicable with consecutive timestamps", () => {
   const gpxData: GPXData = {
     waypoints: [],
     tracks: [{ name: "Track", trackpoints: makeTrackpoints(5, true) }],
   };
   const strategies = detectApplicableStrategies(gpxData);
-  assertArrayIncludes(strategies, ["speed"]);
-  assertArrayIncludes(strategies, ["landscape"]);
+  expect(strategies).toEqual(expect.arrayContaining(["speed"]));
+  expect(strategies).toEqual(expect.arrayContaining(["landscape"]));
 });
 
-Deno.test("detectApplicableStrategies - speed not applicable without timestamps", () => {
+it("detectApplicableStrategies - speed not applicable without timestamps", () => {
   const gpxData: GPXData = {
     waypoints: [],
     tracks: [{ name: "Track", trackpoints: makeTrackpoints(5, false) }],
   };
   const strategies = detectApplicableStrategies(gpxData);
-  assertEquals(strategies.includes("speed"), false);
+  expect(strategies.includes("speed")).toEqual(false);
 });
 
-Deno.test("detectApplicableStrategies - waypoint applicable with sym 200", () => {
+it("detectApplicableStrategies - waypoint applicable with sym 200", () => {
   const gpxData: GPXData = {
     waypoints: [
       {
@@ -82,10 +82,10 @@ Deno.test("detectApplicableStrategies - waypoint applicable with sym 200", () =>
     tracks: [{ name: "Track", trackpoints: makeTrackpoints(5) }],
   };
   const strategies = detectApplicableStrategies(gpxData);
-  assertArrayIncludes(strategies, ["waypoint"]);
+  expect(strategies).toEqual(expect.arrayContaining(["waypoint"]));
 });
 
-Deno.test("detectApplicableStrategies - waypoint applicable with sym 201", () => {
+it("detectApplicableStrategies - waypoint applicable with sym 201", () => {
   const gpxData: GPXData = {
     waypoints: [
       {
@@ -99,10 +99,10 @@ Deno.test("detectApplicableStrategies - waypoint applicable with sym 201", () =>
     tracks: [{ name: "Track", trackpoints: makeTrackpoints(5) }],
   };
   const strategies = detectApplicableStrategies(gpxData);
-  assertArrayIncludes(strategies, ["waypoint"]);
+  expect(strategies).toEqual(expect.arrayContaining(["waypoint"]));
 });
 
-Deno.test("detectApplicableStrategies - waypoint applicable with name 'Début SWIM...'", () => {
+it("detectApplicableStrategies - waypoint applicable with name 'Début SWIM...'", () => {
   const gpxData: GPXData = {
     waypoints: [
       {
@@ -116,10 +116,10 @@ Deno.test("detectApplicableStrategies - waypoint applicable with name 'Début SW
     tracks: [{ name: "Track", trackpoints: makeTrackpoints(5) }],
   };
   const strategies = detectApplicableStrategies(gpxData);
-  assertArrayIncludes(strategies, ["waypoint"]);
+  expect(strategies).toEqual(expect.arrayContaining(["waypoint"]));
 });
 
-Deno.test("detectApplicableStrategies - waypoint not applicable with unrelated waypoints", () => {
+it("detectApplicableStrategies - waypoint not applicable with unrelated waypoints", () => {
   const gpxData: GPXData = {
     waypoints: [
       {
@@ -133,21 +133,21 @@ Deno.test("detectApplicableStrategies - waypoint not applicable with unrelated w
     tracks: [{ name: "Track", trackpoints: makeTrackpoints(5) }],
   };
   const strategies = detectApplicableStrategies(gpxData);
-  assertEquals(strategies.includes("waypoint"), false);
+  expect(strategies.includes("waypoint")).toEqual(false);
 });
 
-Deno.test("detectApplicableStrategies - empty tracks returns empty array", () => {
+it("detectApplicableStrategies - empty tracks returns empty array", () => {
   const gpxData: GPXData = {
     waypoints: [],
     tracks: [],
   };
   const strategies = detectApplicableStrategies(gpxData);
-  assertEquals(strategies, []);
+  expect(strategies).toEqual([]);
 });
 
 // --- combineStrategies tests ---
 
-Deno.test("combineStrategies - single strategy becomes segments directly", () => {
+it("combineStrategies - single strategy becomes segments directly", () => {
   const results: StrategyResult[] = [
     {
       strategy: "waypoint",
@@ -158,18 +158,18 @@ Deno.test("combineStrategies - single strategy becomes segments directly", () =>
     },
   ];
   const segments = combineStrategies(results, 10);
-  assertEquals(segments.length, 2);
-  assertEquals(segments[0].type, "run");
-  assertEquals(segments[0].startTrackpointIndex, 0);
-  assertEquals(segments[0].endTrackpointIndex, 4);
-  assertEquals(segments[0].number, 1);
-  assertEquals(segments[1].type, "swim");
-  assertEquals(segments[1].startTrackpointIndex, 5);
-  assertEquals(segments[1].endTrackpointIndex, 9);
-  assertEquals(segments[1].number, 2);
+  expect(segments.length).toEqual(2);
+  expect(segments[0].type).toEqual("run");
+  expect(segments[0].startTrackpointIndex).toEqual(0);
+  expect(segments[0].endTrackpointIndex).toEqual(4);
+  expect(segments[0].number).toEqual(1);
+  expect(segments[1].type).toEqual("swim");
+  expect(segments[1].startTrackpointIndex).toEqual(5);
+  expect(segments[1].endTrackpointIndex).toEqual(9);
+  expect(segments[1].number).toEqual(2);
 });
 
-Deno.test("combineStrategies - higher confidence wins per trackpoint", () => {
+it("combineStrategies - higher confidence wins per trackpoint", () => {
   const results: StrategyResult[] = [
     {
       strategy: "speed",
@@ -186,14 +186,14 @@ Deno.test("combineStrategies - higher confidence wins per trackpoint", () => {
     },
   ];
   const segments = combineStrategies(results, 10);
-  assertEquals(segments.length, 2);
-  assertEquals(segments[0].type, "run");
-  assertEquals(segments[0].endTrackpointIndex, 4);
-  assertEquals(segments[1].type, "swim");
-  assertEquals(segments[1].startTrackpointIndex, 5);
+  expect(segments.length).toEqual(2);
+  expect(segments[0].type).toEqual("run");
+  expect(segments[0].endTrackpointIndex).toEqual(4);
+  expect(segments[1].type).toEqual("swim");
+  expect(segments[1].startTrackpointIndex).toEqual(5);
 });
 
-Deno.test("combineStrategies - unclassified when all confidence < 0.3", () => {
+it("combineStrategies - unclassified when all confidence < 0.3", () => {
   const results: StrategyResult[] = [
     {
       strategy: "speed",
@@ -209,11 +209,11 @@ Deno.test("combineStrategies - unclassified when all confidence < 0.3", () => {
     },
   ];
   const segments = combineStrategies(results, 10);
-  assertEquals(segments.length, 1);
-  assertEquals(segments[0].type, "unclassified");
+  expect(segments.length).toEqual(1);
+  expect(segments[0].type).toEqual("unclassified");
 });
 
-Deno.test("combineStrategies - ensures complete contiguous coverage", () => {
+it("combineStrategies - ensures complete contiguous coverage", () => {
   const results: StrategyResult[] = [
     {
       strategy: "waypoint",
@@ -226,16 +226,16 @@ Deno.test("combineStrategies - ensures complete contiguous coverage", () => {
   ];
   const segments = combineStrategies(results, 10);
   // Should cover all trackpoints 0-9 contiguously
-  assertEquals(segments[0].startTrackpointIndex, 0);
+  expect(segments[0].startTrackpointIndex).toEqual(0);
   const lastSegment = segments[segments.length - 1];
-  assertEquals(lastSegment.endTrackpointIndex, 9);
+  expect(lastSegment.endTrackpointIndex).toEqual(9);
   // Check contiguity
   for (let i = 1; i < segments.length; i++) {
-    assertEquals(segments[i].startTrackpointIndex, segments[i - 1].endTrackpointIndex + 1);
+    expect(segments[i].startTrackpointIndex).toEqual(segments[i - 1].endTrackpointIndex + 1);
   }
 });
 
-Deno.test("combineStrategies - sequential numbering", () => {
+it("combineStrategies - sequential numbering", () => {
   const results: StrategyResult[] = [
     {
       strategy: "speed",
@@ -248,11 +248,11 @@ Deno.test("combineStrategies - sequential numbering", () => {
   ];
   const segments = combineStrategies(results, 10);
   for (let i = 0; i < segments.length; i++) {
-    assertEquals(segments[i].number, i + 1);
+    expect(segments[i].number).toEqual(i + 1);
   }
 });
 
-Deno.test("combineStrategies - detectedBy tracks which strategies contributed", () => {
+it("combineStrategies - detectedBy tracks which strategies contributed", () => {
   const results: StrategyResult[] = [
     {
       strategy: "waypoint",
@@ -268,28 +268,28 @@ Deno.test("combineStrategies - detectedBy tracks which strategies contributed", 
     },
   ];
   const segments = combineStrategies(results, 10);
-  assertEquals(segments.length, 1);
-  assertArrayIncludes(segments[0].detectedBy, ["waypoint"]);
+  expect(segments.length).toEqual(1);
+  expect(segments[0].detectedBy).toEqual(expect.arrayContaining(["waypoint"]));
 });
 
-Deno.test("combineStrategies - empty results with trackpoints creates unclassified segment", () => {
+it("combineStrategies - empty results with trackpoints creates unclassified segment", () => {
   const results: StrategyResult[] = [];
   const segments = combineStrategies(results, 10);
-  assertEquals(segments.length, 1);
-  assertEquals(segments[0].type, "unclassified");
-  assertEquals(segments[0].startTrackpointIndex, 0);
-  assertEquals(segments[0].endTrackpointIndex, 9);
+  expect(segments.length).toEqual(1);
+  expect(segments[0].type).toEqual("unclassified");
+  expect(segments[0].startTrackpointIndex).toEqual(0);
+  expect(segments[0].endTrackpointIndex).toEqual(9);
 });
 
-Deno.test("combineStrategies - zero trackpoints returns empty", () => {
+it("combineStrategies - zero trackpoints returns empty", () => {
   const results: StrategyResult[] = [];
   const segments = combineStrategies(results, 0);
-  assertEquals(segments.length, 0);
+  expect(segments.length).toEqual(0);
 });
 
 // --- detectConflicts tests ---
 
-Deno.test("detectConflicts - no conflicts when strategies agree", () => {
+it("detectConflicts - no conflicts when strategies agree", () => {
   const trackpoints = makeTrackpoints(10);
   const results: StrategyResult[] = [
     {
@@ -308,10 +308,10 @@ Deno.test("detectConflicts - no conflicts when strategies agree", () => {
     },
   ];
   const conflicts = detectConflicts(results, trackpoints);
-  assertEquals(conflicts.length, 0);
+  expect(conflicts.length).toEqual(0);
 });
 
-Deno.test("detectConflicts - detects conflict when boundaries are within 100m", () => {
+it("detectConflicts - detects conflict when boundaries are within 100m", () => {
   // Create trackpoints very close together (within 100m)
   const trackpoints: Trackpoint[] = Array.from({ length: 10 }, (_, i) => ({
     coordinate: { lat: 45.0, lon: 6.0 + i * 0.0001 }, // ~11m apart
@@ -338,12 +338,12 @@ Deno.test("detectConflicts - detects conflict when boundaries are within 100m", 
   ];
   const conflicts = detectConflicts(results, trackpoints);
   // Boundary at 4→5 vs 6→7 for run→swim transition, within 100m
-  assertEquals(conflicts.length > 0, true);
-  assertEquals(conflicts[0].strategies.length, 2);
-  assertEquals(conflicts[0].resolvedBy, "waypoint"); // Higher confidence
+  expect(conflicts.length > 0).toEqual(true);
+  expect(conflicts[0].strategies.length).toEqual(2);
+  expect(conflicts[0].resolvedBy).toEqual("waypoint"); // Higher confidence
 });
 
-Deno.test("detectConflicts - no conflict when boundaries are far apart", () => {
+it("detectConflicts - no conflict when boundaries are far apart", () => {
   // Create trackpoints far apart (>100m between each)
   const trackpoints: Trackpoint[] = Array.from({ length: 10 }, (_, i) => ({
     coordinate: { lat: 45.0 + i * 0.01, lon: 6.0 }, // ~1.1km apart
@@ -369,10 +369,10 @@ Deno.test("detectConflicts - no conflict when boundaries are far apart", () => {
     },
   ];
   const conflicts = detectConflicts(results, trackpoints);
-  assertEquals(conflicts.length, 0);
+  expect(conflicts.length).toEqual(0);
 });
 
-Deno.test("detectConflicts - single strategy produces no conflicts", () => {
+it("detectConflicts - single strategy produces no conflicts", () => {
   const trackpoints = makeTrackpoints(10);
   const results: StrategyResult[] = [
     {
@@ -384,5 +384,5 @@ Deno.test("detectConflicts - single strategy produces no conflicts", () => {
     },
   ];
   const conflicts = detectConflicts(results, trackpoints);
-  assertEquals(conflicts.length, 0);
+  expect(conflicts.length).toEqual(0);
 });

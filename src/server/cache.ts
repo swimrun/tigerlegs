@@ -1,3 +1,5 @@
+import { mkdirSync } from "node:fs";
+import { readFile, rm, writeFile } from "node:fs/promises";
 import type { Coordinate, TerrainResult } from "../shared/types.ts";
 
 /** Cache store interface — filesystem or SQLite backend */
@@ -41,7 +43,7 @@ function keyToFilename(key: string): string {
 function createFilesystemCacheStore(dirPath: string): CacheStore {
   // Ensure directory exists (sync on first access is fine for server startup)
   try {
-    Deno.mkdirSync(dirPath, { recursive: true });
+    mkdirSync(dirPath, { recursive: true });
   } catch {
     // Directory may already exist
   }
@@ -50,13 +52,13 @@ function createFilesystemCacheStore(dirPath: string): CacheStore {
     async get(key: string): Promise<TerrainResult | null> {
       const filePath = `${dirPath}/${keyToFilename(key)}`;
       try {
-        const content = await Deno.readTextFile(filePath);
+        const content = await readFile(filePath, "utf8");
         const entry: CacheEntry = JSON.parse(content);
         // Check TTL
         if (Date.now() > entry.expiresAt) {
           // Expired - clean up and return null
           try {
-            await Deno.remove(filePath);
+            await rm(filePath);
           } catch {
             // Ignore cleanup errors
           }
@@ -74,7 +76,7 @@ function createFilesystemCacheStore(dirPath: string): CacheStore {
         value,
         expiresAt: Date.now() + ttlSeconds * 1000,
       };
-      await Deno.writeTextFile(filePath, JSON.stringify(entry));
+      await writeFile(filePath, JSON.stringify(entry));
     },
 
     async has(key: string): Promise<boolean> {
@@ -85,7 +87,7 @@ function createFilesystemCacheStore(dirPath: string): CacheStore {
     async delete(key: string): Promise<void> {
       const filePath = `${dirPath}/${keyToFilename(key)}`;
       try {
-        await Deno.remove(filePath);
+        await rm(filePath);
       } catch {
         // File may not exist
       }

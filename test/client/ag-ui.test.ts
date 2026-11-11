@@ -1,4 +1,4 @@
-import { assert, assertEquals } from "@std/assert";
+import { expect, it } from "vitest";
 import { EventSchemas } from "@ag-ui/core/schemas";
 import type { ChatAgent, ChatEvent } from "../../src/client/chat-agent.ts";
 import { runAsAgUi, toAgUiEvents } from "../../src/client/ag-ui.ts";
@@ -15,22 +15,22 @@ async function* chat(events: ChatEvent[]): AsyncGenerator<ChatEvent> {
   yield* events;
 }
 
-Deno.test("a chat run becomes a valid AG-UI run with a text message", async () => {
+it("a chat run becomes a valid AG-UI run with a text message", async () => {
   const events = await collect(toAgUiEvents(
     chat([{ type: "run-started" }, { type: "text", text: "Hello" }, { type: "run-finished" }]),
     RUN,
   ));
-  assertEquals(events.map((event) => event.type), [
+  expect(events.map((event) => event.type)).toEqual([
     "RUN_STARTED",
     "TEXT_MESSAGE_START",
     "TEXT_MESSAGE_CONTENT",
     "TEXT_MESSAGE_END",
     "RUN_FINISHED",
   ]);
-  for (const event of events) assert(EventSchemas.safeParse(event).success, JSON.stringify(event));
+  for (const event of events) expect(EventSchemas.safeParse(event).success, JSON.stringify(event)).toBeTruthy();
 });
 
-Deno.test("status and suggestion chips travel as CUSTOM events", async () => {
+it("status and suggestion chips travel as CUSTOM events", async () => {
   const events = await collect(toAgUiEvents(
     chat([
       { type: "run-started" },
@@ -41,36 +41,36 @@ Deno.test("status and suggestion chips travel as CUSTOM events", async () => {
     RUN,
   ));
   const custom = events.filter((event) => event.type === "CUSTOM") as unknown as { name: string; value: unknown }[];
-  assertEquals(custom.map((event) => event.name), ["status", "followUps"]);
-  assertEquals(custom[0].value, "Downloading 40%");
-  assertEquals(custom[1].value, [{ id: "apply-1", label: "Apply", prompt: "apply-proposal" }]);
-  for (const event of events) assert(EventSchemas.safeParse(event).success, JSON.stringify(event));
+  expect(custom.map((event) => event.name)).toEqual(["status", "followUps"]);
+  expect(custom[0].value).toEqual("Downloading 40%");
+  expect(custom[1].value).toEqual([{ id: "apply-1", label: "Apply", prompt: "apply-proposal" }]);
+  for (const event of events) expect(EventSchemas.safeParse(event).success, JSON.stringify(event)).toBeTruthy();
 });
 
-Deno.test("two text messages in one run get different message ids", async () => {
+it("two text messages in one run get different message ids", async () => {
   const events = await collect(toAgUiEvents(
     chat([{ type: "run-started" }, { type: "text", text: "one" }, { type: "text", text: "two" }, { type: "run-finished" }]),
     RUN,
   ));
   const ids = new Set(events.flatMap((event) => "messageId" in event ? [String(event.messageId)] : []));
-  assertEquals(ids.size, 2);
+  expect(ids.size).toEqual(2);
 });
 
-Deno.test("an agent that throws ends the run with RUN_ERROR", async () => {
+it("an agent that throws ends the run with RUN_ERROR", async () => {
   async function* failing(): AsyncGenerator<ChatEvent> {
     yield { type: "run-started" };
     throw new Error("model gone");
   }
   const events = await collect(toAgUiEvents(failing(), RUN));
-  assertEquals(events.map((event) => event.type), ["RUN_STARTED", "RUN_ERROR"]);
-  for (const event of events) assert(EventSchemas.safeParse(event).success, JSON.stringify(event));
+  expect(events.map((event) => event.type)).toEqual(["RUN_STARTED", "RUN_ERROR"]);
+  for (const event of events) expect(EventSchemas.safeParse(event).success, JSON.stringify(event)).toBeTruthy();
 });
 
-Deno.test("runAsAgUi runs a ChatAgent on a message", async () => {
+it("runAsAgUi runs a ChatAgent on a message", async () => {
   const agent: ChatAgent = {
     suggestions: () => Promise.resolve([]),
     run: (message: string) => chat([{ type: "run-started" }, { type: "text", text: `echo ${message}` }, { type: "run-finished" }]),
   };
   const events = await collect(runAsAgUi(agent, "hi", RUN));
-  assertEquals(events.length, 5);
+  expect(events.length).toEqual(5);
 });

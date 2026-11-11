@@ -1,4 +1,4 @@
-import { assertEquals, assertAlmostEquals } from "@std/assert";
+import { expect, it } from "vitest";
 import {
   computeScatterRatio,
   detectLateralDeviation,
@@ -78,36 +78,36 @@ function makeNoisyLine(
 
 // --- computeScatterRatio ---
 
-Deno.test("computeScatterRatio - straight line returns ~1.0", () => {
+it("computeScatterRatio - straight line returns ~1.0", () => {
   const trackpoints = makeStraightLine(0, 10, 45.0, 5.0, 45.01, 5.0);
   const ratio = computeScatterRatio(trackpoints, 0, 9);
-  assertAlmostEquals(ratio, 1.0, 0.01);
+  expect(Math.abs((ratio) - (1.0))).toBeLessThanOrEqual(0.01);
 });
 
-Deno.test("computeScatterRatio - noisy path returns ratio > 1.0", () => {
+it("computeScatterRatio - noisy path returns ratio > 1.0", () => {
   // Create a path with significant zigzag
   const trackpoints = makeNoisyLine(0, 10, 45.0, 5.0, 45.01, 5.0, 0.002);
   const ratio = computeScatterRatio(trackpoints, 0, 9);
-  assertEquals(ratio > 1.0, true);
+  expect(ratio > 1.0).toEqual(true);
 });
 
-Deno.test("computeScatterRatio - two identical points returns Infinity", () => {
+it("computeScatterRatio - two identical points returns Infinity", () => {
   const trackpoints = [
     makeTrackpoint(0, 45.0, 5.0),
     makeTrackpoint(1, 45.0, 5.0),
   ];
   const ratio = computeScatterRatio(trackpoints, 0, 1);
-  assertEquals(ratio, Infinity);
+  expect(ratio).toEqual(Infinity);
 });
 
-Deno.test("computeScatterRatio - single point returns Infinity", () => {
+it("computeScatterRatio - single point returns Infinity", () => {
   const trackpoints = [makeTrackpoint(0, 45.0, 5.0)];
   const ratio = computeScatterRatio(trackpoints, 0, 0);
   // straight-line is 0, cumulative is 0, so 0/0 → treat as Infinity
-  assertEquals(ratio, Infinity);
+  expect(ratio).toEqual(Infinity);
 });
 
-Deno.test("computeScatterRatio - uses startIndex and endIndex correctly", () => {
+it("computeScatterRatio - uses startIndex and endIndex correctly", () => {
   const trackpoints = [
     makeTrackpoint(0, 45.0, 5.0),
     makeTrackpoint(1, 45.005, 5.0), // straight part
@@ -117,19 +117,19 @@ Deno.test("computeScatterRatio - uses startIndex and endIndex correctly", () => 
   ];
   // Only check middle segment (indices 0 to 2 which is straight)
   const ratio = computeScatterRatio(trackpoints, 0, 2);
-  assertAlmostEquals(ratio, 1.0, 0.01);
+  expect(Math.abs((ratio) - (1.0))).toBeLessThanOrEqual(0.01);
 });
 
 // --- detectLateralDeviation ---
 
-Deno.test("detectLateralDeviation - straight line has no deviations", () => {
+it("detectLateralDeviation - straight line has no deviations", () => {
   const trackpoints = makeStraightLine(0, 10, 45.0, 5.0, 45.01, 5.0);
   const result = detectLateralDeviation(trackpoints, 0, 9, 20);
-  assertEquals(result.hasConsecutiveDeviation, false);
-  assertEquals(result.maxConsecutive, 0);
+  expect(result.hasConsecutiveDeviation).toEqual(false);
+  expect(result.maxConsecutive).toEqual(0);
 });
 
-Deno.test("detectLateralDeviation - points deviating same direction are counted", () => {
+it("detectLateralDeviation - points deviating same direction are counted", () => {
   // Create points that all deviate to the east (same lateral direction)
   // 0.001 degree of longitude at lat 45 ≈ 78m - well above 20m threshold
   const trackpoints: Trackpoint[] = [];
@@ -141,11 +141,11 @@ Deno.test("detectLateralDeviation - points deviating same direction are counted"
     trackpoints.push(makeTrackpoint(i, lat, 5.0 + lonOffset));
   }
   const result = detectLateralDeviation(trackpoints, 0, 9, 20);
-  assertEquals(result.hasConsecutiveDeviation, true);
-  assertEquals(result.maxConsecutive >= 4, true);
+  expect(result.hasConsecutiveDeviation).toEqual(true);
+  expect(result.maxConsecutive >= 4).toEqual(true);
 });
 
-Deno.test("detectLateralDeviation - alternating direction resets count", () => {
+it("detectLateralDeviation - alternating direction resets count", () => {
   // Points zigzag left-right alternately, so no consecutive same-direction
   const trackpoints: Trackpoint[] = [];
   for (let i = 0; i < 10; i++) {
@@ -158,10 +158,10 @@ Deno.test("detectLateralDeviation - alternating direction resets count", () => {
   }
   const result = detectLateralDeviation(trackpoints, 0, 9, 20);
   // Each direction only has 1 consecutive (alternating), never 4
-  assertEquals(result.maxConsecutive < 4, true);
+  expect(result.maxConsecutive < 4).toEqual(true);
 });
 
-Deno.test("detectLateralDeviation - respects threshold parameter", () => {
+it("detectLateralDeviation - respects threshold parameter", () => {
   // Points deviate ~78m (0.001 deg lon at lat 45)
   const trackpoints: Trackpoint[] = [];
   for (let i = 0; i < 10; i++) {
@@ -172,22 +172,22 @@ Deno.test("detectLateralDeviation - respects threshold parameter", () => {
   }
   // With threshold 100m, 78m deviation is below threshold → no deviations
   const result = detectLateralDeviation(trackpoints, 0, 9, 100);
-  assertEquals(result.maxConsecutive, 0);
+  expect(result.maxConsecutive).toEqual(0);
 });
 
 // --- smoothPath ---
 
-Deno.test("smoothPath - with window 1 returns original coordinates", () => {
+it("smoothPath - with window 1 returns original coordinates", () => {
   const trackpoints = makeStraightLine(0, 5, 45.0, 5.0, 45.004, 5.0);
   const result = smoothPath(trackpoints, 1);
-  assertEquals(result.length, 5);
+  expect(result.length).toEqual(5);
   for (let i = 0; i < 5; i++) {
-    assertAlmostEquals(result[i].lat, trackpoints[i].coordinate.lat, 0.0001);
-    assertAlmostEquals(result[i].lon, trackpoints[i].coordinate.lon, 0.0001);
+    expect(Math.abs((result[i].lat) - (trackpoints[i].coordinate.lat))).toBeLessThanOrEqual(0.0001);
+    expect(Math.abs((result[i].lon) - (trackpoints[i].coordinate.lon))).toBeLessThanOrEqual(0.0001);
   }
 });
 
-Deno.test("smoothPath - averages coordinates within window", () => {
+it("smoothPath - averages coordinates within window", () => {
   const trackpoints = [
     makeTrackpoint(0, 45.0, 5.0),
     makeTrackpoint(1, 45.002, 5.0),
@@ -196,48 +196,48 @@ Deno.test("smoothPath - averages coordinates within window", () => {
     makeTrackpoint(4, 45.004, 5.0),
   ];
   const result = smoothPath(trackpoints, 3);
-  assertEquals(result.length, 5);
+  expect(result.length).toEqual(5);
   // Middle point (index 2) should be average of indices 1, 2, 3
   const expectedLat = (45.002 + 45.001 + 45.003) / 3;
-  assertAlmostEquals(result[2].lat, expectedLat, 0.0001);
+  expect(Math.abs((result[2].lat) - (expectedLat))).toBeLessThanOrEqual(0.0001);
 });
 
-Deno.test("smoothPath - output length matches input length", () => {
+it("smoothPath - output length matches input length", () => {
   const trackpoints = makeStraightLine(0, 7, 45.0, 5.0, 45.007, 5.0);
   const result = smoothPath(trackpoints, 5);
-  assertEquals(result.length, 7);
+  expect(result.length).toEqual(7);
 });
 
-Deno.test("smoothPath - does not mutate input", () => {
+it("smoothPath - does not mutate input", () => {
   const trackpoints = makeStraightLine(0, 5, 45.0, 5.0, 45.004, 5.0);
   const originalLats = trackpoints.map((tp) => tp.coordinate.lat);
   smoothPath(trackpoints, 3);
   for (let i = 0; i < trackpoints.length; i++) {
-    assertEquals(trackpoints[i].coordinate.lat, originalLats[i]);
+    expect(trackpoints[i].coordinate.lat).toEqual(originalLats[i]);
   }
 });
 
 // --- filterSwimSegment ---
 
-Deno.test("filterSwimSegment - straight line returns no filtering", () => {
+it("filterSwimSegment - straight line returns no filtering", () => {
   // ~1.1 km straight line
   const trackpoints = makeStraightLine(0, 10, 45.0, 5.0, 45.01, 5.0);
   const result = filterSwimSegment(trackpoints, 0, 9);
-  assertEquals(result.hasSignificantNoise, false);
-  assertEquals(result.filterMethod, "none");
-  assertAlmostEquals(result.scatterRatio, 1.0, 0.05);
+  expect(result.hasSignificantNoise).toEqual(false);
+  expect(result.filterMethod).toEqual("none");
+  expect(Math.abs((result.scatterRatio) - (1.0))).toBeLessThanOrEqual(0.05);
 });
 
-Deno.test("filterSwimSegment - very short segment skips filtering", () => {
+it("filterSwimSegment - very short segment skips filtering", () => {
   // Points ~1m apart (0.00001 deg lat ≈ 1.1m)
   const trackpoints = makeStraightLine(0, 3, 45.0, 5.0, 45.00003, 5.0);
   const result = filterSwimSegment(trackpoints, 0, 2);
-  assertEquals(result.filterMethod, "none");
+  expect(result.filterMethod).toEqual("none");
   // Distance should be the cumulative distance
-  assertEquals(result.filteredDistance > 0, true);
+  expect(result.filteredDistance > 0).toEqual(true);
 });
 
-Deno.test("filterSwimSegment - noisy segment with few consecutive deviations uses straight-line", () => {
+it("filterSwimSegment - noisy segment with few consecutive deviations uses straight-line", () => {
   // Create a ~1km path with scattered noise (alternating zigzag)
   // Alternating means no consecutive same-direction deviations
   const trackpoints: Trackpoint[] = [];
@@ -251,11 +251,11 @@ Deno.test("filterSwimSegment - noisy segment with few consecutive deviations use
     trackpoints.push(makeTrackpoint(i, lat, 5.0 + lonOffset));
   }
   const result = filterSwimSegment(trackpoints, 0, count - 1);
-  assertEquals(result.hasSignificantNoise, true);
-  assertEquals(result.filterMethod, "straight-line");
+  expect(result.hasSignificantNoise).toEqual(true);
+  expect(result.filterMethod).toEqual("straight-line");
 });
 
-Deno.test("filterSwimSegment - noisy segment with many consecutive deviations uses smoothing", () => {
+it("filterSwimSegment - noisy segment with many consecutive deviations uses smoothing", () => {
   // Create a path where points deviate significantly to one side AND creates
   // enough zigzag to inflate the scatter ratio above 1.5.
   // Strategy: some points go way to one side, some zigzag back slightly,
@@ -279,13 +279,13 @@ Deno.test("filterSwimSegment - noisy segment with many consecutive deviations us
     trackpoints.push(makeTrackpoint(i, lat, 5.0 + lonOffset));
   }
   const result = filterSwimSegment(trackpoints, 0, count - 1);
-  assertEquals(result.hasSignificantNoise, true);
-  assertEquals(result.filterMethod, "smoothed");
+  expect(result.hasSignificantNoise).toEqual(true);
+  expect(result.filterMethod).toEqual("smoothed");
   // Smoothed distance should be ≤ original distance
-  assertEquals(result.filteredDistance <= result.originalDistance, true);
+  expect(result.filteredDistance <= result.originalDistance).toEqual(true);
 });
 
-Deno.test("filterSwimSegment - never mutates input array", () => {
+it("filterSwimSegment - never mutates input array", () => {
   const trackpoints = makeNoisyLine(0, 15, 45.0, 5.0, 45.01, 5.0, 0.003);
   const originalCoords = trackpoints.map((tp) => ({
     lat: tp.coordinate.lat,
@@ -293,28 +293,28 @@ Deno.test("filterSwimSegment - never mutates input array", () => {
   }));
   filterSwimSegment(trackpoints, 0, 14);
   for (let i = 0; i < trackpoints.length; i++) {
-    assertEquals(trackpoints[i].coordinate.lat, originalCoords[i].lat);
-    assertEquals(trackpoints[i].coordinate.lon, originalCoords[i].lon);
+    expect(trackpoints[i].coordinate.lat).toEqual(originalCoords[i].lat);
+    expect(trackpoints[i].coordinate.lon).toEqual(originalCoords[i].lon);
   }
 });
 
-Deno.test("filterSwimSegment - result includes original distance", () => {
+it("filterSwimSegment - result includes original distance", () => {
   const trackpoints = makeStraightLine(0, 10, 45.0, 5.0, 45.01, 5.0);
   const result = filterSwimSegment(trackpoints, 0, 9);
-  assertEquals(result.originalDistance > 0, true);
+  expect(result.originalDistance > 0).toEqual(true);
 });
 
-Deno.test("filterSwimSegment - respects custom config", () => {
+it("filterSwimSegment - respects custom config", () => {
   // With scatterThreshold: 10 (very high), nothing should be classified as noisy
   const trackpoints = makeNoisyLine(0, 15, 45.0, 5.0, 45.01, 5.0, 0.003);
   const result = filterSwimSegment(trackpoints, 0, 14, {
     scatterThreshold: 10,
   });
-  assertEquals(result.hasSignificantNoise, false);
-  assertEquals(result.filterMethod, "none");
+  expect(result.hasSignificantNoise).toEqual(false);
+  expect(result.filterMethod).toEqual("none");
 });
 
-Deno.test("filterSwimSegment - smoothed distance capped at maxSmoothedRatio of straight-line", () => {
+it("filterSwimSegment - smoothed distance capped at maxSmoothedRatio of straight-line", () => {
   // Create a heavily noisy path with consecutive same-direction deviations
   const trackpoints: Trackpoint[] = [];
   const count = 30;
@@ -335,6 +335,6 @@ Deno.test("filterSwimSegment - smoothed distance capped at maxSmoothedRatio of s
       trackpoints[0].coordinate,
       trackpoints[count - 1].coordinate,
     );
-    assertEquals(result.filteredDistance <= straightLine * 1.2 + 0.001, true);
+    expect(result.filteredDistance <= straightLine * 1.2 + 0.001).toEqual(true);
   }
 });

@@ -1,4 +1,4 @@
-import { assert, assertEquals, assertThrows } from "@std/assert";
+import { expect, it } from "vitest";
 import {
   applyMoves,
   CATALOG_IDS,
@@ -28,41 +28,41 @@ const WEEK: TrainingSession[] = [
   { id: "strength", day: "Fri", title: "Strength", discipline: "strength" },
 ];
 
-Deno.test("isDay - accepts days and rejects everything else", () => {
-  assertEquals(isDay("Mon"), true);
-  assertEquals(isDay("Monday"), false);
-  assertEquals(isDay(null), false);
+it("isDay - accepts days and rejects everything else", () => {
+  expect(isDay("Mon")).toEqual(true);
+  expect(isDay("Monday")).toEqual(false);
+  expect(isDay(null)).toEqual(false);
 });
 
-Deno.test("applyMoves - moves named sessions and keeps the rest", () => {
+it("applyMoves - moves named sessions and keeps the rest", () => {
   const result = applyMoves(WEEK, [{
     id: "trail",
     toDay: "Mon",
     reason: "travel",
   }]);
-  assertEquals(result.map((s) => s.day), ["Mon", "Fri"]);
+  expect(result.map((s) => s.day)).toEqual(["Mon", "Fri"]);
 });
 
-Deno.test("applyMoves - does not mutate the input week", () => {
+it("applyMoves - does not mutate the input week", () => {
   const input = structuredClone(WEEK);
   applyMoves(input, [{ id: "trail", toDay: "Sun", reason: "" }]);
-  assertEquals(input, WEEK);
+  expect(input).toEqual(WEEK);
 });
 
-Deno.test("applyMoves - ignores moves for unknown sessions", () => {
+it("applyMoves - ignores moves for unknown sessions", () => {
   const result = applyMoves(WEEK, [{ id: "ghost", toDay: "Mon", reason: "" }]);
-  assertEquals(result, WEEK);
+  expect(result).toEqual(WEEK);
 });
 
-Deno.test("changedSessions - lists only sessions whose day changed, with the old day", () => {
+it("changedSessions - lists only sessions whose day changed, with the old day", () => {
   const next = applyMoves(WEEK, [{ id: "strength", toDay: "Wed", reason: "" }]);
   const changes = changedSessions(WEEK, next);
-  assertEquals(changes.length, 1);
-  assertEquals(changes[0].session.id, "strength");
-  assertEquals(changes[0].fromDay, "Fri" as Day);
+  expect(changes.length).toEqual(1);
+  expect(changes[0].session.id).toEqual("strength");
+  expect(changes[0].fromDay).toEqual("Fri" as Day);
 });
 
-Deno.test("parseProposal - keeps valid moves and drops unknown ids and invalid days", () => {
+it("parseProposal - keeps valid moves and drops unknown ids and invalid days", () => {
   const json = JSON.stringify({
     moves: [
       { id: "trail", toDay: "Mon", reason: "travel" },
@@ -71,185 +71,181 @@ Deno.test("parseProposal - keeps valid moves and drops unknown ids and invalid d
       { id: "strength", toDay: "Wed" },
     ],
   });
-  assertEquals(parseProposal(json, WEEK), [
+  expect(parseProposal(json, WEEK)).toEqual([
     { id: "trail", toDay: "Mon", reason: "travel" },
     { id: "strength", toDay: "Wed", reason: "" },
   ]);
 });
 
-Deno.test("parseProposal - throws on malformed JSON and on a missing moves array", () => {
-  assertThrows(() => parseProposal("not json", WEEK));
-  assertThrows(() => parseProposal(JSON.stringify({ sessions: [] }), WEEK));
+it("parseProposal - throws on malformed JSON and on a missing moves array", () => {
+  expect(() => parseProposal("not json", WEEK)).toThrow();
+  expect(() => parseProposal(JSON.stringify({ sessions: [] }), WEEK)).toThrow();
 });
 
-Deno.test("PROTOTYPE_WEEK - has unique ids and covers the four swimrun capacities", () => {
+it("PROTOTYPE_WEEK - has unique ids and covers the four swimrun capacities", () => {
   const ids = PROTOTYPE_WEEK.map((session) => session.id);
-  assertEquals(new Set(ids).size, ids.length);
+  expect(new Set(ids).size).toEqual(ids.length);
   const disciplines = new Set(
     PROTOTYPE_WEEK.map((session) => session.discipline),
   );
   for (const needed of ["swim", "run", "strength", "flexibility"]) {
-    assertEquals(
-      disciplines.has(needed as TrainingSession["discipline"]),
-      true,
-      `missing ${needed}`,
-    );
+    expect(disciplines.has(needed as TrainingSession["discipline"]), `missing ${needed}`).toEqual(true);
   }
 });
 
-Deno.test("mentionedDisciplines - finds the discipline in the four site languages", () => {
-  assertEquals([...mentionedDisciplines("I want to run every other day")], ["run"]);
-  assertEquals([...mentionedDisciplines("ik wil vaker zwemmen")], ["swim"]);
-  assertEquals([...mentionedDisciplines("Ich möchte weniger laufen")], ["run"]);
-  assertEquals([...mentionedDisciplines("je veux nager plus")], ["swim"]);
-  assertEquals([...mentionedDisciplines("I am travelling Thursday")], []);
+it("mentionedDisciplines - finds the discipline in the four site languages", () => {
+  expect([...mentionedDisciplines("I want to run every other day")]).toEqual(["run"]);
+  expect([...mentionedDisciplines("ik wil vaker zwemmen")]).toEqual(["swim"]);
+  expect([...mentionedDisciplines("Ich möchte weniger laufen")]).toEqual(["run"]);
+  expect([...mentionedDisciplines("je veux nager plus")]).toEqual(["swim"]);
+  expect([...mentionedDisciplines("I am travelling Thursday")]).toEqual([]);
 });
 
-Deno.test("fitsInstruction - a swimrun session fits both a run and a swim instruction", () => {
+it("fitsInstruction - a swimrun session fits both a run and a swim instruction", () => {
   const brick = PROTOTYPE_WEEK.find((session) => session.id === "swimrun-1")!;
   const swim = PROTOTYPE_WEEK.find((session) => session.id === "swim-1")!;
-  assertEquals(fitsInstruction(brick, new Set(["run"])), true);
-  assertEquals(fitsInstruction(swim, new Set(["run"])), false);
-  assertEquals(fitsInstruction(swim, new Set()), true);
+  expect(fitsInstruction(brick, new Set(["run"]))).toEqual(true);
+  expect(fitsInstruction(swim, new Set(["run"]))).toEqual(false);
+  expect(fitsInstruction(swim, new Set())).toEqual(true);
 });
 
-Deno.test("restDaysRequested reads rest days in English, Dutch, French and German", () => {
-  assertEquals(restDaysRequested("I need a rest day on Wednesday"), ["Wed"]);
-  assertEquals(restDaysRequested("ik wil woensdag een rustdag"), ["Wed"]);
-  assertEquals(restDaysRequested("je voudrais un jour de repos le vendredi"), ["Fri"]);
-  assertEquals(restDaysRequested("Ich brauche am Sonntag einen Ruhetag"), ["Sun"]);
-  assertEquals(restDaysRequested("Make Wednesday a day off please"), ["Wed"]);
+it("restDaysRequested reads rest days in English, Dutch, French and German", () => {
+  expect(restDaysRequested("I need a rest day on Wednesday")).toEqual(["Wed"]);
+  expect(restDaysRequested("ik wil woensdag een rustdag")).toEqual(["Wed"]);
+  expect(restDaysRequested("je voudrais un jour de repos le vendredi")).toEqual(["Fri"]);
+  expect(restDaysRequested("Ich brauche am Sonntag einen Ruhetag")).toEqual(["Sun"]);
+  expect(restDaysRequested("Make Wednesday a day off please")).toEqual(["Wed"]);
 });
 
-Deno.test("restDaysRequested ignores days that are not next to a rest word", () => {
-  assertEquals(restDaysRequested("I am travelling Thursday and Friday, so I need a rest day on Wednesday and then move things"), ["Wed"]);
-  assertEquals(restDaysRequested("I am travelling Thursday and Friday"), []);
-  assertEquals(restDaysRequested("Run the rest of the week on Tuesday"), []);
+it("restDaysRequested ignores days that are not next to a rest word", () => {
+  expect(restDaysRequested("I am travelling Thursday and Friday, so I need a rest day on Wednesday and then move things")).toEqual(["Wed"]);
+  expect(restDaysRequested("I am travelling Thursday and Friday")).toEqual([]);
+  expect(restDaysRequested("Run the rest of the week on Tuesday")).toEqual([]);
 });
 
-Deno.test("the prototype week has no problems, and a session on a rest day is one", () => {
-  assertEquals(weekIssues(PROTOTYPE_WEEK, []), []);
-  assertEquals(weekIssues(PROTOTYPE_WEEK, ["Wed"]).map((issue) => issue.kind), ["rest-day"]);
+it("the prototype week has no problems, and a session on a rest day is one", () => {
+  expect(weekIssues(PROTOTYPE_WEEK, [])).toEqual([]);
+  expect(weekIssues(PROTOTYPE_WEEK, ["Wed"]).map((issue) => issue.kind)).toEqual(["rest-day"]);
 });
 
-Deno.test("two main sessions on a day, and runs on consecutive days, are problems", () => {
+it("two main sessions on a day, and runs on consecutive days, are problems", () => {
   const clash = applyMoves(PROTOTYPE_WEEK, [{ id: "swim-1", toDay: "Mon", reason: "" }]);
-  assertEquals(weekIssues(clash, []).map((issue) => issue.kind), ["clash"]);
+  expect(weekIssues(clash, []).map((issue) => issue.kind)).toEqual(["clash"]);
   const runs = applyMoves(PROTOTYPE_WEEK, [
     { id: "swim-1", toDay: "Thu", reason: "" },
     { id: "run-2", toDay: "Tue", reason: "" },
   ]);
-  assertEquals(weekIssues(runs, []).map((issue) => issue.kind), ["back-to-back-runs"]);
+  expect(weekIssues(runs, []).map((issue) => issue.kind)).toEqual(["back-to-back-runs"]);
 });
 
-Deno.test("a short session next to a main session is no problem", () => {
+it("a short session next to a main session is no problem", () => {
   const shared = applyMoves(PROTOTYPE_WEEK, [{ id: "strength-1", toDay: "Thu", reason: "" }]);
-  assertEquals(weekIssues(shared, []), []);
+  expect(weekIssues(shared, [])).toEqual([]);
 });
 
-Deno.test("checkMoves keeps moves off rest days", () => {
+it("checkMoves keeps moves off rest days", () => {
   const moves = [{ id: "brick", toDay: "Wed", reason: "" }, { id: "trail", toDay: "Fri", reason: "" }] as const;
   const { allowed, rejected } = checkMoves(["Wed"], moves);
-  assertEquals(allowed.map((move) => move.id), ["trail"]);
-  assertEquals(rejected.map((move) => move.id), ["brick"]);
+  expect(allowed.map((move) => move.id)).toEqual(["trail"]);
+  expect(rejected.map((move) => move.id)).toEqual(["brick"]);
 });
 
-Deno.test("planRestDay moves only the sessions of that day, to a day that still has room, and nothing else", () => {
+it("planRestDay moves only the sessions of that day, to a day that still has room, and nothing else", () => {
   const plan = planRestDay(PROTOTYPE_WEEK, [], "Wed");
-  assertEquals(plan.restDays, ["Wed"]);
-  assertEquals(plan.moves.map(({ id, toDay }) => [id, toDay]), [["strength-1", "Thu"]]);
+  expect(plan.restDays).toEqual(["Wed"]);
+  expect(plan.moves.map(({ id, toDay }) => [id, toDay])).toEqual([["strength-1", "Thu"]]);
   const after = applyMoves(PROTOTYPE_WEEK, plan.moves);
-  assertEquals(weekIssues(after, plan.restDays), []);
+  expect(weekIssues(after, plan.restDays)).toEqual([]);
 });
 
-Deno.test("planRestDay never puts a session on another rest day", () => {
+it("planRestDay never puts a session on another rest day", () => {
   const plan = planRestDay(PROTOTYPE_WEEK, ["Thu"], "Wed");
-  assertEquals(plan.restDays, ["Wed", "Thu"]);
-  assert(plan.moves.length > 0 && plan.moves.every((move) => !plan.restDays.includes(move.toDay)));
+  expect(plan.restDays).toEqual(["Wed", "Thu"]);
+  expect(plan.moves.length > 0 && plan.moves.every((move) => !plan.restDays.includes(move.toDay))).toBeTruthy();
 });
 
-Deno.test("planRestDay on an empty day changes nothing but the rest days", () => {
+it("planRestDay on an empty day changes nothing but the rest days", () => {
   const week = applyMoves(PROTOTYPE_WEEK, [{ id: "strength-1", toDay: "Mon", reason: "" }]);
   const plan = planRestDay(week, [], "Wed");
-  assertEquals(plan.moves, []);
-  assertEquals(plan.restDays, ["Wed"]);
+  expect(plan.moves).toEqual([]);
+  expect(plan.restDays).toEqual(["Wed"]);
 });
 
-Deno.test("suggestFixes looks one step ahead and moves the later session of a problem", () => {
+it("suggestFixes looks one step ahead and moves the later session of a problem", () => {
   const runs: TrainingSession[] = [
     { id: "run-1", day: "Mon", title: "Run 1", discipline: "run" },
     { id: "run-2", day: "Tue", title: "Run 2", discipline: "run" },
     { id: "swim-1", day: "Thu", title: "Swim", discipline: "swim" },
   ];
   const [fix, ...rest] = suggestFixes(runs, []);
-  assertEquals(fix.resolves.kind, "back-to-back-runs");
-  assertEquals([fix.move.id, fix.move.toDay], ["run-2", "Wed"]);
-  assertEquals(rest, []);
-  assertEquals(weekIssues(applyMoves(runs, [fix.move]), []), []);
+  expect(fix.resolves.kind).toEqual("back-to-back-runs");
+  expect([fix.move.id, fix.move.toDay]).toEqual(["run-2", "Wed"]);
+  expect(rest).toEqual([]);
+  expect(weekIssues(applyMoves(runs, [fix.move]), [])).toEqual([]);
 });
 
-Deno.test("suggestFixes has nothing to suggest for a week without problems", () => {
-  assertEquals(suggestFixes(PROTOTYPE_WEEK, []), []);
+it("suggestFixes has nothing to suggest for a week without problems", () => {
+  expect(suggestFixes(PROTOTYPE_WEEK, [])).toEqual([]);
 });
 
-Deno.test("restDaysRequested forgives typos in the longer day names", () => {
-  assertEquals(restDaysRequested("Ich will der sontagg als Ruhe."), ["Sun"]);
-  assertEquals(restDaysRequested("ik wil woensdga rust"), ["Wed"]);
-  assertEquals(restDaysRequested("a rest day on wednsday"), ["Wed"]);
+it("restDaysRequested forgives typos in the longer day names", () => {
+  expect(restDaysRequested("Ich will der sontagg als Ruhe.")).toEqual(["Sun"]);
+  expect(restDaysRequested("ik wil woensdga rust")).toEqual(["Wed"]);
+  expect(restDaysRequested("a rest day on wednsday")).toEqual(["Wed"]);
 });
 
-Deno.test("restDaysRequested does not take other words for a day", () => {
-  assertEquals(restDaysRequested("I want to rest, sunny weather, a monkey and the sandwich"), []);
+it("restDaysRequested does not take other words for a day", () => {
+  expect(restDaysRequested("I want to rest, sunny weather, a monkey and the sandwich")).toEqual([]);
 });
 
-Deno.test("the default levers give the example week: two short strength and two short mobility sessions", () => {
-  assertEquals(generateWeek(DEFAULT_LEVERS).week, [...PROTOTYPE_WEEK]);
+it("the default levers give the example week: two short strength and two short mobility sessions", () => {
+  expect(generateWeek(DEFAULT_LEVERS).week).toEqual([...PROTOTYPE_WEEK]);
   const short = PROTOTYPE_WEEK.filter(isShort);
-  assertEquals(short.filter((session) => session.discipline === "strength").length, 2);
-  assertEquals(short.filter((session) => session.discipline === "flexibility").length, 2);
-  assert(short.every((session) => session.minutes === 15));
-  assertEquals(weekIssues(PROTOTYPE_WEEK, []), []);
+  expect(short.filter((session) => session.discipline === "strength").length).toEqual(2);
+  expect(short.filter((session) => session.discipline === "flexibility").length).toEqual(2);
+  expect(short.every((session) => session.minutes === 15)).toBeTruthy();
+  expect(weekIssues(PROTOTYPE_WEEK, [])).toEqual([]);
 });
 
-Deno.test("the example week has a trail run and a road run", () => {
+it("the example week has a trail run and a road run", () => {
   const surfaces = PROTOTYPE_WEEK.filter((session) => session.discipline === "run").map((session) => session.surface);
-  assertEquals(surfaces, ["trail", "road"]);
+  expect(surfaces).toEqual(["trail", "road"]);
 });
 
-Deno.test("generateWeek gives the same week for the same levers and rest days", () => {
+it("generateWeek gives the same week for the same levers and rest days", () => {
   const levers = { runs: 3, swims: 2, swimruns: 1, strength: 3, mobility: 2 };
-  assertEquals(generateWeek(levers, ["Wed"]), generateWeek(levers, ["Wed"]));
+  expect(generateWeek(levers, ["Wed"])).toEqual(generateWeek(levers, ["Wed"]));
 });
 
-Deno.test("generateWeek puts nothing on a rest day and has as many sessions as the levers ask for", () => {
+it("generateWeek puts nothing on a rest day and has as many sessions as the levers ask for", () => {
   const levers = { runs: 3, swims: 2, swimruns: 1, strength: 3, mobility: 2 };
   const { week, unplaced } = generateWeek(levers, ["Wed", "Fri"]);
-  assertEquals(unplaced, []);
-  assertEquals(week.length, 3 + 2 + 1 + 3 + 2);
-  assert(week.every((session) => session.day !== "Wed" && session.day !== "Fri"));
-  assert(weekIssues(week, ["Wed", "Fri"]).every((issue) => issue.kind !== "rest-day"));
+  expect(unplaced).toEqual([]);
+  expect(week.length).toEqual(3 + 2 + 1 + 3 + 2);
+  expect(week.every((session) => session.day !== "Wed" && session.day !== "Fri")).toBeTruthy();
+  expect(weekIssues(week, ["Wed", "Fri"]).every((issue) => issue.kind !== "rest-day")).toBeTruthy();
 });
 
-Deno.test("generateWeek with every day a rest day places nothing and reports it", () => {
+it("generateWeek with every day a rest day places nothing and reports it", () => {
   const { week, unplaced } = generateWeek(DEFAULT_LEVERS, [...DAYS]);
-  assertEquals(week, []);
-  assertEquals(unplaced.length, 8);
+  expect(week).toEqual([]);
+  expect(unplaced.length).toEqual(8);
 });
 
-Deno.test("generateWeek keeps levers within their limits", () => {
+it("generateWeek keeps levers within their limits", () => {
   const { week } = generateWeek({ runs: 99, swims: -3, swimruns: 1.7, strength: Number.NaN, mobility: 3 });
-  assertEquals(week.filter((session) => session.discipline === "run").length, LEVER_LIMITS.runs);
-  assertEquals(week.filter((session) => session.discipline === "swim").length, 0);
-  assertEquals(week.filter((session) => session.discipline === "swimrun").length, 1);
-  assertEquals(week.filter((session) => session.discipline === "strength").length, 0);
-  assertEquals(clampLevers({ runs: 9, swims: 9, swimruns: 9, strength: 9, mobility: 9 }), LEVER_LIMITS);
+  expect(week.filter((session) => session.discipline === "run").length).toEqual(LEVER_LIMITS.runs);
+  expect(week.filter((session) => session.discipline === "swim").length).toEqual(0);
+  expect(week.filter((session) => session.discipline === "swimrun").length).toEqual(1);
+  expect(week.filter((session) => session.discipline === "strength").length).toEqual(0);
+  expect(clampLevers({ runs: 9, swims: 9, swimruns: 9, strength: 9, mobility: 9 })).toEqual(LEVER_LIMITS);
 });
 
-Deno.test("every session a lever can produce has a unique id", () => {
-  assertEquals(new Set(CATALOG_IDS).size, CATALOG_IDS.length);
+it("every session a lever can produce has a unique id", () => {
+  expect(new Set(CATALOG_IDS).size).toEqual(CATALOG_IDS.length);
 });
 
-Deno.test("restDaysRequested knows the sports rest day in Dutch and German", () => {
-  assertEquals(restDaysRequested("woensdag sportrustdag graag"), ["Wed"]);
-  assertEquals(restDaysRequested("Am Sonntag Sportruhetag bitte"), ["Sun"]);
+it("restDaysRequested knows the sports rest day in Dutch and German", () => {
+  expect(restDaysRequested("woensdag sportrustdag graag")).toEqual(["Wed"]);
+  expect(restDaysRequested("Am Sonntag Sportruhetag bitte")).toEqual(["Sun"]);
 });

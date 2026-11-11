@@ -1,15 +1,15 @@
-import { assertEquals } from "@std/assert";
+import { expect, it } from "vitest";
 import { resolveLang } from "../../src/client/language.ts";
 
-Deno.test("resolveLang: saved choice beats browser language", () => {
-  assertEquals(resolveLang("de", "nl-NL"), "de");
+it("resolveLang: saved choice beats browser language", () => {
+  expect(resolveLang("de", "nl-NL")).toEqual("de");
 });
 
-Deno.test("resolveLang: browser language is used when nothing is saved or saved is invalid", () => {
-  assertEquals(resolveLang(null, "nl-NL"), "nl");
-  assertEquals(resolveLang("xx", "fr"), "fr");
+it("resolveLang: browser language is used when nothing is saved or saved is invalid", () => {
+  expect(resolveLang(null, "nl-NL")).toEqual("nl");
+  expect(resolveLang("xx", "fr")).toEqual("fr");
 });
 
-Deno.test("resolveLang: unsupported browser language falls back to English", () => {
-  assertEquals(resolveLang(null, "ja-JP"), "en");
+it("resolveLang: unsupported browser language falls back to English", () => {
+  expect(resolveLang(null, "ja-JP")).toEqual("en");
 });

@@ -1,5 +1,5 @@
 import fc from "fast-check";
-import { assert, assertEquals } from "@std/assert";
+import { expect, it } from "vitest";
 import {
   computeScatterRatio,
   filterSwimSegment,
@@ -142,9 +142,8 @@ function arbitraryLowScatterPath(): fc.Arbitrary<Trackpoint[]> {
 // --- Property 16: GPS filter scatter ratio and method selection ---
 // **Validates: Requirements 13.1, 13.3, 13.4, 13.5, 13.6, 13.7, 13.8**
 
-Deno.test("Property 16.1: computeScatterRatio is always ≥ 1.0 for paths with distinct start/end", () => {
-  fc.assert(
-    fc.property(
+it("Property 16.1: computeScatterRatio is always ≥ 1.0 for paths with distinct start/end", () => {
+  fc.assert(fc.property(
       arbitraryPathWithNoise({
         minPoints: 3,
         maxPoints: 30,
@@ -158,19 +157,13 @@ Deno.test("Property 16.1: computeScatterRatio is always ≥ 1.0 for paths with d
         // is always >= straight-line distance, so ratio >= 1.0.
         // Allow a tiny epsilon for floating-point imprecision in haversine
         // (summing multiple small segments can lose precision vs one large segment).
-        assert(
-          ratio >= 1.0 - 1e-10,
-          `Scatter ratio should be >= 1.0 (triangle inequality), got ${ratio}`,
-        );
+        expect(ratio >= 1.0 - 1e-10, `Scatter ratio should be >= 1.0 (triangle inequality), got ${ratio}`).toBeTruthy();
       },
-    ),
-    { numRuns: 200 },
-  );
+    ), { numRuns: 200 });
 });
 
-Deno.test("Property 16.2: filterSwimSegment with scatterRatio ≤ 1.5 always returns filterMethod 'none'", () => {
-  fc.assert(
-    fc.property(
+it("Property 16.2: filterSwimSegment with scatterRatio ≤ 1.5 always returns filterMethod 'none'", () => {
+  fc.assert(fc.property(
       arbitraryLowScatterPath(),
       (trackpoints) => {
         const result = filterSwimSegment(trackpoints, 0, trackpoints.length - 1);
@@ -178,21 +171,14 @@ Deno.test("Property 16.2: filterSwimSegment with scatterRatio ≤ 1.5 always ret
         // If scatter ratio ≤ 1.5 (and the segment is long enough for filtering),
         // the filter method must be "none"
         if (result.scatterRatio <= 1.5 && result.scatterRatio !== Infinity) {
-          assertEquals(
-            result.filterMethod,
-            "none",
-            `When scatterRatio=${result.scatterRatio} (≤ 1.5), filterMethod should be "none", got "${result.filterMethod}"`,
-          );
+          expect(result.filterMethod, `When scatterRatio=${result.scatterRatio} (≤ 1.5), filterMethod should be "none", got "${result.filterMethod}"`).toEqual("none");
         }
       },
-    ),
-    { numRuns: 200 },
-  );
+    ), { numRuns: 200 });
 });
 
-Deno.test("Property 16.3: filterSwimSegment never mutates input trackpoints", () => {
-  fc.assert(
-    fc.property(
+it("Property 16.3: filterSwimSegment never mutates input trackpoints", () => {
+  fc.assert(fc.property(
       arbitraryPathWithNoise({
         minPoints: 5,
         maxPoints: 25,
@@ -213,47 +199,20 @@ Deno.test("Property 16.3: filterSwimSegment never mutates input trackpoints", ()
         filterSwimSegment(trackpoints, 0, trackpoints.length - 1);
 
         // Verify nothing was mutated
-        assertEquals(
-          trackpoints.length,
-          originalCoords.length,
-          "Array length should not change",
-        );
+        expect(trackpoints.length, "Array length should not change").toEqual(originalCoords.length);
         for (let i = 0; i < trackpoints.length; i++) {
-          assertEquals(
-            trackpoints[i].coordinate.lat,
-            originalCoords[i].lat,
-            `Trackpoint ${i} lat was mutated`,
-          );
-          assertEquals(
-            trackpoints[i].coordinate.lon,
-            originalCoords[i].lon,
-            `Trackpoint ${i} lon was mutated`,
-          );
-          assertEquals(
-            trackpoints[i].elevation,
-            originalCoords[i].elevation,
-            `Trackpoint ${i} elevation was mutated`,
-          );
-          assertEquals(
-            trackpoints[i].timestamp,
-            originalCoords[i].timestamp,
-            `Trackpoint ${i} timestamp was mutated`,
-          );
-          assertEquals(
-            trackpoints[i].index,
-            originalCoords[i].index,
-            `Trackpoint ${i} index was mutated`,
-          );
+          expect(trackpoints[i].coordinate.lat, `Trackpoint ${i} lat was mutated`).toEqual(originalCoords[i].lat);
+          expect(trackpoints[i].coordinate.lon, `Trackpoint ${i} lon was mutated`).toEqual(originalCoords[i].lon);
+          expect(trackpoints[i].elevation, `Trackpoint ${i} elevation was mutated`).toEqual(originalCoords[i].elevation);
+          expect(trackpoints[i].timestamp, `Trackpoint ${i} timestamp was mutated`).toEqual(originalCoords[i].timestamp);
+          expect(trackpoints[i].index, `Trackpoint ${i} index was mutated`).toEqual(originalCoords[i].index);
         }
       },
-    ),
-    { numRuns: 200 },
-  );
+    ), { numRuns: 200 });
 });
 
-Deno.test("Property 16.4: filterSwimSegment filteredDistance is always ≤ originalDistance", () => {
-  fc.assert(
-    fc.property(
+it("Property 16.4: filterSwimSegment filteredDistance is always ≤ originalDistance", () => {
+  fc.assert(fc.property(
       arbitraryPathWithNoise({
         minPoints: 5,
         maxPoints: 30,
@@ -263,19 +222,13 @@ Deno.test("Property 16.4: filterSwimSegment filteredDistance is always ≤ origi
       (trackpoints) => {
         const result = filterSwimSegment(trackpoints, 0, trackpoints.length - 1);
 
-        assert(
-          result.filteredDistance <= result.originalDistance + 1e-10,
-          `filteredDistance (${result.filteredDistance}) should be ≤ originalDistance (${result.originalDistance})`,
-        );
+        expect(result.filteredDistance <= result.originalDistance + 1e-10, `filteredDistance (${result.filteredDistance}) should be ≤ originalDistance (${result.originalDistance})`).toBeTruthy();
       },
-    ),
-    { numRuns: 200 },
-  );
+    ), { numRuns: 200 });
 });
 
-Deno.test("Property 16.5: smoothPath output length equals input length", () => {
-  fc.assert(
-    fc.property(
+it("Property 16.5: smoothPath output length equals input length", () => {
+  fc.assert(fc.property(
       arbitraryPathWithNoise({
         minPoints: 1,
         maxPoints: 50,
@@ -285,31 +238,18 @@ Deno.test("Property 16.5: smoothPath output length equals input length", () => {
       fc.integer({ min: 1, max: 11 }),
       (trackpoints, windowSize) => {
         const result = smoothPath(trackpoints, windowSize);
-        assertEquals(
-          result.length,
-          trackpoints.length,
-          `smoothPath output length (${result.length}) should equal input length (${trackpoints.length})`,
-        );
+        expect(result.length, `smoothPath output length (${result.length}) should equal input length (${trackpoints.length})`).toEqual(trackpoints.length);
       },
-    ),
-    { numRuns: 200 },
-  );
+    ), { numRuns: 200 });
 });
 
-Deno.test("Property 16.6: For segments with straight-line < 5m, filterMethod is always 'none'", () => {
-  fc.assert(
-    fc.property(
+it("Property 16.6: For segments with straight-line < 5m, filterMethod is always 'none'", () => {
+  fc.assert(fc.property(
       arbitraryShortPath(),
       (trackpoints) => {
         const result = filterSwimSegment(trackpoints, 0, trackpoints.length - 1);
 
-        assertEquals(
-          result.filterMethod,
-          "none",
-          `For short segments (straight-line < 5m), filterMethod should be "none", got "${result.filterMethod}" with scatterRatio=${result.scatterRatio}`,
-        );
+        expect(result.filterMethod, `For short segments (straight-line < 5m), filterMethod should be "none", got "${result.filterMethod}" with scatterRatio=${result.scatterRatio}`).toEqual("none");
       },
-    ),
-    { numRuns: 200 },
-  );
+    ), { numRuns: 200 });
 });

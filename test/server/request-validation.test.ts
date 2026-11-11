@@ -9,7 +9,7 @@
  */
 
 import fc from "fast-check";
-import { assertEquals, assert } from "@std/assert";
+import { expect, it } from "vitest";
 import { createRouter, type RouterConfig } from "../../src/server/router.ts";
 import type { CacheStore } from "../../src/server/cache.ts";
 import type { TerrainResult } from "../../src/shared/types.ts";
@@ -83,11 +83,10 @@ function withMockFetch<T>(fn: () => Promise<T>): Promise<T> {
 
 // --- Property 19.1: Invalid latitude always rejected ---
 
-Deno.test("Property 19.1: Any coordinate with lat outside [-90, 90] is always rejected (400 INVALID_COORDINATES)", async () => {
+it("Property 19.1: Any coordinate with lat outside [-90, 90] is always rejected (400 INVALID_COORDINATES)", async () => {
   const handler = createTestRouter();
 
-  await fc.assert(
-    fc.asyncProperty(
+  await fc.assert(fc.asyncProperty(
       // Generate latitudes strictly outside [-90, 90]
       fc.oneof(
         fc.double({ min: 90.00001, max: 1000, noNaN: true }),
@@ -100,21 +99,18 @@ Deno.test("Property 19.1: Any coordinate with lat outside [-90, 90] is always re
         const response = await handler(request);
         const body = await response.json();
 
-        assertEquals(response.status, STATUS_BAD_REQUEST);
-        assertEquals(body.code, CODE_INVALID_COORDINATES);
+        expect(response.status).toEqual(STATUS_BAD_REQUEST);
+        expect(body.code).toEqual(CODE_INVALID_COORDINATES);
       },
-    ),
-    { numRuns: 100 },
-  );
+    ), { numRuns: 100 });
 });
 
 // --- Property 19.2: Invalid longitude always rejected ---
 
-Deno.test("Property 19.2: Any coordinate with lon outside [-180, 180] is always rejected (400 INVALID_COORDINATES)", async () => {
+it("Property 19.2: Any coordinate with lon outside [-180, 180] is always rejected (400 INVALID_COORDINATES)", async () => {
   const handler = createTestRouter();
 
-  await fc.assert(
-    fc.asyncProperty(
+  await fc.assert(fc.asyncProperty(
       // Any valid latitude for the request
       fc.double({ min: -90, max: 90, noNaN: true }),
       // Generate longitudes strictly outside [-180, 180]
@@ -127,25 +123,19 @@ Deno.test("Property 19.2: Any coordinate with lon outside [-180, 180] is always 
         const response = await handler(request);
         const body = await response.json();
 
-        assertEquals(response.status, STATUS_BAD_REQUEST);
-        assertEquals(body.code, CODE_INVALID_COORDINATES);
+        expect(response.status).toEqual(STATUS_BAD_REQUEST);
+        expect(body.code).toEqual(CODE_INVALID_COORDINATES);
       },
-    ),
-    { numRuns: 100 },
-  );
+    ), { numRuns: 100 });
 });
 
 // --- Property 19.3: Valid coordinates are never rejected with INVALID_COORDINATES ---
 
-Deno.test({
-  name: "Property 19.3: Valid coordinates (lat in [-90,90], lon in [-180,180]) are never rejected with INVALID_COORDINATES",
-  sanitizeResources: false,
-  fn: async () => {
+it("Property 19.3: Valid coordinates (lat in [-90,90], lon in [-180,180]) are never rejected with INVALID_COORDINATES", async () => {
     const handler = createTestRouter();
 
     await withMockFetch(async () => {
-      await fc.assert(
-        fc.asyncProperty(
+      await fc.assert(fc.asyncProperty(
           fc.double({ min: -90, max: 90, noNaN: true }),
           fc.double({ min: -180, max: 180, noNaN: true }),
           async (lat, lon) => {
@@ -155,26 +145,19 @@ Deno.test({
 
             // Valid coordinates should never result in INVALID_COORDINATES error
             if (response.status === STATUS_BAD_REQUEST) {
-              assert(
-                body.code !== CODE_INVALID_COORDINATES,
-                `Valid coords lat=${lat}, lon=${lon} were incorrectly rejected with INVALID_COORDINATES`,
-              );
+              expect(body.code !== CODE_INVALID_COORDINATES, `Valid coords lat=${lat}, lon=${lon} were incorrectly rejected with INVALID_COORDINATES`).toBeTruthy();
             }
           },
-        ),
-        { numRuns: 100 },
-      );
+        ), { numRuns: 100 });
     });
-  },
-});
+  });
 
 // --- Property 19.4: Batch requests with >100 coordinates always rejected ---
 
-Deno.test("Property 19.4: Batch requests with >100 coordinates are always rejected (400 BATCH_TOO_LARGE)", async () => {
+it("Property 19.4: Batch requests with >100 coordinates are always rejected (400 BATCH_TOO_LARGE)", async () => {
   const handler = createTestRouter();
 
-  await fc.assert(
-    fc.asyncProperty(
+  await fc.assert(fc.asyncProperty(
       // Generate batch size between 101 and 300
       fc.integer({ min: 101, max: 300 }),
       async (batchSize) => {
@@ -194,17 +177,15 @@ Deno.test("Property 19.4: Batch requests with >100 coordinates are always reject
         const response = await handler(request);
         const body = await response.json();
 
-        assertEquals(response.status, STATUS_BAD_REQUEST);
-        assertEquals(body.code, CODE_BATCH_TOO_LARGE);
+        expect(response.status).toEqual(STATUS_BAD_REQUEST);
+        expect(body.code).toEqual(CODE_BATCH_TOO_LARGE);
       },
-    ),
-    { numRuns: 50 },
-  );
+    ), { numRuns: 50 });
 });
 
 // --- Property 19.5: Requests from non-allowed origins always get 403 ---
 
-Deno.test("Property 19.5: Requests from non-allowed origins always get 403 (FORBIDDEN_ORIGIN)", async () => {
+it("Property 19.5: Requests from non-allowed origins always get 403 (FORBIDDEN_ORIGIN)", async () => {
   const handler = createTestRouter();
 
   // Generator for origin strings that are never in ALLOWED_ORIGINS
@@ -212,48 +193,35 @@ Deno.test("Property 19.5: Requests from non-allowed origins always get 403 (FORB
     .webUrl()
     .filter((url) => !ALLOWED_ORIGINS.includes(url));
 
-  await fc.assert(
-    fc.asyncProperty(
+  await fc.assert(fc.asyncProperty(
       arbitraryForbiddenOrigin,
       async (forbiddenOrigin) => {
         const request = lookupRequest(45, 6, forbiddenOrigin);
         const response = await handler(request);
         const body = await response.json();
 
-        assertEquals(response.status, STATUS_FORBIDDEN);
-        assertEquals(body.code, CODE_FORBIDDEN_ORIGIN);
+        expect(response.status).toEqual(STATUS_FORBIDDEN);
+        expect(body.code).toEqual(CODE_FORBIDDEN_ORIGIN);
       },
-    ),
-    { numRuns: 100 },
-  );
+    ), { numRuns: 100 });
 });
 
 // --- Property 19.6: Requests from allowed origins never get 403 ---
 
-Deno.test({
-  name: "Property 19.6: Requests from allowed origins never get 403 (FORBIDDEN_ORIGIN)",
-  sanitizeResources: false,
-  fn: async () => {
+it("Property 19.6: Requests from allowed origins never get 403 (FORBIDDEN_ORIGIN)", async () => {
     const handler = createTestRouter();
 
     await withMockFetch(async () => {
-      await fc.assert(
-        fc.asyncProperty(
+      await fc.assert(fc.asyncProperty(
           fc.constantFrom(...ALLOWED_ORIGINS),
           async (allowedOrigin) => {
             const request = lookupRequest(45, 6, allowedOrigin);
             const response = await handler(request);
 
-            assert(
-              response.status !== STATUS_FORBIDDEN,
-              `Allowed origin ${allowedOrigin} was rejected with 403`,
-            );
+            expect(response.status !== STATUS_FORBIDDEN, `Allowed origin ${allowedOrigin} was rejected with 403`).toBeTruthy();
             // Consume the body to avoid resource leaks
             await response.text();
           },
-        ),
-        { numRuns: 50 },
-      );
+        ), { numRuns: 50 });
     });
-  },
-});
+  });

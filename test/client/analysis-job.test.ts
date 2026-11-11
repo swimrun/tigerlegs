@@ -1,4 +1,5 @@
-import { assert, assertEquals, assertThrows } from "@std/assert";
+import { Worker } from "node:worker_threads";
+import { expect, it } from "vitest";
 import { analyzeGpx } from "../../src/client/analyze.ts";
 import {
   type AnalysisJob,
@@ -27,27 +28,27 @@ const gpx: GPXData = {
   ],
 };
 
-Deno.test("analysis uses only the selected track and enabled strategies", () => {
+it("analysis uses only the selected track and enabled strategies", () => {
   const analysis = analyzeGpx(gpx, [], {
     trackIndex: 1,
     enabledStrategies: ["speed"],
   });
-  assertEquals(analysis.trackName, "Second");
-  assertEquals(analysis.strategies, ["speed"]);
-  assertEquals(analysis.segments.at(-1)?.endTrackpointIndex, 19);
+  expect(analysis.trackName).toEqual("Second");
+  expect(analysis.strategies).toEqual(["speed"]);
+  expect(analysis.segments.at(-1)?.endTrackpointIndex).toEqual(19);
   const disabled = analyzeGpx(gpx, [], {
     trackIndex: 0,
     enabledStrategies: ["waypoint"],
   });
-  assertEquals(disabled.strategies, []);
-  assertEquals(disabled.segments.map((segment) => segment.type), [
+  expect(disabled.strategies).toEqual([]);
+  expect(disabled.segments.map((segment) => segment.type)).toEqual([
     "unclassified",
   ]);
-  assertEquals(disabled.segments[0].detectedBy, []);
-  assertThrows(() => analyzeGpx(gpx, [], { trackIndex: 5 }), RangeError);
+  expect(disabled.segments[0].detectedBy).toEqual([]);
+  expect(() => analyzeGpx(gpx, [], { trackIndex: 5 })).toThrow(RangeError);
 });
 
-Deno.test("timestamps from a different track cannot enable speed for the selected track", () => {
+it("timestamps from a different track cannot enable speed for the selected track", () => {
   const copy: GPXData = {
     waypoints: [],
     tracks: [gpx.tracks[0], {
@@ -55,19 +56,19 @@ Deno.test("timestamps from a different track cannot enable speed for the selecte
       trackpoints: points(5).map((p) => ({ ...p, timestamp: null })),
     }],
   };
-  assertEquals(analyzeGpx(copy, [], { trackIndex: 1 }).strategies, []);
+  expect(analyzeGpx(copy, [], { trackIndex: 1 }).strategies).toEqual([]);
 });
 
-Deno.test("worker boundary is strictly above 10,000 points", () => {
-  assertEquals(requiresAnalysisWorker(10000), false);
-  assertEquals(requiresAnalysisWorker(10001), true);
+it("worker boundary is strictly above 10,000 points", () => {
+  expect(requiresAnalysisWorker(10000)).toEqual(false);
+  expect(requiresAnalysisWorker(10001)).toEqual(true);
 });
 
-Deno.test("large terrain bounding boxes do not exceed the JavaScript argument limit", () => {
-  assertEquals(coarseBbox(points(150000)), [-0.05, -0.05, 0.05, 1.55]);
+it("large terrain bounding boxes do not exceed the JavaScript argument limit", () => {
+  expect(coarseBbox(points(150000))).toEqual([-0.05, -0.05, 0.05, 1.55]);
 });
 
-Deno.test("synthetic 10,000-point local analysis completes within five seconds", () => {
+it("synthetic 10,000-point local analysis completes within five seconds", () => {
   const data: GPXData = {
     waypoints: [],
     tracks: [{ name: "Performance", trackpoints: points(10000) }],
@@ -78,12 +79,12 @@ Deno.test("synthetic 10,000-point local analysis completes within five seconds",
     enabledStrategies: ["speed"],
   });
   const elapsed = performance.now() - started;
-  assert(elapsed < 5000, `Analysis took ${elapsed.toFixed(0)} ms`);
-  assertEquals(result.trackName, "Performance");
-  assertEquals(result.segments.at(-1)?.endTrackpointIndex, 9999);
+  expect(elapsed < 5000, `Analysis took ${elapsed.toFixed(0)} ms`).toBeTruthy();
+  expect(result.trackName).toEqual("Performance");
+  expect(result.segments.at(-1)?.endTrackpointIndex).toEqual(9999);
 });
 
-Deno.test("confirmation and waypoint warnings use exact thresholds and all tracks", () => {
+it("confirmation and waypoint warnings use exact thresholds and all tracks", () => {
   const waypoint: Waypoint = {
     coordinate: { lat: 0, lon: 0 },
     name: "",
@@ -95,7 +96,7 @@ Deno.test("confirmation and waypoint warnings use exact thresholds and all track
     waypoints: Array.from({ length: 100 }, () => waypoint),
     tracks: [{ name: "", trackpoints: points(50000) }],
   };
-  assertEquals(importWarnings(data), {
+  expect(importWarnings(data)).toEqual({
     trackpoints: 50000,
     waypoints: 100,
     confirmationRequired: false,
@@ -104,7 +105,7 @@ Deno.test("confirmation and waypoint warnings use exact thresholds and all track
   });
   data.waypoints.push(waypoint);
   data.tracks.push({ name: "", trackpoints: points(1) });
-  assertEquals(importWarnings(data), {
+  expect(importWarnings(data)).toEqual({
     trackpoints: 50001,
     waypoints: 101,
     confirmationRequired: true,
@@ -113,48 +114,54 @@ Deno.test("confirmation and waypoint warnings use exact thresholds and all track
   });
 });
 
-Deno.test("worker protocol surfaces invalid files and analysis errors", () => {
+it("worker protocol surfaces invalid files and analysis errors", () => {
   const parse = processAnalysisJob({ kind: "parse", xml: "" });
-  assertEquals(parse.kind, "parse");
-  assertEquals(parse.result.ok, false);
+  expect(parse.kind).toEqual("parse");
+  expect(parse.result.ok).toEqual(false);
   const analysis = processAnalysisJob({
     kind: "analyze",
     gpx,
     water: [],
     options: { trackIndex: 99 },
   });
-  assertEquals(analysis.kind, "analyze");
-  assertEquals(analysis.result.ok, false);
+  expect(analysis.kind).toEqual("analyze");
+  expect(analysis.result.ok).toEqual(false);
 });
 
+// The real analysis worker module is a Web Worker (it listens with addEventListener and answers with
+// postMessage). Node's worker threads have another API, so a small shim gives the module the Web Worker
+// functions it uses; the logic under test is the real module.
+const WORKER_URL = new URL("../../src/client/analysis-worker.ts", import.meta.url).href;
+const SHIM = `
+const { parentPort } = require("node:worker_threads");
+const listeners = [];
+globalThis.addEventListener = (type, listener) => { if (type === "message") listeners.push(listener); };
+globalThis.postMessage = (data) => parentPort.postMessage(data);
+parentPort.on("message", (data) => listeners.forEach((listener) => listener({ data })));
+import(${JSON.stringify(WORKER_URL)});
+`;
+
 async function workerJob(job: AnalysisJob): Promise<AnalysisReply> {
-  const worker = new Worker(
-    new URL("../../src/client/analysis-worker.ts", import.meta.url),
-    { type: "module" },
-  );
+  const worker = new Worker(SHIM, { eval: true });
   try {
     return await new Promise<AnalysisReply>((resolve, reject) => {
-      worker.onmessage = (event: MessageEvent<AnalysisReply>) =>
-        resolve(event.data);
-      worker.onerror = (event) => {
-        event.preventDefault();
-        reject(new Error(event.message));
-      };
+      worker.on("message", (data: AnalysisReply) => resolve(data));
+      worker.on("error", reject);
       worker.postMessage(job);
     });
   } finally {
-    worker.terminate();
+    await worker.terminate();
   }
 }
 
-Deno.test("real module worker parses GPX and produces identical large-track analysis", async () => {
+it("real module worker parses GPX and produces identical large-track analysis", async () => {
   const parsed = await workerJob({
     kind: "parse",
     xml:
       '<gpx><trk><name>Worker</name><trkseg><trkpt lat="0" lon="0"/></trkseg></trk></gpx>',
   });
-  assert(parsed.kind === "parse" && parsed.result.ok);
-  assertEquals(parsed.result.value.tracks[0].name, "Worker");
+  expect(parsed.kind === "parse" && parsed.result.ok).toBeTruthy();
+  expect(parsed.result.value.tracks[0].name).toEqual("Worker");
   const data: GPXData = {
     waypoints: [],
     tracks: [{ name: "Large", trackpoints: points(10001) }],
@@ -166,6 +173,6 @@ Deno.test("real module worker parses GPX and produces identical large-track anal
     water: [],
     options,
   });
-  assert(actual.kind === "analyze" && actual.result.ok);
-  assertEquals(actual.result.value, analyzeGpx(data, [], options));
+  expect(actual.kind === "analyze" && actual.result.ok).toBeTruthy();
+  expect(actual.result.value).toEqual(analyzeGpx(data, [], options));
 });

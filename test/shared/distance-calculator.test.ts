@@ -4,7 +4,7 @@
  * Properties 7, 8, 9 from the design document.
  * Validates: Requirements 3.1, 3.2, 3.3, 3.4
  */
-import { assertEquals, assertLessOrEqual } from "@std/assert";
+import { expect, it } from "vitest";
 import fc from "fast-check";
 import {
   calculateTrackDistance,
@@ -25,40 +25,30 @@ import { arbitraryCoordinate, arbitraryTrackpoint } from "../generators.ts";
  *
  * **Validates: Requirements 3.1**
  */
-Deno.test("Property 7: haversineDistance - non-negativity", () => {
-  fc.assert(
-    fc.property(arbitraryCoordinate, arbitraryCoordinate, (a, b) => {
+it("Property 7: haversineDistance - non-negativity", () => {
+  fc.assert(fc.property(arbitraryCoordinate, arbitraryCoordinate, (a, b) => {
       const distance = haversineDistance(a, b);
       return distance >= 0;
-    }),
-    { numRuns: 200 },
-  );
+    }), { numRuns: 200 });
 });
 
-Deno.test("Property 7: haversineDistance - identity of indiscernibles", () => {
-  fc.assert(
-    fc.property(arbitraryCoordinate, (a) => {
+it("Property 7: haversineDistance - identity of indiscernibles", () => {
+  fc.assert(fc.property(arbitraryCoordinate, (a) => {
       const distance = haversineDistance(a, a);
       return distance === 0;
-    }),
-    { numRuns: 200 },
-  );
+    }), { numRuns: 200 });
 });
 
-Deno.test("Property 7: haversineDistance - symmetry", () => {
-  fc.assert(
-    fc.property(arbitraryCoordinate, arbitraryCoordinate, (a, b) => {
+it("Property 7: haversineDistance - symmetry", () => {
+  fc.assert(fc.property(arbitraryCoordinate, arbitraryCoordinate, (a, b) => {
       const dAB = haversineDistance(a, b);
       const dBA = haversineDistance(b, a);
       return Math.abs(dAB - dBA) < 1e-10;
-    }),
-    { numRuns: 200 },
-  );
+    }), { numRuns: 200 });
 });
 
-Deno.test("Property 7: haversineDistance - triangle inequality", () => {
-  fc.assert(
-    fc.property(
+it("Property 7: haversineDistance - triangle inequality", () => {
+  fc.assert(fc.property(
       arbitraryCoordinate,
       arbitraryCoordinate,
       arbitraryCoordinate,
@@ -73,9 +63,7 @@ Deno.test("Property 7: haversineDistance - triangle inequality", () => {
         const tolerance = 1e-3;
         return dAC <= dAB + dBC + tolerance;
       },
-    ),
-    { numRuns: 200 },
-  );
+    ), { numRuns: 200 });
 });
 
 /**
@@ -86,7 +74,7 @@ Deno.test("Property 7: haversineDistance - triangle inequality", () => {
  *
  * **Validates: Requirements 3.2**
  */
-Deno.test("Property 8: calculateTrackDistance - additive over subsequences", () => {
+it("Property 8: calculateTrackDistance - additive over subsequences", () => {
   // Generate a track with at least 3 trackpoints (so we can split into two non-trivial parts)
   const arbitraryTrackWithMinPoints = fc
     .array(arbitraryTrackpoint, { minLength: 3, maxLength: 30 })
@@ -94,8 +82,7 @@ Deno.test("Property 8: calculateTrackDistance - additive over subsequences", () 
       trackpoints.map((tp, i) => ({ ...tp, index: i }))
     );
 
-  fc.assert(
-    fc.property(
+  fc.assert(fc.property(
       arbitraryTrackWithMinPoints,
       fc.nat(),
       (trackpoints, rawK) => {
@@ -109,9 +96,7 @@ Deno.test("Property 8: calculateTrackDistance - additive over subsequences", () 
         // Allow floating point tolerance
         return Math.abs(fullDistance - (firstPart + secondPart)) < 1e-10;
       },
-    ),
-    { numRuns: 200 },
-  );
+    ), { numRuns: 200 });
 });
 
 /**
@@ -126,7 +111,7 @@ Deno.test("Property 8: calculateTrackDistance - additive over subsequences", () 
  *
  * **Validates: Requirements 3.3, 3.4**
  */
-Deno.test("Property 9: findNearestTrackpoint - returns closest within radius or null", () => {
+it("Property 9: findNearestTrackpoint - returns closest within radius or null", () => {
   const arbitraryTrackpoints = fc
     .array(arbitraryTrackpoint, { minLength: 1, maxLength: 20 })
     .map((trackpoints) =>
@@ -136,8 +121,7 @@ Deno.test("Property 9: findNearestTrackpoint - returns closest within radius or 
   // Use a reasonable radius range for testing (0.001 km = 1m to 10 km)
   const arbitraryRadius = fc.double({ min: 0.001, max: 10, noNaN: true });
 
-  fc.assert(
-    fc.property(
+  fc.assert(fc.property(
       arbitraryCoordinate,
       arbitraryTrackpoints,
       arbitraryRadius,
@@ -174,7 +158,5 @@ Deno.test("Property 9: findNearestTrackpoint - returns closest within radius or 
           return true;
         }
       },
-    ),
-    { numRuns: 200 },
-  );
+    ), { numRuns: 200 });
 });
