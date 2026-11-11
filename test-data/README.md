@@ -12,7 +12,8 @@ GPX files for testing and demonstration purposes.
 | `het-rondje-elanden-vinkeveen.gpx` | Het Rondje Elanden | Run | 11 segments, 6.5km total | hetrondjeelanden.nl |
 | `running-only-afstandmeten.gpx` | (no race, just a run) | Run | 0 swim (edge case) | afstandmeten.nl |
 | `rhederlaag-swimrun.gpx` | Swimrun Rhederlaag (2025-10-11) | n/a | Not verified yet | Strava export |
-| `Rondje_Eilanden_lintjes_opruimen.gpx` | Rondje Eilanden: lintjes opruimen (2026-07-19) | n/a | Not verified yet | Strava export |
+| `Rondje_Eilanden_lintjes_opruimen.gpx` | Rondje Eilanden: lintjes opruimen (2026-07-19), no longer a sample | n/a | Not verified yet | Strava export |
+| `Rondje_Eilanden_2025.gpx` | Het Rondje Eilanden (2025-07-19), own Strava recording; heart rate, cadence and power stripped; the first swim was 100 to 200 m longer than standard | Swim | Official: 11 swims (1,500 m) + 11 runs (5,000 m), total 6,500 m (organiser's course map); recorded 6,958 m. Test: `test/client/rondje-eilanden.integration.test.ts` | Strava export |
 | `Twiske_Backyard_SwimRun_Experience.gpx` | Twiske Backyard Ultra SwimRun Experience (2026-06-20) | n/a | Not verified yet; many laps | Strava export |
 | `Ötillö_Rügen_met_Sander_SwimRun_World_Serious_.gpx` | ÖTILLÖ Rügen SwimRun World Series | n/a | Not verified yet | Strava export |
 | `Frankrijk_SwimRun_Coros.gpx` | ÖTILLÖ Cannes World Series (2026-10-03) | Run | Official: 12 run + 11 swim, run 33.10 km, swim 7.30 km, total 40.40 km (racedaymap.com); recorded 43.7 km. Test: `test/client/cannes.integration.test.ts` | Coros export from a friend; heart rate stripped |
@@ -26,7 +27,7 @@ sample links. The mapping lives in `src/build-samples.ts`.
 | File here | Sample name on the site | Track points |
 |-----------|-------------------------|--------------|
 | `rhederlaag-swimrun.gpx` | Rhederlaag SwimRun | 5769 |
-| `Rondje_Eilanden_lintjes_opruimen.gpx` | Rondje Eilanden | 2892 |
+| `Rondje_Eilanden_2025.gpx` | Rondje Eilanden | 4491 |
 | `Twiske_Backyard_SwimRun_Experience.gpx` | Twiske Backyard SwimRun | 9228 |
 | `Ötillö_Rügen_met_Sander_SwimRun_World_Serious_.gpx` | Ötillö Rügen | 19771 |
 | `Frankrijk_SwimRun_Coros.gpx` | Ötillö Cannes | 18272 |
@@ -62,10 +63,11 @@ Source: https://otillo.com
 Long-distance French swimrun with substantial open-water swims.
 Source: https://www.swimruntroll.com/
 
-### Het Rondje Elanden Vinkeveen
+### Het Rondje Eilanden Vinkeveen
 
-~6.5km total: 1500m swimming, 5km running, 11 segments.
-Source: https://hetrondjeelanden.nl
+6,500 m in total: 1,500 m of swimming (11 swims, A to K) and 5,000 m of running (11 runs).
+The race starts with swim A and ends with run 1.
+Source: the organiser's course map (Het Rondje Eilanden, n.d.), with the lengths per swim and run that `test/client/rondje-eilanden.integration.test.ts` uses.
 
 ### Running-only (edge case)
 
@@ -78,3 +80,14 @@ Source: https://afstandmeten.nl (draw and export)
 1. Download the GPX from the source listed above
 2. Rename to match the filename in the table
 3. Place in this `test-data/` directory
+
+## Sources for the expected values
+
+The integration tests compare the extractor with official splits.
+References follow APA 7, as AGENTS.md requires.
+
+- Het Rondje Eilanden. (n.d.). *Parcours* [Course map with the length of every swim and run]. Retrieved November 10, 2026, from https://www.hetrondjeeilanden.nl/wedstrijd/parcours/
+- ÖTILLÖ. (n.d.). *ÖTILLÖ Cannes World Series*. Retrieved November 10, 2026, from https://otilloswimrun.com/races/cannes-france/cannes-world-series/ (full distance: total 40,950 m, run 33,470 m, swim 7,480 m)
+- RaceDayMap. (n.d.). *ÖTILLÖ Swimrun Cannes: World Series* [Interactive course map and leg table]. Retrieved November 10, 2026, from https://app.racedaymap.com/otillo-swimrun-cannes/world-series (12 runs and 11 swims, total 40.40 km, run 33.10 km, swim 7.30 km; this is the reference used in the Cannes test)
+
+The two Cannes sources differ by 0.37 km of running and 0.18 km of swimming; the test uses the RaceDayMap figures.
