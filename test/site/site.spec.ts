@@ -164,7 +164,8 @@ test("chatbot loads the FAQ, shows a typing indicator and answers", async ({ pag
   await expect(chat.getByRole("status")).toContainText("typing");
   await expect(page.getByRole("log")).toContainText("Tigers are among the few big cats");
   await expect(chat.getByRole("status")).toHaveCount(0);
-  await expect(chat.getByRole("button", { name: label })).toBeVisible();
+  await expect(chat.getByRole("button", { name: label }), "a chosen question disappears at once").toHaveCount(0);
+  await expect(chat.getByRole("button", { name: "Tell me more" })).toBeVisible();
   await chat.getByRole("button", { name: "Tell me more" }).click();
   await expect(page.getByRole("log")).toContainText("They cool off in it");
   await expect(chat.getByRole("button", { name: label })).toHaveCount(0);
