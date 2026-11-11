@@ -5,9 +5,14 @@ import {
   changedSessions,
   type Day,
   DAYS,
+  DEFAULT_LEVERS,
   type Discipline,
+  generateWeek,
+  LEVER_LIMITS,
+  type PlanLevers,
   planRestDay,
   PROTOTYPE_WEEK,
+  type Surface,
   type TrainingSession,
 } from "../client/training-week.ts";
 import type { IssueKind } from "../client/training-week.ts";
@@ -32,6 +37,14 @@ interface Strings {
   resetAll: string;
   resetDone: string;
   undoReset: string;
+  surfaces: Record<Surface, string>;
+  leversTitle: string;
+  leversHint: string;
+  leverLabels: Record<keyof PlanLevers, string>;
+  generate: string;
+  generated: string;
+  notPlaced: (count: number) => string;
+  undoGenerate: string;
   dismissed: string;
   assistDownloading: string;
   instructionPlaceholder: string;
@@ -44,6 +57,8 @@ interface Strings {
   noChanges: string;
   movedFromTo: (title: string, from: string, to: string) => string;
   restDay: string;
+  restDaysLabel: string;
+  restDaysNone: string;
   restDayBlocked: (day: string) => string;
   nextStepsTitle: string;
   restDayBecomes: (day: string) => string;
@@ -89,27 +104,46 @@ const STRINGS: Record<Lang, Strings> = {
     noChanges: "No changes yet.",
     movedFromTo: (title, from, to) => `${title}: ${from} → ${to}`,
     sessionTitles: {
-      strength: "Strength: legs & core, 45 min",
-      "ow-swim": "Open-water swim, 2 km",
-      flex: "Flexibility: static + dynamic, 30 min",
-      trail: "Trail run, 75 min Z2",
-      intervals: "Run intervals, 6×400 m",
-      brick: "Swimrun brick, 2 h",
+      "swimrun-1": "Swimrun brick, 2 h",
+      "swimrun-2": "Swimrun, 90 min",
+      "run-1": "Trail run, 75 min Z2",
+      "run-2": "Run intervals, 6×400 m",
+      "run-3": "Road run, 45 min Z2",
+      "run-4": "Trail run, 60 min Z2",
+      "swim-1": "Open-water swim, 2 km",
+      "swim-2": "Pool swim, 1.5 km",
+      "swim-3": "Open-water swim, 3 km",
+      "strength-1": "Strength: legs, 15 min",
+      "strength-2": "Strength: core, 15 min",
+      "strength-3": "Strength: upper body, 15 min",
+      "mobility-1": "Mobility: dynamic, 15 min",
+      "mobility-2": "Mobility: static, 15 min",
+      "mobility-3": "Mobility: hips and ankles, 15 min",
     },
     revert: "Revert",
     resetAll: "Reset all changes",
     resetDone: "All changes were reset to the confirmed week.",
     undoReset: "Undo reset",
-    restDay: "Rest day",
-    restDayBlocked: (day) => `${day} is a rest day: no session can go there.`,
+    surfaces: { trail: "trail", road: "road" },
+    leversTitle: "Plan levers",
+    leversHint: "Set how many sessions a week holds, then generate it. A sports rest day is a day without sessions, for example because it is a busy work day.",
+    leverLabels: { runs: "Runs", swims: "Swims", swimruns: "Swimruns", strength: "Short strength", mobility: "Short mobility" },
+    generate: "Generate week",
+    generated: "Week generated from the levers.",
+    notPlaced: (count) => `${count} session(s) did not fit on the free days.`,
+    undoGenerate: "Undo generate",
+    restDay: "Sports rest day",
+    restDaysLabel: "Sports rest days",
+    restDaysNone: "none",
+    restDayBlocked: (day) => `${day} is a sports rest day: no session can go there.`,
     nextStepsTitle: "Possible next steps (one at a time)",
-    restDayBecomes: (day) => `Rest day: ${day}`,
-    restDayReason: (day) => `rest day on ${day}`,
-    restDayAlready: (day) => `${day} is already a rest day.`,
-    leftOut: (title, day) => `Left out: ${title} to ${day}, a rest day`,
+    restDayBecomes: (day) => `Sports rest day: ${day}`,
+    restDayReason: (day) => `sports rest day on ${day}`,
+    restDayAlready: (day) => `${day} is already a sports rest day.`,
+    leftOut: (title, day) => `Left out: ${title} to ${day}, a sports rest day`,
     nextChip: (title, from, to) => `Next: ${title} ${from} → ${to}`,
     fixReasons: {
-      "rest-day": (day) => `rest day on ${day}`,
+      "rest-day": (day) => `sports rest day on ${day}`,
       clash: (day) => `two sessions on ${day}`,
       "back-to-back-runs": (day) => `two runs in a row at ${day}`,
     },
@@ -164,27 +198,46 @@ const STRINGS: Record<Lang, Strings> = {
     noChanges: "Nog geen wijzigingen.",
     movedFromTo: (title, from, to) => `${title}: ${from} → ${to}`,
     sessionTitles: {
-      strength: "Kracht: benen en core, 45 min",
-      "ow-swim": "Zwemmen in open water, 2 km",
-      flex: "Flexibiliteit: statisch + dynamisch, 30 min",
-      trail: "Trailrun, 75 min Z2",
-      intervals: "Hardloopintervallen, 6×400 m",
-      brick: "Swimrun-koppeltraining, 2 uur",
+      "swimrun-1": "Swimrun-koppeltraining, 2 uur",
+      "swimrun-2": "Swimrun, 90 min",
+      "run-1": "Trailrun, 75 min Z2",
+      "run-2": "Hardloopintervallen, 6×400 m",
+      "run-3": "Duurloop op de weg, 45 min Z2",
+      "run-4": "Trailrun, 60 min Z2",
+      "swim-1": "Zwemmen in open water, 2 km",
+      "swim-2": "Zwembadtraining, 1,5 km",
+      "swim-3": "Zwemmen in open water, 3 km",
+      "strength-1": "Kracht: benen, 15 min",
+      "strength-2": "Kracht: core, 15 min",
+      "strength-3": "Kracht: bovenlichaam, 15 min",
+      "mobility-1": "Mobiliteit: dynamisch, 15 min",
+      "mobility-2": "Mobiliteit: statisch, 15 min",
+      "mobility-3": "Mobiliteit: heupen en enkels, 15 min",
     },
     revert: "Terugdraaien",
     resetAll: "Alle wijzigingen terugdraaien",
     resetDone: "Alle wijzigingen zijn teruggezet naar de bevestigde week.",
     undoReset: "Terugdraaien ongedaan maken",
-    restDay: "Rustdag",
-    restDayBlocked: (day) => `Op ${day} is het rustdag: daar kan geen sessie heen.`,
+    surfaces: { trail: "trail", road: "weg" },
+    leversTitle: "Planinstellingen",
+    leversHint: "Stel in hoeveel sessies een week heeft en genereer de week. Een sportrustdag is een dag zonder sessies, bijvoorbeeld omdat het een drukke werkdag is.",
+    leverLabels: { runs: "Hardloopsessies", swims: "Zwemsessies", swimruns: "Swimrunsessies", strength: "Korte krachtsessies", mobility: "Korte mobiliteitssessies" },
+    generate: "Genereer week",
+    generated: "Week gegenereerd uit de instellingen.",
+    notPlaced: (count) => `${count} sessie(s) pasten niet op de vrije dagen.`,
+    undoGenerate: "Genereren ongedaan maken",
+    restDay: "Sportrustdag",
+    restDaysLabel: "Sportrustdagen",
+    restDaysNone: "geen",
+    restDayBlocked: (day) => `Op ${day} is het sportrustdag: daar kan geen sessie heen.`,
     nextStepsTitle: "Mogelijke vervolgstappen (één voor één)",
-    restDayBecomes: (day) => `Rustdag: ${day}`,
-    restDayReason: (day) => `rustdag op ${day}`,
-    restDayAlready: (day) => `Op ${day} is al een rustdag.`,
-    leftOut: (title, day) => `Weggelaten: ${title} naar ${day}, een rustdag`,
+    restDayBecomes: (day) => `Sportrustdag: ${day}`,
+    restDayReason: (day) => `sportrustdag op ${day}`,
+    restDayAlready: (day) => `Op ${day} is al sportrustdag.`,
+    leftOut: (title, day) => `Weggelaten: ${title} naar ${day}, een sportrustdag`,
     nextChip: (title, from, to) => `Volgende: ${title} ${from} → ${to}`,
     fixReasons: {
-      "rest-day": (day) => `rustdag op ${day}`,
+      "rest-day": (day) => `sportrustdag op ${day}`,
       clash: (day) => `twee sessies op ${day}`,
       "back-to-back-runs": (day) => `twee keer achter elkaar hardlopen bij ${day}`,
     },
@@ -239,27 +292,46 @@ const STRINGS: Record<Lang, Strings> = {
     noChanges: "Pas encore de changements.",
     movedFromTo: (title, from, to) => `${title} : ${from} → ${to}`,
     sessionTitles: {
-      strength: "Renforcement : jambes et gainage, 45 min",
-      "ow-swim": "Nage en eau libre, 2 km",
-      flex: "Souplesse : statique + dynamique, 30 min",
-      trail: "Course en sentier, 75 min Z2",
-      intervals: "Fractionné de course, 6×400 m",
-      brick: "Enchaînement swimrun, 2 h",
+      "swimrun-1": "Enchaînement swimrun, 2 h",
+      "swimrun-2": "Swimrun, 90 min",
+      "run-1": "Course en sentier, 75 min Z2",
+      "run-2": "Fractionné de course, 6×400 m",
+      "run-3": "Course sur route, 45 min Z2",
+      "run-4": "Course en sentier, 60 min Z2",
+      "swim-1": "Nage en eau libre, 2 km",
+      "swim-2": "Natation en piscine, 1,5 km",
+      "swim-3": "Nage en eau libre, 3 km",
+      "strength-1": "Renforcement : jambes, 15 min",
+      "strength-2": "Renforcement : gainage, 15 min",
+      "strength-3": "Renforcement : haut du corps, 15 min",
+      "mobility-1": "Mobilité : dynamique, 15 min",
+      "mobility-2": "Mobilité : statique, 15 min",
+      "mobility-3": "Mobilité : hanches et chevilles, 15 min",
     },
     revert: "Annuler",
     resetAll: "Tout annuler",
     resetDone: "Tous les changements ont été annulés : la semaine confirmée est rétablie.",
     undoReset: "Rétablir mes changements",
-    restDay: "Jour de repos",
-    restDayBlocked: (day) => `Le ${day} est un jour de repos : aucune séance ne peut y aller.`,
+    surfaces: { trail: "sentier", road: "route" },
+    leversTitle: "Réglages du plan",
+    leversHint: "Choisis combien de séances compte une semaine, puis génère-la. Un jour sans sport est un jour sans séance, par exemple parce que c'est une journée de travail chargée.",
+    leverLabels: { runs: "Courses", swims: "Nages", swimruns: "Swimruns", strength: "Renforcement court", mobility: "Mobilité courte" },
+    generate: "Générer la semaine",
+    generated: "Semaine générée à partir des réglages.",
+    notPlaced: (count) => `${count} séance(s) ne tiennent pas sur les jours libres.`,
+    undoGenerate: "Annuler la génération",
+    restDay: "Jour sans sport",
+    restDaysLabel: "Jours sans sport",
+    restDaysNone: "aucun",
+    restDayBlocked: (day) => `Le ${day} est un jour sans sport : aucune séance ne peut y aller.`,
     nextStepsTitle: "Étapes suivantes possibles (une à la fois)",
-    restDayBecomes: (day) => `Jour de repos : ${day}`,
-    restDayReason: (day) => `jour de repos le ${day}`,
-    restDayAlready: (day) => `Le ${day} est déjà un jour de repos.`,
-    leftOut: (title, day) => `Ignoré : ${title} vers ${day}, un jour de repos`,
+    restDayBecomes: (day) => `Jour sans sport : ${day}`,
+    restDayReason: (day) => `jour sans sport le ${day}`,
+    restDayAlready: (day) => `Le ${day} est déjà un jour sans sport.`,
+    leftOut: (title, day) => `Ignoré : ${title} vers ${day}, un jour sans sport`,
     nextChip: (title, from, to) => `Ensuite : ${title} ${from} → ${to}`,
     fixReasons: {
-      "rest-day": (day) => `jour de repos le ${day}`,
+      "rest-day": (day) => `jour sans sport le ${day}`,
       clash: (day) => `deux séances le ${day}`,
       "back-to-back-runs": (day) => `deux courses de suite vers ${day}`,
     },
@@ -314,27 +386,46 @@ const STRINGS: Record<Lang, Strings> = {
     noChanges: "Noch keine Änderungen.",
     movedFromTo: (title, from, to) => `${title}: ${from} → ${to}`,
     sessionTitles: {
-      strength: "Kraft: Beine und Rumpf, 45 Min.",
-      "ow-swim": "Freiwasserschwimmen, 2 km",
-      flex: "Beweglichkeit: statisch + dynamisch, 30 Min.",
-      trail: "Traillauf, 75 Min. Z2",
-      intervals: "Lauf-Intervalle, 6×400 m",
-      brick: "Swimrun-Koppeleinheit, 2 Std.",
+      "swimrun-1": "Swimrun-Koppeleinheit, 2 Std.",
+      "swimrun-2": "Swimrun, 90 Min.",
+      "run-1": "Traillauf, 75 Min. Z2",
+      "run-2": "Lauf-Intervalle, 6×400 m",
+      "run-3": "Straßenlauf, 45 Min. Z2",
+      "run-4": "Traillauf, 60 Min. Z2",
+      "swim-1": "Freiwasserschwimmen, 2 km",
+      "swim-2": "Schwimmen im Becken, 1,5 km",
+      "swim-3": "Freiwasserschwimmen, 3 km",
+      "strength-1": "Kraft: Beine, 15 Min.",
+      "strength-2": "Kraft: Rumpf, 15 Min.",
+      "strength-3": "Kraft: Oberkörper, 15 Min.",
+      "mobility-1": "Mobilität: dynamisch, 15 Min.",
+      "mobility-2": "Mobilität: statisch, 15 Min.",
+      "mobility-3": "Mobilität: Hüfte und Sprunggelenke, 15 Min.",
     },
     revert: "Rückgängig",
     resetAll: "Alle Änderungen zurücksetzen",
     resetDone: "Alle Änderungen wurden auf die bestätigte Woche zurückgesetzt.",
     undoReset: "Zurücksetzen widerrufen",
-    restDay: "Ruhetag",
-    restDayBlocked: (day) => `Am ${day} ist Ruhetag: dort kann keine Einheit hin.`,
+    surfaces: { trail: "Trail", road: "Straße" },
+    leversTitle: "Planeinstellungen",
+    leversHint: "Lege fest, wie viele Einheiten eine Woche hat, und erzeuge sie. Ein Sportruhetag ist ein Tag ohne Einheiten, zum Beispiel weil es ein voller Arbeitstag ist.",
+    leverLabels: { runs: "Läufe", swims: "Schwimmeinheiten", swimruns: "Swimruns", strength: "Kurze Krafteinheiten", mobility: "Kurze Mobilitätseinheiten" },
+    generate: "Woche erzeugen",
+    generated: "Woche aus den Einstellungen erzeugt.",
+    notPlaced: (count) => `${count} Einheit(en) passten nicht auf die freien Tage.`,
+    undoGenerate: "Erzeugen widerrufen",
+    restDay: "Sportruhetag",
+    restDaysLabel: "Sportruhetage",
+    restDaysNone: "keine",
+    restDayBlocked: (day) => `Am ${day} ist Sportruhetag: dort kann keine Einheit hin.`,
     nextStepsTitle: "Mögliche nächste Schritte (einer nach dem anderen)",
-    restDayBecomes: (day) => `Ruhetag: ${day}`,
-    restDayReason: (day) => `Ruhetag am ${day}`,
-    restDayAlready: (day) => `Am ${day} ist schon Ruhetag.`,
-    leftOut: (title, day) => `Weggelassen: ${title} auf ${day}, einen Ruhetag`,
+    restDayBecomes: (day) => `Sportruhetag: ${day}`,
+    restDayReason: (day) => `Sportruhetag am ${day}`,
+    restDayAlready: (day) => `Am ${day} ist schon Sportruhetag.`,
+    leftOut: (title, day) => `Weggelassen: ${title} auf ${day}, einen Sportruhetag`,
     nextChip: (title, from, to) => `Danach: ${title} ${from} → ${to}`,
     fixReasons: {
-      "rest-day": (day) => `Ruhetag am ${day}`,
+      "rest-day": (day) => `Sportruhetag am ${day}`,
       clash: (day) => `zwei Einheiten am ${day}`,
       "back-to-back-runs": (day) => `zwei Läufe hintereinander bei ${day}`,
     },
@@ -360,13 +451,16 @@ const STRINGS: Record<Lang, Strings> = {
   },
 };
 
-const DISCIPLINE_STYLES: Record<Discipline, string> = {
-  swim: "bg-sky-200 border-sky-900 text-sky-950",
-  run: "bg-amber-200 border-amber-900 text-amber-950",
-  swimrun: "bg-emerald-200 border-emerald-900 text-emerald-950",
-  strength: "bg-rose-200 border-rose-900 text-rose-950",
-  flexibility: "bg-violet-200 border-violet-900 text-violet-950",
-};
+/** The colour classes of styles.css, shared with the extractor: a trail run is green, a road run grey. */
+const toneOf = (session: TrainingSession): string =>
+  session.discipline === "run"
+    ? session.surface === "trail" ? "tone-trail" : "tone-road"
+    : {
+      swim: "tone-swim",
+      swimrun: "tone-swimrun",
+      strength: "tone-strength",
+      flexibility: "tone-mobility",
+    }[session.discipline];
 
 /** The page language, which the language switch keeps on the `lang` attribute of `<html>`. */
 function usePageLang(): Lang {
@@ -409,7 +503,10 @@ export default function TrainingWeek({ languageModel }: Props) {
   const [restDays, setRestDays] = useState<readonly Day[]>([]);
   const [baselineRest, setBaselineRest] = useState<readonly Day[]>([]);
   // What a reset replaced, so that it can be undone until something else changes.
-  const [undo, setUndo] = useState<{ week: readonly TrainingSession[]; restDays: readonly Day[] } | null>(null);
+  const [undo, setUndo] = useState<
+    { kind: "reset" | "generate"; week: readonly TrainingSession[]; baseline: readonly TrainingSession[]; restDays: readonly Day[]; baselineRest: readonly Day[] } | null
+  >(null);
+  const [levers, setLevers] = useState<PlanLevers>(DEFAULT_LEVERS);
   const [notice, setNotice] = useState("");
   const restRef = useRef(restDays);
   restRef.current = restDays;
@@ -451,7 +548,7 @@ export default function TrainingWeek({ languageModel }: Props) {
     setWeek((current) => applyMoves(current, [{ id, toDay, reason: "" }]));
     setConfirmed(false);
   };
-  // Making a day a rest day moves its sessions out by the same rules the assistant uses.
+  // Choosing a sports rest day moves its sessions out by the same rules the assistant uses.
   const toggleRestDay = (day: Day) => {
     setNotice("");
     setUndo(null);
@@ -468,7 +565,7 @@ export default function TrainingWeek({ languageModel }: Props) {
   const restChanged = restDays.length !== baselineRest.length || restDays.some((day) => !baselineRest.includes(day));
   const dirty = changes.length > 0 || restChanged;
   const resetAll = () => {
-    setUndo({ week, restDays });
+    setUndo({ kind: "reset", week, baseline, restDays, baselineRest });
     setWeek(baseline);
     setRestDays(baselineRest);
     setNotice(t.resetDone);
@@ -477,9 +574,21 @@ export default function TrainingWeek({ languageModel }: Props) {
   const undoReset = () => {
     if (!undo) return;
     setWeek(undo.week);
+    setBaseline(undo.baseline);
     setRestDays(undo.restDays);
+    setBaselineRest(undo.baselineRest);
     setUndo(null);
     setNotice("");
+  };
+  // The levers set the plan at the top: the generated week becomes the confirmed one.
+  const generate = () => {
+    const { week: generated, unplaced } = generateWeek(levers, restDays);
+    setUndo({ kind: "generate", week, baseline, restDays, baselineRest });
+    setWeek(generated);
+    setBaseline(generated);
+    setBaselineRest(restDays);
+    setNotice(unplaced.length > 0 ? t.notPlaced(unplaced.length) : t.generated);
+    setConfirmed(false);
   };
 
   const endDrag = () => {
@@ -498,6 +607,48 @@ export default function TrainingWeek({ languageModel }: Props) {
       <p className="rounded border-2 border-stone-900 bg-amber-50 p-3 text-sm">
         {t.prototypeNote}
       </p>
+
+      <section aria-labelledby="levers-title" className="space-y-2 rounded border border-stone-300 bg-white p-3">
+        <h2 id="levers-title" className="text-lg font-bold">{t.leversTitle}</h2>
+        <p className="text-sm text-stone-600">{t.leversHint}</p>
+        <div className="flex flex-wrap items-end gap-3">
+          <details className="relative text-sm" data-rest-days>
+            <summary className="cursor-pointer rounded border border-stone-900 bg-white px-2 py-1">
+              <span className="font-medium">{t.restDaysLabel}: </span>
+              {restDays.length > 0 ? DAYS.filter((day) => restDays.includes(day)).map((day) => t.days[day]).join(", ") : t.restDaysNone}
+            </summary>
+            <fieldset className="absolute z-10 mt-1 space-y-1 rounded border border-stone-900 bg-white p-2 shadow">
+              <legend className="sr-only">{t.restDaysLabel}</legend>
+              {DAYS.map((day) => (
+                <label key={day} className="flex items-center gap-2">
+                  <input type="checkbox" checked={restDays.includes(day)} onChange={() => toggleRestDay(day)} />
+                  {t.days[day]}
+                </label>
+              ))}
+            </fieldset>
+          </details>
+          {(Object.keys(LEVER_LIMITS) as (keyof PlanLevers)[]).map((key) => (
+            <label key={key} className="block text-sm">
+              <span className="block font-medium">{t.leverLabels[key]}</span>
+              <input
+                type="number"
+                min={0}
+                max={LEVER_LIMITS[key]}
+                value={levers[key]}
+                onChange={(event) => setLevers({ ...levers, [key]: Number(event.target.value) })}
+                className="w-20 rounded border border-stone-900 bg-white px-2 py-1"
+              />
+            </label>
+          ))}
+          <button
+            type="button"
+            className="rounded bg-stone-900 px-4 py-2 text-sm font-semibold text-white"
+            onClick={generate}
+          >
+            {t.generate}
+          </button>
+        </div>
+      </section>
 
       <p className="text-sm text-stone-600">{t.dragHint}</p>
       <p role="status" className="text-sm font-medium text-amber-900">{notice}</p>
@@ -532,18 +683,11 @@ export default function TrainingWeek({ languageModel }: Props) {
             }}
           >
             <h3 className="text-sm font-bold">{t.days[day]}</h3>
-            <button
-              type="button"
-              aria-pressed={restDays.includes(day)}
-              data-rest-day={day}
-              onClick={() => toggleRestDay(day)}
-              className={`mt-1 rounded border px-2 py-0.5 text-xs font-medium ${
-                restDays.includes(day) ? "border-stone-900 bg-stone-900 text-white" : "border-stone-400 bg-white text-stone-800"
-              }`}
-            >
-              <span className="sr-only">{t.days[day]}: </span>
-              {t.restDay}
-            </button>
+            {restDays.includes(day) && (
+              <p data-rest-day={day} className="mt-1 inline-block rounded bg-stone-900 px-2 py-0.5 text-xs font-medium text-white">
+                {t.restDay}
+              </p>
+            )}
             <ul className="mt-2 space-y-2">
               {week.filter((session) => session.day === day).map((session) => (
                 <li
@@ -556,12 +700,13 @@ export default function TrainingWeek({ languageModel }: Props) {
                     setDraggingId(session.id);
                   }}
                   onDragEnd={endDrag}
-                  className={`cursor-grab rounded border px-2 py-1 text-xs active:cursor-grabbing ${
-                    DISCIPLINE_STYLES[session.discipline]
-                  } ${draggingId === session.id ? "opacity-50" : ""}`}
+                  className={`cursor-grab rounded border px-2 py-1 text-xs active:cursor-grabbing tone ${toneOf(session)} ${
+                    draggingId === session.id ? "opacity-50" : ""
+                  }`}
                 >
                   <span className="font-semibold">
                     {t.disciplines[session.discipline]}
+                    {session.discipline === "run" && ` · ${t.surfaces[session.surface ?? "road"]}`}
                   </span>
                   <p>{titleOf(session)}</p>
                   <label className="mt-1 block">
@@ -650,7 +795,7 @@ export default function TrainingWeek({ languageModel }: Props) {
               className="rounded border border-stone-900 bg-amber-200 px-4 py-2 text-sm font-semibold"
               onClick={undoReset}
             >
-              {t.undoReset}
+              {undo.kind === "generate" ? t.undoGenerate : t.undoReset}
             </button>
           )}
         </div>

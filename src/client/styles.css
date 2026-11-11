@@ -190,3 +190,31 @@
     @apply font-medium;
   }
 }
+
+/*
+ * Shared colours: one definition for the extractor map and the training week, so that a swim, a run and an
+ * unclassified stretch look the same on every page. A trail run in the training week is the extractor's run
+ * green; the extractor cannot tell trail from road, so there every run is green. A road run is the grey of
+ * the extractor's unclassified stretches.
+ */
+:root {
+  --color-swim: #1e88e5;
+  --color-run: #2e7d32;
+  --color-unclassified: #757575;
+  --color-swimrun: #3949ab;
+  --color-strength: #c2185b;
+  --color-mobility: #7b1fa2;
+}
+
+/* A tinted card in a colour: set --tone through a tone-* class, the card takes its colours from it. */
+.tone {
+  background: color-mix(in srgb, var(--tone) 18%, white);
+  border-color: var(--tone);
+  color: color-mix(in srgb, var(--tone) 40%, black);
+}
+.tone-swim { --tone: var(--color-swim); }
+.tone-trail { --tone: var(--color-run); }
+.tone-road { --tone: var(--color-unclassified); }
+.tone-swimrun { --tone: var(--color-swimrun); }
+.tone-strength { --tone: var(--color-strength); }
+.tone-mobility { --tone: var(--color-mobility); }

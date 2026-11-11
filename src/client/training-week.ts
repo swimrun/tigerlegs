@@ -20,12 +20,26 @@ export type Discipline =
   | "strength"
   | "flexibility";
 
+/** What a run is run on: a trail (shown in the extractor's run green) or a road (grey). */
+export type Surface = "trail" | "road";
+
 export interface TrainingSession {
   readonly id: string;
   readonly day: Day;
   readonly title: string;
   readonly discipline: Discipline;
+  /** Only for runs. */
+  readonly surface?: Surface;
+  readonly minutes?: number;
 }
+
+/** A strength or mobility session of at most this many minutes is short and may share a day with a main session. */
+export const SHORT_SESSION_MINUTES = 20;
+
+/** A short strength or mobility session; every other session is a main session. */
+export const isShort = (session: TrainingSession): boolean =>
+  (session.discipline === "strength" || session.discipline === "flexibility") &&
+  (session.minutes ?? Infinity) <= SHORT_SESSION_MINUTES;
 
 /**
  * The disciplines an instruction talks about, from stems in the four site languages
@@ -58,41 +72,6 @@ export interface Move {
   readonly toDay: Day;
   readonly reason: string;
 }
-
-/** The hardcoded prototype week: the four swimrun capacities across six sessions. */
-export const PROTOTYPE_WEEK: readonly TrainingSession[] = [
-  {
-    id: "strength",
-    day: "Mon",
-    title: "Strength: legs & core, 45 min",
-    discipline: "strength",
-  },
-  {
-    id: "ow-swim",
-    day: "Tue",
-    title: "Open-water swim, 2 km",
-    discipline: "swim",
-  },
-  {
-    id: "flex",
-    day: "Wed",
-    title: "Flexibility: static + dynamic, 30 min",
-    discipline: "flexibility",
-  },
-  { id: "trail", day: "Thu", title: "Trail run, 75 min Z2", discipline: "run" },
-  {
-    id: "intervals",
-    day: "Sat",
-    title: "Run intervals, 6×400 m",
-    discipline: "run",
-  },
-  {
-    id: "brick",
-    day: "Sun",
-    title: "Swimrun brick, 2 h",
-    discipline: "swimrun",
-  },
-];
 
 /** Returns a new week with the moves applied; the input week is not mutated. */
 export function applyMoves(
@@ -156,7 +135,7 @@ const DAY_NAMES: Record<Day, readonly string[]> = {
   Sun: ["sunday", "sun", "zondag", "dimanche", "sonntag"],
 };
 
-const REST_WORDS = new Set(["rest", "rust", "rustdag", "repos", "ruhe", "ruhetag", "vrij"]);
+const REST_WORDS = new Set(["rest", "rust", "rustdag", "sportrustdag", "sportrust", "repos", "ruhe", "ruhetag", "sportruhetag", "vrij"]);
 
 /** How many words a day name may sit away from the rest word and still belong to it. */
 const REST_WINDOW = 4;
@@ -218,6 +197,9 @@ export interface Issue {
 
 const isRun = (session: TrainingSession) => session.discipline === "run";
 
+/** One main session and short ones next to it; more than this on a day is too much. */
+const MAX_SESSIONS_PER_DAY = 3;
+
 /** Every problem in the week. Only sessions on a rest day are a hard rule; the others are advice. */
 export function weekIssues(week: readonly TrainingSession[], restDays: readonly Day[]): Issue[] {
   const issues: Issue[] = [];
@@ -225,7 +207,7 @@ export function weekIssues(week: readonly TrainingSession[], restDays: readonly 
     const here = week.filter((session) => session.day === day);
     if (restDays.includes(day) && here.length > 0) {
       issues.push({ kind: "rest-day", day, ids: here.map((session) => session.id) });
-    } else if (here.length > 1) {
+    } else if (here.filter((session) => !isShort(session)).length > 1 || here.length > MAX_SESSIONS_PER_DAY) {
       issues.push({ kind: "clash", day, ids: here.map((session) => session.id) });
     }
     const next = DAYS[index + 1];
@@ -267,7 +249,8 @@ function bestDay(week: readonly TrainingSession[], restDays: readonly Day[], id:
   DAYS.forEach((day, index) => {
     if (day === session.day || restDays.includes(day)) return;
     const problems = weekIssues(applyMoves(week, [{ id, toDay: day, reason: "" }]), restDays).length;
-    const score = [problems, Math.abs(index - from), -index];
+    // Fewest problems first, then a day that is still free, then the nearest day, and the later one when equal.
+    const score = [problems, week.filter((other) => other.day === day).length, Math.abs(index - from), -index];
     if (best === null || before(score, bestScore)) {
       best = day;
       bestScore = score;
@@ -326,3 +309,122 @@ export function suggestFixes(week: readonly TrainingSession[], restDays: readonl
   }
   return fixes;
 }
+
+/**
+ * Plan levers: how many sessions of each kind a week holds. Together with the rest days they are the top
+ * level of a plan (spec 003): the same levers always give the same week.
+ */
+export interface PlanLevers {
+  runs: number;
+  swims: number;
+  swimruns: number;
+  /** Short strength sessions. */
+  strength: number;
+  /** Short mobility sessions. */
+  mobility: number;
+}
+
+export const LEVER_LIMITS: Readonly<PlanLevers> = { runs: 4, swims: 3, swimruns: 2, strength: 3, mobility: 3 };
+
+/** The levers of the example week: two runs, a swim, a swimrun brick, and two short strength and two short mobility sessions. */
+export const DEFAULT_LEVERS: Readonly<PlanLevers> = { runs: 2, swims: 1, swimruns: 1, strength: 2, mobility: 2 };
+
+type CatalogEntry = Omit<TrainingSession, "day">;
+
+/** The sessions a week is built from, in the order the levers take them. */
+const CATALOG: Record<keyof PlanLevers, readonly CatalogEntry[]> = {
+  swimruns: [
+    { id: "swimrun-1", title: "Swimrun brick, 2 h", discipline: "swimrun", minutes: 120 },
+    { id: "swimrun-2", title: "Swimrun, 90 min", discipline: "swimrun", minutes: 90 },
+  ],
+  runs: [
+    { id: "run-1", title: "Trail run, 75 min Z2", discipline: "run", surface: "trail", minutes: 75 },
+    { id: "run-2", title: "Run intervals, 6×400 m", discipline: "run", surface: "road", minutes: 50 },
+    { id: "run-3", title: "Road run, 45 min Z2", discipline: "run", surface: "road", minutes: 45 },
+    { id: "run-4", title: "Trail run, 60 min Z2", discipline: "run", surface: "trail", minutes: 60 },
+  ],
+  swims: [
+    { id: "swim-1", title: "Open-water swim, 2 km", discipline: "swim", minutes: 50 },
+    { id: "swim-2", title: "Pool swim, 1.5 km", discipline: "swim", minutes: 40 },
+    { id: "swim-3", title: "Open-water swim, 3 km", discipline: "swim", minutes: 75 },
+  ],
+  strength: [
+    { id: "strength-1", title: "Strength: legs, 15 min", discipline: "strength", minutes: 15 },
+    { id: "strength-2", title: "Strength: core, 15 min", discipline: "strength", minutes: 15 },
+    { id: "strength-3", title: "Strength: upper body, 15 min", discipline: "strength", minutes: 15 },
+  ],
+  mobility: [
+    { id: "mobility-1", title: "Mobility: dynamic, 15 min", discipline: "flexibility", minutes: 15 },
+    { id: "mobility-2", title: "Mobility: static, 15 min", discipline: "flexibility", minutes: 15 },
+    { id: "mobility-3", title: "Mobility: hips and ankles, 15 min", discipline: "flexibility", minutes: 15 },
+  ],
+};
+
+/** The ids of every session the levers can produce, for translating their titles. */
+export const CATALOG_IDS: readonly string[] = Object.values(CATALOG).flatMap((entries) => entries.map((entry) => entry.id));
+
+/** Levers kept within their limits and whole numbers. */
+export function clampLevers(levers: PlanLevers): PlanLevers {
+  const clamp = (value: number, max: number) => Math.min(max, Math.max(0, Math.floor(Number.isFinite(value) ? value : 0)));
+  return {
+    runs: clamp(levers.runs, LEVER_LIMITS.runs),
+    swims: clamp(levers.swims, LEVER_LIMITS.swims),
+    swimruns: clamp(levers.swimruns, LEVER_LIMITS.swimruns),
+    strength: clamp(levers.strength, LEVER_LIMITS.strength),
+    mobility: clamp(levers.mobility, LEVER_LIMITS.mobility),
+  };
+}
+
+/**
+ * Builds a week from levers by fixed rules, so the same levers and rest days always give the same week.
+ * Main sessions (swimrun, runs, swims, in that order) go to the day with the fewest problems, then the day
+ * with the fewest main sessions, then the day farthest from the other main sessions; the swimrun prefers the
+ * end of the week. Short sessions then go to the day with the fewest problems and the fewest sessions.
+ * Nothing lands on a rest day. A session that finds no day is reported by id.
+ */
+export function generateWeek(
+  levers: PlanLevers,
+  restDays: readonly Day[] = [],
+): { week: TrainingSession[]; unplaced: string[] } {
+  const wanted = clampLevers(levers);
+  const days = DAYS.filter((day) => !restDays.includes(day));
+  const placed: TrainingSession[] = [];
+  const unplaced: string[] = [];
+  const take = (kind: keyof PlanLevers) => CATALOG[kind].slice(0, wanted[kind]);
+  const before = (a: number[], b: number[]) => {
+    for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) return a[i] < b[i];
+    return false;
+  };
+
+  const place = (entry: CatalogEntry, kind: keyof PlanLevers) => {
+    let best: Day | null = null;
+    let bestScore: number[] = [];
+    for (const day of days) {
+      const candidate: TrainingSession = { ...entry, day };
+      const problems = weekIssues([...placed, candidate], restDays).length;
+      const here = placed.filter((session) => session.day === day);
+      const mains = placed.filter((session) => !isShort(session));
+      const index = DAYS.indexOf(day);
+      const apart = mains.length === 0
+        ? 0
+        : -Math.min(...mains.map((session) => Math.abs(DAYS.indexOf(session.day) - index)));
+      const score = isShort(candidate)
+        ? [problems, here.length, index]
+        : [problems, here.filter((session) => !isShort(session)).length, apart, kind === "swimruns" ? -index : index];
+      if (best === null || before(score, bestScore)) {
+        best = day;
+        bestScore = score;
+      }
+    }
+    if (best === null) unplaced.push(entry.id);
+    else placed.push({ ...entry, day: best });
+  };
+
+  for (const kind of ["swimruns", "runs", "swims", "strength", "mobility"] as const) {
+    for (const entry of take(kind)) place(entry, kind);
+  }
+  return { week: placed, unplaced };
+}
+
+/** The example week of the prototype: what the default levers give. */
+export const PROTOTYPE_WEEK: readonly TrainingSession[] = generateWeek(DEFAULT_LEVERS).week;

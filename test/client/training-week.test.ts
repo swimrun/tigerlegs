@@ -1,8 +1,15 @@
 import { assert, assertEquals, assertThrows } from "@std/assert";
 import {
   applyMoves,
+  CATALOG_IDS,
   changedSessions,
   checkMoves,
+  clampLevers,
+  DAYS,
+  DEFAULT_LEVERS,
+  generateWeek,
+  isShort,
+  LEVER_LIMITS,
   type Day,
   fitsInstruction,
   isDay,
@@ -99,8 +106,8 @@ Deno.test("mentionedDisciplines - finds the discipline in the four site language
 });
 
 Deno.test("fitsInstruction - a swimrun session fits both a run and a swim instruction", () => {
-  const brick = PROTOTYPE_WEEK.find((session) => session.id === "brick")!;
-  const swim = PROTOTYPE_WEEK.find((session) => session.id === "ow-swim")!;
+  const brick = PROTOTYPE_WEEK.find((session) => session.id === "swimrun-1")!;
+  const swim = PROTOTYPE_WEEK.find((session) => session.id === "swim-1")!;
   assertEquals(fitsInstruction(brick, new Set(["run"])), true);
   assertEquals(fitsInstruction(swim, new Set(["run"])), false);
   assertEquals(fitsInstruction(swim, new Set()), true);
@@ -125,11 +132,19 @@ Deno.test("the prototype week has no problems, and a session on a rest day is on
   assertEquals(weekIssues(PROTOTYPE_WEEK, ["Wed"]).map((issue) => issue.kind), ["rest-day"]);
 });
 
-Deno.test("two sessions on a day, and runs on consecutive days, are problems", () => {
-  const clash = applyMoves(PROTOTYPE_WEEK, [{ id: "flex", toDay: "Thu", reason: "" }]);
+Deno.test("two main sessions on a day, and runs on consecutive days, are problems", () => {
+  const clash = applyMoves(PROTOTYPE_WEEK, [{ id: "swim-1", toDay: "Mon", reason: "" }]);
   assertEquals(weekIssues(clash, []).map((issue) => issue.kind), ["clash"]);
-  const runs = applyMoves(PROTOTYPE_WEEK, [{ id: "intervals", toDay: "Fri", reason: "" }]);
+  const runs = applyMoves(PROTOTYPE_WEEK, [
+    { id: "swim-1", toDay: "Thu", reason: "" },
+    { id: "run-2", toDay: "Tue", reason: "" },
+  ]);
   assertEquals(weekIssues(runs, []).map((issue) => issue.kind), ["back-to-back-runs"]);
+});
+
+Deno.test("a short session next to a main session is no problem", () => {
+  const shared = applyMoves(PROTOTYPE_WEEK, [{ id: "strength-1", toDay: "Thu", reason: "" }]);
+  assertEquals(weekIssues(shared, []), []);
 });
 
 Deno.test("checkMoves keeps moves off rest days", () => {
@@ -139,31 +154,36 @@ Deno.test("checkMoves keeps moves off rest days", () => {
   assertEquals(rejected.map((move) => move.id), ["brick"]);
 });
 
-Deno.test("planRestDay moves only the sessions of that day, to the free day, and nothing else", () => {
+Deno.test("planRestDay moves only the sessions of that day, to a day that still has room, and nothing else", () => {
   const plan = planRestDay(PROTOTYPE_WEEK, [], "Wed");
   assertEquals(plan.restDays, ["Wed"]);
-  assertEquals(plan.moves.map(({ id, toDay }) => [id, toDay]), [["flex", "Fri"]]);
+  assertEquals(plan.moves.map(({ id, toDay }) => [id, toDay]), [["strength-1", "Thu"]]);
   const after = applyMoves(PROTOTYPE_WEEK, plan.moves);
   assertEquals(weekIssues(after, plan.restDays), []);
 });
 
 Deno.test("planRestDay never puts a session on another rest day", () => {
-  const plan = planRestDay(PROTOTYPE_WEEK, ["Fri"], "Wed");
-  assertEquals(plan.restDays, ["Wed", "Fri"]);
-  assert(plan.moves.every((move) => !plan.restDays.includes(move.toDay)));
+  const plan = planRestDay(PROTOTYPE_WEEK, ["Thu"], "Wed");
+  assertEquals(plan.restDays, ["Wed", "Thu"]);
+  assert(plan.moves.length > 0 && plan.moves.every((move) => !plan.restDays.includes(move.toDay)));
 });
 
 Deno.test("planRestDay on an empty day changes nothing but the rest days", () => {
-  const plan = planRestDay(PROTOTYPE_WEEK, [], "Fri");
+  const week = applyMoves(PROTOTYPE_WEEK, [{ id: "strength-1", toDay: "Mon", reason: "" }]);
+  const plan = planRestDay(week, [], "Wed");
   assertEquals(plan.moves, []);
-  assertEquals(plan.restDays, ["Fri"]);
+  assertEquals(plan.restDays, ["Wed"]);
 });
 
 Deno.test("suggestFixes looks one step ahead and moves the later session of a problem", () => {
-  const runs = applyMoves(PROTOTYPE_WEEK, [{ id: "intervals", toDay: "Fri", reason: "" }]);
+  const runs: TrainingSession[] = [
+    { id: "run-1", day: "Mon", title: "Run 1", discipline: "run" },
+    { id: "run-2", day: "Tue", title: "Run 2", discipline: "run" },
+    { id: "swim-1", day: "Thu", title: "Swim", discipline: "swim" },
+  ];
   const [fix, ...rest] = suggestFixes(runs, []);
   assertEquals(fix.resolves.kind, "back-to-back-runs");
-  assertEquals(fix.move.id, "intervals");
+  assertEquals([fix.move.id, fix.move.toDay], ["run-2", "Wed"]);
   assertEquals(rest, []);
   assertEquals(weekIssues(applyMoves(runs, [fix.move]), []), []);
 });
@@ -180,4 +200,56 @@ Deno.test("restDaysRequested forgives typos in the longer day names", () => {
 
 Deno.test("restDaysRequested does not take other words for a day", () => {
   assertEquals(restDaysRequested("I want to rest, sunny weather, a monkey and the sandwich"), []);
+});
+
+Deno.test("the default levers give the example week: two short strength and two short mobility sessions", () => {
+  assertEquals(generateWeek(DEFAULT_LEVERS).week, [...PROTOTYPE_WEEK]);
+  const short = PROTOTYPE_WEEK.filter(isShort);
+  assertEquals(short.filter((session) => session.discipline === "strength").length, 2);
+  assertEquals(short.filter((session) => session.discipline === "flexibility").length, 2);
+  assert(short.every((session) => session.minutes === 15));
+  assertEquals(weekIssues(PROTOTYPE_WEEK, []), []);
+});
+
+Deno.test("the example week has a trail run and a road run", () => {
+  const surfaces = PROTOTYPE_WEEK.filter((session) => session.discipline === "run").map((session) => session.surface);
+  assertEquals(surfaces, ["trail", "road"]);
+});
+
+Deno.test("generateWeek gives the same week for the same levers and rest days", () => {
+  const levers = { runs: 3, swims: 2, swimruns: 1, strength: 3, mobility: 2 };
+  assertEquals(generateWeek(levers, ["Wed"]), generateWeek(levers, ["Wed"]));
+});
+
+Deno.test("generateWeek puts nothing on a rest day and has as many sessions as the levers ask for", () => {
+  const levers = { runs: 3, swims: 2, swimruns: 1, strength: 3, mobility: 2 };
+  const { week, unplaced } = generateWeek(levers, ["Wed", "Fri"]);
+  assertEquals(unplaced, []);
+  assertEquals(week.length, 3 + 2 + 1 + 3 + 2);
+  assert(week.every((session) => session.day !== "Wed" && session.day !== "Fri"));
+  assert(weekIssues(week, ["Wed", "Fri"]).every((issue) => issue.kind !== "rest-day"));
+});
+
+Deno.test("generateWeek with every day a rest day places nothing and reports it", () => {
+  const { week, unplaced } = generateWeek(DEFAULT_LEVERS, [...DAYS]);
+  assertEquals(week, []);
+  assertEquals(unplaced.length, 8);
+});
+
+Deno.test("generateWeek keeps levers within their limits", () => {
+  const { week } = generateWeek({ runs: 99, swims: -3, swimruns: 1.7, strength: Number.NaN, mobility: 3 });
+  assertEquals(week.filter((session) => session.discipline === "run").length, LEVER_LIMITS.runs);
+  assertEquals(week.filter((session) => session.discipline === "swim").length, 0);
+  assertEquals(week.filter((session) => session.discipline === "swimrun").length, 1);
+  assertEquals(week.filter((session) => session.discipline === "strength").length, 0);
+  assertEquals(clampLevers({ runs: 9, swims: 9, swimruns: 9, strength: 9, mobility: 9 }), LEVER_LIMITS);
+});
+
+Deno.test("every session a lever can produce has a unique id", () => {
+  assertEquals(new Set(CATALOG_IDS).size, CATALOG_IDS.length);
+});
+
+Deno.test("restDaysRequested knows the sports rest day in Dutch and German", () => {
+  assertEquals(restDaysRequested("woensdag sportrustdag graag"), ["Wed"]);
+  assertEquals(restDaysRequested("Am Sonntag Sportruhetag bitte"), ["Sun"]);
 });

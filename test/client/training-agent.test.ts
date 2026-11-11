@@ -44,7 +44,7 @@ function fakeModel(prompts: string[]): LanguageModelStatic {
       return Promise.resolve({
         prompt: (input: string) => {
           prompts.push(input);
-          return Promise.resolve(JSON.stringify({ moves: [{ id: "trail", toDay: "Mon", reason: "Travelling." }] }));
+          return Promise.resolve(JSON.stringify({ moves: [{ id: "run-1", toDay: "Fri", reason: "Travelling." }] }));
         },
         destroy: () => {},
       });
@@ -127,7 +127,7 @@ Deno.test("training agent: a rest day request is planned by the rules, as a bull
   const prompts: string[] = [];
   const applied: { moves: Move[]; restDays: Day[] }[] = [];
   const agent = createTrainingAgent({
-    model: badModel(prompts, { moves: [{ id: "brick", toDay: "Wed", reason: "rest" }] }),
+    model: badModel(prompts, { moves: [{ id: "swimrun-1", toDay: "Wed", reason: "rest" }] }),
     lang: "en",
     strings,
     chrome: true,
@@ -140,15 +140,15 @@ Deno.test("training agent: a rest day request is planned by the rules, as a bull
   assertEquals(proposal.text.split("\n"), [
     "# Proposal",
     "- Wed becomes a rest day",
-    "- Flexibility: static + dynamic, 30 min: Wed → Fri — Wed is a rest day",
+    "- Strength: legs, 15 min: Wed → Thu — Wed is a rest day",
   ]);
   assertEquals(proposal.followUps?.map((f) => f.label), ["Apply", "Dismiss"]);
 
   const [done] = texts(await collect(agent, proposal.followUps![0].prompt!));
-  assertEquals(done.text, "applied: Wed becomes a rest day; Flexibility: static + dynamic, 30 min: Wed → Fri");
+  assertEquals(done.text, "applied: Wed becomes a rest day; Strength: legs, 15 min: Wed → Thu");
   assertEquals(done.followUps, undefined, "a week without problems has no next steps");
   assertEquals(applied.length, 1);
-  assertEquals(applied[0].moves.map((move) => [move.id, move.toDay]), [["flex", "Fri"]]);
+  assertEquals(applied[0].moves.map((move) => [move.id, move.toDay]), [["strength-1", "Thu"]]);
   assertEquals(applied[0].restDays, ["Wed"]);
 });
 
@@ -168,7 +168,7 @@ Deno.test("training agent: a rest day request works without the model, in Dutch 
 Deno.test("training agent: a rest day asked for in other words is planned by the rules, whatever the model moved", async () => {
   const prompts: string[] = [];
   const agent = createTrainingAgent({
-    model: badModel(prompts, { restDays: ["Wed"], moves: [{ id: "brick", toDay: "Wed", reason: "rest" }] }),
+    model: badModel(prompts, { restDays: ["Wed"], moves: [{ id: "swimrun-1", toDay: "Wed", reason: "rest" }] }),
     lang: "en",
     strings,
     chrome: true,
@@ -182,9 +182,9 @@ Deno.test("training agent: a rest day asked for in other words is planned by the
 });
 
 Deno.test("training agent: a move onto a rest day is left out and says so", async () => {
-  const week = applyMoves(PROTOTYPE_WEEK, [{ id: "flex", toDay: "Fri", reason: "" }]);
+  const week = applyMoves(PROTOTYPE_WEEK, [{ id: "strength-1", toDay: "Mon", reason: "" }]);
   const agent = createTrainingAgent({
-    model: badModel([], { moves: [{ id: "trail", toDay: "Wed", reason: "x" }] }),
+    model: badModel([], { moves: [{ id: "run-1", toDay: "Wed", reason: "x" }] }),
     lang: "en",
     strings,
     chrome: true,

@@ -2497,6 +2497,7 @@
   "workspace": {
     "dependencies": [
       "jsr:@std/assert@1",
+      "npm:@ag-ui/core@^1.0.4",
       "npm:@tailwindcss/cli@^4.3.3",
       "npm:@xmldom/xmldom@0.9",
       "npm:fast-check@^3.22.0",
@@ -2505,6 +2506,7 @@
     ],
     "packageJson": {
       "dependencies": [
+        "npm:@ag-ui/core@^1.0.4",
         "npm:@astrojs/check@~0.9.4",
         "npm:@astrojs/react@^7.1.2",
         "npm:@playwright/test@^1.58.0",
