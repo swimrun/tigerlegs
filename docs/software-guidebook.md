@@ -61,11 +61,11 @@ Each way below is a user story with one acceptance criterion in Given/When/Then 
 4. **Read a compact table.** As an athlete, I see one row per run and swim pair so that I can write the numbers on a paddle ([ADR-0007](./adr/0007-compact-segment-table-format.md)).
    - Given a course that starts with a run, when the table is shown run-first, then each row shows a run distance and the swim that follows it.
 
-The table defaults to run-first; **Swim first** changes both the pairing and column order.
+The table defaults to run-first; **Show swim first** (against the default **Show run first**) changes both the pairing and column order.
 Each distance is an independently selectable segment, even when two segments share a row.
 Map selections scroll the corresponding row into view; Escape clears selection.
 Hover still previews a segment when no selection is pinned.
-**Cumulative distance** sums the unrounded distances of the displayed segments and shows the result to one decimal place; displayed breaks contribute only when **Include breaks** is enabled.
+**Show total so far** (the cumulative distance) sums the unrounded distances of the displayed segments and shows the result to one decimal place; displayed breaks contribute only when **Show breaks** is enabled.
 Incomplete pairs use a dash for the missing distance, and boundary disagreements include a conflict label identifying the resolving strategy.
 
 ### 2.1 Upload and analysis controls
@@ -73,7 +73,7 @@ Incomplete pairs use a dash for the missing distance, and boundary disagreements
 Choose a GPX file or drop exactly one file onto the upload area; both paths use the same validation and analysis pipeline.
 For a file with several tracks, the selector lists track names and point counts, and analysis waits for the athlete to choose a non-empty track.
 Only that track supplies coordinates, timestamps, distances and the terrain query area.
-**Waypoints** and **Speed** are enabled by default; **Use terrain data** remains off until explicitly enabled.
+**Waypoints** and **Speed** are enabled by default. Terrain data stays off until the athlete says yes: after an own file has been analysed a dialog asks "Use terrain data?" and shows what is sent, and the button "Improve swims with terrain data" next to the status asks the same question for a sample or later. The athlete can turn it off again with "Turn terrain data off".
 Strategies without usable data are reported in the status area.
 Disabling the last local strategy is rejected with a message and retains the results.
 Terrain can always be switched off: if it was the only enabled strategy, local speed analysis is re-enabled instead of forcing terrain back on.
@@ -153,17 +153,17 @@ Table 3 gives the segment distances as the organisers published them.
 
 *Table 3*: Published segment distances of the Vertical SwimRunMan Laffrey 2026.
 
-| #         | Run (km) | Swim (m) | Cumulative (km) |
-| --------- | -------- | -------- | --------------- |
-| 1         |          | 400      | 0.4             |
-| 2         | 5.2      | 400      | 5.6             |
-| 3         | 0.3      | 2200     | 6.3             |
-| 4         | 1.4      | 400      | 9.9             |
-| 5         | 0.2      | 600      | 10.5            |
-| 6         | 6.7      | 1000     | 17.8            |
-| 7         | 4.9      | 1100     | 23.7            |
-| 8         | 6.1      |          | 29.1            |
-| **Total** | 24.8     | 6100     | 30.9            |
+| #         | Run (km) | Swim (m) | Total so far (km) |
+| --------- | -------- | -------- | ----------------- |
+| 1         |          | 400      | 0.4               |
+| 2         | 5.2      | 400      | 5.6               |
+| 3         | 0.3      | 2200     | 6.3               |
+| 4         | 1.4      | 400      | 9.9               |
+| 5         | 0.2      | 600      | 10.5              |
+| 6         | 6.7      | 1000     | 17.8              |
+| 7         | 4.9      | 1100     | 23.7              |
+| 8         | 6.1      |          | 29.1              |
+| **Total** | 24.8     | 6100     | 30.9              |
 
 The test file is `test-data/vertical_swimrunman_2026-22910326-1781510068-71.gpx`.
 On a comparable Laffrey file the system measured 24.7 km of running and 6250 m of swimming, so its swim total is 150 m longer than the published one.
