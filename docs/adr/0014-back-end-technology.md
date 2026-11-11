@@ -72,7 +72,7 @@ What Rust offers at our scale is a very small image and memory use and a strict 
 
 ### What the owner has said (11 November 2026)
 
-Interest in Java and in getting to know it better, in Spring Boot or another Java microservice framework (Micronaut, Quarkus, Javalin), in Project Leyden for the start-up time, and in Spring Data JDBC for its support of the aggregate pattern; a long-standing interest in Domain-Driven Design.
+Interest in Java and in getting to know it better, in Spring Boot or another Java microservice framework (Micronaut, Quarkus, Javalin), in Project Leyden for the start-up time, and in Spring Data JDBC for its support of the aggregate pattern; a long-standing interest in Domain-Driven Design; and a liking for database migrations, as known from EF Core and Flyway.
 These are inputs for C1 and for C10, not scores; the C1 scores stay the owner's.
 
 ## Method
@@ -152,13 +152,24 @@ The owner works in Domain-Driven Design and values persistence that follows the 
 The model we expect has aggregates such as a course (with its variants and legs), a team or app group (with its members), a swimrunner profile and a recording, where a recording refers to a course by id instead of containing it.
 What each ecosystem offers for that:
 
-- **Java with Spring Data JDBC.** Built on exactly these ideas: "each aggregate has exactly one aggregate root", all entities reachable from the root belong to the aggregate, references across aggregates are not guaranteed to be consistent at all times but eventually, and there is no lazy loading, so an aggregate loads and saves as a whole; the price is that child entities of an aggregate are deleted and recreated when it is saved, so large aggregates are costly to write (Spring, n.d.). Spatial types are not mapped out of the box; PostGIS columns need converters or SQL functions, to be tried in the spike. Kotlin's immutable data classes suit value objects. Micronaut Data JDBC is close in mechanics: queries are computed as SQL at build time and "results are mapped straight to your entities, without an ORM, lazy loading or a persistence context", with association mapping and fetching, PostgreSQL and GraalVM native image support; but its guide does not present aggregates as its design, and how it saves child collections (cascading) was not found in the pages we read, so it must be tried (Micronaut, n.d.). Quarkus offers Panache on top of Hibernate ORM, in an active record style (entity classes carry their own queries, which works against persistence ignorance) or a repository style; it is a JPA model with the usual lazy loading, so the aggregate boundaries are ours to keep, in exchange for Hibernate's mature migrations and spatial support (Quarkus, n.d.-b).
+- **Java with Spring Data JDBC.** Built on exactly these ideas: "each aggregate has exactly one aggregate root", all entities reachable from the root belong to the aggregate, references across aggregates are not guaranteed to be consistent at all times but eventually, and there is no lazy loading, so an aggregate loads and saves as a whole; the price is that child entities of an aggregate are deleted and recreated when it is saved, so large aggregates are costly to write (Spring, n.d.-a). Spatial types are not mapped out of the box; PostGIS columns need converters or SQL functions, to be tried in the spike. Kotlin's immutable data classes suit value objects. Micronaut Data JDBC is close in mechanics: queries are computed as SQL at build time and "results are mapped straight to your entities, without an ORM, lazy loading or a persistence context", with association mapping and fetching, PostgreSQL and GraalVM native image support; but its guide does not present aggregates as its design, and how it saves child collections (cascading) was not found in the pages we read, so it must be tried (Micronaut, n.d.). Quarkus offers Panache on top of Hibernate ORM, in an active record style (entity classes carry their own queries, which works against persistence ignorance) or a repository style; it is a JPA model with the usual lazy loading, so the aggregate boundaries are ours to keep, in exchange for Hibernate's mature migrations and spatial support (Quarkus, n.d.-b).
 - **.NET with Entity Framework Core.** Microsoft's own guidance for DDD uses it: persistence-ignorant POCO entities, private fields and read-only collections that the aggregate root controls, value objects as owned types, one repository per aggregate and the `DbContext` as unit of work, with Dapper for queries in a CQRS split (Microsoft, 2021).
 - **Python with SQLAlchemy.** The imperative (classical) mapping lets the ORM depend on the domain model and not the other way round, so "our domain model classes stay blissfully unaware of the database" (Percival & Gregory, n.d.).
-- **TypeScript (Node.js or Deno).** The popular tools (Prisma, Drizzle) are schema and query builders and do not model aggregates; MikroORM, with an identity map and a unit of work, comes closest, to be checked. Repositories written by hand are common.
+- **TypeScript (Node.js or Deno).** The popular tools (Prisma, Drizzle) are schema and query builders and do not model aggregates; MikroORM comes closest: it describes itself as a data mapper that aims at persistence ignorance, with an identity map, a unit of work that tracks changes and writes them in one transaction on `flush`, and repositories as thin layers over the entity manager; its documentation does not present aggregates or DDD, so the boundaries are ours, and PostGIS is not built in but needs custom types (MikroORM, n.d.-a, n.d.-b, n.d.-d). Repositories written by hand are common.
 - **Go and Rust.** No aggregate-aware mapper; the usual way is hand-written repositories over `pgx` or `sqlc` and `sqlx`, which is clear but is all code to write and test.
 
 So Java with Spring Data JDBC, .NET with EF Core and Python with SQLAlchemy have the best-documented fit with the aggregate pattern; of the Java frameworks only Spring Data JDBC is built around it, Micronaut Data JDBC comes close in mechanics and Quarkus follows the JPA model, and the scores for C10 reflect that (Spring Boot 5, Micronaut and Quarkus 4).
+
+### Database migrations
+
+The owner likes migrations, as known from EF Core and from Flyway in Java: schema changes that are versioned, reviewable and repeatable. There are two styles, and the tools of the options fall in one or both:
+
+- **Model-first**: the tool compares the model with a snapshot or the database and generates the migration. EF Core keeps a model snapshot, generates migration source files and records applied migrations in a history table; for deployment it points to migration bundles or reviewed SQL scripts rather than the development tools (Microsoft, 2026). Alembic does the same for SQLAlchemy, with autogenerate from the differences and upgrade and downgrade scripts (Bayer, n.d.). MikroORM generates migrations from the schema difference, with `up` and `down`, and can run them at start-up through its Migrator API (MikroORM, n.d.-c). The other TypeScript, Go and Rust tools have their own migration tools; we have not checked them.
+- **SQL-first**: versioned SQL files, applied in order and recorded in a history table. Flyway uses files named `V<version>__<name>.sql`, and Liquibase uses change logs; Spring Boot runs either at start-up when it is on the classpath, with Flyway scripts in `db/migration` by default (Spring, n.d.-b). Flyway's Community edition is Apache 2.0, while Liquibase moved to the Functional Source License with version 5.0 in September 2025 (Bytebase, 2026; a vendor blog).
+
+Flyway and Liquibase are separate tools with a command line and a container image, so they work with every option here and can run as an initialisation step in a container before the service starts; they are not tied to a language or an ORM.
+PostGIS asks for hand-written SQL in any case (`CREATE EXTENSION postgis`, spatial indexes), so SQL migrations are the common ground and a generator from the ORM is an aid to draft them, not the source of truth.
+The working assumption is therefore: SQL migrations with Flyway, whatever the language, and the choice of ORM does not decide this.
 
 ## Evaluation (provisional)
 
@@ -224,6 +235,8 @@ If the owner rates Spring Boot 5 and Node.js 3 on C1, the totals are 385 and 400
 - Adoptium. (n.d.). *Temurin support and roadmap*. Retrieved November 10, 2026, from https://adoptium.net/support/
 - Astro. (n.d.-a). *On-demand rendering*. Retrieved November 10, 2026, from https://docs.astro.build/en/guides/on-demand-rendering/
 - Astro. (n.d.-b). *Endpoints*. Retrieved November 10, 2026, from https://docs.astro.build/en/guides/endpoints/
+- Bayer, M. (n.d.). *Alembic* [Documentation]. Retrieved November 11, 2026, from https://alembic.sqlalchemy.org/en/latest/
+- Bytebase. (2026). *Database deployment tools for DevOps teams in 2026* [Blog]. https://www.bytebase.com/blog/database-deployment-tools.md
 - Cloudflare. (2026, October 9). *Deno joins Cloudflare*. https://blog.cloudflare.com/deno-joins-cloudflare
 - Deno. (2026). *The state of Deno after the Cloudflare announcement* (Issue 37030) [Issue tracker]. GitHub. Retrieved November 10, 2026, from https://github.com/denoland/deno/issues/37030
 - eSecurity Planet. (2026). *GitHub account breach fuels Shai-Hulud npm supply chain attack*. https://esecurityplanet.com/threats/github-account-breach-fuels-shai-hulud-npm-supply-chain-attack/
@@ -239,7 +252,12 @@ If the owner rates Spring Boot 5 and Node.js 3 on C1, the totals are 385 and 400
 - Linuxiac. (2026). *Cloudflare acquires Deno JavaScript runtime, core development to end in 2027*. https://linuxiac.com/cloudflare-acquires-deno-javascript-runtime/
 - Micronaut. (n.d.). *Micronaut Data* [User guide]. Retrieved November 11, 2026, from https://micronaut-projects.github.io/micronaut-data/latest/guide/
 - Microsoft. (2021). *Implementing the infrastructure persistence layer with Entity Framework Core* [.NET microservices architecture]. Retrieved November 11, 2026, from https://learn.microsoft.com/en-us/dotnet/architecture/microservices/microservice-ddd-cqrs-patterns/infrastructure-persistence-layer-implementation-entity-framework-core
+- Microsoft. (2026, August 5). *Migrations overview* [EF Core]. Retrieved November 11, 2026, from https://learn.microsoft.com/en-us/ef/core/managing-schemas/migrations/
 - Microsoft. (n.d.). *.NET and .NET Core official support policy*. Retrieved November 10, 2026, from https://dotnet.microsoft.com/en-us/platform/support/policy/dotnet-core
+- MikroORM. (n.d.-a). *Unit of work and identity map*. Retrieved November 11, 2026, from https://mikro-orm.io/docs/unit-of-work
+- MikroORM. (n.d.-b). *Repositories*. Retrieved November 11, 2026, from https://mikro-orm.io/docs/repositories
+- MikroORM. (n.d.-c). *Migrations*. Retrieved November 11, 2026, from https://mikro-orm.io/docs/migrations
+- MikroORM. (n.d.-d). *Custom types*. Retrieved November 11, 2026, from https://mikro-orm.io/docs/custom-types
 - Mollie. (n.d.). *API client libraries*. Retrieved November 11, 2026, from https://docs.mollie.com/docs/libraries
 - .NET Foundation. (n.d.). *dotnet/runtime* [Repository and licence]. GitHub. Retrieved November 10, 2026, from https://github.com/dotnet/runtime
 - Next.js. (2026, March 25). *Next.js across platforms* [Adapter API announcement]. https://nextjs.org/nextjs-across-platforms
@@ -253,6 +271,7 @@ If the owner rates Spring Boot 5 and Node.js 3 on C1, the totals are 385 and 400
 - Quarkus. (n.d.-b). *Simplified Hibernate ORM with Panache*. Retrieved November 11, 2026, from https://quarkus.io/guides/hibernate-orm-panache
 - Roden, G. (2026). *Commentary: Deno joins Cloudflare — judged by its own promises*. heise online. Retrieved November 10, 2026, from https://www.heise.de/en/blog/Commentary-Deno-joins-Cloudflare-judged-by-its-own-promises-11509407.html
 - Socket. (2026). *Deno goes the way of the dinosaur*. Retrieved November 10, 2026, from https://socket.dev/blog/deno-acquisition
-- Spring. (n.d.). *Domain-driven design and relational databases* [Spring Data JDBC reference]. Retrieved November 11, 2026, from https://docs.spring.io/spring-data/relational/reference/jdbc/domain-driven-design.html
+- Spring. (n.d.-a). *Domain-driven design and relational databases* [Spring Data JDBC reference]. Retrieved November 11, 2026, from https://docs.spring.io/spring-data/relational/reference/jdbc/domain-driven-design.html
+- Spring. (n.d.-b). *Database initialization: Flyway and Liquibase* [Spring Boot how-to]. Retrieved November 11, 2026, from https://docs.spring.io/spring-boot/how-to/data-initialization.html
 - Tech Holder. (2026, March). *How to optimize Spring Boot native image build times with GraalVM* [Blog post]. https://tech-holder.blogspot.com/2026/03/how-to-optimize-spring-boot-native.html
 - Tokio. (n.d.). *axum* [Repository and README]. GitHub. Retrieved November 10, 2026, from https://github.com/tokio-rs/axum
