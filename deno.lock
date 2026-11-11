@@ -2513,6 +2513,7 @@
         "npm:fast-check@^3.22.0",
         "npm:leaflet@^1.9.4",
         "npm:marked@15",
+        "npm:playwright-bdd@^9.2.1",
         "npm:react-dom@^19.2.0",
         "npm:react@^19.2.0",
         "npm:storybook@^10.6.5",

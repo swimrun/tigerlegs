@@ -61,11 +61,11 @@ Each way below is a user story with one acceptance criterion in Given/When/Then 
 4. **Read a compact table.** As an athlete, I see one row per run and swim pair so that I can write the numbers on a paddle ([ADR-0007](./adr/0007-compact-segment-table-format.md)).
    - Given a course that starts with a run, when the table is shown run-first, then each row shows a run distance and the swim that follows it.
 
-The table defaults to run-first; **Swim first** changes both the pairing and column order.
+The table defaults to run-first; **Show swim first** (against the default **Show run first**) changes both the pairing and column order.
 Each distance is an independently selectable segment, even when two segments share a row.
 Map selections scroll the corresponding row into view; Escape clears selection.
 Hover still previews a segment when no selection is pinned.
-**Cumulative distance** sums the unrounded distances of the displayed segments and shows the result to one decimal place; displayed breaks contribute only when **Include breaks** is enabled.
+**Show total so far** (the cumulative distance) sums the unrounded distances of the displayed segments and shows the result to one decimal place; displayed breaks contribute only when **Show breaks** is enabled.
 Incomplete pairs use a dash for the missing distance, and boundary disagreements include a conflict label identifying the resolving strategy.
 
 ### 2.1 Upload and analysis controls
@@ -73,7 +73,7 @@ Incomplete pairs use a dash for the missing distance, and boundary disagreements
 Choose a GPX file or drop exactly one file onto the upload area; both paths use the same validation and analysis pipeline.
 For a file with several tracks, the selector lists track names and point counts, and analysis waits for the athlete to choose a non-empty track.
 Only that track supplies coordinates, timestamps, distances and the terrain query area.
-**Waypoints** and **Speed** are enabled by default; **Use terrain data** remains off until explicitly enabled.
+**Waypoints** and **Speed** are enabled by default. Terrain data stays off until the athlete says yes: after an own file has been analysed a dialog asks "Use terrain data?" and shows what is sent, and the button "Improve swims with terrain data" next to the status asks the same question for a sample or later. The athlete can turn it off again with "Turn terrain data off".
 Strategies without usable data are reported in the status area.
 Disabling the last local strategy is rejected with a message and retains the results.
 Terrain can always be switched off: if it was the only enabled strategy, local speed analysis is re-enabled instead of forcing terrain back on.
@@ -153,17 +153,17 @@ Table 3 gives the segment distances as the organisers published them.
 
 *Table 3*: Published segment distances of the Vertical SwimRunMan Laffrey 2026.
 
-| #         | Run (km) | Swim (m) | Cumulative (km) |
-| --------- | -------- | -------- | --------------- |
-| 1         |          | 400      | 0.4             |
-| 2         | 5.2      | 400      | 5.6             |
-| 3         | 0.3      | 2200     | 6.3             |
-| 4         | 1.4      | 400      | 9.9             |
-| 5         | 0.2      | 600      | 10.5            |
-| 6         | 6.7      | 1000     | 17.8            |
-| 7         | 4.9      | 1100     | 23.7            |
-| 8         | 6.1      |          | 29.1            |
-| **Total** | 24.8     | 6100     | 30.9            |
+| #         | Run (km) | Swim (m) | Total so far (km) |
+| --------- | -------- | -------- | ----------------- |
+| 1         |          | 400      | 0.4               |
+| 2         | 5.2      | 400      | 5.6               |
+| 3         | 0.3      | 2200     | 6.3               |
+| 4         | 1.4      | 400      | 9.9               |
+| 5         | 0.2      | 600      | 10.5              |
+| 6         | 6.7      | 1000     | 17.8              |
+| 7         | 4.9      | 1100     | 23.7              |
+| 8         | 6.1      |          | 29.1              |
+| **Total** | 24.8     | 6100     | 30.9              |
 
 The test file is `test-data/vertical_swimrunman_2026-22910326-1781510068-71.gpx`.
 On a comparable Laffrey file the system measured 24.7 km of running and 6250 m of swimming, so its swim total is 150 m longer than the published one.
@@ -1100,11 +1100,13 @@ For development you can run your own Overpass server, with a one-time import of 
 
 Tests follow the test pyramid: many fast tests at the bottom, few slow ones at the top.
 
-| Level                   | Tool                                        | Location                       | What it covers                                                                                                 |
-| ----------------------- | ------------------------------------------- | ------------------------------ | -------------------------------------------------------------------------------------------------------------- |
-| Unit and property-based | Deno test runner, `@std/assert`, fast-check | `test/client/`, `test/shared/` | Pure domain functions: GPX parsing, classification, confidence, chat agent, session store, language resolution |
-| Integration (back end)  | Deno test runner                            | `test/server/`                 | The Overpass proxy and its cache                                                                               |
-| End-to-end              | Playwright on the built static site         | `test/site/`                   | Deep links, menu, language switch, fake login, terrain consent, mobile layout                                  |
+| Level                   | Tool                                 | Location                                 | What it covers                                                                                                                                                     |
+| ----------------------- | ------------------------------------ | ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Unit and property-based | Vitest, fast-check                   | `test/client/`, `test/shared/`, `src/**` | Pure domain functions: GPX parsing, classification, confidence, chat agents, session store, language resolution                                                    |
+| Integration (back end)  | Vitest on Node                       | `src/server/`                            | The Overpass proxy and its cache                                                                                                                                   |
+| Component               | Storybook play functions, with axe   | `src/components/*.stories.tsx`           | One component and its interactions and accessibility; label steps `Given`, `When`, `Then` with `step()`                                                            |
+| Acceptance criteria     | Gherkin features with playwright-bdd | `test/features/`                         | The Given, When, Then criteria of an issue, run in a browser on the built static site ([ADR-0018](./adr/0018-acceptance-tests-with-gherkin-and-playwright-bdd.md)) |
+| End-to-end              | Playwright on the built static site  | `test/site/`                             | Deep links, menu, language switch, fake login, terrain consent, mobile layout                                                                                      |
 
 Rules:
 
@@ -1143,6 +1145,7 @@ Table 8 lists the ADRs and what each decides.
 | [0014](./adr/0014-back-end-technology.md)                                 | Accepted: the back end is Node.js with TypeScript, chosen with multi-criteria decision making, a decision tree and a spike that measured memory and image size against Spring Boot, Micronaut and ASP.NET Core                   |
 | [0016](./adr/0016-data-access-layer.md)                                   | Draft: the data layer of the back end (ORM or repositories, PostgreSQL driver, optimistic concurrency, transactions); no decision yet                                                                                            |
 | [0017](./adr/0017-localisation.md)                                        | Accepted: localisation with i18next and react-i18next, translations as external data files (YAML preferred, JSON accepted), ICU message syntax preferred, and one URL per language (Astro i18n routing); decided without a spike |
+| [0018](./adr/0018-acceptance-tests-with-gherkin-and-playwright-bdd.md)    | Accepted as a pilot: acceptance criteria as Gherkin features in `test/features/`, run with playwright-bdd on the Playwright runner                                                                                               |
 
 ADR-0008 implements a shared Astro layout and directly linkable HTML pages, with the interactive extractor implemented in React and no runtime backend. Astro itself is not React-based; it supplies static page composition around the React application. Existing TypeScript analysis modules remain reusable. All ADRs are built into HTML pages and linked from this chapter. The ADR includes a provisional weighted comparison of the previous Deno-only site build, Astro, Next.js static export, Vite + React SPA and Eleventy, following the [ICT Research Methods multi-criteria decision making method](https://ictresearchmethods.nl/workshop/multi-criteria-decision-making/).
 

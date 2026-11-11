@@ -5,10 +5,11 @@ import { importWarnings, requiresAnalysisWorker } from "../client/analysis-job.t
 import { runWorkerJob } from "../client/worker-client.ts";
 import { detectApplicableStrategies } from "../client/strategy-combiner.ts";
 import { fetchWater, type WaterBody } from "../client/water.ts";
-import { SAMPLE_COURSES } from "../client/sample-courses.ts";
 import { haversineDistance } from "../shared/distance-calculator.ts";
 import type { GPXData, StrategyName, Trackpoint } from "../shared/types.ts";
 import CourseMap from "./CourseMap.tsx";
+import SampleMenu from "./SampleMenu.tsx";
+import Toggle from "./Toggle.tsx";
 import SegmentTable from "./SegmentTable.tsx";
 
 interface Course {
@@ -39,6 +40,15 @@ export default function Extractor({ base }: { base: string }) {
   const [strategies, setStrategies] = useState<StrategyName[]>(["waypoint", "speed"]);
   const enabled = useRef(strategies);
   const [status, setStatus] = useState("");
+  // The question whether to use terrain data, asked when it matters: after an own file was analysed, or on request.
+  const [terrainAsk, setTerrainAsk] = useState(false);
+  const terrainDialog = useRef<HTMLDialogElement>(null);
+  useEffect(() => {
+    const dialog = terrainDialog.current;
+    if (!dialog) return;
+    if (terrainAsk && !dialog.open) dialog.showModal();
+    if (!terrainAsk && dialog.open) dialog.close();
+  }, [terrainAsk]);
   const [message, setMessage] = useState("");
   const [notice, setNotice] = useState<string | null>(null);
   const [warning, setWarning] = useState("");
@@ -157,6 +167,7 @@ export default function Extractor({ base }: { base: string }) {
     try {
       const xml = await readFileAsText(file);
       if (!request.signal.aborted) await importText(file.name, xml, request);
+      if (!request.signal.aborted && current.current?.file === file.name && current.current.analysis && !enabled.current.includes("landscape")) setTerrainAsk(true);
     } catch (error) {
       if (request.signal.aborted) return;
       setStatus("Import failed; previous results retained.");
@@ -227,36 +238,10 @@ export default function Extractor({ base }: { base: string }) {
   const presentationChange = () => { setSelected(null); setHovered(null); };
   return <>
     <noscript><p>Enable JavaScript to analyse GPX files locally in your browser.</p></noscript>
-    <div className="lg:grid lg:grid-cols-[13rem_minmax(0,1fr)] lg:gap-6">
-    <nav aria-label="Sample swimruns" className="mb-6 lg:mb-0">
-      <h2 className="text-sm font-semibold uppercase tracking-wide text-stone-600">Try a sample</h2>
-      <ul className="mt-2 space-y-3">
-        {SAMPLE_COURSES.map(course => {
-          const single = course.variants.length === 1 ? course.variants[0] : null;
-          if (single?.file) return <li key={course.id}>
-            <a href={`${base}samples/${single.file}`} data-sample={single.file} title={single.description}
-              className="sample-link block rounded border border-stone-200 bg-white px-3 py-2 text-sm font-medium hover:border-amber-500 hover:bg-amber-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-stone-950"
-              onClick={event => { event.preventDefault(); void importSample(single.file!); }}>{course.name}</a>
-          </li>;
-          return <li key={course.id} data-course={course.id}>
-            <h3 className="text-sm font-semibold text-stone-800">{course.name}</h3>
-            <ul className="mt-1 space-y-2">
-              {course.variants.map(variant => <li key={variant.id} data-variant={variant.id}>
-                {variant.file
-                  ? <a href={`${base}samples/${variant.file}`} data-sample={variant.file}
-                    className="sample-link block rounded border border-stone-200 bg-white px-3 py-2 text-sm font-medium hover:border-amber-500 hover:bg-amber-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-stone-950"
-                    onClick={event => { event.preventDefault(); void importSample(variant.file!); }}>{variant.label}</a>
-                  : <span aria-disabled="true" className="block rounded border border-dashed border-stone-300 px-3 py-2 text-sm font-medium text-stone-600">{variant.label} <span className="font-normal">(GPX to be added)</span></span>}
-                <p className="mt-1 text-xs text-stone-600">{variant.canonical && <strong className="font-semibold">Main variant. </strong>}{variant.description}</p>
-              </li>)}
-            </ul>
-          </li>;
-        })}
-      </ul>
-    </nav>
+    <SampleMenu base={base} load={file => void importSample(file)} />
     <div className="min-w-0">
     <section id="drop-zone" aria-label="GPX file drop zone"
-      className={`mb-6 rounded-lg border border-stone-200 border-t-4 border-t-amber-500 bg-white p-4 shadow-sm${dragging ? " drop-active" : ""}`}
+      className={`mb-4 rounded-lg border border-stone-200 border-t-4 border-t-amber-500 bg-white p-4 shadow-sm${dragging ? " drop-active" : ""}`}
       onDragOver={event => { event.preventDefault(); setDragging(true); }}
       onDragLeave={event => { if (!(event.relatedTarget instanceof Node) || !event.currentTarget.contains(event.relatedTarget)) setDragging(false); }}
       onDrop={event => {
@@ -264,6 +249,8 @@ export default function Extractor({ base }: { base: string }) {
         if (event.dataTransfer.files.length !== 1) { fail("Drop exactly one GPX file at a time"); return; }
         void importFile(event.dataTransfer.files[0]);
       }}>
+      <div className="lg:grid lg:grid-cols-2 lg:gap-6">
+      <div>
       <label htmlFor="gpx-input" className="mb-2 block text-sm font-medium text-stone-700">Upload a .gpx file</label>
       <input id="gpx-input" type="file" accept=".gpx"
         className="block w-full text-sm text-stone-600 file:mr-4 file:cursor-pointer file:rounded-md file:border-0 file:bg-amber-500 file:px-4 file:py-2 file:font-semibold file:text-stone-900 hover:file:bg-amber-400"
@@ -279,30 +266,26 @@ export default function Extractor({ base }: { base: string }) {
           </option>)}
         </select>
       </div>}
-      <fieldset className="mt-3 space-y-2"><legend className="text-sm font-semibold">Detection strategies</legend>
-        <div className="flex flex-wrap gap-4 text-sm">
-          {(["waypoint", "speed"] as const).map(strategy => <label key={strategy}>
-            <input id={strategy === "waypoint" ? "use-waypoints" : "use-speed"} type="checkbox" checked={strategies.includes(strategy)}
-              onChange={event => void toggleStrategy(strategy, event.target.checked)} /> {strategy === "waypoint" ? "Waypoints" : "Speed"}
-          </label>)}
-        </div>
-        <div className="rounded border-2 border-stone-900 bg-amber-50 p-3 text-sm">
-          <label className="flex cursor-pointer items-start gap-2">
-            <input id="use-terrain" type="checkbox" className="mt-1 h-4 w-4" checked={strategies.includes("landscape")}
-              onChange={event => void toggleStrategy("landscape", event.target.checked)} />
-            <span><strong>Use terrain data</strong> <span className="rounded bg-stone-950 px-2 py-0.5 text-xs font-semibold uppercase tracking-wider text-amber-400">Recommended</span>
-              <span className="mt-1 block">This is what makes TigerLegs <em>terrain-informed</em>: lakes and rivers from OpenStreetMap show where your track is really in the water, for more accurate swims. Switched off, the analysis only uses speed and waypoints, locally.</span></span>
-          </label>
-          <p className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-stone-700">
-            <a href="https://overpass-api.de" className="inline-flex items-center" aria-label="Overpass API">
-              <img src={`${base}img/overpass-api-logo.svg`} alt="" width="60" height="24" className="h-6 w-auto" />
-            </a>
-            <span>Terrain data © <a className="underline" href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors</a> (ODbL), served by the <a className="underline" href="https://overpass-api.de">Overpass API</a>. Logo: <a className="underline" href="https://wiki.openstreetmap.org/wiki/File:Overpass_API_logo.svg">OpenStreetMap Wiki</a>, CC BY-SA 2.0.</span>
-          </p>
-        </div>
-        {strategies.includes("landscape") && <p id="terrain-warning" className="rounded border border-amber-300 bg-amber-50 p-2 text-xs text-stone-800">Warning: with terrain data on, the rough area of the track (a coarse bounding box, not the track itself) and your IP address are sent to OpenStreetMap's Overpass service to look up lakes and rivers. Your GPX file is never uploaded.</p>}
+      </div>
+      <fieldset className="mt-3 space-y-2 lg:mt-0"><legend className="text-sm font-semibold">How swims are found</legend>
+        <details className="text-sm">
+          <summary className="cursor-pointer font-medium">Local strategies: waypoints and speed</summary>
+          <div className="mt-1 flex flex-wrap gap-4">
+            {(["waypoint", "speed"] as const).map(strategy => <label key={strategy}>
+              <input id={strategy === "waypoint" ? "use-waypoints" : "use-speed"} type="checkbox" checked={strategies.includes(strategy)}
+                onChange={event => void toggleStrategy(strategy, event.target.checked)} /> {strategy === "waypoint" ? "Waypoints" : "Speed"}
+            </label>)}
+          </div>
+        </details>
+        {strategies.includes("landscape") && <p id="terrain-warning" className="rounded border border-amber-300 bg-amber-50 p-2 text-xs text-stone-800">Warning: the rough area of the track (a coarse bounding box, not the track itself) and your IP address are sent to OpenStreetMap's Overpass service. Your GPX file is never uploaded. <a className="underline" href="#terrain-details" onClick={() => { const details = document.getElementById("terrain-details") as HTMLDetailsElement | null; if (details) details.open = true; }}>More</a></p>}
       </fieldset>
+      </div>
       <p id="analysis-status" role="status" className="mt-2 text-sm text-stone-700">{status}</p>
+      {course?.analysis && <p className="mt-1 text-sm">
+        {strategies.includes("landscape")
+          ? <button type="button" id="terrain-off" className="underline" onClick={() => void toggleStrategy("landscape", false)}>Turn terrain data off</button>
+          : <button type="button" id="terrain-ask" className="underline" onClick={() => setTerrainAsk(true)}>Improve swims with terrain data</button>}
+      </p>}
       {warning && <p id="point-warning" role="status" className="mt-2 rounded border border-amber-300 bg-amber-50 p-2 text-sm text-stone-800">{warning}</p>}
       {notice && <p id="notice" role="status" className="mt-2 rounded border border-amber-300 bg-amber-50 p-2 text-sm text-stone-800">{notice}</p>}
       <p id="message" role="alert" className="mt-2 text-sm font-medium text-red-700">{message}</p>
@@ -316,10 +299,14 @@ export default function Extractor({ base }: { base: string }) {
           });
         }} />
       <div id="results" ref={results} className="overflow-y-auto rounded-lg border border-stone-200 border-t-4 border-t-stone-950 bg-white shadow-sm lg:col-span-2 lg:max-h-[75vh]">
-        <label className="flex cursor-pointer items-center justify-end gap-2 border-b border-stone-100 px-3 py-2 text-sm text-stone-700">
-          <span>Include breaks</span><input id="include-breaks" type="checkbox" className="peer sr-only" checked={includeBreaks} onChange={event => { setIncludeBreaks(event.target.checked); presentationChange(); }} />
-          <span className="relative h-6 w-11 rounded-full bg-stone-300 transition-colors after:absolute after:left-0.5 after:top-0.5 after:h-5 after:w-5 after:rounded-full after:bg-white after:shadow after:transition-transform peer-checked:bg-amber-500 peer-checked:after:translate-x-5 peer-focus-visible:ring-2 peer-focus-visible:ring-amber-500 peer-focus-visible:ring-offset-2" />
-        </label>
+        <div className="flex flex-wrap gap-x-6 gap-y-2 border-b border-stone-100 px-3 py-2">
+          <Toggle id="include-breaks" label="Show breaks" checked={includeBreaks} onChange={checked => { setIncludeBreaks(checked); presentationChange(); }} />
+          <fieldset className="flex items-center gap-4 text-sm text-stone-700"><legend className="sr-only">Order of the table</legend>
+            <label className="flex cursor-pointer items-center gap-1"><input id="run-first" type="radio" name="table-order" checked={!swimFirst} onChange={() => { setSwimFirst(false); presentationChange(); }} /> Show run first</label>
+            <label className="flex cursor-pointer items-center gap-1"><input id="swim-first" type="radio" name="table-order" checked={swimFirst} onChange={() => { setSwimFirst(true); presentationChange(); }} /> Show swim first</label>
+          </fieldset>
+          <Toggle id="show-cumulative" label="Show total so far" checked={showCumulative} onChange={checked => { setShowCumulative(checked); presentationChange(); }} />
+        </div>
         <div id="totals" className="border-b border-stone-100 px-4 py-3">
           {course?.analysis && <>
             <h2 className="text-base font-semibold text-stone-900">{course.analysis.trackName || "Unnamed track"}</h2>
@@ -331,10 +318,6 @@ export default function Extractor({ base }: { base: string }) {
             </dl>
           </>}
         </div>
-        <div className="flex flex-wrap gap-4 px-3 py-2 text-sm">
-          <label><input id="swim-first" type="checkbox" checked={swimFirst} onChange={event => { setSwimFirst(event.target.checked); presentationChange(); }} /> Swim first</label>
-          <label><input id="show-cumulative" type="checkbox" checked={showCumulative} onChange={event => { setShowCumulative(event.target.checked); presentationChange(); }} /> Cumulative distance</label>
-        </div>
         <p id="segment-help" className="px-3 py-2 text-xs text-stone-600">Click a map line or table row to select a segment; click it again to deselect. Use Tab to reach segment buttons and Enter or Space to select. Escape clears the selection.</p>
         <SegmentTable segments={visible} totals={course?.analysis?.totals ?? { totalRunKm: "0.0", totalSwimM: "0" }}
           conflicts={course?.analysis?.conflicts ?? []} config={{ swimFirst, showCumulative }}
@@ -342,6 +325,21 @@ export default function Extractor({ base }: { base: string }) {
       </div>
     </div>
     </div>
-    </div>
+    <dialog ref={terrainDialog} id="terrain-dialog" aria-labelledby="terrain-title" onClose={() => setTerrainAsk(false)}
+      className="m-auto max-w-md rounded-lg border-2 border-stone-900 bg-amber-50 p-4 text-sm text-stone-800 shadow-lg backdrop:bg-stone-900/50">
+      <h2 id="terrain-title" className="text-base font-bold">Use terrain data?</h2>
+      <p className="mt-2">Lakes and rivers from OpenStreetMap show where your track is really in the water, for more accurate swims. This is what makes TigerLegs <em>terrain-informed</em>.</p>
+      <p id="terrain-sent" className="mt-2 rounded border border-amber-300 bg-white p-2 text-xs">What is sent: the rough area of the track (a coarse bounding box, not the track itself) and your IP address, to OpenStreetMap's Overpass service. Your GPX file is never uploaded.</p>
+      <p className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-stone-700">
+        <a href="https://overpass-api.de" className="inline-flex items-center" aria-label="Overpass API">
+          <img src={`${base}img/overpass-api-logo.svg`} alt="" width="60" height="24" className="h-6 w-auto" />
+        </a>
+        <span>Terrain data © <a className="underline" href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors</a> (ODbL), served by the <a className="underline" href="https://overpass-api.de">Overpass API</a>. Logo: <a className="underline" href="https://wiki.openstreetmap.org/wiki/File:Overpass_API_logo.svg">OpenStreetMap Wiki</a>, CC BY-SA 2.0.</span>
+      </p>
+      <div className="mt-3 flex flex-wrap gap-2">
+        <button type="button" id="use-terrain" className="rounded bg-stone-900 px-4 py-2 font-semibold text-white" onClick={() => { setTerrainAsk(false); void toggleStrategy("landscape", true); }}>Yes, use terrain data</button>
+        <button type="button" id="keep-local" className="rounded border border-stone-900 bg-white px-4 py-2 font-semibold" onClick={() => setTerrainAsk(false)}>No, keep it local</button>
+      </div>
+    </dialog>
   </>;
 }
