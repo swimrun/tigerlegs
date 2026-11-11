@@ -77,3 +77,9 @@ b1tw153. (n.d.). *Overpass-API* [README]. GitHub. Retrieved November 10, 2026, f
 Geofabrik. (n.d.). *OpenStreetMap data extracts*. Retrieved November 10, 2026, from https://download.geofabrik.de/
 
 Wiktorn. (n.d.). *Overpass-API* [Docker image and README]. GitHub. Retrieved November 10, 2026, from https://github.com/wiktorn/Overpass-API
+
+## Look at the data with Overpass Turbo
+
+The local server is an API only: it answers `http://127.0.0.1:8081/api/interpreter` for queries and `http://127.0.0.1:8081/api/status` for its state, and has no web page of its own.
+[Overpass Turbo](https://overpass-turbo.eu/) is the web interface for writing and running queries on a map. In its settings, set the server to `http://127.0.0.1:8081/api/` and it uses the local server instead of a public one.
+The local server answers with `Access-Control-Allow-Origin: *`, so the browser accepts its answers on the Overpass Turbo page. Whether a browser blocks a page from `https` calling a local `http` address depends on the browser; Chrome and Firefox treat `127.0.0.1` as a trustworthy address (not verified here, so try it).
