@@ -82,9 +82,9 @@ for (const [name, strategies, issue] of APPROACHES) {
 // Ratchets: today's error per approach, in metres off the official total. A change may make a number
 // smaller (better) but not larger. When an approach improves, lower its numbers here.
 const RATCHET: Record<string, { swimErrorM: number; runErrorM: number }> = {
-  "speed only": { swimErrorM: 930, runErrorM: 1390 },
+  "speed only": { swimErrorM: 390, runErrorM: 690 },
   "terrain only": { swimErrorM: 4710, runErrorM: 5000 },
-  "speed and terrain combined": { swimErrorM: 480, runErrorM: 940 },
+  "speed and terrain combined": { swimErrorM: 100, runErrorM: 560 },
 };
 for (const [name, strategies] of APPROACHES) {
   it(`Rondje Eilanden, ${name}: no worse than the pinned error`, () => {
@@ -96,3 +96,25 @@ for (const [name, strategies] of APPROACHES) {
     expect(runErrorM <= pinned.runErrorM, `run off by ${runErrorM} m, pinned ${pinned.runErrorM} m; ${result.shown}`).toBeTruthy();
   });
 }
+
+// Issue #98: swim A at the start was found as a swim, a "run" of 542 m across the water and a second swim,
+// because the speed was the mean of one-second steps, which noisy fixes in the water push above 5 km/h.
+// The speed is now the net displacement over 10 s, so the water stretch around trackpoints 750-880 is a swim.
+it("Rondje Eilanden: the noisy water stretch of swim A is no longer a run, and a swim with terrain (#98)", () => {
+  const typeAt = (strategies: readonly StrategyName[]) =>
+    analyse(strategies).segments.find((s) => s.startTrackpointIndex <= 800 && s.endTrackpointIndex >= 800)?.type;
+  // Speed alone is unsure here (a break of 166 m); it is no longer a run of 542 m.
+  expect(typeAt(["speed"]) !== "run", `speed alone: ${typeAt(["speed"])}`).toBeTruthy();
+  expect(typeAt(["speed", "landscape"])).toEqual("swim");
+});
+
+// The recording of 2026-07-19 is missing the part from island 3 to 5, and there is no official split of it, so
+// it is pinned as a snapshot: the number of swims and runs and the distances found with speed and terrain.
+it("Rondje Eilanden, lintjes opruimen: snapshot of speed and terrain combined (no official split)", () => {
+  const parsed = parseGPX(readFileSync("test-data/Rondje_Eilanden_lintjes_opruimen.gpx", "utf8"));
+  expect(parsed.ok).toBeTruthy();
+  const result = summarize(analyzeGpx(parsed.value, water, { enabledStrategies: ["speed", "landscape"] }).segments);
+  expect([result.swims, result.runs], result.shown).toEqual([9, 10]);
+  expect(Math.round(result.swimM / 50) * 50, result.shown).toEqual(2000);
+  expect(Math.round(result.runM / 50) * 50, result.shown).toEqual(4050);
+});
