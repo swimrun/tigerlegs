@@ -39,6 +39,9 @@ export interface TrainingAgentStrings {
   /** A model move that was left out because it would put a session on a rest day. */
   leftOut: (title: string, day: string) => string;
   nextChip: (title: string, from: string, to: string) => string;
+  /** Default chips: make a day a sports rest day, and fix what the week still needs. */
+  restDayChip: (day: string) => string;
+  fixChip: string;
   fixReasons: Record<IssueKind, (day: string) => string>;
   apply: string;
   /** What the chat says after a proposal was applied; the summary names what changed. */
@@ -68,6 +71,9 @@ const INSTALL = "install-model";
 const APPLY = "apply-proposal";
 const DISMISS = "dismiss-proposal";
 const NEXT = "next-step:";
+const FIX = "fix-week";
+/** The day the default rest day chip offers. */
+const CHIP_REST_DAY: Day = "Wed";
 
 /**
  * Chat agent that moves training sessions with Gemini Nano. It only proposes: moves are applied
@@ -182,7 +188,17 @@ export function createTrainingAgent(
     followUps ? { type: "text", text: value, followUps } : { type: "text", text: value };
 
   return {
-    suggestions: () => Promise.resolve([]),
+    // Only chips that apply to the week as it is now: no rest day chip for a day that already is one,
+    // and a fix chip only when the week still has something to fix.
+    suggestions: () => {
+      const rest = getRestDays();
+      const chips: ChatSuggestion[] = [];
+      if (!rest.includes(CHIP_REST_DAY)) {
+        chips.push({ id: "chip-rest", label: t.restDayChip(t.days[CHIP_REST_DAY]) });
+      }
+      if (suggestFixes(getWeek(), rest).length > 0) chips.push({ id: "chip-fix", label: t.fixChip, prompt: FIX });
+      return Promise.resolve(chips);
+    },
     async *run(message: string) {
       yield { type: "run-started" };
 
@@ -213,6 +229,14 @@ export function createTrainingAgent(
       } else if (message === DISMISS) {
         pending = { moves: [], restDays: [] };
         yield text(t.dismissed);
+      } else if (message === FIX) {
+        const [first] = suggestFixes(getWeek(), getRestDays());
+        if (!first) {
+          yield text(t.proposalEmpty);
+        } else {
+          round++;
+          yield proposal([first.move], [...getRestDays()], [], []);
+        }
       } else if (message.startsWith(NEXT)) {
         const move = nextSteps[Number(message.slice(NEXT.length))];
         if (!move) {
