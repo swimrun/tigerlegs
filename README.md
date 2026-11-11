@@ -9,7 +9,12 @@
 
 ![TigerLegs: a tiger swims across a bay and runs along the coast, following a GPS route](./public/img/tigerlegs-promo.png)
 
-TigerLegs splits a swimrun course into its swim and run legs. You upload a GPX file, and the tool shows the course on an interactive map next to a table with the distance of every swim (in metres) and run (in kilometres).
+TigerLegs splits a swimrun into its swim and run legs, whether it is a race course or one of your own training sessions. You upload a GPX file, and the tool shows it on an interactive map next to a table with the distance of every swim (in metres) and run (in kilometres).
+
+Two kinds of GPX file go in, and what the tool can use differs:
+
+- **A course from an organiser** often holds only positions and waypoints, without times. Then the speed cannot be derived, and TigerLegs relies on the waypoints (swim start and end) and on the terrain (water from OpenStreetMap).
+- **A recording of your own training** has times, so the speed shows where you swam and ran, and the terrain adds evidence. Analysing your own training is as much a use case as analysing a race.
 
 TIGERLegs stands for *Terrain-Informed Gpx Extractor: LEts Go Swimrun!* (TIGE-R + LEGS). The tiger is also a nod to Team Groot Rondje Eilanden (TGRE), since a tiger is an amphibious animal and a good swimmer.
 
