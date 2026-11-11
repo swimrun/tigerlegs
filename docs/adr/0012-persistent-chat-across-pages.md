@@ -47,8 +47,6 @@ Spike findings (all Playwright site tests pass, plus a new test that navigates `
 
 ## References
 
-Astro. (n.d.). *View transitions*. https://docs.astro.build/en/guides/view-transitions/
-
-Astro. (n.d.). *Share state between islands*. https://docs.astro.build/en/recipes/sharing-state-islands/
-
-GitHub. (n.d.). *Creating a custom 404 page for your GitHub Pages site*. https://docs.github.com/en/pages/getting-started-with-github-pages/creating-a-custom-404-page-for-your-github-pages-site
+- Astro. (n.d.). *View transitions*. https://docs.astro.build/en/guides/view-transitions/
+- Astro. (n.d.). *Share state between islands*. https://docs.astro.build/en/recipes/sharing-state-islands/
+- GitHub. (n.d.). *Creating a custom 404 page for your GitHub Pages site*. https://docs.github.com/en/pages/getting-started-with-github-pages/creating-a-custom-404-page-for-your-github-pages-site

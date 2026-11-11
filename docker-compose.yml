@@ -1,5 +1,11 @@
 # Local run: `docker compose up --build`  (API on http://localhost:8123)
-# On the VPS, run the same image behind Caddy (see docs/deployment.md).
+# On the VPS, run the same image behind Caddy or nginx (ADR-0004).
+#
+# Optional local Overpass server (profile "overpass"), for development and for recording test
+# fixtures, so the public servers are not hit. One-time setup and options: docs/local-overpass.md.
+#   docker compose --profile overpass up -d overpass
+# To let the API use it:
+#   OVERPASS_API_URL=http://overpass/api/interpreter docker compose --profile overpass up --build
 services:
   api:
     build: .
@@ -7,9 +13,34 @@ services:
       - "8123:8123"
     environment:
       ALLOWED_ORIGINS: "https://swimrun.group,http://localhost:8123"
+      OVERPASS_API_URL: ${OVERPASS_API_URL:-https://overpass-api.de/api/interpreter}
     volumes:
       - terrain-cache:/data
     restart: unless-stopped
+
+  overpass:
+    profiles: ["overpass"]
+    # wiktorn/overpass-api has a native arm64 build (Apple Silicon); the b1tw153/overpass-api image
+    # of the upstream manual is amd64 only. Both document the same Overpass API.
+    image: wiktorn/overpass-api:latest
+    container_name: tigerlegs-overpass
+    ports:
+      - "127.0.0.1:8081:80"
+    volumes:
+      - ./overpass-data/${REGION:-netherlands}:/db
+      # The extract is downloaded once on the host (resumable), see docs/local-overpass.md.
+      - ./overpass-data/downloads:/downloads:ro
+    environment:
+      OVERPASS_MODE: init
+      OVERPASS_PLANET_URL: file:///downloads/${EXTRACT_FILE:-netherlands-latest.osm.pbf}
+      # Geofabrik only offers PBF, the image imports .osm.bz2: convert first.
+      OVERPASS_PLANET_PREPROCESS: "mv /db/planet.osm.bz2 /db/planet.osm.pbf && osmium cat -o /db/planet.osm.bz2 /db/planet.osm.pbf && rm /db/planet.osm.pbf"
+      OVERPASS_DIFF_URL: ${DIFF_URL:-https://download.geofabrik.de/europe/netherlands-updates/}
+      # We query by bounding box and need no history or author data, so the derived "area" objects
+      # and the metadata are left out: less import time and disk space.
+      OVERPASS_META: "no"
+      OVERPASS_USE_AREAS: "false"
+    restart: on-failure:2
 
 volumes:
   terrain-cache:

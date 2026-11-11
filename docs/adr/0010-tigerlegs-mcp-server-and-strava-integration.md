@@ -51,10 +51,7 @@ None yet. The working hypothesis to validate is option **A** for the long term, 
 
 ## References
 
-Anthropic. (n.d.). *Model Context Protocol*. https://modelcontextprotocol.io/
-
-Augo. (n.d.). *Connect augo to Claude and ChatGPT*. Retrieved November 9, 2026, from https://www.augotraining.com/en/mcp
-
-Strava. (2024, November 19). *Updates to Strava's API agreement*. https://press.strava.com/articles/updates-to-stravas-api-agreement
-
-Stryd. (n.d.). *Stryd MCP | Explore your Stryd data with AI / SI*. Retrieved November 9, 2026, from https://help.stryd.com/en/articles/17993725-stryd-mcp-explore-your-stryd-data-with-ai-si
+- Anthropic. (n.d.). *Model Context Protocol*. https://modelcontextprotocol.io/
+- Augo. (n.d.). *Connect augo to Claude and ChatGPT*. Retrieved November 9, 2026, from https://www.augotraining.com/en/mcp
+- Strava. (2024, November 19). *Updates to Strava's API agreement*. https://press.strava.com/articles/updates-to-stravas-api-agreement
+- Stryd. (n.d.). *Stryd MCP | Explore your Stryd data with AI / SI*. Retrieved November 9, 2026, from https://help.stryd.com/en/articles/17993725-stryd-mcp-explore-your-stryd-data-with-ai-si

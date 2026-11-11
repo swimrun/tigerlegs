@@ -1,12 +1,21 @@
 import { marked } from "marked";
+import { extractPlantUml } from "./build-diagrams.ts";
 
 export function renderDocument(source: string, base = "", isAdr = false): string {
   const renderer = new marked.Renderer();
   const defaultCode = renderer.code.bind(renderer);
-  renderer.code = (token) =>
-    token.lang === "mermaid"
-      ? `<pre class="mermaid">${token.text}</pre>`
-      : defaultCode(token);
+  const root0 = base ? base.replace(/\/?$/, "/") : "";
+  renderer.code = (token) => {
+    if (token.lang === "mermaid") return `<pre class="mermaid">${token.text}</pre>`;
+    if (token.lang === "plantuml") {
+      // The picture is rendered from this block by `deno task diagrams`; the source stays readable.
+      const [block] = extractPlantUml("```plantuml\n" + token.text + "\n```");
+      const alt = block.title.replace(/"/g, "&quot;");
+      return `<figure><img src="${root0}diagrams/${block.name}.svg" alt="${alt}">` +
+        `<details><summary>PlantUML source</summary>${defaultCode(token)}</details></figure>`;
+    }
+    return defaultCode(token);
+  };
 
   const defaultLink = renderer.link.bind(renderer);
   const root = base ? base.replace(/\/?$/, "/") : "";

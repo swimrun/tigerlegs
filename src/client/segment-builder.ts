@@ -22,7 +22,9 @@ export function roundSwimDistance(metres: number): number {
  * Examples: 5.23→5.2, 1.37→1.4
  */
 export function roundRunDistance(km: number): number {
-  return Math.round(km * 10) / 10;
+  // Drop binary noise first: a total that is exactly 60.65 km can be stored as 60.6499999999999986 or
+  // 60.65000000000001 depending on the order of the additions, and must round the same way (up) either way.
+  return Math.round(Number((km * 10).toPrecision(12))) / 10;
 }
 
 /**

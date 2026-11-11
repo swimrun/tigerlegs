@@ -17,7 +17,8 @@ System_Ext(garmin, "Garmin Connect", "Transfers the exported course to the watch
 
 Rel(athlete, browser, "Uses")
 Rel(athlete, watch, "Glances at mid-race", $tags="planned")
-Rel(browser, backend, "Requests terrain", "REST, JSON, port 8123")
+Rel(browser, overpass, "Queries water, with backoff and a cache", "HTTPS")
+Rel(browser, backend, "Optional: requests terrain", "REST, JSON, port 8123")
 Rel(backend, cache, "Reads and writes")
 Rel(backend, overpass, "Queries terrain", "HTTPS")
 Rel(browser, garmin, "Exports course to", "versioned course format", $tags="planned")

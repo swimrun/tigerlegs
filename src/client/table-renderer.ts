@@ -7,6 +7,7 @@ import type { ConflictInfo } from "./strategy-combiner.ts";
 import {
   groupSegmentsForDisplay,
   pairSegmentsForDisplay,
+  roundRunDistance,
 } from "./segment-builder.ts";
 
 export interface TableConfig {
@@ -40,7 +41,7 @@ export function buildTableRows(
     return {
       pair: pairs[index],
       segments: group,
-      cumulativeKm: cumulative.toFixed(1),
+      cumulativeKm: roundRunDistance(cumulative).toFixed(1),
       conflicts: conflicts.filter((conflict) =>
         group.some((segment) =>
           conflict.trackpointIndex >= segment.startTrackpointIndex &&
