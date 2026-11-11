@@ -2,11 +2,11 @@
 
 Date: 2026-06-15
 
-## Status
+## 1. Status
 
 Accepted
 
-## Context
+## 2. Context
 
 The Deno backend (ADR-0004) currently serves as an API proxy for
 landscape feature lookups. As the project evolves, multiple client
@@ -28,7 +28,7 @@ from a Garmin watch app.
 We need to decide on the API style for the backend to ensure it can
 serve all these clients without modification.
 
-## Quality Criteria
+## 3. Quality Criteria
 
 | Criterion | Weight | Description |
 |-----------|--------|-------------|
@@ -40,9 +40,9 @@ serve all these clients without modification.
 | Caching friendliness | Medium | HTTP caching headers work naturally |
 | Offline resilience | Low | Clients may cache responses locally |
 
-## Options
+## 4. Options
 
-### Option A: REST/JSON API (chosen)
+### 4.1 Option A: REST/JSON API (chosen)
 
 Standard RESTful HTTP endpoints returning JSON responses.
 
@@ -70,7 +70,7 @@ GET  /api/health
 - Slightly more verbose than binary protocols
 - No built-in streaming (fine for our small payloads)
 
-### Option B: GraphQL
+### 4.2 Option B: GraphQL
 
 Single endpoint with query language.
 
@@ -89,7 +89,7 @@ Single endpoint with query language.
 - Harder to cache (POST requests, variable queries)
 - Larger client libraries needed on mobile
 
-### Option C: gRPC / Protocol Buffers
+### 4.3 Option C: gRPC / Protocol Buffers
 
 Binary RPC protocol.
 
@@ -106,7 +106,7 @@ Binary RPC protocol.
 - Heavyweight for 2–3 simple endpoints
 - Requires code generation step
 
-## Decision
+## 5. Decision
 
 **Option A: REST/JSON API.**
 
@@ -126,7 +126,7 @@ Rationale:
 5. **Future-proof** — If we add analysis-on-server later (ADR-0003
    Option C), it's just more REST endpoints.
 
-## API Design Principles
+## 6. API Design Principles
 
 - All endpoints under `/api/v1/` prefix
 - JSON request and response bodies with `Content-Type: application/json`
@@ -138,7 +138,7 @@ Rationale:
 - No authentication required initially (rate limiting by IP);
   API keys can be added later for mobile/watch clients
 
-## Garmin Connect IQ Feasibility
+## 7. Garmin Connect IQ Feasibility
 
 Garmin watches (Fenix 8, Forerunner 965, Enduro 3, etc.) can
 consume this API via:
@@ -157,7 +157,7 @@ Constraints for Garmin clients:
 These constraints are easily met by our terrain lookup endpoints
 (small JSON payloads, simple GET/POST).
 
-## Consequences
+## 8. Consequences
 
 - Requirement 15 (Deno Backend) is extended: all endpoints follow
   REST conventions and return JSON

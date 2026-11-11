@@ -2,13 +2,13 @@
 
 Date: 2026-11-11
 
-## Status
+## 1. Status
 
 Draft. No decision has been taken; this record sets up the comparison for issue #71.
 It follows [ADR-0014](./0014-back-end-technology.md) (Node.js with TypeScript) and sits next to the storage record of #63 (ADR-0015: PostgreSQL with PostGIS, backups, schema outline), which is about the database and not about how code talks to it.
 The weights are the owner's to set; nothing here is scored yet.
 
-## Context
+## 2. Context
 
 The back end will hold aggregates such as a course (with variants and legs), a team or app group (with members), a swimrunner profile and a recording that refers to a course by id (ADR-0014, persistence section).
 The owner works in Domain-Driven Design and knows Spring Data JDBC, so three things are requirements and not extras.
@@ -26,12 +26,12 @@ For an aggregate the check belongs on the root: a change to any child must confl
 A unit of work is the persistence mechanism that writes changes in one transaction; it is not the same as an aggregate (Fowler, n.d.-a; ADR-0014).
 A tool whose unit of work spans many aggregates only respects the rule if the use case does: one aggregate root per flush.
 
-## Method
+## 3. Method
 
 The same as ADR-0014: the [ICT Research Methods multi-criteria decision making method](https://ictresearchmethods.nl/workshop/multi-criteria-decision-making/) with a weighted sum, a decision tree and a section on lack of prejudice (ICT Research Methods, n.d.).
 The spike decides what documentation cannot: each requirement above becomes a test that runs against PostgreSQL in a container.
 
-## Alternatives
+## 4. Alternatives
 
 | Option                             | What it is                                                                              | To check                                                                 |
 | ---------------------------------- | --------------------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
@@ -40,14 +40,14 @@ The spike decides what documentation cannot: each requirement above becomes a te
 | **Drizzle, Prisma, TypeORM**       | Schema and query tools; the ADR-0014 research found they do not model aggregates        | Whether any of them can express a root-level version check               |
 | **Plain driver**                   | The PostgreSQL client directly, with SQL in repositories                                | Lightest and most explicit; all mapping is ours                          |
 
-## PostgreSQL drivers
+## 5. PostgreSQL drivers
 
 The question is which driver talks to PostgreSQL, and whether the transaction guarantees are real for it.
 MikroORM ships `@mikro-orm/postgresql`, which "works with cockroachdb too", and `@mikro-orm/pglite` for an embedded PostgreSQL in WASM, which could serve fast tests (MikroORM, n.d.-c).
 The documentation states that "all changes computed during `em.flush()` are executed inside a database transaction by default" and names Cloudflare D1 as the one driver without explicit transactions (MikroORM, n.d.-c).
 Which client library `@mikro-orm/postgresql` uses underneath, and which other PostgreSQL clients exist for the other options, is not in the pages read and is to be found out before the comparison (to check: the `pg` package and `postgres`).
 
-## Sources on aggregates and the unit of work
+## 6. Sources on aggregates and the unit of work
 
 The patterns, in the words of their sources, and what each ecosystem says about them:
 
@@ -61,7 +61,7 @@ The patterns, in the words of their sources, and what each ecosystem says about 
 
 The patterns are also described in the Code chapter of the [software guidebook](../software-guidebook.md#76-back-end-aggregate-repository-and-unit-of-work-planned).
 
-## Criteria (draft, weights to be set by the owner)
+## 7. Criteria (draft, weights to be set by the owner)
 
 | #   | Criterion                          | What it asks                                                                                                    |
 | --- | ---------------------------------- | --------------------------------------------------------------------------------------------------------------- |
@@ -75,14 +75,14 @@ The patterns are also described in the Code chapter of the [software guidebook](
 | D8  | Learnability and testing           | Close to what the owner knows (EF Core, Spring Data JDBC), and testable without heavy set-up                    |
 | D9  | Footprint                          | Memory and start time next to the service (ADR-0014, C3), and the supply chain                                  |
 
-## What MikroORM is documented to do so far
+## 8. What MikroORM is documented to do so far
 
 - A version property for optimistic locking, as a number or a timestamp; "version numbers (not timestamps) should however be preferred as they cannot potentially conflict in a highly concurrent environment".
   A mismatch at `em.flush()` throws an `OptimisticLockError` and rolls back the active transaction; `em.lock` and `findOne` with `LockMode.OPTIMISTIC` and an expected version check a version explicitly (MikroORM, n.d.-a).
 - Transactions: all writes are queued until `em.flush()`, which wraps them in a single transaction; isolation levels up to `SERIALIZABLE`; pessimistic locking (MikroORM, n.d.-a).
 - Not documented in the pages read: aggregates and DDD, domain events, an outbox, and whether a change to a child entity conflicts through the version of the root. These are the first spike tests.
 
-## Spike tests (planned; none exist or have been run yet)
+## 9. Spike tests (planned; none exist or have been run yet)
 
 Each test runs against PostgreSQL in a container, for MikroORM and for the query-builder option.
 
@@ -94,7 +94,7 @@ Each test runs against PostgreSQL in a container, for MikroORM and for the query
 6. Deletion is explicit: removing a child from its aggregate deletes that row, deleting the root deletes its composed children, and a reference to another aggregate (by id) deletes nothing.
 7. Erasure of personal data: after the erasure use case for a swimrunner, no row with their personal data remains in any table, including outbox payloads, caches and stored files.
 
-## Deletion and personal data
+## 10. Deletion and personal data
 
 Deletion is a design decision for each relation and not an ORM default.
 Inside an aggregate the children are composed, so they follow the root (and an orphan removed from the aggregate is deleted).
@@ -104,7 +104,7 @@ The options are an explicit erasure use case that deletes across aggregates, an 
 Backups and caches need their own retention rule, which belongs in the storage record (#63).
 Which cascade and orphan-removal options MikroORM offers is to be checked in the spike.
 
-## Next steps
+## 11. Next steps
 
 1. The owner sets the weights and scores criteria D1 to D9; the evaluation and decision tree follow as in ADR-0014.
 2. Write the seven spike tests for MikroORM and for the query-builder option and run them.

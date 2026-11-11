@@ -1,9 +1,5 @@
 # Claude Instructions
 
-Primarily follow the repository-wide instructions below, which are imported from AGENTS.md.
+Follow the repository-wide instructions below, which are imported from AGENTS.md. They apply to every agent, so nothing is specific to Claude here.
 
 @AGENTS.md
-
-Additionally for Claude:
-
-- Where applicable, put the issue number in the commit title.

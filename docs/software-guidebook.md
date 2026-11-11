@@ -46,7 +46,7 @@ Live tracking and race results are out of scope.
 
 This chapter describes what the system does for its users.
 The Kiro specs in `.kiro/specs/gpx-swimrun-analyzer/` hold the detailed requirements; this chapter gives the overview.
-Section 2.1 maps the user stories to use cases, and section 2.2 shows a real course that the system analyses.
+Section 2.2 maps the user stories to use cases, and section 2.3 shows a real course that the system analyses.
 The near-term roadmap is in the README; milestones and the watch-platform strategy are in [ROADMAP.md](./ROADMAP.md) and [PRODUCT_VISION.md](./PRODUCT_VISION.md).
 
 An athlete interacts with the system in four ways.
@@ -68,7 +68,7 @@ Hover still previews a segment when no selection is pinned.
 **Cumulative distance** sums the unrounded distances of the displayed segments and shows the result to one decimal place; displayed breaks contribute only when **Include breaks** is enabled.
 Incomplete pairs use a dash for the missing distance, and boundary disagreements include a conflict label identifying the resolving strategy.
 
-### Upload and analysis controls
+### 2.1 Upload and analysis controls
 
 Choose a GPX file or drop exactly one file onto the upload area; both paths use the same validation and analysis pipeline.
 For a file with several tracks, the selector lists track names and point counts, and analysis waits for the athlete to choose a non-empty track.
@@ -104,7 +104,7 @@ The strategy combiner keeps, per trackpoint, the result with the highest confide
 
 The system also shows aid stations, handles files with several tracks and filters GPS noise during swims; the Kiro specs describe these features.
 
-### 2.1 Use cases
+### 2.2 Use cases
 
 The user stories above describe what an athlete wants; the use cases below describe the features the system offers for it.
 Table 2 lists the six use cases, who uses them and which user story and Kiro requirement each one implements.
@@ -145,7 +145,7 @@ The Kiro specs number these stories and requirements.
 Two further stories, US-2 (waypoint classification) and US-7 (GPX round-trip integrity), are internal processing steps that no user starts, so they are not use cases.
 Accessibility (Req 10) and performance (Req 11) are quality attributes and apply to all use cases; chapter 3 covers them.
 
-### 2.2 Example course: Vertical SwimRunMan Laffrey 2026
+### 2.3 Example course: Vertical SwimRunMan Laffrey 2026
 
 The Vertical SwimRunMan Laffrey 2026 is the main test course.
 It starts with a swim, which is unusual: most swimruns start with a run.
@@ -727,7 +727,7 @@ The front end uses none of these. It follows the GPX rule instead, pure function
 The two aggregates the extractor page needs first are the course and the recording.
 Figure 12 is their design class diagram: types, operations, value objects, the repositories and the domain service that makes a course from a recording.
 Entities have an id and a version for optimistic concurrency ([ADR-0016](./adr/0016-data-access-layer.md)); value objects are immutable.
-The existing types of `src/shared/types.ts` carry over: `Coordinate` and `Trackpoint` become `LinePoint` and `TracePoint`, `Segment` becomes `RecordedSegment` and `StrategyName` stays.
+The model is implemented in `src/shared/domain/`, in plain TypeScript with no framework, so that the browser and the back end share it: `course/` and `recording/` hold the two aggregates, `geometry.ts` the line and trace values, `course-from-recording.ts` the domain service, `repositories.ts` the interfaces and `in-memory-repositories.ts` test doubles with the version check. Two details differ from the diagram: a leg is a swim or a run (`LegKind`; only a recorded segment can be unclassified), and the repositories are asynchronous and `save` returns nothing, so after a save the aggregate in hand is stale and is reloaded before the next change. The existing types of `src/shared/types.ts` carry over: `Coordinate` and `Trackpoint` become `LinePoint` and `TracePoint`, `Segment` becomes `RecordedSegment` and `StrategyName` stays.
 `Leg`, the version and the ids are new.
 
 *Figure 12*: Design class diagram of the Course and Recording aggregates (planned). The diagram is the PlantUML block below.
@@ -946,7 +946,7 @@ The frontend is a static GitHub Pages site at `https://swimrun.group/tigerlegs/`
 
 This chapter describes how the system reaches production.
 
-`.github/workflows/pages.yml` installs npm dependencies, runs Deno tests, builds the Worker/assets and Astro pages, checks site types, and runs Playwright browser tests on pull requests and pushes to `main`. Only `main` publishes `dist/` to GitHub Pages. Feature branches do not deploy automatically.
+`.github/workflows/pages.yml` installs npm dependencies, runs the unit tests (`npm test`), builds the Worker/assets and Astro pages, checks site types, and runs Playwright browser tests on pull requests and pushes to `main`. Only `main` publishes `dist/` to GitHub Pages. Feature branches do not deploy automatically.
 
 The build generates `index.html`, `about.html`, `guidebook.html` and one HTML page per ADR. Public links and assets use the `/tigerlegs/` base path; direct navigation does not require a backend router or a 404 SPA fallback. The `README.md` in the repository root holds the build/preview commands.
 
@@ -962,11 +962,11 @@ The optional Deno API exposes `GET /api/v1/health`; it needs no `Origin` header,
 
 This chapter lists what you need to work on the code.
 
-You need Deno, npm and Node.js 22.23.4 or newer; `.nvmrc` pins Node 24, which CI also uses (`nvm use` picks it up). Run `npm ci` first; npm manages the dependency tree used by both the site build and Deno tests.
+You need Deno, npm and Node.js 22.23.4 or newer; `.nvmrc` pins Node 24, which CI also uses (`nvm use` picks it up). Run `npm ci` first; npm manages the dependency tree used by the site build, the unit tests and Deno.
 
 `deno task dev` prepares the Worker, samples and styling, then starts Astro at `http://localhost:8123/tigerlegs/`. `deno task build` generates the production site in `dist/`; `npm run preview` serves that build locally. No API service is needed for these workflows.
 
-`deno test -A` runs analysis and documentation unit/integration tests. `npm run check` checks the Astro/React code. After building and installing Chromium with `npx playwright install chromium`, `npm run test:site` checks static deep links, ADR publication, React imports/selection, Worker thresholds, terrain consent and mobile layout on a plain static server.
+`npm test` (Vitest) runs the analysis, documentation and domain unit and integration tests. `npm run check` checks the Astro/React code. After building and installing Chromium with `npx playwright install chromium`, `npm run test:site` checks static deep links, ADR publication, React imports/selection, Worker thresholds, terrain consent and mobile layout on a plain static server.
 
 For development you can run your own Overpass server, with a one-time import of a regional extract, so that recording test fixtures does not hit the public servers; see [local-overpass.md](./local-overpass.md) (a service of `docker-compose.yml`, data in the git-ignored `overpass-data/`). The browser client retries a busy public server with exponential backoff and caches the water of an area for a week.
 
@@ -989,7 +989,7 @@ Rules:
 - React components have stories in Storybook (`npm run storybook`, files `src/components/*.stories.tsx`). Each story is also a component test: `npm run test:a11y` runs every story in Chromium through Vitest and fails on any axe accessibility violation (`a11y.test: "error"` in `.storybook/preview.ts`). The *Accessibility* panel in Storybook shows the same findings while developing.
 - Automated checks find only part of the accessibility problems (roughly a third to a half). Keyboard use, focus order and screen-reader wording still need a manual check.
 - Not yet covered: `Extractor` and `CourseMap` (Leaflet, web worker and map tiles need mocks), and the Astro pages and layout, which Storybook does not render.
-- A change is done only when `deno task test`, `deno task build` and (for site changes) `npm run test:site` pass; see [DEFINITION_OF_DONE.md](./DEFINITION_OF_DONE.md).
+- A change is done only when `npm test`, `deno task build` and (for site changes) `npm run test:site` pass; see [DEFINITION_OF_DONE.md](./DEFINITION_OF_DONE.md).
 
 ## 13. Decision log
 
@@ -999,24 +999,24 @@ Table 8 lists the ADRs and what each decides.
 
 *Table 8*: Architecture decision records.
 
-| ADR                                                                       | Decision                                                                                                                                                                                                       |
-| ------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [0001](./adr/0001-record-architecture-decisions.md)                       | Record architecture decisions                                                                                                                                                                                  |
-| [0002](./adr/0002-use-deno-with-typescript.md)                            | Use Deno with TypeScript                                                                                                                                                                                       |
-| [0003](./adr/0003-gpx-analysis-execution-location.md)                     | Choose where the GPX analysis runs                                                                                                                                                                             |
-| [0004](./adr/0004-host-deno-backend-on-eu-vps.md)                         | Host the backend on an EU VPS                                                                                                                                                                                  |
-| [0005](./adr/0005-rest-json-api-for-multi-client-support.md)              | Offer a REST/JSON API                                                                                                                                                                                          |
-| [0006](./adr/0006-open-source-gis-stack.md)                               | Use an open-source GIS stack                                                                                                                                                                                   |
-| [0007](./adr/0007-compact-segment-table-format.md)                        | Show a compact paired segment table                                                                                                                                                                            |
-| [0008](./adr/0008-astro-static-site-with-react-islands.md)                | Astro static pages with a React-based interactive frontend; compare alternatives using multi-criteria decision making                                                                                          |
-| [0009](./adr/0009-react-for-interactive-frontend.md)                      | Use React for the interactive frontend; owner familiarity and learning goals, compared with Vue, Angular and other options                                                                                     |
-| [0010](./adr/0010-tigerlegs-mcp-server-and-strava-integration.md)         | Draft: expose training data through a TigerLegs MCP server with Strava as a data source; no decision yet                                                                                                       |
-| [0011](./adr/0011-model-lifecycle-and-think-thread-for-on-device-chat.md) | Draft: separate the one-off model download from the per-prompt think thread in the on-device chat; no decision                                                                                                 |
-| [0012](./adr/0012-persistent-chat-across-pages.md)                        | Proposed: keep the chat across pages with Astro view transitions and a persisted island                                                                                                                        |
-| [0013](./adr/0013-back-end-is-optional.md)                                | Draft: the back end is optional and a premium feature; the front end works without it; no decision                                                                                                             |
-| [0014](./adr/0014-back-end-technology.md)                                 | Accepted: the back end is Node.js with TypeScript, chosen with multi-criteria decision making, a decision tree and a spike that measured memory and image size against Spring Boot, Micronaut and ASP.NET Core |
-| [0016](./adr/0016-data-access-layer.md)                                   | Draft: the data layer of the back end (ORM or repositories, PostgreSQL driver, optimistic concurrency, transactions); no decision yet                                                                          |
-| [0017](./adr/0017-localisation.md)                                        | Draft: localisation with translations as JSON data, one URL per language (Astro i18n routing) and an i18n library, compared with multi-criteria decision making; no decision on the library yet                |
+| ADR                                                                       | Decision                                                                                                                                                                                                                         |
+| ------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [0001](./adr/0001-record-architecture-decisions.md)                       | Record architecture decisions                                                                                                                                                                                                    |
+| [0002](./adr/0002-use-deno-with-typescript.md)                            | Use Deno with TypeScript                                                                                                                                                                                                         |
+| [0003](./adr/0003-gpx-analysis-execution-location.md)                     | Choose where the GPX analysis runs                                                                                                                                                                                               |
+| [0004](./adr/0004-host-deno-backend-on-eu-vps.md)                         | Host the backend on an EU VPS                                                                                                                                                                                                    |
+| [0005](./adr/0005-rest-json-api-for-multi-client-support.md)              | Offer a REST/JSON API                                                                                                                                                                                                            |
+| [0006](./adr/0006-open-source-gis-stack.md)                               | Use an open-source GIS stack                                                                                                                                                                                                     |
+| [0007](./adr/0007-compact-segment-table-format.md)                        | Show a compact paired segment table                                                                                                                                                                                              |
+| [0008](./adr/0008-astro-static-site-with-react-islands.md)                | Astro static pages with a React-based interactive frontend; compare alternatives using multi-criteria decision making                                                                                                            |
+| [0009](./adr/0009-react-for-interactive-frontend.md)                      | Use React for the interactive frontend; owner familiarity and learning goals, compared with Vue, Angular and other options                                                                                                       |
+| [0010](./adr/0010-tigerlegs-mcp-server-and-strava-integration.md)         | Draft: expose training data through a TigerLegs MCP server with Strava as a data source; no decision yet                                                                                                                         |
+| [0011](./adr/0011-model-lifecycle-and-think-thread-for-on-device-chat.md) | Draft: separate the one-off model download from the per-prompt think thread in the on-device chat; no decision                                                                                                                   |
+| [0012](./adr/0012-persistent-chat-across-pages.md)                        | Proposed: keep the chat across pages with Astro view transitions and a persisted island                                                                                                                                          |
+| [0013](./adr/0013-back-end-is-optional.md)                                | Draft: the back end is optional and a premium feature; the front end works without it; no decision                                                                                                                               |
+| [0014](./adr/0014-back-end-technology.md)                                 | Accepted: the back end is Node.js with TypeScript, chosen with multi-criteria decision making, a decision tree and a spike that measured memory and image size against Spring Boot, Micronaut and ASP.NET Core                   |
+| [0016](./adr/0016-data-access-layer.md)                                   | Draft: the data layer of the back end (ORM or repositories, PostgreSQL driver, optimistic concurrency, transactions); no decision yet                                                                                            |
+| [0017](./adr/0017-localisation.md)                                        | Accepted: localisation with i18next and react-i18next, translations as external data files (YAML preferred, JSON accepted), ICU message syntax preferred, and one URL per language (Astro i18n routing); decided without a spike |
 
 ADR-0008 implements a shared Astro layout and directly linkable HTML pages, with the interactive extractor implemented in React and no runtime backend. Astro itself is not React-based; it supplies static page composition around the React application. Existing TypeScript analysis modules remain reusable. All ADRs are built into HTML pages and linked from this chapter. The ADR includes a provisional weighted comparison of the previous Deno-only site build, Astro, Next.js static export, Vite + React SPA and Eleventy, following the [ICT Research Methods multi-criteria decision making method](https://ictresearchmethods.nl/workshop/multi-criteria-decision-making/).
 

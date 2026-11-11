@@ -2,12 +2,12 @@
 
 Date: 2026-11-11
 
-## Status
+## 1. Status
 
-Draft. The owner has decided the format (translations are data in external files, not TypeScript; YAML is preferred as the source for easier maintenance, JSON is accepted), likes the ICU message syntax, and wants an i18n framework; the routing, the loading and the library are to decide (issue #84).
-Until then the per-language TypeScript files (`TrainingWeek.strings.<lang>.ts`, `chat.strings.<lang>.ts`) are a stopgap.
+Accepted on 11 November 2026: the library is **i18next with react-i18next**, and the owner decided it without a spike. Translations are data in external files (YAML preferred as the source, JSON accepted), the ICU message syntax is preferred, and every language gets its own URL (decision 1 below). The migration is issue #84.
+The comparison was close (i18next 415, Paraglide JS 410 on provisional scores); the owner judged that a spike would not be worth the time, after the length of the back-end spike of ADR-0014.
 
-## Context
+## 2. Context
 
 Today the language is a runtime choice in the browser:
 
@@ -30,9 +30,9 @@ What we want:
 | R8  | The visitor can switch language live, without a full page reload                                             |
 | R9  | A first visit can start in the browser's language (the hosting is static: GitHub Pages)                      |
 
-## The three decisions
+## 3. The three decisions
 
-### 1. Routing: one URL per language (R3, R4)
+### 3.1 Routing: one URL per language (R3, R4)
 
 Astro has built-in i18n routing: `locales` and `defaultLocale` in the configuration, translated pages in folders (`src/pages/fr/about.astro` gives `/fr/about/`, `src/pages/about.astro` the default language when `prefixDefaultLocale` is false), `Astro.currentLocale` in a page and `getRelativeLocaleUrl()` for links (Astro, n.d.).
 Because the site is static, every page is built once per language, and `<html lang>` is written at build time.
@@ -41,23 +41,23 @@ The language switch becomes a list of links to the same page in the other langua
 **Browser language (R9).** GitHub Pages is static and cannot choose a language by the `Accept-Language` header. A start in the browser's language is therefore a small client-side step on the first visit to the root: when no choice is saved and the browser language is offered, go to that language's URL; remember the choice afterwards. Whether this hurts search engines, which see the root without a saved choice, is to check; `hreflang` with an `x-default` link is the usual answer.
 The pages should not be copied per language: one page file with a locale parameter generates all languages (to check against the Astro documentation of dynamic routes).
 
-### 2. Loading: only the language of the page (R1, R2, R6)
+### 3.2 Loading: only the language of the page (R1, R2, R6)
 
 Each page is rendered for its language at build time, and the React islands receive only the messages of that language, as props or through the library's provider.
 Adding a language then means a new set of JSON files and one entry in `locales`; nobody downloads it unless they read that language.
 The files are `<feature>/strings/<lang>.json` once the folders follow the feature structure of #83, for example `training/strings/nl.json`.
 
-### 3. The library
+### 3.3 The library
 
 The choice of library is made with the multi-criteria method of ADR-0014, below.
 
-## Method
+## 4. Method
 
 The comparison follows the [ICT Research Methods multi-criteria decision making method](https://ictresearchmethods.nl/workshop/multi-criteria-decision-making/), as ADR-0009 and ADR-0014 did: alternatives, criteria and weights first, then each option judged per criterion, with time to iterate (ICT Research Methods, n.d.).
 Scores run from 1 (poor) to 5 (excellent), weights add up to 100, and the total is the sum of weight times score.
 The weights and the familiarity scores (C7) are the owner's to set; every other score is provisional and rests on search summaries and library documentation that have not been read in full ([Tolgee](https://tolgee.io/blog/react-i18n-libraries-comparison), [SimpleLocalize](https://simplelocalize.io/blog/posts/the-most-popular-react-localization-libraries/), [Locize](https://www.locize.com/blog/react-intl-vs-react-i18next), [Paraglide JS](https://github.com/opral/paraglide-js), [i18next-icu](https://github.com/i18next/i18next-icu)), so they must be checked, and the spike below is meant to do that.
 
-## Alternatives
+## 5. Alternatives
 
 | Option                         | What it is                                                                                                                                                        |
 | ------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -69,7 +69,7 @@ The weights and the familiarity scores (C7) are the owner's to set; every other 
 
 Others exist (Tolgee, Intlayer, next-intl, which is for Next.js); they are left out because they are tied to a platform or a framework we do not use.
 
-## Criteria and weights (draft)
+## 6. Criteria and weights (draft)
 
 | #   | Criterion                                 | Weight | What it asks                                                                                                                |
 | --- | ----------------------------------------- | ------ | --------------------------------------------------------------------------------------------------------------------------- |
@@ -84,7 +84,7 @@ Others exist (Tolgee, Intlayer, next-intl, which is for Next.js); they are left 
 | C9  | Autonomy                                  | 5      | Who owns it, and the licence (criterion C8 of ADR-0014); not yet looked up for these                                        |
 | C10 | Size on the page                          | 5      | What it adds to the JavaScript of a small site                                                                              |
 
-## Evaluation (provisional)
+## 7. Evaluation (provisional)
 
 | Option                     | C1 (15) | C2 (10) | C3 (15) | C4 (15) | C5 (10) | C6 (10) | C7 (10) | C8 (5) | C9 (5) | C10 (5) | Total   |
 | -------------------------- | ------- | ------- | ------- | ------- | ------- | ------- | ------- | ------ | ------ | ------- | ------- |
@@ -99,43 +99,46 @@ All C7 scores are my placeholder, 3 for every library and 5 for the files the pr
 
 ICU (C4): react-intl is ICU native; i18next needs the official `i18next-icu` plugin, after which only ICU syntax is read; Lingui uses ICU; Paraglide's own message format is not ICU, but an inlang plugin stores ICU messages in JSON files per locale (select, plural, selectordinal, exact matches and offset) (Paraglide JS, n.d.; inlang, n.d.). So react-intl is not the only library with ICU.
 
-### Dependence on Astro
+### 7.1 Dependence on Astro
 
 The library does not decide how dependent we are on Astro; the routing does. One URL per language through Astro's i18n routing ties the page structure to Astro, which Cloudflare now owns (ADR-0014). All of the libraries above are framework independent: i18next and Paraglide JS also run in a plain TypeScript module, in React without Astro, in SvelteKit or in a bare Vite app, and Paraglide JS can even do the URL mapping itself (`localizeUrl` and `deLocalizeUrl`, for example `/de/ueber` for `/about`), which would keep the language routes out of Astro (Paraglide JS, n.d.; whether that works with Astro's static build is to check).
 Who maintains Paraglide JS is not clear from the sources read: its README names the organisation opral, a summary of its GitHub page named another; the owner of each library is still to look up for criterion C9.
 
-### Reading the result
+### 7.2 Reading the result
 
-i18next and Paraglide JS are close, 415 against 410, so a spike decides, as in ADR-0014. The tie comes from facts in Paraglide's own documentation, which raised two of its scores: it offers per-locale builds that "remove other languages from each locale's client graph" (C2, an option and not the default), and its messages support `plural`, `number`, `datetime` and `relativetime` through formatters (C4) (Paraglide JS, n.d.).
+i18next and Paraglide JS are close, 415 against 410; the owner decided for i18next without a spike (see the decision below). The tie comes from facts in Paraglide's own documentation, which raised two of its scores: it offers per-locale builds that "remove other languages from each locale's client graph" (C2, an option and not the default), and its messages support `plural`, `number`, `datetime` and `relativetime` through formatters (C4) (Paraglide JS, n.d.).
 The loading requirement (C2) does not decide between the libraries: every one of them can receive the messages of a single language, and decision 2 above does that work through routing. "The same library in the islands and the agents" (C3) means that the library offers a plain function that a React component and a plain TypeScript module can both call (`t("key", { day })` or `m.key({ day })`); a library that only offers React hooks cannot be called from the agents, which are not components.
 
-## Sensitivity
+## 8. Sensitivity
 
 - If the owner knows i18next well (C7 = 5 against 3 for the others) its total is 440 against 420 for Paraglide JS.
 - If size and type safety weigh more (C5 and C10 at 15 each, C8 and C1 lowered), Paraglide JS and Lingui gain and Paraglide leads. If the owner knows i18next well (C7), i18next leads; if the owner prefers Paraglide's functions, Paraglide leads.
 - If ICU everywhere is the first requirement (C4 at 20), react-intl and Lingui gain.
 - If autonomy (C9) turns out to differ between the projects, the owners of each need to be looked up first: not done.
 
-## Spike
+## 9. Decision
 
-Migrate the training page texts to JSON with i18next (with `i18next-icu`) and with Paraglide JS, on the Astro i18n routes of decision 1, and compare: the JavaScript added to the page, whether only the page's language is shipped, how plurals and variables read in the JSON, whether a missing key fails a check, and how the chat agents (plain TypeScript) use each. Record the results in this ADR.
+The owner chose **i18next with react-i18next** (issue #84).
+Decided without a spike. What this gives up: Paraglide JS's compile-time type safety and smaller bundles. What makes up for it: i18next types its keys by declaration merging, and `test/client/strings.test.ts` becomes a test that every language file has the same keys (R7).
+To settle during the migration, not before: whether the official `i18next-icu` plugin is used (the owner prefers ICU; with the plugin only ICU syntax is read), and whether the YAML source is converted by `vite-plugin-i18next-loader` or by our own build step with JSON as the fallback.
+Reconsider the library if the page bundles grow noticeably because of it, or if missing keys keep reaching production in spite of the key-parity test.
 
-## Two kinds of localisation
+## 10. Two kinds of localisation
 
 The library here is for the **texts of the interface**: static files that ship with the code and change when the code changes.
 The events and profiles that the owner wants to edit later (create, read, update, delete) are **content**: stored in the database and written by users. An i18n library does not do that, and no library in the table is chosen or excluded by it; the data model does it, for example a `LocalizedText` value object (a text per language with a fallback language) on the aggregates that hold names and descriptions, such as the course variant descriptions of the guidebook (section 6.6), which are English only today.
 What the libraries still give that content is the formatting around it: plurals, numbers and dates in the visitor's language, and messages that take a user's text as a variable.
 
-## YAML as the source format
+## 11. YAML as the source format
 
 YAML is easier to maintain by hand: it allows comments for translators and multi-line texts without quote noise, which JSON does not. None of the libraries reads YAML directly, so the source is converted at build time: for i18next there is a Vite plugin that bundles locales from JSON or YAML files (`vite-plugin-i18next-loader`, which uses js-yaml); Paraglide JS reads any file format through inlang plugins, and whether a YAML plugin exists is to check, the fallback being a build step that writes the JSON.
 One catch: in YAML a plain value cannot start with `{`, so an ICU message that starts with a variable or a plural must be quoted (`"{count, plural, one {# session} other {# sessions}} did not fit"`), which takes away some of YAML's advantage for ICU texts.
 
-## Translation workflow
+## 12. Translation workflow
 
 Translating apart from the code is what a translation management system does. Weblate is open source (GPL v3), Czech, can be self-hosted, syncs with Git and supports JSON and YAML files and checks ICU strings (Weblate, n.d.; from search summaries, to check). It is not needed yet: with four languages the files can be edited by hand.
 
-## Consequences and migration
+## 13. Consequences and migration
 
 1. Add the `i18n` configuration, move the pages to locale routes, set `<html lang>` and the `hreflang` links in the layout, and turn the language select into links. Playwright checks that every language URL has the right `lang` and alternates.
 2. Add the library, move the training and chat texts from the stopgap TypeScript files into JSON, and replace the functions (`movedFromTo`, `notPlaced`) by messages with variables and plurals.
@@ -143,13 +146,12 @@ Translating apart from the code is what a translation management system does. We
 4. Remove `language-switch.ts` and the `MutationObserver` on `lang`; keep the FAQ JSON, which already is per language.
 5. Replace the guard test on `*.strings.<lang>.ts` by a test that every language file has the same keys (R7).
 
-## Open questions
+## 14. Open questions
 
 1. Is the default language at the root (`/tigerlegs/training.html`) or also under a prefix (`/tigerlegs/en/…`)?
 2. Is a first visit redirected by browser language, or only offered a link?
 3. Page titles and descriptions per language: from the same JSON files?
-4. Which library: i18next, Paraglide JS or another? The owner sets the weights and the familiarity scores, then the spike decides.
-5. YAML or JSON as the source format, with a build step for either?
+4. Whether `i18next-icu` is used, and whether YAML is converted by the Vite plugin or by our own build step.
 
 ## References
 

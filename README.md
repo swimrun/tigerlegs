@@ -13,11 +13,11 @@ TigerLegs splits a swimrun course into its swim and run legs. You upload a GPX f
 
 TIGERLegs stands for *Terrain-Informed Gpx Extractor: LEts Go Swimrun!* (TIGE-R + LEGS). The tiger is also a nod to Team Groot Rondje Eilanden (TGRE), since a tiger is an amphibious animal and a good swimmer.
 
-**Requirements:** [Deno](https://deno.com/) 2.x and a modern web browser. The maintainers develop on macOS and have not tested other platforms.
+**Requirements:** [Node.js](https://nodejs.org/en/download) 22.23 or newer with npm (version 24 is pinned in `.nvmrc`), for the site and the back end; [Deno](https://deno.com/) 2.x, which still runs the tests and the build tasks until they move to npm (see [docs/vite-plus.md](./docs/vite-plus.md)); and a modern web browser. The maintainers develop on macOS and have not tested other platforms.
 
-## Getting started
+## 1. Getting started
 
-1. Install Deno by following the [installation guide](https://docs.deno.com/runtime/getting_started/installation/).
+1. Install Node.js and Deno. Deno has an [installation guide](https://docs.deno.com/runtime/getting_started/installation/); Node.js can come from your package manager or a version manager that reads `.nvmrc`.
 2. Clone the repository and open its folder:
 
    ```sh
@@ -25,7 +25,7 @@ TIGERLegs stands for *Terrain-Informed Gpx Extractor: LEts Go Swimrun!* (TIGE-R 
    cd gpx-to-swimrun-segments
    ```
 
-3. Install site dependencies (Node.js 22.23.4 or newer is required), then start the Astro development server:
+3. Install the site dependencies with npm, then start the Astro development server (the task is still a Deno task):
 
    ```sh
    npm ci
@@ -37,26 +37,56 @@ TIGERLegs stands for *Terrain-Informed Gpx Extractor: LEts Go Swimrun!* (TIGE-R 
 
 This serves the frontend only; GPX analysis stays in the browser. The optional Deno API is separate and is not required by the site.
 
-## Build and test
+## 2. Build and test
 
-| Task | Command |
-| --- | --- |
-| Build the Astro static site into `dist/`, including the Worker, samples and all ADRs | `deno task build` |
-| Check Astro and React types | `npm run check` |
-| Run analysis and documentation unit tests | `deno task test` |
-| Install the browser for site tests (once) | `npx playwright install chromium` |
-| Test built static routes and React interactions | `npm run test:site` |
-| Preview the production build | `npm run preview` |
-| Lint the code | `deno task lint` |
-| Format the code | `deno task fmt` |
+| Command                           | What it does                          |
+| --------------------------------- | ------------------------------------- |
+| `deno task build`                 | Build the site into `dist/`           |
+| `npm run preview`                 | Preview the production build          |
+| `npm test`                        | Run the unit tests                    |
+| `npm run check`                   | Type-check Astro and React            |
+| `npm run check:shared`            | Check the shared modules are portable |
+| `npx playwright install chromium` | Install the test browser (once)       |
+| `npm run test:site`               | Test the built site in the browser    |
+| `npm run test:a11y`               | Test the components for accessibility |
+| `deno task lint`                  | Lint the code                         |
+| `deno task fmt`                   | Format the code                       |
 
-Astro supplies the shared layout and static HTML pages; React supplies the interactive extractor. Pure TypeScript analysis modules remain tested with Deno. npm owns `node_modules/` and `package-lock.json`; Deno uses that installed dependency tree (`nodeModulesDir: manual`), so run `npm ci` before Deno commands on a fresh checkout.
+The Worker in the build is a browser Web Worker, not an Astro feature: it runs the heavy GPX analysis on a background thread so that the page does not freeze on a large file. Its source is `src/client/analysis-worker.ts`; `deno task build:js` bundles it into `public/analysis-worker.js`, which Astro copies into `dist/`. Files of up to 10,000 trackpoints are analysed on the page itself.
 
-GitHub Actions tests and builds the site, then publishes `dist/` to GitHub Pages. No Astro or Node process runs in production. Existing `about.html` and `guidebook.html` URLs and chapter anchors are preserved; chapter 13 links to each generated `adr/*.html` page. See [ADR-0008](./docs/adr/0008-astro-static-site-with-react-islands.md) and [ADR-0009](./docs/adr/0009-react-for-interactive-frontend.md).
+Astro builds the shared layout and the static pages, and React runs the extractor. npm owns `node_modules/`; Deno uses that tree (`nodeModulesDir: manual`), so run `npm ci` before Deno commands on a fresh checkout.
 
-Working on the terrain detection? You can run a local Overpass server with Docker instead of using the public ones: see [docs/local-overpass.md](./docs/local-overpass.md).
+GitHub Actions tests and builds the site, then publishes `dist/` to GitHub Pages; nothing runs on a server in production. See [ADR-0008](./docs/adr/0008-astro-static-site-with-react-islands.md) and [ADR-0009](./docs/adr/0009-react-for-interactive-frontend.md).
 
-## Roadmap
+Working on terrain detection? Run a local Overpass server with Docker instead of the public ones: see [docs/local-overpass.md](./docs/local-overpass.md).
+
+## 3. Back end (optional)
+
+The site works without a back end: GPX analysis and the terrain lookup happen in the browser. The back end is an optional Node.js service ([ADR-0013](./docs/adr/0013-back-end-is-optional.md), [ADR-0014](./docs/adr/0014-back-end-technology.md)); today it is a terrain proxy with a file cache, and premium features come later.
+It needs Node.js 22.18 or newer, which runs the TypeScript directly, and no extra packages.
+
+```sh
+PORT=8124 npm run server
+curl http://localhost:8124/api/v1/health
+```
+
+Use another port than 8123, which the Astro development server takes and which is also the back end's default.
+
+| Variable           | Default                                   | Meaning                                                                                       |
+| ------------------ | ----------------------------------------- | --------------------------------------------------------------------------------------------- |
+| `PORT`             | `8123`                                    | Port to listen on                                                                             |
+| `ALLOWED_ORIGINS`  | `http://localhost:8123`                   | Comma-separated origins that may call the API (CORS and an origin check)                      |
+| `STATIC_DIR`       | `./public`                                | Folder to serve as static files (development); a path that does not exist serves the API only |
+| `CACHE_PATH`       | `./data/terrain_cache`                    | Folder of the file cache for terrain answers                                                  |
+| `OVERPASS_API_URL` | `https://overpass-api.de/api/interpreter` | Overpass server; use the local one of [docs/local-overpass.md](./docs/local-overpass.md)      |
+
+Endpoints: `GET /api/v1/health`, `GET /api/v1/terrain/lookup?lat=…&lon=…` and `POST /api/v1/terrain/batch` with `{"coordinates": [{"lat": …, "lon": …}]}` (at most 100).
+Tests and checks: `npm run test:server` (Vitest) and `npm run check:server` (compiles with only Node's types).
+As a container: `docker build -t tigerlegs-api .` and `docker run -p 8123:8123 tigerlegs-api`.
+
+**CORS.** The site on GitHub Pages and the API have different origins, so a browser only lets the site call the API when the API allows that origin: the back end answers only for the origins in `ALLOWED_ORIGINS` and refuses other origins on the API routes with 403 (`/api/v1/health` needs no origin). When the back end itself serves the front end (`STATIC_DIR`), calls are same-origin and CORS plays no part.
+
+## 4. Roadmap
 
 The roadmap shows what is done and what is planned. Checked items are done.
 For the longer horizon — terrain milestones, the Garmin Connect IQ data field and Apple Watch/Coros export — see the [milestone roadmap](./docs/ROADMAP.md) and the [product vision](./docs/PRODUCT_VISION.md).
@@ -77,11 +107,11 @@ For the longer horizon — terrain milestones, the Garmin Connect IQ data field 
 - [ ] Garmin Connect IQ data field (see the [constraints](./docs/software-guidebook.md#4-constraints) in the guidebook)
 - [ ] Accounts and login (for example Auth0), and saving analysed routes online. This is the first feature that needs a real backend, and it needs its own privacy review, because stored routes reveal home locations. Until then the app stays static, with no backend.
 
-## Learn more
+## 5. Learn more
 
 The [software guidebook](./docs/software-guidebook.md) describes what the system does (including use cases and an example course), how it is built, the domain terms and the GPX conventions it relies on. The [architecture decision records](./docs/adr/) explain why the design looks the way it does.
 
-## Contribute
+## 6. Contribute
 
 Read [CONTRIBUTING.md](./CONTRIBUTING.md) to get involved and [AGENTS.md](./AGENTS.md) for the working agreements. Documentation lives in the repository and changes in the same commit as the behaviour it describes, so update the README, the guidebook or an ADR when your change affects them.
 

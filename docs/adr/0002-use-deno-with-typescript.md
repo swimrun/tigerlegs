@@ -2,11 +2,11 @@
 
 Date: 2026-06-15
 
-## Status
+## 1. Status
 
 Accepted
 
-## Context
+## 2. Context
 
 We need to choose a runtime and language for building a web-based
 TigerLegs tool. The tool is primarily client-side
@@ -20,9 +20,9 @@ Candidates considered:
 - Java (Spring Boot)
 - Vanilla HTML/JS (no runtime)
 
-## Options
+## 3. Options
 
-### Deno + TypeScript (chosen)
+### 3.1 Deno + TypeScript (chosen)
 
 - Native TypeScript support without a build step
 - Secure-by-default (no file/network access unless explicitly granted)
@@ -31,38 +31,38 @@ Candidates considered:
 - Standard library covers most utility needs without third-party deps
 - URL-based imports with lock files mitigate dependency attacks
 
-### Node.js + npm + TypeScript
+### 3.2 Node.js + npm + TypeScript
 
 - Largest ecosystem, most library choices
 - Requires separate TypeScript compilation step (tsc or bundler)
 - npm supply chain attacks are a known and growing risk
 - Requires additional tooling setup (Jest/Vitest, ESLint, Prettier)
 
-### Python (Flask/Django)
+### 3.3 Python (Flask/Django)
 
 - Unnecessary server round-trip for client-side operations
 - Django ORM/admin irrelevant for this use case
 - Adds deployment complexity for a static-first tool
 
-### Java (Spring Boot)
+### 3.4 Java (Spring Boot)
 
 - Heavy for a lightweight open-source tool
 - No database, no auth, no multi-user state to justify it
 
-### Vanilla HTML/JS (no runtime)
+### 3.5 Vanilla HTML/JS (no runtime)
 
 - Smallest attack surface, zero dependencies beyond Leaflet CDN
 - No component model, harder to test in isolation
 - No type safety
 
-## Decision
+## 4. Decision
 
 We will use Deno as the runtime with TypeScript as the language.
 The core GPX parsing and distance logic will be a standalone module
 publishable to JSR. The web UI will be a static site or Deno Fresh
 app that imports the core module.
 
-## Consequences
+## 5. Consequences
 
 - All source files use `.ts` extension
 - `deno.json` serves as project configuration (equivalent to
