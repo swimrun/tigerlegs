@@ -54,6 +54,12 @@ Little. The site is Astro in its default static mode on GitHub Pages: "By defaul
 
 Two related questions are tracked in #64. Astro itself now belongs to Cloudflare: its company joined Cloudflare on 16 January 2026, and Astro stays MIT-licensed with a public roadmap and open governance (heise online, 2026), the same pattern as Deno. And Next.js, the usual alternative for an app-like front end, is governed by Vercel but can be self-hosted: as a Node server or Docker container with standalone output, as a static export, and since version 16.2 through a stable Adapter API (Next.js, 2026). Cloudflare is an American company: it is headquartered in San Francisco and listed on the New York Stock Exchange (Cloudflare, n.d.).
 The reaction of the community to the Astro deal is reported as mixed, between excitement and caution, with the question "will Astro become coupled to a hosting provider?" and the reassurance of the stated commitments: free, open source and MIT licensed, open governance, continued support of the ecosystem fund and of partners such as Netlify, Wix and Sentry, and portability to other runtimes (IT Brief, 2026; The New Stack, 2026; these are news reports, not measurements).
+What the commitments are worth is the open question, and the precedent that fits is Gatsby.
+Netlify acquired Gatsby in February 2023 and ended Gatsby Cloud, the hosting product, with the free plan discontinued on 29 September 2023; the Gatsby framework itself was kept, but by September 2023 its co-founders indicated that it would be in maintenance mode (Netlify, 2023; the maintenance mode is reported in a community discussion, "Is GatsbyJS Officially Dead?", not in a Netlify statement). A Hacker News commenter who had moved from Gatsby to Astro described "a sense of déjà vu" (nozzlegear, 2026), and another warned that "almost every acquisition begins with saying, 'nothing will change'" (mmooss, 2026); these are opinions, not evidence.
+The one piece that sets the Cloudflare deals side by side is an anonymous blog post without cited sources, so treat it as an opinion too: "Astro and VoidZero were promised continuity; Deno Runtime was given a sunset schedule. Open source guarantees access to code, not perpetual staffing" (aiidelist, 2026).
+We found no commentary by Roden on the Astro deal; his commentary on Deno does not mention Astro (Roden, 2026).
+For this project the exposure is limited, because the site is static HTML on GitHub Pages: if Astro were wound down, the generated pages keep working and the cost would be moving the layouts and React islands to another builder (#64).
+
 Astro needs Node.js: the installation guide asks for Node.js v22.23.4 or higher, with only even-numbered versions supported (Astro, n.d.-c), and rendering pages on demand needs an adapter for a server runtime (Node.js, Cloudflare, Netlify or Vercel). Astro as the back end would therefore be a Node.js back end, running the Node adapter in a container; it would tie the back end to the front-end framework and its release cycle, which cuts against a back end that is optional and separately deployable (ADR-0013), and Astro endpoints cover routes, not accounts, payments, jobs or a data layer. As a thin layer for the front end it is possible, as the whole back end it is not recommended here.
 A Next.js front end with server code would pull the back end toward Node.js, which is the one real pressure from a framework on this decision; it does not follow from the current static site.
 
@@ -259,26 +265,27 @@ With the owner's scores the totals are 400 for Node.js and 365 for Spring Boot. 
 
 ## Spike phase 1: measured (11 November 2026)
 
-The spike in `spikes/backend/` (#65, PR #70) builds the same service on five stacks: a health endpoint and a water endpoint that queries Overpass with exponential backoff (1, 2, 4 s).
+The spike in `spikes/backend/` (#65, PR #70) builds the same service on four stacks: a health endpoint and a water endpoint that queries Overpass with exponential backoff (1, 2, 4 s).
 Each container ran with 1 CPU and 1 GB against a stand-in Overpass (`fake-overpass/`) that answers a fixed JSON, so the real Overpass is not loaded and the local one does not disturb the measurement.
-Memory is idle after start, and after 100 water requests with a unique bounding box each.
-Deno is the idle baseline only: no service was built on it in this phase.
+Memory is idle after start (20 s), and after 100 water requests with a unique bounding box each.
+The raw output is stored in `spikes/backend/results/2026-11-11-measure.txt` and `2026-11-11-tests.txt`, written by `spikes/backend/record.sh` on an Apple silicon Mac with Docker at 12 CPUs and 5.8 GiB; run it again to reproduce.
+Deno is the idle baseline only (117 MB, 21.7 MiB, 10 November 2026): no service was built on it in this phase.
 
 | Stack                  | Image  | Ready  | Idle MiB | After load MiB |
 | ---------------------- | ------ | ------ | -------- | -------------- |
-| Node.js 24             | 159 MB | 1.16 s | 27.4     | 39.2           |
-| ASP.NET Core (.NET 10) | 250 MB | 1.08 s | 19.7     | 27.2           |
-| Spring Boot (JVM)      | 360 MB | 6.17 s | 174.1    | 186.6          |
-| Spring Boot + Leyden   | 410 MB | 7.69 s | 188.3    | 202.6          |
-| Micronaut              | 354 MB | 4.37 s | 136.7    | 163.3          |
-| Deno (baseline)        | 117 MB | n/a    | 21.7     | n/a            |
+| Node.js 24             | 159 MB | 0.73 s | 29.2     | 38.1           |
+| ASP.NET Core (.NET 10) | 250 MB | 1.19 s | 19.5     | 27.3           |
+| Spring Boot (JVM)      | 360 MB | 4.68 s | 173.3    | 184.5          |
+| Spring Boot + Leyden   | 410 MB | 4.40 s | 180.4    | 193.7          |
+| Micronaut              | 354 MB | 3.24 s | 134.6    | 161.2          |
 
 What this says, and what it does not:
 
-- Idle memory orders the stacks as the evaluation guessed for C3: ASP.NET Core and Node.js use 20 to 30 MiB, the JVM stacks 135 to 190 MiB, about six to eight times more. On a VPS of 1 GB that is a cost, not a blocker.
-- The "ready" times were taken while the machine was busy and are noisy. Repeating the start of the Spring Boot containers afterwards, the application reported 3.8 to 4.8 s for the plain JVM and 2.0 to 4.0 s with Leyden. So Leyden does start faster, and the 7.69 s in the table is a measurement artefact, not a property of Leyden. A clean repeat is still needed before a ready time is quoted.
-- Leyden's price is visible and real: the AOT cache is 53 MB (the image grows by 50 MB) and idle memory was about 14 MiB higher.
-- The four backoff tests (two retries then success, three failures then an error, a 400 not retried, no wait on a first-try success) pass in all four service stacks, run in containers. The retry logic is about equally small in each; C2 does not separate them.
+- Idle memory orders the stacks as the evaluation guessed for C3: ASP.NET Core and Node.js use 20 to 30 MiB, the JVM stacks 135 to 180 MiB, about five to nine times more. On a VPS of 1 GB that is a cost, not a blocker.
+- Ready times come from one run each, so differences of a few tenths of a second are noise. An earlier run on a busier machine gave 6.17 s for the plain JVM and 7.69 s for Leyden, which looked as if Leyden were slower; starting the containers again showed the application itself starting in 3.8 to 4.8 s (JVM) and 2.0 to 4.0 s (Leyden), and the stored run has them within 0.3 s of each other. The honest reading is that Leyden helps little at this size, not that it hurts.
+- Leyden's price is visible and real: the AOT cache is 53 MB (the image grows by 50 MB) and idle memory is about 7 MiB higher.
+- The four backoff tests (two retries then success, three failures then an error, a 400 not retried, no wait on a first-try success) pass in all four stacks, run in containers.
+  The retry logic is about equally small in each; C2 does not separate them.
 - The C1 scores are untouched: this phase says nothing about which language the owner prefers to write.
 
 Not yet measured: the PostgreSQL read with a Flyway migration and a PostGIS column (C10), and the native-image variants (build time and memory, and idle memory of the binary).
@@ -301,6 +308,7 @@ Not yet measured: the PostgreSQL read with a Flyway migration and a PostGIS colu
 ## References
 
 - Adoptium. (n.d.). *Temurin support and roadmap*. Retrieved November 10, 2026, from https://adoptium.net/support/
+- aiidelist. (2026, October 10). *Cloudflare acquires Deno: Why the runtime is being sunset, and how Astro, Vite, and AI agents fit the plan* [Blog post, no author named]. https://aiidelist.com/blog/deno-joins-cloudflare-runtime-sunset-astro-vite-developer-reactions.md
 - Astro. (n.d.-a). *On-demand rendering*. Retrieved November 10, 2026, from https://docs.astro.build/en/guides/on-demand-rendering/
 - Astro. (n.d.-b). *Endpoints*. Retrieved November 10, 2026, from https://docs.astro.build/en/guides/endpoints/
 - Astro. (n.d.-c). *Install and set up Astro*. Retrieved November 11, 2026, from https://docs.astro.build/en/install-and-setup/
@@ -330,10 +338,13 @@ Not yet measured: the PostgreSQL read with a Flyway migration and a PostGIS colu
 - MikroORM. (n.d.-b). *Repositories*. Retrieved November 11, 2026, from https://mikro-orm.io/docs/repositories
 - MikroORM. (n.d.-c). *Migrations*. Retrieved November 11, 2026, from https://mikro-orm.io/docs/migrations
 - MikroORM. (n.d.-d). *Custom types*. Retrieved November 11, 2026, from https://mikro-orm.io/docs/custom-types
+- mmooss. (2026). Comment on *Cloudflare acquires Astro* [Discussion]. Hacker News. https://news.ycombinator.com/item?id=46646645
 - Mollie. (n.d.). *API client libraries*. Retrieved November 11, 2026, from https://docs.mollie.com/docs/libraries
 - .NET Foundation. (n.d.). *dotnet/runtime* [Repository and licence]. GitHub. Retrieved November 10, 2026, from https://github.com/dotnet/runtime
+- Netlify. (2023). *Gatsby Cloud evolution* [Blog]. https://www.netlify.com/blog/gatsby-cloud-evolution/
 - Next.js. (2026, March 25). *Next.js across platforms* [Adapter API announcement]. https://nextjs.org/nextjs-across-platforms
 - Node.js. (n.d.). *Modules: TypeScript*. Retrieved November 11, 2026, from https://nodejs.org/api/typescript.html
+- nozzlegear. (2026). Comment on *Cloudflare acquires Astro* [Discussion]. Hacker News. https://news.ycombinator.com/item?id=46646645
 - OpenLogic. (n.d.). *Java experts on OpenJDK vs. Oracle JDK*. https://www.openlogic.com/blog/java-experts-openjdk-vs-oracle-jdk
 - OpenStreetMap Wiki. (n.d.-a). *Overpass API*. Retrieved November 10, 2026, from https://wiki.openstreetmap.org/wiki/Overpass_API
 - OpenStreetMap Wiki. (n.d.-b). *Overpass API/Overpass QL*. Retrieved November 10, 2026, from https://wiki.openstreetmap.org/wiki/Overpass_API/Overpass_QL

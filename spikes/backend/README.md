@@ -35,3 +35,8 @@ docker compose --profile overpass up -d overpass      # the local Overpass serve
 
 `measure.sh` builds the image, starts a container, and prints one line: image size, build time, time until `/api/v1/health` answers, idle memory after 20 s, and memory after 100 water requests.
 Run it on an otherwise quiet machine; the numbers are for comparing the candidates on the same machine, not absolute.
+
+## Record the results
+
+`./record.sh` runs the backoff tests of every stack and the measurements of every variant and stores the output, with the date and the machine, in `results/`.
+ADR-0014 points at these files; commit a new pair when the numbers are measured again.

@@ -1,0 +1,8 @@
+# Measurements, 2026-11-11
+# Darwin arm64, Docker: 12 CPUs, 6209511424 bytes memory
+# Service limits: 1 CPU, 1 GB. Overpass is the stand-in server of fake-overpass/.
+spike-node-dockerfile | image 159 MB | build 2 s | limits 1 CPU, 1g | ready 0.73 s | idle 29.15MiB | after 100 water requests 38.1MiB | water: 100 of 100 answers were JSON
+spike-aspnet-core-dockerfile | image 250 MB | build 9 s | limits 1 CPU, 1g | ready 1.19 s | idle 19.54MiB | after 100 water requests 27.25MiB | water: 100 of 100 answers were JSON
+spike-spring-boot-dockerfile | image 360 MB | build 6 s | limits 1 CPU, 1g | ready 4.68 s | idle 173.3MiB | after 100 water requests 184.5MiB | water: 100 of 100 answers were JSON
+spike-spring-boot-dockerfile-leyden | image 410 MB | build 15 s | limits 1 CPU, 1g | ready 4.4 s | idle 180.4MiB | after 100 water requests 193.7MiB | water: 100 of 100 answers were JSON
+spike-micronaut-dockerfile | image 354 MB | build 10 s | limits 1 CPU, 1g | ready 3.24 s | idle 134.6MiB | after 100 water requests 161.2MiB | water: 100 of 100 answers were JSON

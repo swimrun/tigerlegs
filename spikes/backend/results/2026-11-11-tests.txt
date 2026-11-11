@@ -1,0 +1,20 @@
+# Backoff tests, 2026-11-11
+# Darwin arm64, Docker: 12 CPUs, 6209511424 bytes memory
+== spring-boot
+[INFO] Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.438 s -- in group.swimrun.spike.OverpassTest
+[INFO] Tests run: 4, Failures: 0, Errors: 0, Skipped: 0
+[INFO] BUILD SUCCESS
+== micronaut
+[INFO] Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.374 s -- in spike.OverpassTest
+[INFO] Tests run: 4, Failures: 0, Errors: 0, Skipped: 0
+[INFO] BUILD SUCCESS
+== node
+✔ a busy server is retried with a doubling wait, then it works (114.023ms)
+✔ three busy answers end in an error (43.888125ms)
+✔ a bad query is not retried (6.55825ms)
+✔ an answer on the first try needs no waiting (7.698583ms)
+ℹ tests 4
+ℹ pass 4
+ℹ fail 0
+== aspnet-core
+Passed!  - Failed:     0, Passed:     4, Skipped:     0, Total:     4, Duration: 18 ms - Spike.Tests.dll (net10.0)
