@@ -123,14 +123,9 @@ The site build uses npm-managed dependencies and Node.js 22.23.4 or newer; Deno 
 
 ## References
 
-Astro. (n.d.-a). *Deploy your Astro site to GitHub Pages*. https://docs.astro.build/en/guides/deploy/github/
-
-Astro. (n.d.-b). *Islands architecture*. https://docs.astro.build/en/concepts/islands/
-
-Eleventy. (n.d.). *Get started*. https://www.11ty.dev/docs/
-
-ICT Research Methods. (n.d.). *Multi-criteria decision making*. https://ictresearchmethods.nl/workshop/multi-criteria-decision-making/
-
-Vercel. (n.d.). *How to create a static export of your Next.js application*. https://nextjs.org/docs/app/guides/static-exports
-
-Vite. (n.d.). *Deploying a static site*. https://vite.dev/guide/static-deploy.html
+- Astro. (n.d.-a). *Deploy your Astro site to GitHub Pages*. https://docs.astro.build/en/guides/deploy/github/
+- Astro. (n.d.-b). *Islands architecture*. https://docs.astro.build/en/concepts/islands/
+- Eleventy. (n.d.). *Get started*. https://www.11ty.dev/docs/
+- ICT Research Methods. (n.d.). *Multi-criteria decision making*. https://ictresearchmethods.nl/workshop/multi-criteria-decision-making/
+- Vercel. (n.d.). *How to create a static export of your Next.js application*. https://nextjs.org/docs/app/guides/static-exports
+- Vite. (n.d.). *Deploying a static site*. https://vite.dev/guide/static-deploy.html

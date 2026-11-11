@@ -4,6 +4,7 @@ const SAMPLES: Record<string, string> = {
   "Rondje_Eilanden_lintjes_opruimen.gpx": "rondje-eilanden.gpx",
   "Twiske_Backyard_SwimRun_Experience.gpx": "twiske-backyard.gpx",
   "Ötillö_Rügen_met_Sander_SwimRun_World_Serious_.gpx": "ruegen-swimrun.gpx",
+  "Frankrijk_SwimRun_Coros.gpx": "frankrijk-swimrun.gpx",
 };
 
 await Deno.mkdir("public/samples", { recursive: true });

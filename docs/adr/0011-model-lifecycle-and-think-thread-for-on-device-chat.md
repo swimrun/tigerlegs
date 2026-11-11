@@ -78,6 +78,5 @@ None yet.
 
 ## References
 
-Chrome for Developers. (n.d.). *Get started with built-in AI*. https://developer.chrome.com/docs/ai/get-started
-
-Google. (n.d.). *Gemini thinking*. Google AI Studio. https://aistudio.google.com/docs/thinking
+- Chrome for Developers. (n.d.). *Get started with built-in AI*. https://developer.chrome.com/docs/ai/get-started
+- Google. (n.d.). *Gemini thinking*. Google AI Studio. https://aistudio.google.com/docs/thinking

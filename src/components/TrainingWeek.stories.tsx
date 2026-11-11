@@ -25,6 +25,8 @@ export const WithoutAssistant: Story = {
     const canvas = within(canvasElement);
     await expect(await canvas.findByRole("list", { name: "Training week" }))
       .toBeVisible();
+    // Nothing to confirm before a change has been made.
+    await expect(canvas.queryByRole("button", { name: "Confirm new week" })).toBeNull();
     const day = await canvas.findByLabelText("Day: Trail run, 75 min Z2");
     await userEvent.selectOptions(day, "Mon");
     await expect(

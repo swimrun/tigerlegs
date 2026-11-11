@@ -133,12 +133,23 @@ Deno.test("property: pairing preserves every segment, distance and selection ide
             true,
           );
         }
+        // The expectation is computed in whole metres, so it does not depend on the order of float additions.
+        const totalMetres = items.reduce((sum, item) => sum + item.distance, 0);
         assertEquals(
           rows.at(-1)?.cumulativeKm ?? "0.0",
-          segments.reduce((sum, s) => sum + s.distanceKm, 0).toFixed(1),
+          (Math.round(totalMetres / 100) / 10).toFixed(1),
         );
       },
     ),
     { numRuns: 300 },
   );
+});
+
+Deno.test("cumulative km rounds an exact tie up, whatever the order of the additions (issue #66)", () => {
+  // 30.325 km + 30.325 km = 60.650 km; as a float it is just below 60.65, and toFixed(1) gave 60.6.
+  const rows = buildTableRows(
+    [segment(1, "run", 30.325), segment(2, "run", 30.325)],
+    { swimFirst: false, showCumulative: true },
+  );
+  assertEquals(rows.at(-1)?.cumulativeKm, "60.7");
 });

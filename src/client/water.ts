@@ -1,3 +1,5 @@
+import { type OverpassCache, browserOverpassCache } from "./overpass-cache.ts";
+import { type OverpassOptions, queryOverpass } from "./overpass.ts";
 import type {
   Coordinate,
   StrategyResult,
@@ -23,13 +25,6 @@ interface OverpassElement {
   members?: { role: string; geometry?: OverpassPoint[] }[];
 }
 
-// Public Overpass instances; the first is often overloaded, so fall through to the next.
-const REQUEST_TIMEOUT_MS = 20000;
-const OVERPASS_URLS = [
-  "https://overpass-api.de/api/interpreter",
-  "https://overpass.private.coffee/api/interpreter",
-  "https://overpass.kumi.systems/api/interpreter",
-];
 const MIN_SWIM_SPAN_KM = 0.04;
 const MAX_LAND_GAP_POINTS = 10;
 // Nobody swims faster than this; faster stretches along a shore are runs, not swims.
@@ -148,35 +143,28 @@ export function coarseBbox(
   ];
 }
 
-/** Fetch lakes, ponds and riverbanks around the track from OpenStreetMap (Overpass). */
+export interface FetchWaterOptions extends OverpassOptions {
+  /** Answers per coarse bounding box; the browser cache by default, `null` for none. */
+  cache?: OverpassCache | null;
+}
+
+/** Fetch lakes, ponds and riverbanks around the track from OpenStreetMap (Overpass), cached per area. */
 export async function fetchWater(
   points: Trackpoint[],
   signal?: AbortSignal,
+  options: FetchWaterOptions = {},
 ): Promise<WaterBody[]> {
   signal?.throwIfAborted();
   const bbox = coarseBbox(points).join(",");
+  const cache = options.cache === undefined ? browserOverpassCache() : options.cache;
+  const key = `water:${bbox}`;
+  const cached = await cache?.get(key);
+  if (cached) return parseWater(cached as { elements?: OverpassElement[] });
   const query = `[out:json][timeout:25];(way["natural"="water"](${bbox});` +
     `relation["natural"="water"](${bbox});way["waterway"="riverbank"](${bbox}););out geom;`;
-  let lastError = "no Overpass server reachable";
-  for (const url of OVERPASS_URLS) {
-    try {
-      const response = await fetch(url, {
-        method: "POST",
-        body: "data=" + encodeURIComponent(query),
-        headers: { "content-type": "application/x-www-form-urlencoded" },
-        signal: signal
-          ? AbortSignal.any([signal, AbortSignal.timeout(REQUEST_TIMEOUT_MS)])
-          : AbortSignal.timeout(REQUEST_TIMEOUT_MS),
-      });
-      if (response.ok) return parseWater(await response.json());
-      lastError = `Overpass returned status ${response.status}`;
-    } catch (e) {
-      if (signal?.aborted) throw e;
-      // timeouts and network errors fall through to the next mirror
-      lastError = e instanceof Error ? e.message : String(e);
-    }
-  }
-  throw new Error(lastError);
+  const json = await queryOverpass(query, { ...options, signal });
+  await cache?.set(key, json);
+  return parseWater(json as { elements?: OverpassElement[] });
 }
 
 /** Speed in km/h around point i over about SPEED_WINDOW_SECONDS, or null without timestamps. */
