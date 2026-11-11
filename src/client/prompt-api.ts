@@ -10,7 +10,9 @@
 
 import {
   DAYS,
+  fitsInstruction,
   type Move,
+  mentionedDisciplines,
   parseProposal,
   type TrainingSession,
 } from "./training-week.ts";
@@ -82,7 +84,8 @@ const SYSTEM_PROMPT = "You rearrange a weekly swimrun training schedule. " +
   "Never place two runs on the same day; leave every session you were not asked about where it is. " +
   "When the instruction does not identify exactly one session (for example 'move the run' while " +
   "several runs exist), do not guess: return an empty moves array and a clarification with a short " +
-  "question and one option per candidate session, labelling each with its name and current day.";
+  "question and one option per candidate session, labelling each with its name and current day. " +
+  "Only offer candidates of the discipline the athlete mentions: when they say run, never offer a swim.";
 
 const REPLY_SCHEMA = {
   type: "object",
@@ -157,6 +160,27 @@ export function parseReply(json: string, week: readonly TrainingSession[]): Assi
 }
 
 /**
+ * Drops clarification candidates that do not fit the discipline the instruction names ("run" never
+ * offers a swim), whatever the model offered. Leaves everything alone when the instruction names no
+ * discipline or no candidate fits.
+ */
+export function narrowByDiscipline(
+  reply: AssistantReply,
+  week: readonly TrainingSession[],
+  instruction: string,
+): AssistantReply {
+  if (reply.kind !== "clarification") return reply;
+  const mentioned = mentionedDisciplines(instruction);
+  const byId = new Map(week.map((session) => [session.id, session]));
+  const options = reply.clarification.options.filter((option) => {
+    const session = byId.get(option.id);
+    return session !== undefined && fitsInstruction(session, mentioned);
+  });
+  if (options.length === 0 || options.length === reply.clarification.options.length) return reply;
+  return { kind: "clarification", clarification: { ...reply.clarification, options } };
+}
+
+/**
  * Creates and immediately destroys a session, which triggers the one-off
  * model download when needed; progress is reported as 0..1.
  */
@@ -188,6 +212,21 @@ export async function proposeChange(
   instruction: string,
   onDownloadProgress?: (loaded: number) => void,
 ): Promise<AssistantReply> {
+  const reply = await askModel(model, week, instruction, onDownloadProgress);
+  // One candidate left after narrowing is no question: take it and ask again with that session named.
+  if (reply.kind === "clarification" && reply.clarification.options.length === 1 && !instruction.includes("(session id ")) {
+    const [only] = reply.clarification.options;
+    return await askModel(model, week, `${instruction} — I mean ${only.label} (session id "${only.id}").`, onDownloadProgress);
+  }
+  return reply;
+}
+
+async function askModel(
+  model: LanguageModelStatic,
+  week: readonly TrainingSession[],
+  instruction: string,
+  onDownloadProgress?: (loaded: number) => void,
+): Promise<AssistantReply> {
   const session = await model.create({
     expectedInputs: LANGUAGES,
     expectedOutputs: LANGUAGES,
@@ -209,7 +248,7 @@ export async function proposeChange(
       `Schedule: ${JSON.stringify(schedule)}. ${instruction} Propose moves.`,
       { responseConstraint: REPLY_SCHEMA },
     );
-    return parseReply(response, week);
+    return narrowByDiscipline(parseReply(response, week), week, instruction);
   } finally {
     session.destroy();
   }

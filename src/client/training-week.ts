@@ -27,6 +27,31 @@ export interface TrainingSession {
   readonly discipline: Discipline;
 }
 
+/**
+ * The disciplines an instruction talks about, from stems in the four site languages
+ * ("run", "hardlopen", "laufen", "courir", ...). Empty when it names none.
+ */
+export function mentionedDisciplines(instruction: string): ReadonlySet<Discipline> {
+  const text = instruction.toLowerCase();
+  const stems: [Discipline, RegExp][] = [
+    ["run", /\b(run|runs|running|jog|trail|hardlo|rennen|renn|laufen|lauf|courir|course|cours)/],
+    ["swim", /\b(swim|zwem|schwimm|nager|nage|natation)/],
+    ["strength", /\b(strength|kracht|kraft|force|muscu)/],
+    ["flexibility", /\b(flex|mobility|stretch|rek|beweglich|souplesse|mobilit)/],
+  ];
+  return new Set(stems.filter(([, pattern]) => pattern.test(text)).map(([discipline]) => discipline));
+}
+
+/**
+ * Whether a session fits what the instruction talks about. A swimrun session counts as both a
+ * run and a swim; with no discipline named, every session fits.
+ */
+export function fitsInstruction(session: TrainingSession, mentioned: ReadonlySet<Discipline>): boolean {
+  if (mentioned.size === 0) return true;
+  if (mentioned.has(session.discipline)) return true;
+  return session.discipline === "swimrun" && (mentioned.has("run") || mentioned.has("swim"));
+}
+
 /** A proposal to move one existing session to another day. */
 export interface Move {
   readonly id: string;
