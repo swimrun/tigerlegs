@@ -8,6 +8,7 @@ export type ChatEvent =
   | { type: "run-started" }
   /** Progress while the agent works, e.g. a model download; shown next to the typing dots. */
   | { type: "status"; text: string }
+  /** `text` may use "# Heading" lines and consecutive "- item" lines, which the chat shows as a heading and a bulleted list. */
   | { type: "text"; text: string; followUps?: ChatSuggestion[] }
   | { type: "run-finished" };
 

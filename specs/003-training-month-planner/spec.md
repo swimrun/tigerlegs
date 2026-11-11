@@ -124,6 +124,16 @@ generation). Nothing is saved to a server.
   applies: the on-device model only proposes moves, nothing changes until
   applied, and no schedule data leaves the device.
 - **FR-012**: All texts MUST follow the page language (en/nl/fr/de).
+- **FR-013**: Rest days. The athlete can make any day a rest day, by hand or by
+  asking the assistant ("I need a rest day on Wednesday"). Making a day a rest
+  day moves its sessions to the best other day, one session at a time; no
+  session can be dragged, selected or proposed onto a rest day. A model
+  proposal that would put a session on a rest day is left out and says so.
+  Rest days are planned by rules in code, so they work without the model.
+- **FR-014**: Step by step. A proposal shows the step to apply now. What the
+  week would still need afterwards (two sessions on a day, runs on consecutive
+  days) is listed as possible next steps and offered, one at a time, as chips
+  once the first step is applied.
 
 ### Non-Functional Requirements
 
@@ -143,7 +153,9 @@ generation). Nothing is saved to a server.
 ### Key Entities
 
 - **PlanLevers**: runs per week (0–5), swims per week (0–5), strength
-  (off | 1 | 2 | 3 per week), mobility (off | 1 | 2 | 3 per week).
+  (off | 1 | 2 | 3 per week), mobility (off | 1 | 2 | 3 per week), and **rest days**: any of the seven
+  days of the week on which no session may be planned. A rest day is a fixed part
+  of the plan, not a gap that happens to be empty.
 - **Plan**: four weeks of sessions generated from the levers plus the
   hardcoded sessions the athlete made.
 - **TrainingSession** (extends spec 002): discipline, day, duration in

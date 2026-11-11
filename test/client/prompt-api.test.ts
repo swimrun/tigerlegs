@@ -1,4 +1,4 @@
-import { assertEquals } from "@std/assert";
+import { assert, assertEquals } from "@std/assert";
 import {
   assistAvailability,
   getLanguageModel,
@@ -50,7 +50,7 @@ Deno.test("proposeChange - sends schedule and instruction, parses moves, destroy
   const log = { prompts: [] as string[], destroyed: false };
   const response = JSON.stringify({ moves: [{ id: "trail", toDay: "Mon", reason: "travel" }] });
   const reply = await proposeChange(fakeModel(response, log), WEEK, "Move the trail run to Monday.");
-  assertEquals(reply, { kind: "moves", moves: [{ id: "trail", toDay: "Mon", reason: "travel" }] });
+  assertEquals(reply, { kind: "moves", moves: [{ id: "trail", toDay: "Mon", reason: "travel" }], restDays: [] });
   assertEquals(log.prompts.length, 1);
   assertEquals(log.prompts[0].includes("trail"), true);
   assertEquals(log.prompts[0].includes("Move the trail run to Monday."), true);
@@ -104,7 +104,7 @@ Deno.test("parseReply - clarification options naming unknown sessions are droppe
     },
   });
   // One remaining option is no choice: fall back to the (empty) moves.
-  assertEquals(parseReply(json, WEEK), { kind: "moves", moves: [] });
+  assertEquals(parseReply(json, WEEK), { kind: "moves", moves: [], restDays: [] });
 });
 
 Deno.test("parseReply - a missing option label falls back to the session title", () => {
@@ -130,7 +130,35 @@ Deno.test("parseReply - moves win when no usable clarification is present", () =
   assertEquals(parseReply(json, WEEK), {
     kind: "moves",
     moves: [{ id: "trail", toDay: "Fri", reason: "empty day" }],
+    restDays: [],
   });
+});
+
+Deno.test("parseReply - restDays are read, kept in week order and cleaned of unknown days", () => {
+  const json = JSON.stringify({ moves: [], restDays: ["Fri", "Wed", "Funday", "Wed"] });
+  assertEquals(parseReply(json, WEEK), { kind: "moves", moves: [], restDays: ["Wed", "Fri"] });
+});
+
+Deno.test("proposeChange tells the model the rest days and the system prompt forbids moving onto them", async () => {
+  const prompts: string[] = [];
+  const systems: string[] = [];
+  const model: LanguageModelStatic = {
+    availability: () => Promise.resolve("available"),
+    create: (options) => {
+      systems.push(options?.initialPrompts?.[0]?.content ?? "");
+      return Promise.resolve({
+        prompt: (input: string) => {
+          prompts.push(input);
+          return Promise.resolve(JSON.stringify({ moves: [] }));
+        },
+        destroy: () => {},
+      });
+    },
+  };
+  await proposeChange(model, WEEK, "Move the trail run", undefined, ["Wed"]);
+  assert(prompts[0].includes('Rest days: ["Wed"]'));
+  assert(systems[0].includes("never move a session onto a rest day"));
+  assert(systems[0].includes("return that day in restDays"));
 });
 
 const MIXED: TrainingSession[] = [

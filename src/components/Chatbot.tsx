@@ -70,6 +70,37 @@ const STRINGS: Record<Lang, Strings> = {
 };
 
 const bubble = "w-fit max-w-[85%] rounded px-3 py-2 text-sm";
+
+/**
+ * A chat message as text, with two line conventions an agent can use: "# Heading" is a bold heading and
+ * consecutive "- item" lines are a bulleted list. Every other line is a paragraph; a message without
+ * either convention renders as the single paragraph it always was.
+ */
+export function ChatText({ text, className }: { text: string; className: string }) {
+  const blocks: ({ kind: "p" | "h"; text: string } | { kind: "ul"; items: string[] })[] = [];
+  for (const line of text.split("\n")) {
+    const last = blocks.at(-1);
+    if (line.startsWith("- ")) {
+      if (last?.kind === "ul") last.items.push(line.slice(2));
+      else blocks.push({ kind: "ul", items: [line.slice(2)] });
+    } else if (line.startsWith("# ")) {
+      blocks.push({ kind: "h", text: line.slice(2) });
+    } else {
+      blocks.push({ kind: "p", text: line });
+    }
+  }
+  if (blocks.length === 1 && blocks[0].kind === "p") return <p className={className}>{text}</p>;
+  return (
+    <div className={`${className} space-y-1`}>
+      {blocks.map((block, index) =>
+        block.kind === "ul"
+          ? <ul key={index} className="list-disc space-y-1 pl-5">{block.items.map((item, at) => <li key={at}>{item}</li>)}</ul>
+          : <p key={index} className={block.kind === "h" ? "font-semibold" : undefined}>{block.text}</p>
+      )}
+    </div>
+  );
+}
+
 const pill =
   "rounded-full border border-stone-900 bg-amber-200 px-3 py-1 text-sm font-medium hover:bg-amber-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-stone-950";
 
@@ -180,12 +211,10 @@ function ChatPanel({ chat, t, id, placeholder }: { chat: ChatAgent; t: Strings; 
             ))}
           </ul>
         )}
-      <div ref={log} role="log" aria-live="polite" className="mt-3 max-h-60 space-y-2 overflow-y-auto">
+      <div ref={log} role="log" aria-live="polite" tabIndex={0} className="mt-3 max-h-60 space-y-2 overflow-y-auto focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-600">
         {messages.map((m, i) => (
           <div key={i} className="space-y-1">
-            <p className={m.role === "user" ? `${bubble} ml-auto bg-stone-900 text-white` : `${bubble} bg-white`}>
-              {m.text}
-            </p>
+            <ChatText text={m.text} className={m.role === "user" ? `${bubble} ml-auto bg-stone-900 text-white` : `${bubble} bg-white`} />
             {i === messages.length - 1 && m.followUps?.filter((f) => !asked.includes(f.id)).map((f) => (
               <button key={f.id} type="button" disabled={busy} className={pill}
                 onClick={() => ask(f.label, { id: f.id, prompt: f.prompt, shown: true, completes: f.completes })}>

@@ -6,9 +6,11 @@ import {
   type Day,
   DAYS,
   type Discipline,
+  planRestDay,
   PROTOTYPE_WEEK,
   type TrainingSession,
 } from "../client/training-week.ts";
+import type { IssueKind } from "../client/training-week.ts";
 import { getLanguageModel, type LanguageModelStatic } from "../client/prompt-api.ts";
 import { createTrainingAgent } from "../client/training-agent.ts";
 import { setPageChat } from "../client/chat-store.ts";
@@ -36,6 +38,15 @@ interface Strings {
   changesTitle: string;
   noChanges: string;
   movedFromTo: (title: string, from: string, to: string) => string;
+  restDay: string;
+  restDayBlocked: (day: string) => string;
+  nextStepsTitle: string;
+  restDayBecomes: (day: string) => string;
+  restDayReason: (day: string) => string;
+  restDayAlready: (day: string) => string;
+  leftOut: (title: string, day: string) => string;
+  nextChip: (title: string, from: string, to: string) => string;
+  fixReasons: Record<IssueKind, (day: string) => string>;
   confirm: string;
   confirmed: string;
   days: Record<Day, string>;
@@ -72,6 +83,19 @@ const STRINGS: Record<Lang, Strings> = {
     changesTitle: "Your changes",
     noChanges: "No changes yet.",
     movedFromTo: (title, from, to) => `${title}: ${from} → ${to}`,
+    restDay: "Rest day",
+    restDayBlocked: (day) => `${day} is a rest day: no session can go there.`,
+    nextStepsTitle: "Possible next steps (one at a time)",
+    restDayBecomes: (day) => `Rest day: ${day}`,
+    restDayReason: (day) => `rest day on ${day}`,
+    restDayAlready: (day) => `${day} is already a rest day.`,
+    leftOut: (title, day) => `Left out: ${title} to ${day}, a rest day`,
+    nextChip: (title, from, to) => `Next: ${title} ${from} → ${to}`,
+    fixReasons: {
+      "rest-day": (day) => `rest day on ${day}`,
+      clash: (day) => `two sessions on ${day}`,
+      "back-to-back-runs": (day) => `two runs in a row at ${day}`,
+    },
     confirm: "Confirm new week",
     confirmed:
       "New week confirmed. Prototype: it stays in your browser; syncing to your coach is not built yet.",
@@ -122,6 +146,19 @@ const STRINGS: Record<Lang, Strings> = {
     changesTitle: "Jouw wijzigingen",
     noChanges: "Nog geen wijzigingen.",
     movedFromTo: (title, from, to) => `${title}: ${from} → ${to}`,
+    restDay: "Rustdag",
+    restDayBlocked: (day) => `Op ${day} is het rustdag: daar kan geen sessie heen.`,
+    nextStepsTitle: "Mogelijke vervolgstappen (één voor één)",
+    restDayBecomes: (day) => `Rustdag: ${day}`,
+    restDayReason: (day) => `rustdag op ${day}`,
+    restDayAlready: (day) => `Op ${day} is al een rustdag.`,
+    leftOut: (title, day) => `Weggelaten: ${title} naar ${day}, een rustdag`,
+    nextChip: (title, from, to) => `Volgende: ${title} ${from} → ${to}`,
+    fixReasons: {
+      "rest-day": (day) => `rustdag op ${day}`,
+      clash: (day) => `twee sessies op ${day}`,
+      "back-to-back-runs": (day) => `twee keer achter elkaar hardlopen bij ${day}`,
+    },
     confirm: "Bevestig nieuwe week",
     confirmed:
       "Nieuwe week bevestigd. Prototype: hij blijft in je browser; synchroniseren met je coach bestaat nog niet.",
@@ -172,6 +209,19 @@ const STRINGS: Record<Lang, Strings> = {
     changesTitle: "Tes changements",
     noChanges: "Pas encore de changements.",
     movedFromTo: (title, from, to) => `${title} : ${from} → ${to}`,
+    restDay: "Jour de repos",
+    restDayBlocked: (day) => `Le ${day} est un jour de repos : aucune séance ne peut y aller.`,
+    nextStepsTitle: "Étapes suivantes possibles (une à la fois)",
+    restDayBecomes: (day) => `Jour de repos : ${day}`,
+    restDayReason: (day) => `jour de repos le ${day}`,
+    restDayAlready: (day) => `Le ${day} est déjà un jour de repos.`,
+    leftOut: (title, day) => `Ignoré : ${title} vers ${day}, un jour de repos`,
+    nextChip: (title, from, to) => `Ensuite : ${title} ${from} → ${to}`,
+    fixReasons: {
+      "rest-day": (day) => `jour de repos le ${day}`,
+      clash: (day) => `deux séances le ${day}`,
+      "back-to-back-runs": (day) => `deux courses de suite vers ${day}`,
+    },
     confirm: "Confirmer la nouvelle semaine",
     confirmed:
       "Nouvelle semaine confirmée. Prototype : elle reste dans ton navigateur ; la synchronisation avec ton coach n'existe pas encore.",
@@ -222,6 +272,19 @@ const STRINGS: Record<Lang, Strings> = {
     changesTitle: "Deine Änderungen",
     noChanges: "Noch keine Änderungen.",
     movedFromTo: (title, from, to) => `${title}: ${from} → ${to}`,
+    restDay: "Ruhetag",
+    restDayBlocked: (day) => `Am ${day} ist Ruhetag: dort kann keine Einheit hin.`,
+    nextStepsTitle: "Mögliche nächste Schritte (einer nach dem anderen)",
+    restDayBecomes: (day) => `Ruhetag: ${day}`,
+    restDayReason: (day) => `Ruhetag am ${day}`,
+    restDayAlready: (day) => `Am ${day} ist schon Ruhetag.`,
+    leftOut: (title, day) => `Weggelassen: ${title} auf ${day}, einen Ruhetag`,
+    nextChip: (title, from, to) => `Danach: ${title} ${from} → ${to}`,
+    fixReasons: {
+      "rest-day": (day) => `Ruhetag am ${day}`,
+      clash: (day) => `zwei Einheiten am ${day}`,
+      "back-to-back-runs": (day) => `zwei Läufe hintereinander bei ${day}`,
+    },
     confirm: "Neue Woche bestätigen",
     confirmed:
       "Neue Woche bestätigt. Prototyp: sie bleibt in deinem Browser; die Synchronisierung mit deinem Coach gibt es noch nicht.",
@@ -289,6 +352,11 @@ export default function TrainingWeek({ languageModel }: Props) {
   );
   const [week, setWeek] = useState<readonly TrainingSession[]>(PROTOTYPE_WEEK);
   const [confirmed, setConfirmed] = useState(false);
+  // Fixed rest days: days on which no session may be planned (a plan lever, spec 003).
+  const [restDays, setRestDays] = useState<readonly Day[]>([]);
+  const [notice, setNotice] = useState("");
+  const restRef = useRef(restDays);
+  restRef.current = restDays;
 
   // The agent reads the week through a ref, so it always sees manual changes without being recreated.
   const weekRef = useRef(week);
@@ -300,8 +368,11 @@ export default function TrainingWeek({ languageModel }: Props) {
         lang,
         strings: t,
         getWeek: () => weekRef.current,
-        onApply: (moves) => {
+        getRestDays: () => restRef.current,
+        onApply: (moves, rest) => {
           setWeek((current) => applyMoves(current, moves));
+          setRestDays(rest);
+          setNotice("");
           setConfirmed(false);
         },
       }),
@@ -313,7 +384,24 @@ export default function TrainingWeek({ languageModel }: Props) {
   const [draggingId, setDraggingId] = useState<string | null>(null);
   const [overDay, setOverDay] = useState<Day | null>(null);
   const moveSession = (id: string, toDay: Day) => {
+    if (restDays.includes(toDay)) {
+      setNotice(t.restDayBlocked(t.days[toDay]));
+      return;
+    }
+    setNotice("");
     setWeek((current) => applyMoves(current, [{ id, toDay, reason: "" }]));
+    setConfirmed(false);
+  };
+  // Making a day a rest day moves its sessions out by the same rules the assistant uses.
+  const toggleRestDay = (day: Day) => {
+    setNotice("");
+    if (restDays.includes(day)) {
+      setRestDays(restDays.filter((candidate) => candidate !== day));
+      return;
+    }
+    const plan = planRestDay(week, restDays, day);
+    setWeek(applyMoves(week, plan.moves));
+    setRestDays(plan.restDays);
     setConfirmed(false);
   };
 
@@ -335,6 +423,7 @@ export default function TrainingWeek({ languageModel }: Props) {
       </p>
 
       <p className="text-sm text-stone-600">{t.dragHint}</p>
+      <p role="status" className="text-sm font-medium text-amber-900">{notice}</p>
 
       <ol
         aria-label={t.weekTitle}
@@ -344,7 +433,7 @@ export default function TrainingWeek({ languageModel }: Props) {
           <li
             key={day}
             data-day={day}
-            className={`min-h-24 rounded border bg-white p-2 ${
+            className={`min-h-24 rounded border p-2 ${restDays.includes(day) ? "bg-stone-100" : "bg-white"} ${
               overDay === day && draggingId
                 ? "border-amber-500 bg-amber-50 ring-2 ring-amber-500"
                 : "border-stone-300"
@@ -366,6 +455,18 @@ export default function TrainingWeek({ languageModel }: Props) {
             }}
           >
             <h3 className="text-sm font-bold">{t.days[day]}</h3>
+            <button
+              type="button"
+              aria-pressed={restDays.includes(day)}
+              data-rest-day={day}
+              onClick={() => toggleRestDay(day)}
+              className={`mt-1 rounded border px-2 py-0.5 text-xs font-medium ${
+                restDays.includes(day) ? "border-stone-900 bg-stone-900 text-white" : "border-stone-400 bg-white text-stone-800"
+              }`}
+            >
+              <span className="sr-only">{t.days[day]}: </span>
+              {t.restDay}
+            </button>
             <ul className="mt-2 space-y-2">
               {week.filter((session) => session.day === day).map((session) => (
                 <li
@@ -397,7 +498,7 @@ export default function TrainingWeek({ languageModel }: Props) {
                         moveSession(session.id, event.target.value as Day)}
                     >
                       {DAYS.map((option) => (
-                        <option key={option} value={option}>
+                        <option key={option} value={option} disabled={restDays.includes(option)}>
                           {t.days[option]}
                         </option>
                       ))}

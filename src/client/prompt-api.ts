@@ -9,8 +9,10 @@
  */
 
 import {
+  type Day,
   DAYS,
   fitsInstruction,
+  isDay,
   type Move,
   mentionedDisciplines,
   parseProposal,
@@ -85,11 +87,14 @@ const SYSTEM_PROMPT = "You rearrange a weekly swimrun training schedule. " +
   "When the instruction does not identify exactly one session (for example 'move the run' while " +
   "several runs exist), do not guess: return an empty moves array and a clarification with a short " +
   "question and one option per candidate session, labelling each with its name and current day. " +
-  "Only offer candidates of the discipline the athlete mentions: when they say run, never offer a swim.";
+  "Only offer candidates of the discipline the athlete mentions: when they say run, never offer a swim. " +
+  "Rest days are days without any session: never move a session onto a rest day listed in the schedule. " +
+  "When the athlete asks for a rest day on a day, return that day in restDays and no moves: the app moves the sessions itself.";
 
 const REPLY_SCHEMA = {
   type: "object",
   properties: {
+    restDays: { type: "array", items: { enum: [...DAYS] } },
     moves: {
       type: "array",
       items: {
@@ -130,9 +135,9 @@ export interface Clarification {
   options: { id: string; label: string }[];
 }
 
-/** The assistant either proposes moves or asks which session is meant. */
+/** The assistant either proposes moves (or asks for rest days, which the app plans itself) or asks which session is meant. */
 export type AssistantReply =
-  | { kind: "moves"; moves: Move[] }
+  | { kind: "moves"; moves: Move[]; restDays: Day[] }
   | { kind: "clarification"; clarification: Clarification };
 
 /**
@@ -156,7 +161,12 @@ export function parseReply(json: string, week: readonly TrainingSession[]): Assi
       return { kind: "clarification", clarification: { question: clarification.question, options } };
     }
   }
-  return { kind: "moves", moves: parseProposal(json, week) };
+  const restDays = (parsed as { restDays?: unknown })?.restDays;
+  return {
+    kind: "moves",
+    moves: parseProposal(json, week),
+    restDays: Array.isArray(restDays) ? DAYS.filter((day) => restDays.some((candidate) => isDay(candidate) && candidate === day)) : [],
+  };
 }
 
 /**
@@ -211,12 +221,13 @@ export async function proposeChange(
   week: readonly TrainingSession[],
   instruction: string,
   onDownloadProgress?: (loaded: number) => void,
+  restDays: readonly Day[] = [],
 ): Promise<AssistantReply> {
-  const reply = await askModel(model, week, instruction, onDownloadProgress);
+  const reply = await askModel(model, week, instruction, onDownloadProgress, restDays);
   // One candidate left after narrowing is no question: take it and ask again with that session named.
   if (reply.kind === "clarification" && reply.clarification.options.length === 1 && !instruction.includes("(session id ")) {
     const [only] = reply.clarification.options;
-    return await askModel(model, week, `${instruction} — I mean ${only.label} (session id "${only.id}").`, onDownloadProgress);
+    return await askModel(model, week, `${instruction} — I mean ${only.label} (session id "${only.id}").`, onDownloadProgress, restDays);
   }
   return reply;
 }
@@ -226,6 +237,7 @@ async function askModel(
   week: readonly TrainingSession[],
   instruction: string,
   onDownloadProgress?: (loaded: number) => void,
+  restDays: readonly Day[] = [],
 ): Promise<AssistantReply> {
   const session = await model.create({
     expectedInputs: LANGUAGES,
@@ -245,7 +257,7 @@ async function askModel(
       what: title,
     }));
     const response = await session.prompt(
-      `Schedule: ${JSON.stringify(schedule)}. ${instruction} Propose moves.`,
+      `Schedule: ${JSON.stringify(schedule)}. Rest days: ${JSON.stringify(restDays)}. ${instruction} Propose moves.`,
       { responseConstraint: REPLY_SCHEMA },
     );
     return narrowByDiscipline(parseReply(response, week), week, instruction);

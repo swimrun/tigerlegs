@@ -1,14 +1,19 @@
-import { assertEquals, assertThrows } from "@std/assert";
+import { assert, assertEquals, assertThrows } from "@std/assert";
 import {
   applyMoves,
   changedSessions,
+  checkMoves,
   type Day,
   fitsInstruction,
   isDay,
   mentionedDisciplines,
   parseProposal,
+  planRestDay,
   PROTOTYPE_WEEK,
+  restDaysRequested,
+  suggestFixes,
   type TrainingSession,
+  weekIssues,
 } from "../../src/client/training-week.ts";
 
 const WEEK: TrainingSession[] = [
@@ -99,4 +104,70 @@ Deno.test("fitsInstruction - a swimrun session fits both a run and a swim instru
   assertEquals(fitsInstruction(brick, new Set(["run"])), true);
   assertEquals(fitsInstruction(swim, new Set(["run"])), false);
   assertEquals(fitsInstruction(swim, new Set()), true);
+});
+
+Deno.test("restDaysRequested reads rest days in English, Dutch, French and German", () => {
+  assertEquals(restDaysRequested("I need a rest day on Wednesday"), ["Wed"]);
+  assertEquals(restDaysRequested("ik wil woensdag een rustdag"), ["Wed"]);
+  assertEquals(restDaysRequested("je voudrais un jour de repos le vendredi"), ["Fri"]);
+  assertEquals(restDaysRequested("Ich brauche am Sonntag einen Ruhetag"), ["Sun"]);
+  assertEquals(restDaysRequested("Make Wednesday a day off please"), ["Wed"]);
+});
+
+Deno.test("restDaysRequested ignores days that are not next to a rest word", () => {
+  assertEquals(restDaysRequested("I am travelling Thursday and Friday, so I need a rest day on Wednesday and then move things"), ["Wed"]);
+  assertEquals(restDaysRequested("I am travelling Thursday and Friday"), []);
+  assertEquals(restDaysRequested("Run the rest of the week on Tuesday"), []);
+});
+
+Deno.test("the prototype week has no problems, and a session on a rest day is one", () => {
+  assertEquals(weekIssues(PROTOTYPE_WEEK, []), []);
+  assertEquals(weekIssues(PROTOTYPE_WEEK, ["Wed"]).map((issue) => issue.kind), ["rest-day"]);
+});
+
+Deno.test("two sessions on a day, and runs on consecutive days, are problems", () => {
+  const clash = applyMoves(PROTOTYPE_WEEK, [{ id: "flex", toDay: "Thu", reason: "" }]);
+  assertEquals(weekIssues(clash, []).map((issue) => issue.kind), ["clash"]);
+  const runs = applyMoves(PROTOTYPE_WEEK, [{ id: "intervals", toDay: "Fri", reason: "" }]);
+  assertEquals(weekIssues(runs, []).map((issue) => issue.kind), ["back-to-back-runs"]);
+});
+
+Deno.test("checkMoves keeps moves off rest days", () => {
+  const moves = [{ id: "brick", toDay: "Wed", reason: "" }, { id: "trail", toDay: "Fri", reason: "" }] as const;
+  const { allowed, rejected } = checkMoves(["Wed"], moves);
+  assertEquals(allowed.map((move) => move.id), ["trail"]);
+  assertEquals(rejected.map((move) => move.id), ["brick"]);
+});
+
+Deno.test("planRestDay moves only the sessions of that day, to the free day, and nothing else", () => {
+  const plan = planRestDay(PROTOTYPE_WEEK, [], "Wed");
+  assertEquals(plan.restDays, ["Wed"]);
+  assertEquals(plan.moves.map(({ id, toDay }) => [id, toDay]), [["flex", "Fri"]]);
+  const after = applyMoves(PROTOTYPE_WEEK, plan.moves);
+  assertEquals(weekIssues(after, plan.restDays), []);
+});
+
+Deno.test("planRestDay never puts a session on another rest day", () => {
+  const plan = planRestDay(PROTOTYPE_WEEK, ["Fri"], "Wed");
+  assertEquals(plan.restDays, ["Wed", "Fri"]);
+  assert(plan.moves.every((move) => !plan.restDays.includes(move.toDay)));
+});
+
+Deno.test("planRestDay on an empty day changes nothing but the rest days", () => {
+  const plan = planRestDay(PROTOTYPE_WEEK, [], "Fri");
+  assertEquals(plan.moves, []);
+  assertEquals(plan.restDays, ["Fri"]);
+});
+
+Deno.test("suggestFixes looks one step ahead and moves the later session of a problem", () => {
+  const runs = applyMoves(PROTOTYPE_WEEK, [{ id: "intervals", toDay: "Fri", reason: "" }]);
+  const [fix, ...rest] = suggestFixes(runs, []);
+  assertEquals(fix.resolves.kind, "back-to-back-runs");
+  assertEquals(fix.move.id, "intervals");
+  assertEquals(rest, []);
+  assertEquals(weekIssues(applyMoves(runs, [fix.move]), []), []);
+});
+
+Deno.test("suggestFixes has nothing to suggest for a week without problems", () => {
+  assertEquals(suggestFixes(PROTOTYPE_WEEK, []), []);
 });

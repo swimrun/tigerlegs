@@ -139,3 +139,168 @@ export function parseProposal(
     return [{ id, toDay, reason: typeof reason === "string" ? reason : "" }];
   });
 }
+
+/**
+ * Rest days. A rest day is a day of the week on which no session may be planned: a fixed part of the
+ * plan levers (spec 003), not a gap that happens to be empty. Rules are checked here, in plain code, so
+ * that a language model never decides what is allowed.
+ */
+
+const DAY_NAMES: Record<Day, readonly string[]> = {
+  Mon: ["monday", "mon", "maandag", "lundi", "montag"],
+  Tue: ["tuesday", "tue", "tues", "dinsdag", "mardi", "dienstag"],
+  Wed: ["wednesday", "wed", "woensdag", "mercredi", "mittwoch"],
+  Thu: ["thursday", "thu", "thur", "thurs", "donderdag", "jeudi", "donnerstag"],
+  Fri: ["friday", "fri", "vrijdag", "vendredi", "freitag"],
+  Sat: ["saturday", "sat", "zaterdag", "samedi", "samstag"],
+  Sun: ["sunday", "sun", "zondag", "dimanche", "sonntag"],
+};
+
+const REST_WORDS = new Set(["rest", "rust", "rustdag", "repos", "ruhe", "ruhetag", "vrij"]);
+
+/** How many words a day name may sit away from the rest word and still belong to it. */
+const REST_WINDOW = 4;
+
+/**
+ * The days an instruction asks to be a rest day, in English, Dutch, French or German ("I need a rest day
+ * on Wednesday", "ik wil woensdag rust"). A day counts when it stands within a few words of a rest word,
+ * so "I travel Thursday and Friday and want Wednesday off as a rest day" gives only Wednesday.
+ * "the rest of the week" is no rest day.
+ */
+export function restDaysRequested(instruction: string): Day[] {
+  const tokens = instruction.toLowerCase().match(/\p{L}+/gu) ?? [];
+  const dayOf = (token: string): Day | null => DAYS.find((day) => DAY_NAMES[day].includes(token)) ?? null;
+  const isRest = (token: string, index: number) =>
+    REST_WORDS.has(token) && !(token === "rest" && tokens[index + 1] === "of") ||
+    (token === "off" && (tokens[index - 1] === "day" || tokens[index + 1] === "day"));
+  const found = new Set<Day>();
+  tokens.forEach((token, index) => {
+    if (!isRest(token, index)) return;
+    for (let near = Math.max(0, index - REST_WINDOW); near <= Math.min(tokens.length - 1, index + REST_WINDOW); near++) {
+      const day = dayOf(tokens[near]);
+      if (day) found.add(day);
+    }
+  });
+  return DAYS.filter((day) => found.has(day));
+}
+
+export type IssueKind = "rest-day" | "clash" | "back-to-back-runs";
+
+/** A problem in a week: sessions on a rest day, two sessions on one day, or runs on consecutive days. */
+export interface Issue {
+  kind: IssueKind;
+  day: Day;
+  /** The sessions involved, earliest day first. */
+  ids: string[];
+}
+
+const isRun = (session: TrainingSession) => session.discipline === "run";
+
+/** Every problem in the week. Only sessions on a rest day are a hard rule; the others are advice. */
+export function weekIssues(week: readonly TrainingSession[], restDays: readonly Day[]): Issue[] {
+  const issues: Issue[] = [];
+  DAYS.forEach((day, index) => {
+    const here = week.filter((session) => session.day === day);
+    if (restDays.includes(day) && here.length > 0) {
+      issues.push({ kind: "rest-day", day, ids: here.map((session) => session.id) });
+    } else if (here.length > 1) {
+      issues.push({ kind: "clash", day, ids: here.map((session) => session.id) });
+    }
+    const next = DAYS[index + 1];
+    const runsNext = next ? week.filter((session) => session.day === next && isRun(session)) : [];
+    const runsHere = here.filter(isRun);
+    if (runsHere.length > 0 && runsNext.length > 0) {
+      issues.push({ kind: "back-to-back-runs", day: next, ids: [...runsHere, ...runsNext].map((session) => session.id) });
+    }
+  });
+  return issues;
+}
+
+/** Splits moves into those that respect the rest days and those that would put a session on one. */
+export function checkMoves(
+  restDays: readonly Day[],
+  moves: readonly Move[],
+): { allowed: Move[]; rejected: Move[] } {
+  const allowed: Move[] = [];
+  const rejected: Move[] = [];
+  for (const move of moves) (restDays.includes(move.toDay) ? rejected : allowed).push(move);
+  return { allowed, rejected };
+}
+
+/**
+ * The day that suits a session best: never a rest day, and the one with the fewest problems in the
+ * resulting week; among equals the nearest day, and the later one when two are equally near. Null when
+ * every other day is a rest day.
+ */
+function bestDay(week: readonly TrainingSession[], restDays: readonly Day[], id: string): Day | null {
+  const session = week.find((candidate) => candidate.id === id);
+  if (!session) return null;
+  const from = DAYS.indexOf(session.day);
+  const before = (a: number[], b: number[]) => {
+    for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) return a[i] < b[i];
+    return false;
+  };
+  let best: Day | null = null;
+  let bestScore: number[] = [];
+  DAYS.forEach((day, index) => {
+    if (day === session.day || restDays.includes(day)) return;
+    const problems = weekIssues(applyMoves(week, [{ id, toDay: day, reason: "" }]), restDays).length;
+    const score = [problems, Math.abs(index - from), -index];
+    if (best === null || before(score, bestScore)) {
+      best = day;
+      bestScore = score;
+    }
+  });
+  return best;
+}
+
+/**
+ * The first step for "I need a rest day on this day": each session on that day goes to the best other
+ * day, one at a time, and nothing else in the week moves. What the move may leave behind is advice for
+ * a next step (see `suggestFixes`), not part of this one.
+ */
+export function planRestDay(
+  week: readonly TrainingSession[],
+  restDays: readonly Day[],
+  day: Day,
+): { restDays: Day[]; moves: Move[] } {
+  const rest = DAYS.filter((candidate) => candidate === day || restDays.includes(candidate));
+  const moves: Move[] = [];
+  let current = week;
+  for (const session of week.filter((candidate) => candidate.day === day)) {
+    const toDay = bestDay(current, rest, session.id);
+    if (!toDay) continue;
+    const move = { id: session.id, toDay, reason: "" };
+    moves.push(move);
+    current = applyMoves(current, [move]);
+  }
+  return { restDays: rest, moves };
+}
+
+/** A possible next step: one move that lessens a problem, and the problem it answers. */
+export interface Fix {
+  move: Move;
+  resolves: Issue;
+}
+
+/**
+ * Looks one step ahead: for the problems in the week, at most `limit` single moves that each make the
+ * week better. The later session of a problem is the one to move, and nothing is chained: the athlete
+ * applies one step and then sees what the next one is.
+ */
+export function suggestFixes(week: readonly TrainingSession[], restDays: readonly Day[], limit = 2): Fix[] {
+  const fixes: Fix[] = [];
+  let current = week;
+  for (const issue of weekIssues(week, restDays)) {
+    if (fixes.length >= limit) break;
+    const id = issue.ids.at(-1)!;
+    const toDay = bestDay(current, restDays, id);
+    if (!toDay) continue;
+    const move = { id, toDay, reason: "" };
+    const after = applyMoves(current, [move]);
+    if (weekIssues(after, restDays).length >= weekIssues(current, restDays).length) continue;
+    fixes.push({ move, resolves: issue });
+    current = after;
+  }
+  return fixes;
+}
