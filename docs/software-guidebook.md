@@ -1100,11 +1100,13 @@ For development you can run your own Overpass server, with a one-time import of 
 
 Tests follow the test pyramid: many fast tests at the bottom, few slow ones at the top.
 
-| Level                   | Tool                                        | Location                       | What it covers                                                                                                 |
-| ----------------------- | ------------------------------------------- | ------------------------------ | -------------------------------------------------------------------------------------------------------------- |
-| Unit and property-based | Deno test runner, `@std/assert`, fast-check | `test/client/`, `test/shared/` | Pure domain functions: GPX parsing, classification, confidence, chat agent, session store, language resolution |
-| Integration (back end)  | Deno test runner                            | `test/server/`                 | The Overpass proxy and its cache                                                                               |
-| End-to-end              | Playwright on the built static site         | `test/site/`                   | Deep links, menu, language switch, fake login, terrain consent, mobile layout                                  |
+| Level                   | Tool                                 | Location                                 | What it covers                                                                                                                                                     |
+| ----------------------- | ------------------------------------ | ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Unit and property-based | Vitest, fast-check                   | `test/client/`, `test/shared/`, `src/**` | Pure domain functions: GPX parsing, classification, confidence, chat agents, session store, language resolution                                                    |
+| Integration (back end)  | Vitest on Node                       | `src/server/`                            | The Overpass proxy and its cache                                                                                                                                   |
+| Component               | Storybook play functions, with axe   | `src/components/*.stories.tsx`           | One component and its interactions and accessibility; label steps `Given`, `When`, `Then` with `step()`                                                            |
+| Acceptance criteria     | Gherkin features with playwright-bdd | `test/features/`                         | The Given, When, Then criteria of an issue, run in a browser on the built static site ([ADR-0018](./adr/0018-acceptance-tests-with-gherkin-and-playwright-bdd.md)) |
+| End-to-end              | Playwright on the built static site  | `test/site/`                             | Deep links, menu, language switch, fake login, terrain consent, mobile layout                                                                                      |
 
 Rules:
 
@@ -1143,6 +1145,7 @@ Table 8 lists the ADRs and what each decides.
 | [0014](./adr/0014-back-end-technology.md)                                 | Accepted: the back end is Node.js with TypeScript, chosen with multi-criteria decision making, a decision tree and a spike that measured memory and image size against Spring Boot, Micronaut and ASP.NET Core                   |
 | [0016](./adr/0016-data-access-layer.md)                                   | Draft: the data layer of the back end (ORM or repositories, PostgreSQL driver, optimistic concurrency, transactions); no decision yet                                                                                            |
 | [0017](./adr/0017-localisation.md)                                        | Accepted: localisation with i18next and react-i18next, translations as external data files (YAML preferred, JSON accepted), ICU message syntax preferred, and one URL per language (Astro i18n routing); decided without a spike |
+| [0018](./adr/0018-acceptance-tests-with-gherkin-and-playwright-bdd.md)    | Accepted as a pilot: acceptance criteria as Gherkin features in `test/features/`, run with playwright-bdd on the Playwright runner                                                                                               |
 
 ADR-0008 implements a shared Astro layout and directly linkable HTML pages, with the interactive extractor implemented in React and no runtime backend. Astro itself is not React-based; it supplies static page composition around the React application. Existing TypeScript analysis modules remain reusable. All ADRs are built into HTML pages and linked from this chapter. The ADR includes a provisional weighted comparison of the previous Deno-only site build, Astro, Next.js static export, Vite + React SPA and Eleventy, following the [ICT Research Methods multi-criteria decision making method](https://ictresearchmethods.nl/workshop/multi-criteria-decision-making/).
 
