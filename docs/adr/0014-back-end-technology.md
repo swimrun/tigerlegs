@@ -52,7 +52,10 @@ Weighing this in C4 is a decision of the owner; the sensitivity below shows what
 
 Little. The site is Astro in its default static mode on GitHub Pages: "By default, your entire Astro site will be prerendered, and static HTML pages will be sent to the browser", and an adapter (Node.js, Cloudflare, Netlify, Vercel) is only needed for pages rendered on demand (Astro, n.d.-a). A static site that calls a separate API needs no adapter, and in static mode Astro endpoints only run at build time (Astro, n.d.-b). So the back end is a separate service behind a REST/JSON contract (ADR-0005), and Astro does not care what it is written in.
 
-Two related questions are tracked in #64. Astro itself now belongs to Cloudflare: its company joined Cloudflare on 16 January 2026, and Astro stays MIT-licensed with a public roadmap and open governance (heise online, 2026), the same pattern as Deno. And Next.js, the usual alternative for an app-like front end, is governed by Vercel but can be self-hosted: as a Node server or Docker container with standalone output, as a static export, and since version 16.2 through a stable Adapter API (Next.js, 2026). A Next.js front end with server code would pull the back end toward Node.js, which is the one real pressure from a framework on this decision; it does not follow from the current static site.
+Two related questions are tracked in #64. Astro itself now belongs to Cloudflare: its company joined Cloudflare on 16 January 2026, and Astro stays MIT-licensed with a public roadmap and open governance (heise online, 2026), the same pattern as Deno. And Next.js, the usual alternative for an app-like front end, is governed by Vercel but can be self-hosted: as a Node server or Docker container with standalone output, as a static export, and since version 16.2 through a stable Adapter API (Next.js, 2026). Cloudflare is an American company: it is headquartered in San Francisco and listed on the New York Stock Exchange (Cloudflare, n.d.).
+The reaction of the community to the Astro deal is reported as mixed, between excitement and caution, with the question "will Astro become coupled to a hosting provider?" and the reassurance of the stated commitments: free, open source and MIT licensed, open governance, continued support of the ecosystem fund and of partners such as Netlify, Wix and Sentry, and portability to other runtimes (IT Brief, 2026; The New Stack, 2026; these are news reports, not measurements).
+Astro needs Node.js: the installation guide asks for Node.js v22.23.4 or higher, with only even-numbered versions supported (Astro, n.d.-c), and rendering pages on demand needs an adapter for a server runtime (Node.js, Cloudflare, Netlify or Vercel). Astro as the back end would therefore be a Node.js back end, running the Node adapter in a container; it would tie the back end to the front-end framework and its release cycle, which cuts against a back end that is optional and separately deployable (ADR-0013), and Astro endpoints cover routes, not accounts, payments, jobs or a data layer. As a thin layer for the front end it is possible, as the whole back end it is not recommended here.
+A Next.js front end with server code would pull the back end toward Node.js, which is the one real pressure from a framework on this decision; it does not follow from the current static site.
 
 Where pressure could appear:
 
@@ -255,9 +258,11 @@ If the owner rates Spring Boot 5 and Node.js 3 on C1, the totals are 385 and 400
 - Adoptium. (n.d.). *Temurin support and roadmap*. Retrieved November 10, 2026, from https://adoptium.net/support/
 - Astro. (n.d.-a). *On-demand rendering*. Retrieved November 10, 2026, from https://docs.astro.build/en/guides/on-demand-rendering/
 - Astro. (n.d.-b). *Endpoints*. Retrieved November 10, 2026, from https://docs.astro.build/en/guides/endpoints/
+- Astro. (n.d.-c). *Install and set up Astro*. Retrieved November 11, 2026, from https://docs.astro.build/en/install-and-setup/
 - Bayer, M. (n.d.). *Alembic* [Documentation]. Retrieved November 11, 2026, from https://alembic.sqlalchemy.org/en/latest/
 - Bytebase. (2026). *Database deployment tools for DevOps teams in 2026* [Blog]. https://www.bytebase.com/blog/database-deployment-tools.md
 - Cloudflare. (2026, October 9). *Deno joins Cloudflare*. https://blog.cloudflare.com/deno-joins-cloudflare
+- Cloudflare. (n.d.). *About Cloudflare*. Retrieved November 11, 2026, from https://www.cloudflare.com/about-overview/
 - Deno. (2026). *The state of Deno after the Cloudflare announcement* (Issue 37030) [Issue tracker]. GitHub. Retrieved November 10, 2026, from https://github.com/denoland/deno/issues/37030
 - eSecurity Planet. (2026). *GitHub account breach fuels Shai-Hulud npm supply chain attack*. https://esecurityplanet.com/threats/github-account-breach-fuels-shai-hulud-npm-supply-chain-attack/
 - GraalVM. (n.d.). *Downloads*. Retrieved November 10, 2026, from https://www.graalvm.org/downloads/
@@ -267,6 +272,7 @@ If the owner rates Spring Boot 5 and Node.js 3 on C1, the totals are 385 and 400
 - ICT Research Methods. (n.d.). *Multi-criteria decision making*. Retrieved November 10, 2026, from https://ictresearchmethods.nl/workshop/multi-criteria-decision-making/
 - InfoQ. (2025, March). *Java 24 ships Project Leyden*. https://www.infoq.com/news/2025/03/java-24-leyden-ships
 - InfoQ. (2026, August). *JEP 401 value objects preview*. https://infoq.com/news/2026/08/jep401-value-objects-preview
+- IT Brief. (2026, January). *Cloudflare buys Astro framework, pledges open future*. https://itbrief.co.uk/story/cloudflare-buys-astro-framework-pledges-open-future
 - Javalin. (n.d.). *Javalin: A simple web framework for Java and Kotlin*. Retrieved November 10, 2026, from https://javalin.io/
 - Kalium. (2026). *TechEmpower Framework Benchmarks are now archived: What's next?* DEV Community. Retrieved November 10, 2026, from https://dev.to/kaliumhexacyanoferrat/techempower-framework-benchmarks-are-now-archived-whats-next-3l0a
 - Linuxiac. (2026). *Cloudflare acquires Deno JavaScript runtime, core development to end in 2027*. https://linuxiac.com/cloudflare-acquires-deno-javascript-runtime/
@@ -294,4 +300,5 @@ If the owner rates Spring Boot 5 and Node.js 3 on C1, the totals are 385 and 400
 - Spring. (n.d.-a). *Domain-driven design and relational databases* [Spring Data JDBC reference]. Retrieved November 11, 2026, from https://docs.spring.io/spring-data/relational/reference/jdbc/domain-driven-design.html
 - Spring. (n.d.-b). *Database initialization: Flyway and Liquibase* [Spring Boot how-to]. Retrieved November 11, 2026, from https://docs.spring.io/spring-boot/how-to/data-initialization.html
 - Tech Holder. (2026, March). *How to optimize Spring Boot native image build times with GraalVM* [Blog post]. https://tech-holder.blogspot.com/2026/03/how-to-optimize-spring-boot-native.html
+- The New Stack. (2026). *Why platform companies keep buying frontend framework teams*. https://thenewstack.io/why-platform-companies-keep-buying-frontend-framework-teams/
 - Tokio. (n.d.). *axum* [Repository and README]. GitHub. Retrieved November 10, 2026, from https://github.com/tokio-rs/axum
