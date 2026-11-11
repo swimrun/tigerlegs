@@ -1,0 +1,121 @@
+/**
+ * The sample swimruns of the extractor page, as courses with variants (software guidebook, section 6.6).
+ * A variant is one way of doing a course: race day or training, high or low water, or a route that keeps
+ * clear of nesting birds. Each variant has a description and its own typical GPX file.
+ * A variant without a file is announced on the page but cannot be loaded yet.
+ */
+export interface SampleVariant {
+  id: string;
+  label: string;
+  description: string;
+  /** File name on the site under samples/; null while the typical GPX for this variant is missing. */
+  file: string | null;
+  /** File name in test-data/ that is copied to `file` by `deno task build:samples`. */
+  source: string | null;
+}
+
+export interface SampleCourse {
+  id: string;
+  name: string;
+  variants: SampleVariant[];
+}
+
+export const SAMPLE_COURSES: readonly SampleCourse[] = [
+  {
+    id: "rhederlaag",
+    name: "Rhederlaag SwimRun",
+    variants: [
+      {
+        id: "recorded-2025-10-11",
+        label: "As recorded, 11 October 2025",
+        description: "The loop as one athlete swam and ran it. The water level that day is not noted yet.",
+        file: "rhederlaag-swimrun.gpx",
+        source: "rhederlaag-swimrun.gpx",
+      },
+      {
+        id: "high-water",
+        label: "High water",
+        description: "The loop when the water is high. What changes in the route is still to be described.",
+        file: null,
+        source: null,
+      },
+      {
+        id: "low-water",
+        label: "Low water",
+        description: "The loop when the water is low. What changes in the route is still to be described.",
+        file: null,
+        source: null,
+      },
+      {
+        id: "bird-breeding-season",
+        label: "Water bird breeding season",
+        description: "From April to June some islands are avoided for the sake of nature.",
+        file: null,
+        source: null,
+      },
+    ],
+  },
+  {
+    id: "rondje-eilanden",
+    name: "Het Rondje Eilanden",
+    variants: [
+      {
+        id: "race-day",
+        label: "Race day",
+        description:
+          "The race starts with swim A of about 400 m along the island, because the whole island is full of people on race day. Recorded on 19 July 2025.",
+        file: "rondje-eilanden.gpx",
+        source: "Rondje_Eilanden_2025.gpx",
+      },
+      {
+        id: "training",
+        label: "Training",
+        description: "When training, the first stretch (swim A) is run instead of swum.",
+        file: null,
+        source: null,
+      },
+    ],
+  },
+  {
+    id: "twiske-backyard",
+    name: "Twiske Backyard SwimRun",
+    variants: [{
+      id: "standard",
+      label: "Standard",
+      description: "The Twiske Backyard Ultra SwimRun Experience of 20 June 2026, many laps.",
+      file: "twiske-backyard.gpx",
+      source: "Twiske_Backyard_SwimRun_Experience.gpx",
+    }],
+  },
+  {
+    id: "ruegen",
+    name: "Ötillö Rügen",
+    variants: [{
+      id: "standard",
+      label: "Standard",
+      description: "The Ötillö Rügen SwimRun World Series.",
+      file: "ruegen-swimrun.gpx",
+      source: "Ötillö_Rügen_met_Sander_SwimRun_World_Serious_.gpx",
+    }],
+  },
+  {
+    id: "cannes",
+    name: "Ötillö Cannes",
+    variants: [{
+      id: "standard",
+      label: "Standard",
+      description: "The Ötillö Cannes World Series of 3 October 2026.",
+      file: "frankrijk-swimrun.gpx",
+      source: "Frankrijk_SwimRun_Coros.gpx",
+    }],
+  },
+];
+
+/** The variants that have a GPX file, as pairs of source (test-data) and site file name. */
+export function sampleFiles(courses: readonly SampleCourse[] = SAMPLE_COURSES): [source: string, file: string][] {
+  return courses.flatMap((course) =>
+    course.variants.flatMap((variant): [string, string][] =>
+      variant.file !== null && variant.source !== null ? [[variant.source, variant.file]] : []
+    )
+  );
+}

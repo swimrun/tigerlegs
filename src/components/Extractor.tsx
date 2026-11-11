@@ -5,6 +5,7 @@ import { importWarnings, requiresAnalysisWorker } from "../client/analysis-job.t
 import { runWorkerJob } from "../client/worker-client.ts";
 import { detectApplicableStrategies } from "../client/strategy-combiner.ts";
 import { fetchWater, type WaterBody } from "../client/water.ts";
+import { SAMPLE_COURSES } from "../client/sample-courses.ts";
 import { haversineDistance } from "../shared/distance-calculator.ts";
 import type { GPXData, StrategyName, Trackpoint } from "../shared/types.ts";
 import CourseMap from "./CourseMap.tsx";
@@ -19,13 +20,6 @@ interface Course {
 }
 const EMPTY_POINTS: Trackpoint[] = [];
 const EMPTY_WATER: WaterBody[] = [];
-const SAMPLES = [
-  ["rhederlaag-swimrun.gpx", "Rhederlaag SwimRun"],
-  ["rondje-eilanden.gpx", "Rondje Eilanden"],
-  ["twiske-backyard.gpx", "Twiske Backyard SwimRun"],
-  ["ruegen-swimrun.gpx", "Ötillö Rügen"],
-  ["frankrijk-swimrun.gpx", "Ötillö Cannes"],
-];
 
 function timeSummary(points: Trackpoint[]) {
   const times = points.map(p => Date.parse(p.timestamp ?? ""));
@@ -236,12 +230,28 @@ export default function Extractor({ base }: { base: string }) {
     <div className="lg:grid lg:grid-cols-[13rem_minmax(0,1fr)] lg:gap-6">
     <nav aria-label="Sample swimruns" className="mb-6 lg:mb-0">
       <h2 className="text-sm font-semibold uppercase tracking-wide text-stone-600">Try a sample</h2>
-      <ul className="mt-2 space-y-1">
-        {SAMPLES.map(([name, label]) => <li key={name}>
-          <a href={`${base}samples/${name}`} data-sample={name}
-            className="sample-link block rounded border border-stone-200 bg-white px-3 py-2 text-sm font-medium hover:border-amber-500 hover:bg-amber-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-stone-950"
-            onClick={event => { event.preventDefault(); void importSample(name); }}>{label}</a>
-        </li>)}
+      <ul className="mt-2 space-y-3">
+        {SAMPLE_COURSES.map(course => {
+          const single = course.variants.length === 1 ? course.variants[0] : null;
+          if (single?.file) return <li key={course.id}>
+            <a href={`${base}samples/${single.file}`} data-sample={single.file} title={single.description}
+              className="sample-link block rounded border border-stone-200 bg-white px-3 py-2 text-sm font-medium hover:border-amber-500 hover:bg-amber-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-stone-950"
+              onClick={event => { event.preventDefault(); void importSample(single.file!); }}>{course.name}</a>
+          </li>;
+          return <li key={course.id} data-course={course.id}>
+            <h3 className="text-sm font-semibold text-stone-800">{course.name}</h3>
+            <ul className="mt-1 space-y-2">
+              {course.variants.map(variant => <li key={variant.id} data-variant={variant.id}>
+                {variant.file
+                  ? <a href={`${base}samples/${variant.file}`} data-sample={variant.file}
+                    className="sample-link block rounded border border-stone-200 bg-white px-3 py-2 text-sm font-medium hover:border-amber-500 hover:bg-amber-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-stone-950"
+                    onClick={event => { event.preventDefault(); void importSample(variant.file!); }}>{variant.label}</a>
+                  : <span aria-disabled="true" className="block rounded border border-dashed border-stone-300 px-3 py-2 text-sm font-medium text-stone-600">{variant.label} <span className="font-normal">(GPX to be added)</span></span>}
+                <p className="mt-1 text-xs text-stone-600">{variant.description}</p>
+              </li>)}
+            </ul>
+          </li>;
+        })}
       </ul>
     </nav>
     <div className="min-w-0">

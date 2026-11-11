@@ -473,6 +473,7 @@ package "Course (idealized track)" {
   }
   class CourseVariant <<entity>> {
     name
+    description
   }
   class CourseLine <<value>> {
     positions, no time
@@ -572,6 +573,7 @@ The words, as the extractor and training pages need them:
   The extractor shows a course when it loads an official GPX file.
 - A **recording** is a carried-out track: an athlete's GPX or FIT file with time and, when the device recorded it, speed and heart rate. The swim and run segments detected on it belong to it. The GPX file of an executed training is a recording once the athlete saves it from the extractor; saving is the athlete's choice and we do not sync or keep a training log.
 - The extractor page treats both as "a GPX file". A sample such as the Rondje Eilanden file is a recording of one athlete with heart rate, cadence and power stripped (`test-data/README.md`); that stripping is how a course is made from a recording.
+- A course has **variants**: one way of doing it, with a description and its own typical GPX line. Race day and training, high and low water, and the water bird breeding season (from April to June some islands are avoided for the sake of nature) are variants. The extractor lists them per course: Het Rondje Eilanden has *race day* (the race starts with swim A of about 400 m along the island, because the island is full of people on race day) and *training* (swim A is run instead), and Rhederlaag has the recording as swum, high water, low water and the breeding season. Only the variants whose typical GPX file exists can be loaded; the others are announced as "GPX to be added".
 - A **swimrun group** is a set of athletes: a duo, a team or a larger training group.
 - A **training plan** leads to goal events: one A event and B or C events before it (roadmap M10). Its **planned sessions** are what the training page shows, and a session can have a structure of steps for intervals, intensity and rest. We do not build a training log: Strava, Garmin and Polar are dedicated platforms for executed training, so a session points at the activity there, or at a recording the athlete saved, and keeps a small adherence snapshot.
 
@@ -608,7 +610,7 @@ What the three services offer is not yet verified; the following comes from sear
 Open questions:
 
 1. May a course be made from a recording of an athlete, and how much of the start and end must be trimmed so that it does not reveal a home address?
-2. Does a course need variants from the first version, or one line and its legs?
+2. Which GPX files are the typical line of each variant that has none yet, and which variant is the existing Rhederlaag recording (its water level is not noted)? Variants are part of the model from the first version.
 3. Is a goal event part of one plan, or a shared event that plans refer to by id?
 4. Is a coach a role in a group, or a relation between two athletes?
 5. Is the login account the same aggregate as the athlete profile?
@@ -733,13 +735,14 @@ class Course <<aggregate root>> {
   -variants: CourseVariant[1..*]
   -version: number
   +rename(name: string): void
-  +addVariant(name: string, line: CourseLine, legs: Leg[]): VariantId
+  +addVariant(name: string, description: string, line: CourseLine, legs: Leg[]): VariantId
   +removeVariant(id: VariantId): void
   +publish(): void
 }
 class CourseVariant <<entity>> {
   -id: VariantId
   -name: string
+  -description: string
   -line: CourseLine
   -legs: Leg[1..*]
   +distanceM(): number
