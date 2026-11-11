@@ -626,7 +626,7 @@ Open questions:
 This chapter explains how the source code is organised.
 
 The source lives in three folders: `src/client` for the browser, `src/server` for the backend and `src/shared` for types and distance calculation.
-Texts for the interface live in external per-language files, `<owner>.strings.<lang>.ts`, next to the module that owns them, with a `<owner>.strings.ts` for the `Strings` type; `test/client/strings.test.ts` fails when a dictionary appears inline (see `AGENTS.md`). Tests sit next to the code (`*.test.ts`) or in `test/`.
+Texts for the interface are data in external JSON files, one per language, and never inline; the library and the routing per language are decided in [ADR-0017](./adr/0017-localisation.md), and until then per-language TypeScript files are a stopgap (see `AGENTS.md`). Tests sit next to the code (`*.test.ts`) or in `test/`.
 Most tests are property-based: they state a rule that must hold for generated inputs, such as the maximum gap between samples.
 `deno task build` bundles the browser code into `public/app.js` with `deno bundle`, which is an experimental Deno command.
 
@@ -1016,6 +1016,7 @@ Table 8 lists the ADRs and what each decides.
 | [0013](./adr/0013-back-end-is-optional.md)                                | Draft: the back end is optional and a premium feature; the front end works without it; no decision                                                                                                             |
 | [0014](./adr/0014-back-end-technology.md)                                 | Accepted: the back end is Node.js with TypeScript, chosen with multi-criteria decision making, a decision tree and a spike that measured memory and image size against Spring Boot, Micronaut and ASP.NET Core |
 | [0016](./adr/0016-data-access-layer.md)                                   | Draft: the data layer of the back end (ORM or repositories, PostgreSQL driver, optimistic concurrency, transactions); no decision yet                                                                          |
+| [0017](./adr/0017-localisation.md)                                        | Draft: localisation with translations as JSON data, one URL per language (Astro i18n routing) and an i18n library, compared with multi-criteria decision making; no decision on the library yet                |
 
 ADR-0008 implements a shared Astro layout and directly linkable HTML pages, with the interactive extractor implemented in React and no runtime backend. Astro itself is not React-based; it supplies static page composition around the React application. Existing TypeScript analysis modules remain reusable. All ADRs are built into HTML pages and linked from this chapter. The ADR includes a provisional weighted comparison of the previous Deno-only site build, Astro, Next.js static export, Vite + React SPA and Eleventy, following the [ICT Research Methods multi-criteria decision making method](https://ictresearchmethods.nl/workshop/multi-criteria-decision-making/).
 
