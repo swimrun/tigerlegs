@@ -41,11 +41,15 @@ Therefore:
 
 ### APA reference list format
 
-```markdown
-Author, A. A. (Year). *Title of work.* Publisher. https://doi.org/xxx
+Write each reference in APA 7 form, but lay the list out as a bullet list: one bullet per source and no blank line between sources.
+This departs from the APA layout, which separates references by a blank line and hangs the second line; bullets keep the Markdown source short, and the list still reads as a list.
+A reference that needs a second line continues on the next line, indented by two spaces.
+After writing or editing a `## References` section, run `deno task refs <file>`; it turns a section of blank-line separated paragraphs into bullets, leaves a list as it is, and a second run changes nothing.
 
-Author, A. A. (Year, Month Day). *Title of article*. Site Name.
-    https://domain.tld/path
+```markdown
+- Author, A. A. (Year). *Title of work.* Publisher. https://doi.org/xxx
+- Author, A. A. (Year, Month Day). *Title of article*. Site Name.
+  https://domain.tld/path
 ```
 
 ### Why quotes over paraphrasing
@@ -121,6 +125,13 @@ Rationale:
 - The `line-length = "off"` rule in quickmark.toml exists precisely because line length limits are inappropriate for documentation
 
 The one acceptable alternative to "one long line per paragraph" is **semantic line breaks** (one sentence per line). This gives clean diffs while keeping logical units together. Either approach is fine; hard wraps at a fixed column width are not.
+
+### Markdown tables: aligned columns
+
+Write every Markdown table with its columns padded with spaces, so that the table reads as a table in the source without a preview: each cell as wide as the widest cell of its column, and the separator row as wide as the column.
+After writing or editing a table, run `deno task tables <file>` on the file; it aligns all tables in it (and leaves tables inside code fences alone), and a second run changes nothing.
+Keep table cells short enough to scan: short option names in the first column, and the explanation in a later column.
+QuickMark has no rule that checks this (its table rules cover the pipe style, the column count and the blank lines around a table), so the check is this rule and the task.
 
 ### Markdown linting
 

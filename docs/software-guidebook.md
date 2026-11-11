@@ -373,6 +373,58 @@ classDiagram
 A *question* is a clickable label or free text. The FAQ catalog holds one question per label, each with a static answer: a brief answer, and optionally *more*, which the user asks for with the *Tell me more* follow-up.
 There is one catalog per language. Free text gets the fallback today, and a dynamic answer from an LLM agent later. Both agent kinds sit behind the `ChatAgent` interface.
 
+### 6.5 Terrain data paths
+
+Figure 10 shows where the water data comes from and how the optional back end and the planned premium service fit in.
+
+*Figure 10*: Terrain data paths: browser, optional back end and Overpass. The diagram is the PlantUML block below (C4-PlantUML); the Markdown preview, the site and `deno task diagrams` all draw it from that text.
+
+```plantuml
+@startuml overpass-architecture
+!include <C4/C4_Container>
+
+title Terrain data paths: browser, optional back end and Overpass
+
+AddElementTag("planned", $bgColor="#7a7a7a", $borderStyle="dashed", $legendText="planned (roadmap M12)")
+AddElementTag("dev", $bgColor="#4a7c59", $legendText="development only")
+
+Person(athlete, "Athlete")
+Person(developer, "Developer", "Records test fixtures")
+
+System_Boundary(tigerlegs, "TigerLegs") {
+  Container(browser, "Browser app", "TypeScript, Leaflet", "Analyses the GPX file in a Web Worker. queryOverpass retries a busy server with exponential backoff (1, 2, 4 s)")
+  ContainerDb(areaCache, "Area cache", "Cache API in the browser, 7 days", "Overpass answers per coarse bounding box; public map data only")
+  Container(backend, "Back end API", "Deno, Docker container", "Optional. A terrain proxy today, premium features later. The front end works without it")
+  ContainerDb(terrainCache, "Terrain cache", "Files on disk", "Cached Overpass answers on the server")
+  Container(ownOverpass, "Own Overpass server", "Docker container, EU VPS", "Quality of service for paying users: no rate limits, own regions", $tags="planned")
+  Container(localOverpass, "Local Overpass server", "wiktorn/overpass-api, Docker Compose profile 'overpass'", "http://127.0.0.1:8081, data in overpass-data/ (git-ignored)", $tags="dev")
+}
+
+System_Ext(publicOverpass, "Public Overpass servers", "overpass-api.de and two mirrors; free, shared, often busy")
+System_Ext(geofabrik, "Geofabrik", "Regional OpenStreetMap extracts as PBF files")
+
+Rel(athlete, browser, "Uses")
+Rel(browser, areaCache, "Reads first, writes after a query")
+Rel(browser, publicOverpass, "Water query for the bounding box", "HTTPS POST, Overpass QL")
+Rel(browser, backend, "Premium: terrain and saved courses", "REST, JSON", $tags="planned")
+Rel(backend, terrainCache, "Reads and writes")
+Rel(backend, ownOverpass, "Queries", "HTTP", $tags="planned")
+Rel(backend, publicOverpass, "Falls back to", "HTTPS")
+Rel(geofabrik, ownOverpass, "PBF extract, import and updates", $tags="planned")
+Rel(geofabrik, localOverpass, "PBF extract, one-time download and import", $tags="dev")
+Rel(developer, localOverpass, "Records fixtures with curl", "HTTP", $tags="dev")
+Rel(backend, localOverpass, "OVERPASS_API_URL in development", "HTTP", $tags="dev")
+
+SHOW_LEGEND()
+@enduml
+```
+
+The free path needs no back end: the browser asks a public Overpass server for the water around the track, retries a busy server with exponential backoff, tries the next mirror, and keeps the answer in an area cache for a week.
+The query area is a coarse bounding box, so the request reveals the neighbourhood of the track and not the track itself.
+The back end is optional ([ADR-0013](./adr/0013-back-end-is-optional.md)); the planned premium service adds our own Overpass server behind it, with a quality of service the public servers cannot give (roadmap M12).
+For development a local Overpass container runs from the same `docker-compose.yml` (profile `overpass`), filled once from a Geofabrik extract; see [local-overpass.md](./local-overpass.md).
+Overpass speaks plain HTTP with a query in Overpass QL, so the front end and back end can be written in any language; the language choice is the subject of [ADR-0014](./adr/0014-back-end-technology.md).
+
 ## 7. Code
 
 This chapter explains how the source code is organised.
@@ -562,34 +614,29 @@ Table 8 lists the ADRs and what each decides.
 | [0011](./adr/0011-model-lifecycle-and-think-thread-for-on-device-chat.md) | Draft: separate the one-off model download from the per-prompt think thread in the on-device chat; no decision |
 | [0012](./adr/0012-persistent-chat-across-pages.md) | Proposed: keep the chat across pages with Astro view transitions and a persisted island |
 | [0013](./adr/0013-back-end-is-optional.md) | Draft: the back end is optional and a premium feature; the front end works without it; no decision |
+| [0014](./adr/0014-back-end-technology.md) | Draft: back-end technology compared with multi-criteria decision making (Deno, Node.js, Python, Java 25 with Spring Boot, Micronaut, Quarkus or Javalin, .NET 10, Go, Rust); no decision |
 
 ADR-0008 implements a shared Astro layout and directly linkable HTML pages, with the interactive extractor implemented in React and no runtime backend. Astro itself is not React-based; it supplies static page composition around the React application. Existing TypeScript analysis modules remain reusable. All ADRs are built into HTML pages and linked from this chapter. The ADR includes a provisional weighted comparison of the previous Deno-only site build, Astro, Next.js static export, Vite + React SPA and Eleventy, following the [ICT Research Methods multi-criteria decision making method](https://ictresearchmethods.nl/workshop/multi-criteria-decision-making/).
 
 ## References
 
-Brown, S. (n.d.-a). *The software guidebook*. Leanpub. https://leanpub.com/documenting-software-architecture
-
-Brown, S. (n.d.-b). *The C4 model for visualising software architecture*. https://c4model.com/
-
-Cavoukian, A. (2011). *Privacy by design: The 7 foundational principles*. Information and Privacy Commissioner of Ontario. https://www.ipc.on.ca/wp-content/uploads/resources/7foundationalprinciples.pdf
-
-Cockburn, A. (2001). *Writing effective use cases*. Addison-Wesley.
-
-file-extensions.com. (n.d.). *GPX file format*. Retrieved June 15, 2026, from https://file-extensions.com/docs/gpx
-
-Garmin. (n.d.). *Connect IQ basics*. Retrieved November 1, 2026, from https://developer.garmin.com/connect-iq/connect-iq-basics/
-
-Gruber, T. (2008). Ontology. In L. Liu & M. T. Özsu (Eds.), *Encyclopedia of Database Systems*. Springer. https://tomgruber.org/writing/definition-of-ontology
-
-Knuth, D. E. (1984). Literate programming. *The Computer Journal, 27*(2), 97–111. https://doi.org/10.1093/comjnl/27.2.97
-
-Larman, C. (2005). *Applying UML and patterns: An introduction to object-oriented analysis and design and iterative development* (3rd ed.). Prentice Hall.
-
-Nielsen, J. (1994). *10 usability heuristics for user interface design*. Nielsen Norman Group. https://www.nngroup.com/articles/ten-usability-heuristics/
-
-Preston-Werner, T. (2010, August 23). *Readme Driven Development*. https://tom.preston-werner.com/2010/08/23/readme-driven-development.html
-
-TopoGrafix. (2004). *GPX 1.1 schema documentation*. https://www.topografix.com/GPX/1/1/
+- Brown, S. (n.d.-a). *The software guidebook*. Leanpub. https://leanpub.com/documenting-software-architecture
+- Brown, S. (n.d.-b). *The C4 model for visualising software architecture*. https://c4model.com/
+- Cavoukian, A. (2011). *Privacy by design: The 7 foundational principles*. Information and Privacy Commissioner of Ontario. https://www.ipc.on.ca/wp-content/uploads/resources/7foundationalprinciples.pdf
+- Cockburn, A. (2001). *Writing effective use cases*. Addison-Wesley.
+- file-extensions.com. (n.d.). *GPX file format*. Retrieved June 15, 2026, from https://file-extensions.com/docs/gpx
+- Garmin. (n.d.). *Connect IQ basics*. Retrieved November 1, 2026, from https://developer.garmin.com/connect-iq/connect-iq-basics/
+- Geofabrik. (n.d.). *OpenStreetMap data extracts*. Retrieved November 10, 2026, from https://download.geofabrik.de/
+- Gruber, T. (2008). Ontology. In L. Liu & M. T. Özsu (Eds.), *Encyclopedia of Database Systems*. Springer. https://tomgruber.org/writing/definition-of-ontology
+- ICT Research Methods. (n.d.). *Multi-criteria decision making*. Retrieved November 10, 2026, from https://ictresearchmethods.nl/workshop/multi-criteria-decision-making/
+- Knuth, D. E. (1984). Literate programming. *The Computer Journal, 27*(2), 97–111. https://doi.org/10.1093/comjnl/27.2.97
+- Larman, C. (2005). *Applying UML and patterns: An introduction to object-oriented analysis and design and iterative development* (3rd ed.). Prentice Hall.
+- Nielsen, J. (1994). *10 usability heuristics for user interface design*. Nielsen Norman Group. https://www.nngroup.com/articles/ten-usability-heuristics/
+- OpenStreetMap Wiki. (n.d.-a). *PBF format*. Retrieved November 10, 2026, from https://wiki.openstreetmap.org/wiki/PBF_Format
+- OpenStreetMap Wiki. (n.d.-b). *Overpass API*. Retrieved November 10, 2026, from https://wiki.openstreetmap.org/wiki/Overpass_API
+- OpenStreetMap Wiki. (n.d.-c). *Overpass API/Overpass QL*. Retrieved November 10, 2026, from https://wiki.openstreetmap.org/wiki/Overpass_API/Overpass_QL
+- Preston-Werner, T. (2010, August 23). *Readme Driven Development*. https://tom.preston-werner.com/2010/08/23/readme-driven-development.html
+- TopoGrafix. (2004). *GPX 1.1 schema documentation*. https://www.topografix.com/GPX/1/1/
 
 ## Appendices
 
@@ -628,6 +675,33 @@ Table 9 lists the terms in the order in which you meet them when you follow a GP
 | Paired segment table | Table with one row per run and swim pair ([ADR-0007](./adr/0007-compact-segment-table-format.md)) | Row: run 2.1 km, swim 400 m |
 | Run-first, swim-first | Which segment type opens a paired row; run-first is the default | A toggle above the table |
 | Aid station | Food and drink point, usually on land | A waypoint on a run |
+
+Table 10 defines the terms about map data, the terrain service and the infrastructure around it, in alphabetical order.
+
+*Table 10*: Map data and infrastructure glossary.
+
+| Term | Meaning | Example |
+| --- | --- | --- |
+| Area cache | Browser store of the Overpass answers per coarse bounding box, kept for a week, so a second analysis of the same area needs no request; it holds public map data only, never GPX content | The Cache API entry for one 0.05 degree grid cell |
+| Bounding box (bbox) | Rectangle on the map given by its south, west, north and east edge; an Overpass query is limited to one | `52.15,4.85,52.35,5.05` |
+| Coarse bounding box | The track's bounding box grown outward to a 0.05 degree grid (about 5 km), so the request shows the neighbourhood of the track and not the track itself | The query area for the Rondje Eilanden |
+| Container, image | A container is an isolated process started from an image, which packages a program with what it needs to run; the same image runs on a laptop and on a server | The back end image built from the `Dockerfile` |
+| Docker Compose, profile | A Compose file describes several containers that run together; a profile marks services that start only when asked for | The local Overpass server, profile `overpass`, in `docker-compose.yml` |
+| Exponential backoff | Retrying a request after a wait that doubles each time (here 1, 2 and 4 seconds), as busy Overpass servers ask for | A 502 answer is followed by a retry after 1 s |
+| Extract | The OpenStreetMap data of one region as a file, a part of the complete planet file | The Netherlands extract |
+| Fixture | Recorded data that a test uses instead of asking the outside world | `test/fixtures/rondje-eilanden-overpass.json` |
+| Geofabrik | A German company that processes OpenStreetMap data and publishes ready-made regional extracts for download | `download.geofabrik.de/europe/netherlands-latest.osm.pbf` |
+| Mirror | Another public Overpass server with the same data, tried when the first one is busy | `overpass.kumi.systems` |
+| Multi-criteria decision making (MCDM) | Choosing between options by judging each against weighted criteria, and iterating between judging the options and adjusting the criteria | The weighted comparison of back-end technologies in [ADR-0014](./adr/0014-back-end-technology.md) |
+| OpenStreetMap (OSM) | The open, collaboratively edited map database that TigerLegs takes its water data from, under the ODbL licence | A lake drawn as a `natural=water` area |
+| Oracle test | A test that compares the extractor with an official, independent result | The ÖTILLÖ Cannes split from RaceDayMap |
+| Overpass API | A read-only service that answers queries on OpenStreetMap data | `overpass-api.de` |
+| Overpass QL | The query language of the Overpass API | `way["natural"="water"](bbox);out geom;` |
+| PBF | Protocolbuffer Binary Format, a compact binary file format for OpenStreetMap data, smaller and faster to read than the XML formats, so the usual format of downloads | `netherlands-latest.osm.pbf` |
+| Quality of service | What a user can rely on from a service, such as availability and speed; the planned premium Overpass server offers more of it than the shared public servers | No rate limit on our own server |
+| Ratchet | A passing test that pins today's error of an approach, so a change may make it smaller but not larger | The pinned swim and run error of the speed strategy on the Rondje Eilanden |
+
+Sources: PBF (OpenStreetMap Wiki, n.d.-a), Geofabrik (Geofabrik, n.d.), Overpass API and Overpass QL (OpenStreetMap Wiki, n.d.-b, n.d.-c), multi-criteria decision making (ICT Research Methods, n.d.).
 
 The terms form a chain: a track has trackpoints, a strategy turns them into segments, segments of different terrain meet at transitions, and paired rows group segments for display.
 The Kiro specs contain a longer glossary with the formal definitions.
