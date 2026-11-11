@@ -27,6 +27,8 @@ What we want:
 | R5  | The same library works in React islands and in plain TypeScript modules (the chat agents are not React)      |
 | R6  | Variables and plurals are written in the JSON ("{count} sessions did not fit"), without functions            |
 | R7  | A language file that misses a key fails a check                                                              |
+| R8  | The visitor can switch language live, without a full page reload                                             |
+| R9  | A first visit can start in the browser's language (the hosting is static: GitHub Pages)                      |
 
 ## The three decisions
 
@@ -35,7 +37,8 @@ What we want:
 Astro has built-in i18n routing: `locales` and `defaultLocale` in the configuration, translated pages in folders (`src/pages/fr/about.astro` gives `/fr/about/`, `src/pages/about.astro` the default language when `prefixDefaultLocale` is false), `Astro.currentLocale` in a page and `getRelativeLocaleUrl()` for links (Astro, n.d.).
 Because the site is static, every page is built once per language, and `<html lang>` is written at build time.
 The language switch becomes a list of links to the same page in the other languages, the `localStorage` choice and the script that rewrites `lang` disappear, and the layout adds `<link rel="alternate" hreflang="…">` for every language of the page.
-Whether to redirect a first visit by browser language is open: it helps visitors but is not always good for search engines (to check).
+**Live switching (R8).** With one URL per language, switching is a navigation to the other language's URL. The site already uses Astro view transitions, so the navigation swaps the page without a full reload, the URL changes, and a persistent island such as the chat can stay mounted and receive the new language. A library's `setLocale()` is not needed for that; note that Paraglide JS by default does "a full document navigation" when it switches (it navigates to the localized URL, or reloads), with `setLocale(locale, { reload: false })` as a narrow escape hatch (Paraglide JS, n.d.).
+**Browser language (R9).** GitHub Pages is static and cannot choose a language by the `Accept-Language` header. A start in the browser's language is therefore a small client-side step on the first visit to the root: when no choice is saved and the browser language is offered, go to that language's URL; remember the choice afterwards. Whether this hurts search engines, which see the root without a saved choice, is to check; `hreflang` with an `x-default` link is the usual answer.
 The pages should not be copied per language: one page file with a locale parameter generates all languages (to check against the Astro documentation of dynamic routes).
 
 ### 2. Loading: only the language of the page (R1, R2, R6)
@@ -56,13 +59,13 @@ The weights and the familiarity scores (C7) are the owner's to set; every other 
 
 ## Alternatives
 
-| Option                         | What it is                                                                                         |
-| ------------------------------ | -------------------------------------------------------------------------------------------------- |
-| **i18next + react-i18next**    | The core library with plugins and hooks for React; own message format, ICU through a plugin        |
-| **react-intl (FormatJS)**      | ICU MessageFormat in JSON, messages passed to a provider; `intl-messageformat` works outside React |
-| **Lingui**                     | Catalogs extracted from the code by macros at build time; ICU                                      |
-| **Paraglide JS**               | JSON messages compiled to type-safe, tree-shakable functions; designed for islands                 |
-| **Hand-made TypeScript files** | Dictionaries in code: today's stopgap                                                              |
+| Option                         | What it is                                                                                                                                                        |
+| ------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **i18next + react-i18next**    | The core library with plugins and hooks for React; own message format, ICU through a plugin                                                                       |
+| **react-intl (FormatJS)**      | ICU MessageFormat in JSON, messages passed to a provider; `intl-messageformat` works outside React                                                                |
+| **Lingui**                     | The texts are written in the code and a tool extracts them into one catalog (a translation file) per language; ICU                                                |
+| **Paraglide JS**               | JSON messages (`messages/en.json`, `"greeting": "Hello {name}!"`) compiled to type-safe, tree-shakable functions; MIT; supports Astro, React and plain TypeScript |
+| **Hand-made TypeScript files** | Dictionaries in code: today's stopgap                                                                                                                             |
 
 Others exist (Tolgee, Intlayer, next-intl, which is for Next.js); they are left out because they are tied to a platform or a framework we do not use.
 
@@ -86,7 +89,7 @@ Others exist (Tolgee, Intlayer, next-intl, which is for Next.js); they are left 
 | Option                     | C1 (15) | C2 (10) | C3 (15) | C4 (10) | C5 (10) | C6 (10) | C7 (10) | C8 (10) | C9 (5) | C10 (5) | Total   |
 | -------------------------- | ------- | ------- | ------- | ------- | ------- | ------- | ------- | ------- | ------ | ------- | ------- |
 | i18next + react-i18next    | 5       | 4       | 5       | 4       | 4       | 4       | 3       | 5       | 3      | 3       | **420** |
-| Paraglide JS               | 5       | 3       | 5       | 3       | 5       | 4       | 3       | 3       | 3      | 5       | **400** |
+| Paraglide JS               | 5       | 4       | 5       | 4       | 5       | 4       | 3       | 3       | 3      | 5       | **420** |
 | react-intl (FormatJS)      | 5       | 4       | 3       | 5       | 3       | 3       | 3       | 4       | 3      | 2       | **365** |
 | Lingui                     | 4       | 4       | 3       | 5       | 5       | 2       | 3       | 3       | 3      | 5       | **365** |
 | Hand-made TypeScript files | 1       | 2       | 5       | 1       | 4       | 3       | 5       | 2       | 5      | 5       | **310** |
@@ -94,15 +97,20 @@ Others exist (Tolgee, Intlayer, next-intl, which is for Next.js); they are left 
 How the scores were obtained: i18next works in plain JavaScript as well as React and keeps resources in JSON (C1, C3), has the largest community (about 3.5 million downloads a week, C8), needs a plugin for ICU (C4) and is about 6 KB with react-i18next (C10); react-intl is ICU native (C4) but about 20 KB (C10) and React first (C3); Lingui is about 2 KB with strong typing (C5, C10) but works through build-time macros whose fit with Astro is to check (C6); Paraglide compiles to typed functions that work anywhere (C3, C5) and is small (C10), but is newer (C8) and how it ships only one language per page is to check (C2); the hand-made files fail C1 and C4 by construction.
 All C7 scores are my placeholder, 3 for every library and 5 for the files the project already uses.
 
+### Dependence on Astro
+
+The library does not decide how dependent we are on Astro; the routing does. One URL per language through Astro's i18n routing ties the page structure to Astro, which Cloudflare now owns (ADR-0014). All of the libraries above are framework independent: i18next and Paraglide JS also run in a plain TypeScript module, in React without Astro, in SvelteKit or in a bare Vite app, and Paraglide JS can even do the URL mapping itself (`localizeUrl` and `deLocalizeUrl`, for example `/de/ueber` for `/about`), which would keep the language routes out of Astro (Paraglide JS, n.d.; whether that works with Astro's static build is to check).
+Who maintains Paraglide JS is not clear from the sources read: its README names the organisation opral, a summary of its GitHub page named another; the owner of each library is still to look up for criterion C9.
+
 ### Reading the result
 
-i18next leads with 420 against 400 for Paraglide JS, which is inside the margin of provisional scores, so a spike decides, as in ADR-0014.
-The loading requirement (C2) does not decide between the libraries: every one of them can receive the messages of a single language, and decision 2 above does that work through routing.
+i18next and Paraglide JS tie at 420, so a spike decides, as in ADR-0014. The tie comes from facts in Paraglide's own documentation, which raised two of its scores: it offers per-locale builds that "remove other languages from each locale's client graph" (C2, an option and not the default), and its messages support `plural`, `number`, `datetime` and `relativetime` through formatters (C4, the exact syntax is to check) (Paraglide JS, n.d.).
+The loading requirement (C2) does not decide between the libraries: every one of them can receive the messages of a single language, and decision 2 above does that work through routing. "The same library in the islands and the agents" (C3) means that the library offers a plain function that a React component and a plain TypeScript module can both call (`t("key", { day })` or `m.key({ day })`); a library that only offers React hooks cannot be called from the agents, which are not components.
 
 ## Sensitivity
 
-- If the owner knows i18next well (C7 = 5 against 3 for the others) its lead grows to 440 against 400.
-- If size and type safety weigh more (C5 and C10 at 15 each, C8 and C1 lowered), Paraglide JS and Lingui gain and Paraglide leads.
+- If the owner knows i18next well (C7 = 5 against 3 for the others) its total is 440 against 420 for Paraglide JS.
+- If size and type safety weigh more (C5 and C10 at 15 each, C8 and C1 lowered), Paraglide JS and Lingui gain and Paraglide leads. If the owner knows i18next well (C7), i18next leads; if the owner prefers Paraglide's functions, Paraglide leads.
 - If ICU everywhere is the first requirement (C4 at 20), react-intl and Lingui gain.
 - If autonomy (C9) turns out to differ between the projects, the owners of each need to be looked up first: not done.
 
@@ -127,5 +135,6 @@ Migrate the training page texts to JSON with i18next (with `i18next-icu`) and wi
 
 ## References
 
+- Paraglide JS. (n.d.). *Paraglide JS* [README and documentation]. GitHub. Retrieved November 11, 2026, from https://github.com/opral/paraglide-js
 - ICT Research Methods. (n.d.). *Multi-criteria decision making*. Retrieved November 10, 2026, from https://ictresearchmethods.nl/workshop/multi-criteria-decision-making/
 - Astro. (n.d.). *Internationalization (i18n) routing*. Retrieved November 11, 2026, from https://docs.astro.build/en/guides/internationalization/
