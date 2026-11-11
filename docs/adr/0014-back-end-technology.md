@@ -4,7 +4,9 @@ Date: 2026-11-10
 
 ## Status
 
-Draft. No decision has been taken; this record sets up the multi-criteria comparison for issue #13 (and #6). The weights and the familiarity scores (C1) are the owner's to set; every other score is provisional and says how it was obtained. It builds on [ADR-0002](./0002-use-deno-with-typescript.md), [ADR-0004](./0004-host-deno-backend-on-eu-vps.md), [ADR-0005](./0005-rest-json-api-for-multi-client-support.md) and [ADR-0013](./0013-back-end-is-optional.md). A change in the situation of Deno (below) also puts ADR-0002 itself up for review (#61).
+Accepted on 11 November 2026: the back end is Node.js with TypeScript (see [Decision](#decision)).
+The decision was taken before the persistence part of the spike (C10) was measured, which is the main risk; the [revisit triggers](#consequences-and-revisit-triggers) say what would reopen it.
+It builds on [ADR-0002](./0002-use-deno-with-typescript.md), [ADR-0004](./0004-host-deno-backend-on-eu-vps.md), [ADR-0005](./0005-rest-json-api-for-multi-client-support.md) and [ADR-0013](./0013-back-end-is-optional.md); the fate of ADR-0002 and ADR-0004 follows in #61.
 
 ## Context
 
@@ -187,6 +189,18 @@ What each ecosystem offers for that:
 
 So Java with Spring Data JDBC, .NET with EF Core and Python with SQLAlchemy have the best-documented fit with the aggregate pattern; of the Java frameworks only Spring Data JDBC is built around it, Micronaut Data JDBC comes close in mechanics and Quarkus follows the JPA model, and the scores for C10 reflect that (Spring Boot 5, Micronaut and Quarkus 4).
 
+### Transactions, integrity and growth (Node.js)
+
+The question is whether the TypeScript route gives ACID inside an aggregate and a way to eventual consistency between aggregates when the system grows.
+PostgreSQL itself provides the ACID guarantees; what matters is that the mapper uses them well.
+MikroORM does: "All the write operations (INSERT/UPDATE/DELETE) are queued until `em.flush()` is invoked which wraps all of these changes in a single transaction", `em.transactional(cb)` gives an explicit transaction, and the isolation level can be set up to `SERIALIZABLE`.
+For conflicting updates it offers optimistic locking ("automatic optimistic locking via a version field", with an `OptimisticLockError` when "the entity has been modified by someone else already") and pessimistic locking at the database level, including `SKIP LOCKED` and `NOWAIT` (MikroORM, n.d.-e).
+That fits one aggregate, one transaction.
+For eventual consistency across aggregates the MikroORM transaction page says nothing about domain events or an outbox, so that part is ours to build: the usual pattern is to write the event to an outbox table in the same transaction as the aggregate change and let a separate process publish it. I have not sourced that pattern here, so it is to be checked before it is relied on.
+This matches how Spring Data JDBC treats references between aggregates, as eventually and not always consistent (Spring, n.d.-a), so the model does not need to change when the system grows; the tooling around it is what Node.js has less of than Spring.
+
+**Flyway in Node.js.** Flyway is a Java tool with a command line and an official container image that supports its Community, Teams and Enterprise editions (Redgate, n.d.), so a Node.js back end uses it the same way as a Java one: a container that applies the SQL migrations before the service starts. Wrappers such as `node-flywaydb` exist but need a JVM on the machine, and Node-native tools (umzug, node-pg-migrate, MikroORM's own migrator) are the alternative if the JVM image is unwelcome; the SQL files stay the same either way.
+
 ### Database migrations
 
 The owner likes migrations, as known from EF Core and from Flyway in Java: schema changes that are versioned, reviewable and repeatable. There are two styles, and the tools of the options fall in one or both:
@@ -299,11 +313,37 @@ Not yet measured: the PostgreSQL read with a Flyway migration and a PostGIS colu
 - If supply chain weighs as much as autonomy (C7 weight 15), Node.js loses another 10 and the gap to Go and Axum closes.
 - If autonomy and governance are weighed even higher (C8 and C9 together 30), Deno falls further.
 
-## Next steps
+## Decision tree
 
-1. The owner has set the C1 scores (11 November 2026) and the totals are computed; the weights can still be corrected.
-2. Phase 1 of the spike is done (see above). Phase 2 adds the PostgreSQL read and the native-image variants. The plan was a spike per surviving option that measures C3 (image size, idle memory, start time, and for Java also the JVM, Leyden and native variants including the native build time and memory) and tries one real task: the Overpass query with backoff and a cache, a health endpoint and a PostgreSQL read, in a container.
-3. Iterate between the scores and the criteria, as the method asks, then record the decision (this ADR becomes Proposed) and the fate of ADR-0002 (#61).
+The method page lists a technique "like a 'decision tree'" among the ingredients (ICT Research Methods, n.d.). This is the path this decision took, with the numbers found at each node:
+
+![Decision tree for the back-end technology](../diagrams/adr-0014-decision-tree.svg)
+
+No option was knocked out at the first node: all ten can be self-hosted in the EU on a small VPS under an open-source licence.
+The lead at the second node (35 points) was inside the error of the provisional scores, so the spike was the tiebreaker, and it confirmed the lead on memory (C3) without a difference on the backoff client (C2).
+The last node is the sensitivity check: the choice flips to Spring Boot if shared code with the front end (C4) is not wanted at all.
+
+## Lack of prejudice
+
+The method names "a lack of prejudice" as an ingredient (ICT Research Methods, n.d.). What we did, and what we did not manage:
+
+- **Done.** The criteria and weights were fixed before the scores were filled in; every option was scored on the same criteria, including the ones the owner favours; scores carry a source or are labelled provisional; the owner's familiarity (C1) is a weighted criterion and not a veto, and was scored last, after the other scores were visible; memory and image size were measured and not taken from reputation; the sensitivity section says what would flip the result; sources against our own direction were included (the Gatsby precedent and the Hacker News critics for Astro, the supply-chain reports for npm).
+- **Not done, and the reader should know.** The provisional scores were written by an AI assistant, whose training data favours widely discussed stacks (Node.js, Spring Boot, .NET), and the weights are the draft's: the owner scored C1 and corrected none of them. The Node.js spike is a bare `http` server and the others use frameworks, so the memory comparison shows the floor of Node.js, not a like-for-like framework test. Each ready time is one run. C10 (the database and the aggregate pattern), where Node.js scores 4 against 5 for Spring Boot, was not measured. No one outside the project has reviewed the scores; a colleague who did not take part should read this record before the revisit triggers are relied on.
+
+## Decision
+
+The back end is **Node.js (version 24) with TypeScript**, run with Node's own type stripping and type-checked with `tsc`, on PostgreSQL with PostGIS and with SQL migrations applied by Flyway in an initialisation container.
+It is a separate service behind the REST/JSON contract of ADR-0005, optional as ADR-0013 says, and the front end stays Astro and React.
+The shared analysis modules stay portable between browser, Deno tooling and Node.js, enforced by `tsconfig.shared.json` and `test/portability.test.ts` (see C4 and C6).
+Whether the data layer is MikroORM or hand-written repositories is decided in the storage ADR (#63), on the transactions and aggregate points above.
+
+## Consequences and revisit triggers
+
+- ADR-0002 (Deno with TypeScript) and ADR-0004 (a Deno back end on an EU VPS) no longer describe the back end; Deno remains the runner of the repository's tests and tasks until #61 decides.
+- The shared modules `gpx-parser` and `water` (through `overpass-cache`) still depend on the DOM and the browser Cache API and must be freed before the back end can reuse them.
+- Persistence is the first back-end task: a PostgreSQL read with a PostGIS column through the chosen data layer, a Flyway migration, one transaction around an aggregate and one outbox write. If this is painful, the decision is reopened in favour of Spring Boot.
+- Reopen the decision when: shared code with the front end is no longer wanted (with C4 at weight 0 and C1 at 30, Spring Boot scores 395 against 380 for Node.js, Go and Axum and 375 for ASP.NET Core); the phase-2 persistence work fails as above; a supply-chain incident hits a dependency the back end needs; Node.js or its governing foundation changes course.
+- The native-image variants of the JVM stacks were not measured; they matter only if the JVM is reconsidered.
 
 ## References
 
@@ -338,6 +378,7 @@ Not yet measured: the PostgreSQL read with a Flyway migration and a PostGIS colu
 - MikroORM. (n.d.-b). *Repositories*. Retrieved November 11, 2026, from https://mikro-orm.io/docs/repositories
 - MikroORM. (n.d.-c). *Migrations*. Retrieved November 11, 2026, from https://mikro-orm.io/docs/migrations
 - MikroORM. (n.d.-d). *Custom types*. Retrieved November 11, 2026, from https://mikro-orm.io/docs/custom-types
+- MikroORM. (n.d.-e). *Transactions and concurrency* [Documentation]. Retrieved November 11, 2026, from https://mikro-orm.io/docs/transactions
 - mmooss. (2026). Comment on *Cloudflare acquires Astro* [Discussion]. Hacker News. https://news.ycombinator.com/item?id=46646645
 - Mollie. (n.d.). *API client libraries*. Retrieved November 11, 2026, from https://docs.mollie.com/docs/libraries
 - .NET Foundation. (n.d.). *dotnet/runtime* [Repository and licence]. GitHub. Retrieved November 10, 2026, from https://github.com/dotnet/runtime
@@ -353,6 +394,7 @@ Not yet measured: the PostgreSQL read with a Flyway migration and a PostGIS colu
 - Phoenix Security. (2026). *The acceleration: How supply chain attacks went industrial across npm, PyPI, VS Code, and AI agent tooling*. https://phoenix.security/accelerating-supply-chain-attacks-npm-pypi-vsx-ai-enabled-2026/
 - Quarkus. (n.d.-a). *How we integrated Project Leyden into Quarkus*. Retrieved November 10, 2026, from https://quarkus.io/blog/leyden-2/
 - Quarkus. (n.d.-b). *Simplified Hibernate ORM with Panache*. Retrieved November 11, 2026, from https://quarkus.io/guides/hibernate-orm-panache
+- Redgate. (n.d.). *Flyway* [Docker image]. Docker Hub. Retrieved November 11, 2026, from https://hub.docker.com/r/redgate/flyway
 - Roden, G. (2026). *Commentary: Deno joins Cloudflare — judged by its own promises*. heise online. Retrieved November 10, 2026, from https://www.heise.de/en/blog/Commentary-Deno-joins-Cloudflare-judged-by-its-own-promises-11509407.html
 - Socket. (2026). *Deno goes the way of the dinosaur*. Retrieved November 10, 2026, from https://socket.dev/blog/deno-acquisition
 - Spring. (n.d.-a). *Domain-driven design and relational databases* [Spring Data JDBC reference]. Retrieved November 11, 2026, from https://docs.spring.io/spring-data/relational/reference/jdbc/domain-driven-design.html

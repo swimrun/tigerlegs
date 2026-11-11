@@ -423,7 +423,7 @@ The free path needs no back end: the browser asks a public Overpass server for t
 The query area is a coarse bounding box, so the request reveals the neighbourhood of the track and not the track itself.
 The back end is optional ([ADR-0013](./adr/0013-back-end-is-optional.md)); the planned premium service adds our own Overpass server behind it, with a quality of service the public servers cannot give (roadmap M12).
 For development a local Overpass container runs from the same `docker-compose.yml` (profile `overpass`), filled once from a Geofabrik extract; see [local-overpass.md](./local-overpass.md).
-Overpass speaks plain HTTP with a query in Overpass QL, so the front end and back end can be written in any language; the language choice is the subject of [ADR-0014](./adr/0014-back-end-technology.md).
+Overpass speaks plain HTTP with a query in Overpass QL, so the front end and back end can be written in any language; the language choice, Node.js with TypeScript, is recorded in [ADR-0014](./adr/0014-back-end-technology.md).
 
 ## 7. Code
 
