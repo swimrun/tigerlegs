@@ -4,33 +4,39 @@ GPX files for testing and demonstration purposes.
 
 ## Files
 
-| File | Race | Starts with | Segments | Source |
-|------|------|-------------|----------|--------|
-| `vertical-swimrunman-laffrey-2026.gpx` | Vertical SwimRunMan Laffrey | Swim | 7 swim + 7 run | Openrunner |
-| `otillo-sandhamn-uto.gpx` | ÖTILLÖ World Championship | Run | 24 swim + 26 run | otillo.com / racedaymap.com |
-| `swimrun-troll-enez.gpx` | SwimRun Troll (Enez, FR) | Run | Long swims | swimruntroll.com |
-| `het-rondje-elanden-vinkeveen.gpx` | Het Rondje Elanden | Run | 11 segments, 6.5km total | hetrondjeelanden.nl |
-| `running-only-afstandmeten.gpx` | (no race, just a run) | Run | 0 swim (edge case) | afstandmeten.nl |
-| `rhederlaag-swimrun.gpx` | Swimrun Rhederlaag (2025-10-11) | n/a | Not verified yet | Strava export |
-| `Rondje_Eilanden_lintjes_opruimen.gpx` | Rondje Eilanden: lintjes opruimen (2026-07-19), no longer a sample | n/a | Not verified yet | Strava export |
-| `Rondje_Eilanden_2025.gpx` | Het Rondje Eilanden (2025-07-19), own Strava recording; heart rate, cadence and power stripped; the first swim was 100 to 200 m longer than standard | Swim | Official: 11 swims (1,500 m) + 11 runs (5,000 m), total 6,500 m (organiser's course map); recorded 6,958 m. Test: `test/client/rondje-eilanden.integration.test.ts` | Strava export |
-| `Twiske_Backyard_SwimRun_Experience.gpx` | Twiske Backyard Ultra SwimRun Experience (2026-06-20) | n/a | Not verified yet; many laps | Strava export |
-| `Ötillö_Rügen_met_Sander_SwimRun_World_Serious_.gpx` | ÖTILLÖ Rügen SwimRun World Series | n/a | Not verified yet | Strava export |
-| `Frankrijk_SwimRun_Coros.gpx` | ÖTILLÖ Cannes World Series (2026-10-03) | Run | Official: 12 run + 11 swim, run 33.10 km, swim 7.30 km, total 40.40 km (racedaymap.com); recorded 43.7 km. Test: `test/client/cannes.integration.test.ts` | Coros export from a friend; heart rate stripped |
+| File                                                 | Race                                                                                                                                                 | Starts with | Segments                                                                                                                                                            | Source                                          |
+| ---------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------- |
+| `vertical-swimrunman-laffrey-2026.gpx`               | Vertical SwimRunMan Laffrey                                                                                                                          | Swim        | 7 swim + 7 run                                                                                                                                                      | Openrunner                                      |
+| `otillo-sandhamn-uto.gpx`                            | ÖTILLÖ World Championship                                                                                                                            | Run         | 24 swim + 26 run                                                                                                                                                    | otillo.com / racedaymap.com                     |
+| `swimrun-troll-enez.gpx`                             | SwimRun Troll (Enez, FR)                                                                                                                             | Run         | Long swims                                                                                                                                                          | swimruntroll.com                                |
+| `het-rondje-elanden-vinkeveen.gpx`                   | Het Rondje Elanden                                                                                                                                   | Run         | 11 segments, 6.5km total                                                                                                                                            | hetrondjeelanden.nl                             |
+| `running-only-afstandmeten.gpx`                      | (no race, just a run)                                                                                                                                | Run         | 0 swim (edge case)                                                                                                                                                  | afstandmeten.nl                                 |
+| `rhederlaag-swimrun.gpx`                             | Swimrun Rhederlaag (2025-10-11)                                                                                                                      | n/a         | Not verified yet                                                                                                                                                    | Strava export                                   |
+| `Rondje_Eilanden_lintjes_opruimen.gpx`               | Het Rondje Eilanden, variant *lintjes opruimen* (2026-07-19, 2892 points): clearing the ribbons after the event; missing the part from island 3 to 5 | n/a         | Not verified yet                                                                                                                                                    | Strava export                                   |
+| `Rondje_Eilanden_2025.gpx`                           | Het Rondje Eilanden (2025-07-19), own Strava recording; heart rate, cadence and power stripped; the first swim was 100 to 200 m longer than standard | Swim        | Official: 11 swims (1,500 m) + 11 runs (5,000 m), total 6,500 m (organiser's course map); recorded 6,958 m. Test: `test/client/rondje-eilanden.integration.test.ts` | Strava export                                   |
+| `Twiske_Backyard_SwimRun_Experience.gpx`             | Twiske Backyard Ultra SwimRun Experience (2026-06-20)                                                                                                | n/a         | Not verified yet; many laps                                                                                                                                         | Strava export                                   |
+| `Ötillö_Rügen_met_Sander_SwimRun_World_Serious_.gpx` | ÖTILLÖ Rügen SwimRun World Series (2026-05-16)                                                                                                       | n/a         | Not verified yet                                                                                                                                                    | Strava export                                   |
+| `Frankrijk_SwimRun_Coros.gpx`                        | ÖTILLÖ Cannes World Series (2026-10-03)                                                                                                              | Run         | Official: 12 run + 11 swim, run 33.10 km, swim 7.30 km, total 40.40 km (racedaymap.com); recorded 43.7 km. Test: `test/client/cannes.integration.test.ts`           | Coros export from a friend; heart rate stripped |
 
 ## Sample tracks on the website
 
-`deno task build:samples` (part of `deno task build`) copies five files from
-this folder to `public/samples/`, where the extractor page offers them as
-sample links. The mapping lives in `src/build-samples.ts`.
+`deno task build:samples` (part of `deno task build`) copies the typical GPX file of
+every sample variant from this folder to `public/samples/`, where the extractor page
+offers them. The courses, their variants, descriptions and file mapping live in
+`src/client/sample-courses.ts`. A variant without a file is listed on the page as
+"GPX to be added" (TODO list: issue #80). Each course has exactly one *canonical* variant, its main
+way of doing it; it always has a file, and the page marks it "Main variant".
 
-| File here | Sample name on the site | Track points |
-|-----------|-------------------------|--------------|
-| `rhederlaag-swimrun.gpx` | Rhederlaag SwimRun | 5769 |
-| `Rondje_Eilanden_2025.gpx` | Rondje Eilanden | 4491 |
-| `Twiske_Backyard_SwimRun_Experience.gpx` | Twiske Backyard SwimRun | 9228 |
-| `Ötillö_Rügen_met_Sander_SwimRun_World_Serious_.gpx` | Ötillö Rügen | 19771 |
-| `Frankrijk_SwimRun_Coros.gpx` | Ötillö Cannes | 18272 |
+| Course                  | Variant                                           | File here                                            | Track points |
+| ----------------------- | ------------------------------------------------- | ---------------------------------------------------- | ------------ |
+| Rhederlaag SwimRun      | As recorded, 11 October 2025                      | `rhederlaag-swimrun.gpx`                             | 5769         |
+| Rhederlaag SwimRun      | High water, low water, water bird breeding season | to be added                                          | n/a          |
+| Het Rondje Eilanden     | Race day (canonical)                              | `Rondje_Eilanden_2025.gpx`                           | 4491         |
+| Het Rondje Eilanden     | Lintjes opruimen                                  | `Rondje_Eilanden_lintjes_opruimen.gpx`               | 2892         |
+| Het Rondje Eilanden     | Training                                          | to be added                                          | n/a          |
+| Twiske Backyard SwimRun | Standard                                          | `Twiske_Backyard_SwimRun_Experience.gpx`             | 9228         |
+| Ötillö Rügen            | As recorded, 16 May 2026                          | `Ötillö_Rügen_met_Sander_SwimRun_World_Serious_.gpx` | 19771        |
+| Ötillö Cannes           | Standard                                          | `Frankrijk_SwimRun_Coros.gpx`                        | 18272        |
 
 `rhederlaag-swimrun.gpx` is also used by the integration tests
 (`test/client/rhederlaag.integration.test.ts` and `test/client/water.test.ts`),
@@ -91,3 +97,10 @@ References follow APA 7, as AGENTS.md requires.
 - RaceDayMap. (n.d.). *ÖTILLÖ Swimrun Cannes: World Series* [Interactive course map and leg table]. Retrieved November 10, 2026, from https://app.racedaymap.com/otillo-swimrun-cannes/world-series (12 runs and 11 swims, total 40.40 km, run 33.10 km, swim 7.30 km; this is the reference used in the Cannes test)
 
 The two Cannes sources differ by 0.37 km of running and 0.18 km of swimming; the test uses the RaceDayMap figures.
+
+## Timestamps in the samples
+
+The sample files keep their timestamps, because the speed analysis needs them to tell swimming from running and the extractor shows the moving and event time.
+Heart rate, cadence and power are stripped from the samples.
+The date is kept on purpose: it identifies the edition of an event, courses differ between editions (for example a swim crossing that was dropped after a government restriction), and an edition means something to people.
+Normalising the clock to a fixed start time while keeping the date as metadata of the variant is possible later; see the software guidebook, section 6.6.

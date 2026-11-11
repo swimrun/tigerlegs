@@ -1,0 +1,15 @@
+# JVM with Project Leyden's AOT cache (JDK 25): a training run at build time, then a faster start.
+# Build: docker build -f Dockerfile.leyden -t spike-spring-boot-leyden .
+FROM maven:3.9-eclipse-temurin-25 AS build
+WORKDIR /src
+COPY pom.xml .
+RUN mvn -q -B dependency:go-offline
+COPY src ./src
+RUN mvn -q -B -DskipTests package && cp target/spike-*.jar /app.jar
+
+FROM eclipse-temurin:25-jre
+COPY --from=build /app.jar /app.jar
+# Training run: start the application context once and exit, recording what the JVM loaded.
+RUN java -XX:AOTCacheOutput=/app.aot -Dspring.context.exit=onRefresh -jar /app.jar
+EXPOSE 8080
+ENTRYPOINT ["java", "-XX:AOTCache=/app.aot", "-jar", "/app.jar"]

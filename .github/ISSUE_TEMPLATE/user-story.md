@@ -12,6 +12,8 @@ As a <role>, I want <goal>, so that <benefit>.
 ## Acceptance criteria (BDD)
 
 - Given <context>, when <action>, then <outcome>.
+- etc. GWT statements with all applicable happy paths
+- and also acceptance criteria for relevant unhappy paths
 
 ## Notes
 
