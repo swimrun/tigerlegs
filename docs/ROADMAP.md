@@ -53,12 +53,24 @@ feature specification lives in
 > activity, then the data field advances to the next leg within one
 > GPS fix.
 
-## M5 — Apple Watch and Coros export
+## M5 — Apple Watch and Coros
 
-Investigate importing the M3 course format on other platforms; friends
-with Apple Watch and Coros devices are available as testers. Open
-questions: Apple WorkoutKit custom route support, Coros route import
-formats (GPX/FIT), what degrades when there is no custom app.
+The M4 next-segment feature (current leg, distance left, what comes
+next) is wanted on other watches too. Friends with Apple Watch and
+Coros devices are available as testers.
+
+- **Apple Watch** (#54): which watchOS surface can show the next
+  segment during an outdoor or swim workout, and how a course gets onto
+  the watch. Open: WorkoutKit custom workouts, a watchOS app with its
+  own workout session.
+- **Coros** (#55): whether anything beyond route or structured-workout
+  import exists; route import formats (GPX/FIT) and what survives.
+- **Getting data in** (#56): users import a GPX file themselves, which
+  suits technical users only. A fellow swimrunner and developer asked
+  the key question: *how do you get the data from Garmin?* Compare
+  better import help, a phone share target and platform integrations.
+- What degrades when there is no custom app: a plain route file and the
+  segment table on paper or on the phone.
 
 ## M6 — Live navigation
 
@@ -143,6 +155,24 @@ These goals follow the same evidence rule as segment detection: activity
 data is evidence for how training went, and an LLM draft is evidence for
 what a plan could be; the athlete and the coach keep the final say.
 
+## M12 — Premium: hosted back end and quality of service
+
+Connecting to the back end is a premium feature; the front end works
+fully without it (ADR-0013, #58). For paying users TigerLegs can offer a
+quality of service the public services cannot: our own Overpass
+instance in the EU behind the back end, with a cache and without rate
+limits (#57), next to saved courses, sharing, the MCP server (M11) and
+training plans (M10). Depends on M9 (accounts and the privacy review)
+and on the back-end technology choice (#13, #6). Everything is container
+based (ADR-0004): the back end image and the Overpass server run with
+docker compose locally and as containers on the EU VPS. The local
+Overpass setup ([docs/local-overpass.md](./local-overpass.md)) is the
+starting point, and the back end runs locally for development and
+tests.
+
+> Given no back end is reachable, when I use TigerLegs, then every free
+> feature works and the premium features say what they need.
+
 ## Technical uncertainties
 
 - Quality and coverage of OSM water polygons for race venues.
@@ -150,6 +180,13 @@ what a plan could be; the athlete and the coach keep the final say.
   limits of data fields on older watches.
 - Apple/Coros: no public API may exist for custom leg-by-leg display;
   export may be limited to plain route files.
+- Getting activity data from Garmin, Coros and Apple into TigerLegs
+  without a manual file export: which programmes exist, what approval
+  and terms they carry (#56).
+- Back end optional: every back-end feature needs a test with the back
+  end absent, slow and failing (#58).
+- Own Overpass hosting: regions, refresh frequency, cost against
+  pricing, uptime (#57).
 - GPS noise during swims: transition detection needs hysteresis.
 - Strava API terms: data display limited to the athlete themself and
   restrictions on AI-model training (November 2024 update); how the
