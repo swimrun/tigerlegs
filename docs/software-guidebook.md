@@ -474,6 +474,7 @@ package "Course (idealized track)" {
   class CourseVariant <<entity>> {
     name
     description
+    canonical
     valid for: editions, months
   }
   class CourseLine <<value>> {
@@ -573,8 +574,9 @@ The words, as the extractor and training pages need them:
 - A **course** is an idealized track: a line and its legs, each leg a swim or a run, with no athlete, no time, no speed and no heart rate.
   The extractor shows a course when it loads an official GPX file.
 - A **recording** is a carried-out track: an athlete's GPX or FIT file with time and, when the device recorded it, speed and heart rate. The swim and run segments detected on it belong to it. The GPX file of an executed training is a recording once the athlete saves it from the extractor; saving is the athlete's choice and we do not sync or keep a training log.
+- In the interface a course is a *track* and its variants are *track variants*; in the model and the code they are `Course` and `CourseVariant`, because `Track` already means one recorded line in a GPX file (`src/shared/types.ts`). A rename is possible if that reads better.
 - The extractor page treats both as "a GPX file". A sample such as the Rondje Eilanden file is a recording of one athlete with heart rate, cadence and power stripped (`test-data/README.md`); that stripping is how a course is made from a recording.
-- A course has **variants**: one way of doing it, with a description and its own typical GPX line. Race day and training, high and low water, and the water bird breeding season (from April to June some islands are avoided for the sake of nature) are variants. A variant can be valid only for some editions or months: the breeding season is a period of months, and courses change from year to year. The extractor lists them per course: Het Rondje Eilanden has *race day* (the race starts with swim A of about 400 m along the island, because the island is full of people on race day) and *training* (swim A is run instead), and Rhederlaag has the recording as swum, high water, low water and the breeding season. Only the variants whose typical GPX file exists can be loaded; the others are announced as "GPX to be added".
+- A course has **variants**: one way of doing it, with a description and its own typical GPX line. Race day and training, high and low water, and the water bird breeding season (from April to June some islands are avoided for the sake of nature) are variants. A variant can be valid only for some editions or months: the breeding season is a period of months, and courses change from year to year. Exactly one variant is the **canonical** one, the main way of doing the course: for Het Rondje Eilanden that is the race day recording of 2025, and its first other variant is the *lintjes opruimen* recording of 2026 (clearing the ribbons after the event, missing the part from island 3 to 5). The extractor marks the canonical variant "Main variant" and a canonical variant always has a GPX file. The extractor lists them per course: Het Rondje Eilanden has *race day* (the race starts with swim A of about 400 m along the island, because the island is full of people on race day) and *training* (swim A is run instead), and Rhederlaag has the recording as swum, high water, low water and the breeding season. Only the variants whose typical GPX file exists can be loaded; the others are announced as "GPX to be added".
 - A **swimrun group** is a set of athletes: a duo, a team or a larger training group.
 - A **training plan** leads to goal events: one A event and B or C events before it (roadmap M10). Its **planned sessions** are what the training page shows, and a session can have a structure of steps for intervals, intensity and rest. We do not build a training log: Strava, Garmin and Polar are dedicated platforms for executed training, so a session points at the activity there, or at a recording the athlete saved, and keeps a small adherence snapshot.
 
@@ -582,7 +584,7 @@ Aggregates, their invariants, and what is allowed to be eventually consistent:
 
 - **Athlete** is personal data. Erasing an athlete is a use case that must reach the other aggregates (section 7.6), through events and not through a database cascade across aggregates.
 - **Swimrun group.** Members are references by id with a role. Inside the group it holds at once: a duo has exactly two members, a group has at least one admin, and no athlete is a member twice. When an athlete is erased the membership is removed eventually, because group and athlete are different aggregates.
-- **Course.** Legs of a variant are ordered, contiguous and cover the line from start to end, and their distances add up to the length of the line within a tolerance. A course holds no personal data: no time, no sensor data, and no athlete unless it is a private course.
+- **Course.** A course has exactly one canonical variant. Legs of a variant are ordered, contiguous and cover the line from start to end, and their distances add up to the length of the line within a tolerance. A course holds no personal data: no time, no sensor data, and no athlete unless it is a private course.
 - **Recording** is personal data and private by default. Its segments are ordered, do not overlap and point at existing positions of the trace, and it always has an owner.
 - **Training plan.** It holds one A event, every B or C event lies before it, and a plan the athlete sees is approved (a draft needs explicit approval, roadmap M10).
 - **Planned session** is its own aggregate and not a part of the plan. Its status is planned, done or skipped: done means linked to an executed activity or ticked by the athlete, skipped is ticked by the athlete. It holds at most one reference to an executed activity (a provider and an external id, or the id of a saved recording; the session holds no trace itself) and at most one adherence snapshot, which exists only when a reference does or the athlete entered it. Its steps must be valid (a repeat has at least one repetition, a step has a duration or is open). The balance between runs and swims in a week is advice ("plan warnings", spec 003) and not an invariant, so moving one session never locks the plan and two edits to different sessions do not conflict.
@@ -612,7 +614,7 @@ What the three services offer is not yet verified; the following comes from sear
 Open questions:
 
 1. May a course be made from a recording of an athlete, and how much of the start and end must be trimmed so that it does not reveal a home address?
-2. Which GPX files are the typical line of each variant that has none yet, and which variant is the existing Rhederlaag recording (its water level is not noted)? Variants are part of the model from the first version.
+2. Which GPX files are the typical line of each variant that has none yet, and which variant is the existing Rhederlaag recording (its water level is not noted) and is it the canonical one? Variants and the canonical variant are part of the model and the code from the first version; the missing files are the TODO list of #80.
 3. Is a goal event part of one plan, or a shared event that plans refer to by id?
 4. Is a coach a role in a group, or a relation between two athletes?
 5. Is the login account the same aggregate as the athlete profile?
@@ -739,12 +741,14 @@ class Course <<aggregate root>> {
   +rename(name: string): void
   +addVariant(name: string, description: string, line: CourseLine, legs: Leg[]): VariantId
   +removeVariant(id: VariantId): void
+  +makeCanonical(id: VariantId): void
   +publish(): void
 }
 class CourseVariant <<entity>> {
   -id: VariantId
   -name: string
   -description: string
+  -canonical: boolean
   -validity: Validity | null
   -line: CourseLine
   -legs: Leg[1..*]
@@ -869,10 +873,11 @@ CourseFromRecording ..> Recording : reads
 CourseFromRecording ..> Course : creates
 
 note right of Course
-  Invariants: legs are ordered and contiguous and
-  cover the line; leg distances add up to the line
-  length within a tolerance; no time, sensor data
-  or athlete (unless private).
+  Invariants: exactly one canonical variant; legs
+  are ordered and contiguous and cover the line;
+  leg distances add up to the line length within
+  a tolerance; no time, sensor data or athlete
+  (unless private).
 end note
 note right of Recording
   Invariants: segments are ordered, do not overlap

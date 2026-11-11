@@ -30,9 +30,23 @@ Deno.test("two variants never share a site file", () => {
   assertEquals(new Set(files).size, files.length);
 });
 
-Deno.test("Het Rondje Eilanden has a race day and a training variant, and Rhederlaag has four variants", () => {
+Deno.test("every course has exactly one canonical variant, and it has a GPX file", () => {
+  for (const course of SAMPLE_COURSES) {
+    const canonical = course.variants.filter((variant) => variant.canonical);
+    assertEquals(canonical.length, 1, `${course.id} needs exactly one canonical variant`);
+    assert(canonical[0].file !== null, `${course.id}: the canonical variant needs a GPX file`);
+  }
+});
+
+Deno.test("the 2025 race day recording is the canonical variant of Het Rondje Eilanden, the 2026 clean-up its first variant", () => {
+  const rondje = SAMPLE_COURSES.find((course) => course.id === "rondje-eilanden")!;
+  assertEquals(rondje.variants.find((variant) => variant.canonical)?.source, "Rondje_Eilanden_2025.gpx");
+  assertEquals(rondje.variants.find((variant) => variant.id === "lintjes-opruimen")?.source, "Rondje_Eilanden_lintjes_opruimen.gpx");
+});
+
+Deno.test("Het Rondje Eilanden has a race day, a clean-up and a training variant, and Rhederlaag has four variants", () => {
   const rondje = SAMPLE_COURSES.find((course) => course.id === "rondje-eilanden");
-  assertEquals(rondje?.variants.map((variant) => variant.id), ["race-day", "training"]);
+  assertEquals(rondje?.variants.map((variant) => variant.id), ["race-day", "lintjes-opruimen", "training"]);
   const rhederlaag = SAMPLE_COURSES.find((course) => course.id === "rhederlaag");
   assertEquals(rhederlaag?.variants.length, 4);
   assert(rhederlaag?.variants.some((variant) => variant.id === "bird-breeding-season"));

@@ -247,7 +247,7 @@ export default function Extractor({ base }: { base: string }) {
                     className="sample-link block rounded border border-stone-200 bg-white px-3 py-2 text-sm font-medium hover:border-amber-500 hover:bg-amber-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-stone-950"
                     onClick={event => { event.preventDefault(); void importSample(variant.file!); }}>{variant.label}</a>
                   : <span aria-disabled="true" className="block rounded border border-dashed border-stone-300 px-3 py-2 text-sm font-medium text-stone-600">{variant.label} <span className="font-normal">(GPX to be added)</span></span>}
-                <p className="mt-1 text-xs text-stone-600">{variant.description}</p>
+                <p className="mt-1 text-xs text-stone-600">{variant.canonical && <strong className="font-semibold">Main variant. </strong>}{variant.description}</p>
               </li>)}
             </ul>
           </li>;
