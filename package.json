@@ -14,6 +14,9 @@
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build -o storybook-static",
     "test:a11y": "vitest run --project storybook",
+    "server": "node src/server/server.ts",
+    "test:server": "vitest run --config vitest.server.config.ts",
+    "check:server": "tsc -p tsconfig.server.json",
     "test:features": "bddgen && playwright test --project=features"
   },
   "dependencies": {

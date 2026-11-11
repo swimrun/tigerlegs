@@ -1,6 +1,6 @@
 /**
  * Single source of truth for local development ports and origins.
- * The Deno server currently serves both the static frontend and the API,
+ * The server currently serves both the static frontend and the API,
  * so both ports are equal; change either one here to split them.
  */
 export const FRONTEND_PORT = 8123;

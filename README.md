@@ -40,7 +40,7 @@ TIGERLegs stands for *Terrain-Informed Gpx Extractor: LEts Go Swimrun!* (TIGE-R 
 4. Open <http://localhost:8123/tigerlegs/> in your browser.
 5. Upload a GPX file, for example one from the `test-data/` folder.
 
-This serves the frontend only; GPX analysis stays in the browser. The optional Deno API is separate and is not required by the site.
+This serves the frontend only; GPX analysis stays in the browser. The optional Node.js API (`npm run server`, tested with `npm run test:server`) is separate and is not required by the site.
 
 ## 2. Build and test
 

@@ -8,7 +8,7 @@ AddElementTag("planned", $bgColor="#7a7a7a", $borderStyle="dashed", $legendText=
 Person(athlete, "Athlete or organiser")
 System_Boundary(tigerlegs, "TigerLegs") {
   Container(browser, "Browser app", "TypeScript, Leaflet", "Parses the GPX file, detects segments, draws the map and the table")
-  Container(backend, "Backend", "Deno", "Serves static files, answers terrain requests, checks the Origin header")
+  Container(backend, "Backend", "Node.js", "Serves static files, answers terrain requests, checks the Origin header")
   ContainerDb(cache, "Terrain cache", "Files on disk (.cache)", "Cached Overpass answers")
   Container(watch, "Watch data field", "Monkey C, Connect IQ SDK", "Shows current leg, remaining distance and next leg during a race", $tags="planned")
 }
