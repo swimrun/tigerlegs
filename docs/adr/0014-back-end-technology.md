@@ -213,30 +213,31 @@ GraalVM does not by itself favour Java over Node.js: it narrows the memory gap a
 ### C1 and the totals (11 November 2026)
 
 The owner confirmed 3 for Node.js with TypeScript ("fine, known from this project") and that server-side analysis stays an open option for later (C4 weight stays 10).
-The other C1 scores are my proposal from what the owner has said, to be confirmed or corrected:
+The owner then gave the other C1 scores (11 November 2026); only Deno, which the owner did not mention, keeps my proposal of 3 ("known from this project").
 
-| Option       | C1  | Reason                                      | Subtotal | Total |
-| ------------ | --- | ------------------------------------------- | -------- | ----- |
-| Node.js      | 3   | owner's answer                              | 340      | 400   |
-| Spring Boot  | 5   | Java, Spring, Spring Data JDBC, Leyden, DDD | 285      | 385   |
-| ASP.NET Core | 4   | knows EF Core and migrations                | 295      | 375   |
-| Micronaut    | 4   | named as an alternative                     | 280      | 360   |
-| Quarkus      | 4   | named as an alternative                     | 280      | 360   |
-| Javalin      | 4   | Kotlin or Java, named                       | 275      | 355   |
-| Deno         | 3   | known from this project                     | 290      | 350   |
-| Go           | 2   | not mentioned                               | 300      | 340   |
-| Axum         | 2   | not mentioned                               | 300      | 340   |
-| FastAPI      | 2   | not mentioned                               | 295      | 335   |
+| Option       | C1  | Reason                               | Subtotal | Total |
+| ------------ | --- | ------------------------------------ | -------- | ----- |
+| Node.js      | 3   | owner's answer                       | 340      | 400   |
+| Spring Boot  | 4   | owner's answer                       | 285      | 365   |
+| Go           | 3   | owner's answer                       | 300      | 360   |
+| Axum         | 3   | owner's answer                       | 300      | 360   |
+| ASP.NET Core | 3   | owner's answer                       | 295      | 355   |
+| Deno         | 3   | my proposal, known from this project | 290      | 350   |
+| Micronaut    | 3   | owner's answer                       | 280      | 340   |
+| Quarkus      | 3   | owner's answer                       | 280      | 340   |
+| Javalin      | 2   | owner's answer                       | 275      | 315   |
+| FastAPI      | 1   | owner's answer                       | 295      | 315   |
 
-On these scores the first three are within 25 points of each other, which is inside the margin of my provisional scores, so the spike decides.
+Node.js leads Spring Boot by 35 points, and Spring Boot, Go, Axum, ASP.NET Core and Deno lie within 15 points of each other behind it.
+That is inside the margin of my provisional scores, so the spike decides.
 
 ### The total
 
 Total = subtotal + 20 × C1. A point of familiarity is worth 20 points, so the owner's scores can add 20 to 100 points to each option.
-On the provisional scores Node.js leads with 340; Go and Axum follow at 300, then FastAPI and ASP.NET Core at 295, Deno at 290 and the Java frameworks between 275 and 285.
+On the provisional subtotals Node.js leads with 340; Go and Axum follow at 300, then FastAPI and ASP.NET Core at 295, Deno at 290 and the Java frameworks between 275 and 285.
 Node.js lost 30 points against the first version (supply chain, C7, and the database mapping, C10) and its lead over the best other option shrank from 60 to 40, but it is still ahead.
 The lead is mostly C4 (it shares code with the front end) and C8 and C9 (no vendor control, a healthy foundation).
-If the owner rates Spring Boot 5 and Node.js 3 on C1, the totals are 385 and 400; at Node.js 2 they are 385 and 380, and Spring Boot passes Node.js; a Java option passes Node.js when the owner's gap is about two to three points or more.
+With the owner's scores the totals are 400 for Node.js and 365 for Spring Boot. The owner's gap in C1 is one point in Spring Boot's favour; at a gap of three points (60 points) Spring Boot would pass Node.js, and a better subtotal after the spike would close the rest.
 
 ## Spike phase 1: measured (11 November 2026)
 
@@ -275,7 +276,7 @@ Not yet measured: the PostgreSQL read with a Flyway migration and a PostGIS colu
 
 ## Next steps
 
-1. The owner sets the C1 scores (and corrects the weights), then the totals are computed.
+1. The owner has set the C1 scores (11 November 2026) and the totals are computed; the weights can still be corrected.
 2. Phase 1 of the spike is done (see above). Phase 2 adds the PostgreSQL read and the native-image variants. The plan was a spike per surviving option that measures C3 (image size, idle memory, start time, and for Java also the JVM, Leyden and native variants including the native build time and memory) and tries one real task: the Overpass query with backoff and a cache, a health endpoint and a PostgreSQL read, in a container.
 3. Iterate between the scores and the criteria, as the method asks, then record the decision (this ADR becomes Proposed) and the fate of ADR-0002 (#61).
 
