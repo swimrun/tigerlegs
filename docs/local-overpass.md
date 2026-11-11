@@ -70,6 +70,28 @@ The server proxy of TigerLegs can use the local server too: start it with `OVERP
 - Upstream manual for the Overpass API Docker image, with the import options and resource notes: https://github.com/b1tw153/Overpass-API/blob/main/README.md
 - The image used here: https://github.com/wiktorn/Overpass-API
 
+## Ask the interpreter a question from the browser
+
+Opening `http://127.0.0.1:8081/api/interpreter` without a query gives "Error: encoding error: Your input contains only whitespace", because the interpreter runs the query in the `data` parameter and there is none. The server is fine; the page is empty because nothing was asked.
+The `data` parameter holds an Overpass QL query, and it can be sent as a URL parameter (GET) or as a form field (POST). Both were tried against the local container on 2026-11-11 and answered with JSON.
+
+In the browser address bar, put the URL-encoded query behind `?data=`. This link asks for the tags of three lakes or ponds in the area of Het Rondje Eilanden:
+
+```text
+http://127.0.0.1:8081/api/interpreter?data=%5Bout%3Ajson%5D%5Btimeout%3A25%5D%3Bway%5B%22natural%22%3D%22water%22%5D%2852.228%2C4.94%2C52.256%2C4.97%29%3Bout%20tags%203%3B
+```
+
+The query is `[out:json][timeout:25];way["natural"="water"](52.228,4.94,52.256,4.97);out tags 3;`, with the characters encoded as `%5B` and so on. Without encoding by hand, use `curl`, which does it for you:
+
+```sh
+curl -G http://127.0.0.1:8081/api/interpreter \
+  --data-urlencode 'data=[out:json][timeout:25];way["natural"="water"](52.228,4.94,52.256,4.97);out tags 3;'
+```
+
+`-G` sends the parameter in the URL (GET); without it `curl --data-urlencode` posts it as a form field, as in the fixture example above. The answer starts with a copyright line, "The data included in this document is from www.openstreetmap.org. The data is made available under ODbL.", which is the licence of the data (OpenStreetMap contributors).
+`http://127.0.0.1:8081/api/status` needs no parameter and shows the state of the server.
+For a map and an editor for queries, use Overpass Turbo (next section).
+
 ## Look at the data with Overpass Turbo
 
 The local server is an API only: it answers `http://127.0.0.1:8081/api/interpreter` for queries and `http://127.0.0.1:8081/api/status` for its state, and has no web page of its own.
