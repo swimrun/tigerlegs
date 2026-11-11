@@ -15,7 +15,7 @@ export const nl: Strings = {
     "Jouw Chrome kan Gemini Nano draaien, maar het model is nog niet geïnstalleerd. Installeren downloadt het eenmalig (enkele GB); Chrome eist zo'n 22 GB vrije schijfruimte als marge. Je schema verlaat dit apparaat nooit.",
   assistEnable: "Installeer Gemini Nano",
   assistInstalled: "Gemini Nano is geïnstalleerd. Vraag het opnieuw.",
-  chatTitle: "Herschik met de tijger",
+  chatTitle: "Herschik met RoARR",
   applied: (summary) => `Toegepast: ${summary}. Bevestig of draai de wijzigingen terug onder "Jouw wijzigingen" hieronder.`,
   dismissed: "Genegeerd. Er is niets verplaatst.",
   assistDownloading: "Model wordt gedownload…",
@@ -69,6 +69,8 @@ export const nl: Strings = {
   restDayAlready: (day) => `Op ${day} is al sportrustdag.`,
   leftOut: (title, day) => `Weggelaten: ${title} naar ${day}, een sportrustdag`,
   nextChip: (title, from, to) => `Volgende: ${title} ${from} → ${to}`,
+  restDayChip: (day) => `Maak ${day} een sportrustdag`,
+  fixChip: "Los de problemen in mijn week op",
   fixReasons: {
     "rest-day": (day) => `sportrustdag op ${day}`,
     clash: (day) => `twee sessies op ${day}`,

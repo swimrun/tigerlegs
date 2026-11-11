@@ -52,6 +52,9 @@ export interface Strings {
   restDayAlready: (day: string) => string;
   leftOut: (title: string, day: string) => string;
   nextChip: (title: string, from: string, to: string) => string;
+  /** Default chips of the chat: make a day a sports rest day, and fix what the week still needs. */
+  restDayChip: (day: string) => string;
+  fixChip: string;
   fixReasons: Record<IssueKind, (day: string) => string>;
   confirm: string;
   confirmed: string;
