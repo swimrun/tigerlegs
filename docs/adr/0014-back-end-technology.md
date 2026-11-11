@@ -207,6 +207,26 @@ Project Leyden's AOT cache in OpenJDK is the lighter route: no separate compiler
 For a back end that runs all day on a VPS, start time hardly matters and memory does, so the spike measures idle memory of the JVM (with a small heap and a cheap garbage collector), with Leyden, and as a native image, before we decide that native is worth its build cost.
 GraalVM does not by itself favour Java over Node.js: it narrows the memory gap at the price of build time and compatibility work.
 
+### C1 and the totals (11 November 2026)
+
+The owner confirmed 3 for Node.js with TypeScript ("fine, known from this project") and that server-side analysis stays an open option for later (C4 weight stays 10).
+The other C1 scores are my proposal from what the owner has said, to be confirmed or corrected:
+
+| Option       | C1  | Reason                                      | Subtotal | Total |
+| ------------ | --- | ------------------------------------------- | -------- | ----- |
+| Node.js      | 3   | owner's answer                              | 340      | 400   |
+| Spring Boot  | 5   | Java, Spring, Spring Data JDBC, Leyden, DDD | 285      | 385   |
+| ASP.NET Core | 4   | knows EF Core and migrations                | 295      | 375   |
+| Micronaut    | 4   | named as an alternative                     | 280      | 360   |
+| Quarkus      | 4   | named as an alternative                     | 280      | 360   |
+| Javalin      | 4   | Kotlin or Java, named                       | 275      | 355   |
+| Deno         | 3   | known from this project                     | 290      | 350   |
+| Go           | 2   | not mentioned                               | 300      | 340   |
+| Axum         | 2   | not mentioned                               | 300      | 340   |
+| FastAPI      | 2   | not mentioned                               | 295      | 335   |
+
+On these scores the first three are within 25 points of each other, which is inside the margin of my provisional scores, so the spike decides.
+
 ### The total
 
 Total = subtotal + 20 × C1. A point of familiarity is worth 20 points, so the owner's scores can add 20 to 100 points to each option.
