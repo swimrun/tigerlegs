@@ -1,0 +1,6 @@
+# Build: docker build -t spike-node .
+FROM node:24-alpine
+WORKDIR /app
+COPY server.ts .
+EXPOSE 8080
+CMD ["node", "server.ts"]
