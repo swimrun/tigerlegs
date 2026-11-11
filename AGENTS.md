@@ -26,7 +26,7 @@ Do not write data, scratch files, fixtures, screenshots, exports or one-off scri
 This holds even when a tool or session suggests its own scratch folder; the rule of this repository wins.
 For Claude Code the file tools are blocked from these folders by `permissions.deny` in `.claude/settings.json`; Bash commands are not covered by that, so the rule still depends on you following it.
 
-- Save website images in `public/img/`, GPX sample data in `test-data/` and test fixtures in `test/fixtures/`.
+- Save website images that a page shows in `src/assets/` and show them with Astro's `<Image>` component, which resizes and compresses them at build time; save images that need a fixed URL (the social preview image, favicons, images that the README or the guidebook links to) in `public/img/`. GPX sample data in `test-data/` and test fixtures in `test/fixtures/`.
 - Put ephemeral output that you only need to look at once (for example a screenshot to check a layout) in `test-results/`, which is git-ignored, and delete it before finishing.
 - Do not run one-off scripts: put checks in committed tests (Vitest unit tests and Playwright site tests).
 - If a tool automatically saves output outside the repository and offers no destination setting, copy the needed output into the repository immediately and do not use the external copy as the project asset.

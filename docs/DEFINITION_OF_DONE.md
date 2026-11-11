@@ -17,7 +17,7 @@ Tick only what is verified; write "n/a" with a reason for the rest.
 - [ ] **Privacy check.** No trackpoints leave the browser. Any new storage, network call or analytics is opt-in or cookieless, and the privacy principle in chapter 5 is updated.
 - [ ] **Accessibility check.** Usable by keyboard, controls have text labels, and colour or flags are never the only signal.
 - [ ] **Prototype labelled.** A fake or unfinished feature says so in the interface ("Fake it till you make it").
-- [ ] **Repository hygiene.** No temporary or generated scratch files committed; images in `public/img/`, fixtures in `test/fixtures/`.
+- [ ] **Repository hygiene.** No temporary or generated scratch files committed; images in `src/assets/` (shown on a page) or `public/img/` (fixed URL), fixtures in `test/fixtures/`.
 - [ ] **Commit message** follows Conventional Commits and has the issue number in the title.
 
 ## Rules for creating issues
