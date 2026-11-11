@@ -18,6 +18,8 @@
     "fmt": "deno fmt"
   },
   "imports": {
+    "@ag-ui/core": "npm:@ag-ui/core@^1.0.4",
+    "@ag-ui/core/schemas": "npm:@ag-ui/core@^1.0.4/schemas",
     "@tailwindcss/cli": "npm:@tailwindcss/cli@^4.3.3",
     "@xmldom/xmldom": "npm:@xmldom/xmldom@^0.9",
     "marked": "npm:marked@^15",

@@ -3,6 +3,8 @@
  * FAQ agent below can later be replaced by an LLM behind AG-UI without touching the component.
  * The event names are a small subset of the AG-UI event types (RUN_STARTED, TEXT_MESSAGE_CONTENT,
  * RUN_FINISHED); tool calls and state deltas can be added the same way when agents drive the UI.
+ * `ag-ui.ts` turns this stream into real AG-UI events with the `@ag-ui/core` package; the chat UI itself still
+ * reads `ChatEvent`.
  */
 export type ChatEvent =
   | { type: "run-started" }
