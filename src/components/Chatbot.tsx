@@ -3,71 +3,13 @@ import { type ChatAgent, type ChatSuggestion, createFaqAgent } from "../client/c
 import { getPageChat, subscribePageChat } from "../client/chat-store.ts";
 import { freeformHint, isChromeBrowser, isNanoLanguage } from "../client/chat-hints.ts";
 import { isLang, type Lang } from "../client/language.ts";
+import { type ChatStrings, STRINGS } from "../client/chat.strings.ts";
 
 interface Message {
   role: "user" | "assistant";
   text: string;
   followUps?: ChatSuggestion[];
 }
-
-interface Strings {
-  title: string;
-  prototype: string;
-  typing: string;
-  suggested: string;
-  yourQuestion: string;
-  placeholder: string;
-  ask: string;
-  loadFailed: string;
-  error: string;
-}
-
-const STRINGS: Record<Lang, Strings> = {
-  en: {
-    title: "Ask the tiger",
-    prototype: "prototype",
-    typing: "The tiger is typing…",
-    suggested: "Suggested questions",
-    yourQuestion: "Your question",
-    placeholder: "Ask something…",
-    ask: "Ask",
-    loadFailed: "The tiger could not load its questions. Reload the page to try again.",
-    error: "Sorry, something went wrong. Please try again.",
-  },
-  nl: {
-    title: "Vraag het de tijger",
-    prototype: "prototype",
-    typing: "De tijger is aan het typen…",
-    suggested: "Voorgestelde vragen",
-    yourQuestion: "Jouw vraag",
-    placeholder: "Vraag iets…",
-    ask: "Vraag",
-    loadFailed: "De tijger kon zijn vragen niet laden. Herlaad de pagina om het opnieuw te proberen.",
-    error: "Sorry, er ging iets mis. Probeer het opnieuw.",
-  },
-  fr: {
-    title: "Demande au tigre",
-    prototype: "prototype",
-    typing: "Le tigre est en train d'écrire…",
-    suggested: "Questions suggérées",
-    yourQuestion: "Ta question",
-    placeholder: "Pose une question…",
-    ask: "Demander",
-    loadFailed: "Le tigre n'a pas pu charger ses questions. Recharge la page pour réessayer.",
-    error: "Désolé, une erreur s'est produite. Réessaie.",
-  },
-  de: {
-    title: "Frag den Tiger",
-    prototype: "Prototyp",
-    typing: "Der Tiger tippt…",
-    suggested: "Vorgeschlagene Fragen",
-    yourQuestion: "Deine Frage",
-    placeholder: "Frag etwas…",
-    ask: "Fragen",
-    loadFailed: "Der Tiger konnte seine Fragen nicht laden. Lade die Seite neu, um es erneut zu versuchen.",
-    error: "Entschuldigung, etwas ist schiefgelaufen. Bitte versuche es erneut.",
-  },
-};
 
 const bubble = "w-fit max-w-[85%] rounded px-3 py-2 text-sm";
 
@@ -133,7 +75,7 @@ function TypingIndicator({ label, status }: { label: string; status?: string | n
   );
 }
 
-function ChatPanel({ chat, t, id, placeholder }: { chat: ChatAgent; t: Strings; id: string; placeholder: string }) {
+function ChatPanel({ chat, t, id, placeholder }: { chat: ChatAgent; t: ChatStrings; id: string; placeholder: string }) {
   const [suggestions, setSuggestions] = useState<ChatSuggestion[] | null>(null);
   const [loadFailed, setLoadFailed] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);

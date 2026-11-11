@@ -104,6 +104,12 @@ What does NOT count as grounds: "I believe...", "It's generally known that...", 
 
 Bending without resistance erodes trust in the agent's output. But defending a claim without stating grounds is equally worthless — it's just stubbornness.
 
+### Interface texts: external per-language files
+
+Texts that a user reads live in external files, one per language, never inline in a component or a module: `<owner>.strings.<lang>.ts` (`en`, `nl`, `fr`, `de`) next to the module that owns them, with a `<owner>.strings.ts` that holds the `Strings` type and collects the languages (see `TrainingWeek.strings.ts` and `chat.strings.ts`).
+TypeScript is the format because texts need functions (a move from one day to another) and the compiler then checks that every language has every key; JSON is for content that people edit without code, such as the FAQ in `public/chat/`.
+`test/client/strings.test.ts` fails when a translation dictionary appears inline or a language file is missing.
+
 ### Documentation language
 
 - README.md and user-facing docs: English

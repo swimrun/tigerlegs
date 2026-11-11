@@ -626,7 +626,7 @@ Open questions:
 This chapter explains how the source code is organised.
 
 The source lives in three folders: `src/client` for the browser, `src/server` for the backend and `src/shared` for types and distance calculation.
-Tests sit next to the code (`*.test.ts`) or in `test/`.
+Texts for the interface live in external per-language files, `<owner>.strings.<lang>.ts`, next to the module that owns them, with a `<owner>.strings.ts` for the `Strings` type; `test/client/strings.test.ts` fails when a dictionary appears inline (see `AGENTS.md`). Tests sit next to the code (`*.test.ts`) or in `test/`.
 Most tests are property-based: they state a rule that must hold for generated inputs, such as the maximum gap between samples.
 `deno task build` bundles the browser code into `public/app.js` with `deno bundle`, which is an experimental Deno command.
 
