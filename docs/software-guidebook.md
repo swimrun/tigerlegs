@@ -539,8 +539,8 @@ package "Planned session" {
     repeats
   }
   class ExecutedActivityRef <<value>> {
-    provider: strava | garmin | polar | file
-    external id
+    provider: strava | garmin | polar | recording
+    external id (a recording id for our own)
   }
   class Adherence <<value>> {
     planned and actual duration
@@ -570,10 +570,10 @@ The words, as the extractor and training pages need them:
 
 - A **course** is an idealized track: a line and its legs, each leg a swim or a run, with no athlete, no time, no speed and no heart rate.
   The extractor shows a course when it loads an official GPX file.
-- A **recording** is a carried-out track: an athlete's GPX or FIT file with time and, when the device recorded it, speed and heart rate. The swim and run segments detected on it belong to it. A recording is a saved analysis of one track, as the extractor makes; it is not a training log.
+- A **recording** is a carried-out track: an athlete's GPX or FIT file with time and, when the device recorded it, speed and heart rate. The swim and run segments detected on it belong to it. The GPX file of an executed training is a recording once the athlete saves it from the extractor; saving is the athlete's choice and we do not sync or keep a training log.
 - The extractor page treats both as "a GPX file". A sample such as the Rondje Eilanden file is a recording of one athlete with heart rate, cadence and power stripped (`test-data/README.md`); that stripping is how a course is made from a recording.
 - A **swimrun group** is a set of athletes: a duo, a team or a larger training group.
-- A **training plan** leads to goal events: one A event and B or C events before it (roadmap M10). Its **planned sessions** are what the training page shows, and a session can have a structure of steps for intervals, intensity and rest. What an athlete actually did is not stored here: Strava, Garmin and Polar are dedicated platforms for executed training, so a session only points at the activity there and keeps a small adherence snapshot.
+- A **training plan** leads to goal events: one A event and B or C events before it (roadmap M10). Its **planned sessions** are what the training page shows, and a session can have a structure of steps for intervals, intensity and rest. We do not build a training log: Strava, Garmin and Polar are dedicated platforms for executed training, so a session points at the activity there, or at a recording the athlete saved, and keeps a small adherence snapshot.
 
 Aggregates, their invariants, and what is allowed to be eventually consistent:
 
@@ -582,7 +582,7 @@ Aggregates, their invariants, and what is allowed to be eventually consistent:
 - **Course.** Legs of a variant are ordered, contiguous and cover the line from start to end, and their distances add up to the length of the line within a tolerance. A course holds no personal data: no time, no sensor data, and no athlete unless it is a private course.
 - **Recording** is personal data and private by default. Its segments are ordered, do not overlap and point at existing positions of the trace, and it always has an owner.
 - **Training plan.** It holds one A event, every B or C event lies before it, and a plan the athlete sees is approved (a draft needs explicit approval, roadmap M10).
-- **Planned session** is its own aggregate and not a part of the plan. Its status is planned, done or skipped: done means linked to an executed activity or ticked by the athlete, skipped is ticked by the athlete. It holds at most one reference to an executed activity (provider and external id, no trace) and at most one adherence snapshot, which exists only when a reference does or the athlete entered it. Its steps must be valid (a repeat has at least one repetition, a step has a duration or is open). The balance between runs and swims in a week is advice ("plan warnings", spec 003) and not an invariant, so moving one session never locks the plan and two edits to different sessions do not conflict.
+- **Planned session** is its own aggregate and not a part of the plan. Its status is planned, done or skipped: done means linked to an executed activity or ticked by the athlete, skipped is ticked by the athlete. It holds at most one reference to an executed activity (a provider and an external id, or the id of a saved recording; the session holds no trace itself) and at most one adherence snapshot, which exists only when a reference does or the athlete entered it. Its steps must be valid (a repeat has at least one repetition, a step has a duration or is open). The balance between runs and swims in a week is advice ("plan warnings", spec 003) and not an invariant, so moving one session never locks the plan and two edits to different sessions do not conflict.
 
 Decisions behind the model, each of which can be reversed in the data-layer ADR:
 
@@ -591,7 +591,7 @@ Decisions behind the model, each of which can be reversed in the data-layer ADR:
 3. **Planned sessions are separate from the plan**, for the reason above: advice is not an invariant, and a plan of a year has hundreds of sessions.
 4. **Goal events live inside the plan.** A shared event aggregate (an ÖTILLÖ race that many athletes aim at) is possible later; see the open questions.
 5. **The structure of a session is a tree of steps** (a repeat contains steps), flattened when exported.
-6. **Executed training stays on the platform that recorded it.** Comparing a planned with an executed session is better done by dedicated services, so a planned session holds a reference to the activity (`ExecutedActivityRef`) and a high-level `Adherence` snapshot, and no trace or sensor data. This also keeps personal data out of our database, which suits the erasure rule for athletes (above).
+6. **No training log of our own.** Comparing a planned with an executed session is better done by dedicated services, so a planned session holds a reference to the executed activity (`ExecutedActivityRef`) and a high-level `Adherence` snapshot, and no trace or sensor data. The reference points at the platform that recorded it, or at a recording the athlete saved from the GPX of that training, which is then personal data under the erasure rule for athletes (above).
 
 What the structure maps to. Garmin's FIT workout file "must contain a File Id message, a Workout message, and one or more Workout Step messages"; a step has a duration type and value, a target type and value and an intensity ("Active", "Rest", "Warmup", "Cooldown", "Recovery", "Interval" or "Other"), and a repeat block is a step placed after the steps to repeat, with the index of the first step and the number of repetitions (Garmin, n.d.-b).
 Our roles (warm-up, work, rest, cool-down) map onto those intensities, and the tree becomes the flat list with a repeat step on export.
