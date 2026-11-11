@@ -68,6 +68,8 @@ export default function TrainingWeek({ languageModel }: Props) {
   const [confirmed, setConfirmed] = useState(false);
   // Fixed rest days: days on which no session may be planned (a plan lever, spec 003).
   const [restDays, setRestDays] = useState<readonly Day[]>([]);
+  // The picker's labels exist only while it is open: text in a closed <details> is not rendered, which Astro's audit reads as an empty label.
+  const [restPickerOpen, setRestPickerOpen] = useState(false);
   const [baselineRest, setBaselineRest] = useState<readonly Day[]>([]);
   // What a reset replaced, so that it can be undone until something else changes.
   const [undo, setUndo] = useState<
@@ -199,20 +201,22 @@ export default function TrainingWeek({ languageModel }: Props) {
           >
             {t.generate}
           </button>
-          <details className="relative ml-auto text-sm" data-rest-days>
+          <details className="relative ml-auto text-sm" data-rest-days onToggle={(event) => setRestPickerOpen(event.currentTarget.open)}>
             <summary className="cursor-pointer rounded border border-stone-900 bg-white px-2 py-1">
               <span className="font-medium">{t.restDaysLabel}: </span>
               {restDays.length > 0 ? DAYS.filter((day) => restDays.includes(day)).map((day) => t.days[day]).join(", ") : t.restDaysNone}
             </summary>
-            <fieldset className="absolute right-0 z-10 mt-1 space-y-1 rounded border border-stone-900 bg-white p-2 shadow">
-              <legend className="sr-only">{t.restDaysLabel}</legend>
-              {DAYS.map((day) => (
-                <label key={day} className="flex items-center gap-2">
-                  <input type="checkbox" checked={restDays.includes(day)} onChange={() => toggleRestDay(day)} />
-                  {t.days[day]}
-                </label>
-              ))}
-            </fieldset>
+            {restPickerOpen && (
+              <fieldset className="absolute right-0 z-10 mt-1 space-y-1 rounded border border-stone-900 bg-white p-2 shadow">
+                <legend className="sr-only">{t.restDaysLabel}</legend>
+                {DAYS.map((day) => (
+                  <label key={day} className="flex items-center gap-2">
+                    <input type="checkbox" checked={restDays.includes(day)} onChange={() => toggleRestDay(day)} />
+                    {t.days[day]}
+                  </label>
+                ))}
+              </fieldset>
+            )}
           </details>
         </div>
       </section>
