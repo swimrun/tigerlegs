@@ -19,7 +19,7 @@ export default function SegmentTable(props: Props) {
   const types = config.swimFirst ? ["swim", "run"] as const : ["run", "swim"] as const;
   const rows = buildTableRows(segments, config, conflicts);
   const headings = ["#", ...types.map(t => t === "swim" ? "Swim (m)" : "Run (km)"),
-    ...(config.showCumulative ? ["Cumulative (km)"] : []), "Detected by", "Confidence"];
+    ...(config.showCumulative ? ["Total so far (km)"] : []), "Detected by", "Confidence"];
   const button = (segment: Segment, text: string, label: string) =>
     <button type="button" className="segment-select" aria-label={label} aria-pressed={selected === segment.number}
       onClick={event => { event.stopPropagation(); select(segment.number); }}

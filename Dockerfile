@@ -1,24 +1,24 @@
 # API-only image: the static frontend is served by GitHub Pages.
-FROM denoland/deno:alpine-2.5.6
+# Node.js runs the TypeScript directly (type stripping), so there is no build step and no dependency to install.
+FROM node:24-alpine
 
 WORKDIR /app
-COPY deno.json deno.lock ./
-COPY src ./src
+COPY package.json ./
+COPY src/server ./src/server
+COPY src/shared ./src/shared
 
-# Cache dependencies at build time so the container starts offline-capable.
-RUN deno cache src/server/server.ts
-
-ENV PORT=8123 \
+ENV NODE_ENV=production \
+    PORT=8123 \
     CACHE_PATH=/data/terrain_cache \
     STATIC_DIR=/nonexistent \
     ALLOWED_ORIGINS=https://swimrun.group,http://localhost:8123
 
-RUN mkdir -p /data && chown deno:deno /data
+RUN mkdir -p /data && chown node:node /data
 VOLUME /data
-USER deno
+USER node
 EXPOSE 8123
 
 HEALTHCHECK --interval=30s --timeout=5s \
   CMD wget -qO- http://127.0.0.1:${PORT}/api/v1/health || exit 1
 
-CMD ["run", "--allow-net", "--allow-read", "--allow-write=/data", "--allow-env", "src/server/server.ts"]
+CMD ["node", "src/server/server.ts"]

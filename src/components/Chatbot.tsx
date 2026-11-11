@@ -111,8 +111,8 @@ function ChatPanel({ chat, t, id, placeholder }: { chat: ChatAgent; t: ChatStrin
     if (!question || busy) return;
     setBusy(true);
     setInput("");
-    // A follow-up is used up when chosen; a suggestion only once all its answers have been given.
-    if (completes) setAsked((a) => [...a, completes, ...(id ? [id] : [])]);
+    // A chip is used up as soon as it is chosen; the follow-ups ("tell me more") that come with the answer stay available.
+    if (id || completes) setAsked((a) => [...a, ...(id ? [id] : []), ...(completes ? [completes] : [])]);
     setMessages((m) => [...m, { role: "user", text: shown ? text : question }]);
     try {
       for await (const event of chat.run(question)) {
@@ -121,7 +121,6 @@ function ChatPanel({ chat, t, id, placeholder }: { chat: ChatAgent; t: ChatStrin
         if (event.type === "text") {
           setTyping(false);
           setStatus(null);
-          if (id && !completes && !event.followUps) setAsked((a) => [...a, id]);
           setMessages((m) => [...m, { role: "assistant", text: event.text, followUps: event.followUps }]);
         }
       }
