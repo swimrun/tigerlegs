@@ -40,8 +40,8 @@
     },
     {
       "id": "privacy",
-      "question": "Mon fichier GPX est-il envoyé en ligne ?",
-      "answer": "Non. L'analyse se fait dans ton navigateur. Les données de terrain d'OpenStreetMap sont optionnelles, et seule une zone approximative est alors envoyée, jamais tes points de trace. Voir la page À propos pour les détails."
+      "question": "Mon fichier GPX est-il envoyé à un serveur ?",
+      "answer": "Non. Tu choisis le fichier dans ton navigateur et l'analyse s'y déroule ; le fichier reste sur ton appareil et rien n'est envoyé à un serveur de TigerLegs. Les données de terrain d'OpenStreetMap sont optionnelles, et alors seuls un cadre approximatif et ton adresse IP vont au service Overpass d'OpenStreetMap, jamais tes points de trace. Voir la page À propos pour les détails."
     }
   ]
 }

@@ -40,8 +40,8 @@
     },
     {
       "id": "privacy",
-      "question": "Wird meine GPX-Datei hochgeladen?",
-      "answer": "Nein. Die Analyse läuft in deinem Browser. Geländedaten von OpenStreetMap sind optional, und dann wird nur ein grober Kartenausschnitt gesendet, nie deine Trackpunkte. Details findest du auf der Über-Seite."
+      "question": "Wird meine GPX-Datei auf einen Server hochgeladen?",
+      "answer": "Nein. Du wählst die Datei in deinem Browser aus und die Analyse läuft dort; die Datei bleibt auf deinem Gerät und nichts geht an einen TigerLegs-Server. Geländedaten von OpenStreetMap sind optional, und dann gehen nur ein grober Kartenausschnitt und deine IP-Adresse an den Overpass-Dienst von OpenStreetMap, nie deine Trackpunkte. Details findest du auf der Über-Seite."
     }
   ]
 }
