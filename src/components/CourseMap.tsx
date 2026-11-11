@@ -61,7 +61,10 @@ export default function CourseMap({ points, segments, water, active, select, pre
     groups.course.clearLayers();
     lines.current.clear();
     const coordinates: [number, number][] = points.map(p => [p.coordinate.lat, p.coordinate.lon]);
-    const colors = { swim: "#1e88e5", run: "#2e7d32", unclassified: "#757575" };
+    // The segment colours are shared with the training week: they come from the CSS variables of styles.css.
+    const css = getComputedStyle(document.documentElement);
+    const colorOf = (name: string) => css.getPropertyValue(name).trim() || "currentColor";
+    const colors = { swim: colorOf("--color-swim"), run: colorOf("--color-run"), unclassified: colorOf("--color-unclassified") };
     if (!coordinates.length) return;
     if (!segments.length) L.polyline(coordinates, { color: colors.unclassified, weight: 4 }).addTo(groups.course);
     for (const segment of segments) {

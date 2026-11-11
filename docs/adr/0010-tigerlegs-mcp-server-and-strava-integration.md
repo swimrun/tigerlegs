@@ -2,11 +2,11 @@
 
 Date: 2026-11-09
 
-## Status
+## 1. Status
 
 Draft. No decision has been taken; this record collects the context, options and constraints for the ideation in issue #20. It becomes Proposed once milestone M9 (accounts and backend) is in sight.
 
-## Context
+## 2. Context
 
 The roadmap adds two goals beyond course analysis (see [ROADMAP.md](../ROADMAP.md) M10 and M11, which hold the user stories and the ideation use case diagram):
 
@@ -22,7 +22,7 @@ Strava is the obvious activity source for most swimrunners. Its API agreement wa
 
 Existing constraints and principles apply in full: analysis stays local where possible, the backend runs in the EU ([ADR-0004](./0004-host-deno-backend-on-eu-vps.md)), the stack stays Deno/TypeScript ([ADR-0002](./0002-use-deno-with-typescript.md)), the API stays REST/JSON where it serves multiple clients ([ADR-0005](./0005-rest-json-api-for-multi-client-support.md)), and privacy is a design rule: stored activities and plans reveal home locations and daily patterns, so this feature cannot ship before the M9 accounts-and-privacy review.
 
-## Options under consideration
+## 3. Options under consideration
 
 | Option | Reasons to consider | Reasons against, here |
 | --- | --- | --- |
@@ -36,11 +36,11 @@ Option E is complementary, not competing: it serves the athlete's in-week intera
 
 A fake-door test fits the house principle "fake it till you make it": advertise the capability, measure clicks, build nothing heavy until interest is shown.
 
-## Decision
+## 4. Decision
 
 None yet. The working hypothesis to validate is option **A** for the long term, prototyped via **B** (a local MCP server over an exported TigerLegs course and a Strava export file), with **D**'s measurement gating the investment.
 
-## Consequences and validation
+## 5. Consequences and validation
 
 - Validate the Strava API agreement reading before design: can a coach ever see Strava-derived data of an athlete, and under what consent?
 - A prototype local MCP server can be built against exported GPX/course JSON without accounts, keeping the privacy promise intact.

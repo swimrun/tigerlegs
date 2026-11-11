@@ -9,7 +9,7 @@ Tick only what is verified; write "n/a" with a reason for the rest.
 
 - [ ] **Acceptance criteria met.** Each Given/When/Then of the issue is demonstrably true.
 - [ ] **Tests.** New behaviour has a test (property-based for domain logic, Playwright for site behaviour).
-      `deno task test` passes, and so does `npx playwright test` for site changes.
+      `npm test` passes, and so does `npx playwright test` for site changes.
 - [ ] **Build.** `deno task build` passes (needs Node 24 or newer for Astro).
 - [ ] **Software guidebook updated** in the same commit: the principle (chapter 5), the code section (chapter 7), the glossary or the data section, whichever the change touches.
 - [ ] **README and About page updated** when user-visible behaviour or the privacy statement changes.
@@ -17,7 +17,7 @@ Tick only what is verified; write "n/a" with a reason for the rest.
 - [ ] **Privacy check.** No trackpoints leave the browser. Any new storage, network call or analytics is opt-in or cookieless, and the privacy principle in chapter 5 is updated.
 - [ ] **Accessibility check.** Usable by keyboard, controls have text labels, and colour or flags are never the only signal.
 - [ ] **Prototype labelled.** A fake or unfinished feature says so in the interface ("Fake it till you make it").
-- [ ] **Repository hygiene.** No temporary or generated scratch files committed; images in `public/img/`, fixtures in `test/fixtures/`.
+- [ ] **Repository hygiene.** No temporary or generated scratch files committed; images in `src/assets/` (shown on a page) or `public/img/` (fixed URL), fixtures in `test/fixtures/`.
 - [ ] **Commit message** follows Conventional Commits and has the issue number in the title.
 
 ## Rules for creating issues

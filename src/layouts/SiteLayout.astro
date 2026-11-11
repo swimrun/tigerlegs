@@ -1,5 +1,7 @@
 ---
+import { Image } from "astro:assets";
 import { ClientRouter } from "astro:transitions";
+import logo from "../assets/tigerlegs-logo-web.png";
 import config from "../../deno.json";
 import Chatbot from "../components/Chatbot.tsx";
 interface Props {
@@ -45,7 +47,7 @@ const links = [
   <body class="min-h-screen bg-stone-50 text-stone-800 antialiased">
     <header class="site-header">
       <div class="site-header-inner">
-        <a href={base} class="site-brand"><img src={`${base}img/tigerlegs-logo-web.png`} alt="TigerLegs logo" /></a>
+        <a href={base} class="site-brand"><Image src={logo} alt="TigerLegs logo" width={144} height={96} densities={[1, 2]} /></a>
         <div class="site-header-tools">
           <span class="rounded bg-stone-950 px-2 py-0.5 text-xs font-semibold uppercase tracking-wider text-amber-400">Beta</span>
           <span id="app-version" class="text-xs text-stone-700">v{config.version}</span>

@@ -1,4 +1,4 @@
-import { assertEquals, assertStringIncludes } from "@std/assert";
+import { expect, it } from "vitest";
 import { BACKEND_ORIGIN, FRONTEND_ORIGIN } from "./config.ts";
 import { createRouter, type RouterConfig } from "./router.ts";
 import type { CacheStore } from "./cache.ts";
@@ -36,60 +36,57 @@ function createTestRouter(overrides?: Partial<RouterConfig>) {
 
 // --- Health endpoint ---
 
-Deno.test("GET /api/v1/health returns status ok", async () => {
+it("GET /api/v1/health returns status ok", async () => {
   const handler = createTestRouter();
   const request = new Request(`${BACKEND_ORIGIN}/api/v1/health`);
   const response = await handler(request);
 
-  assertEquals(response.status, 200);
+  expect(response.status).toEqual(200);
   const body = await response.json();
-  assertEquals(body.status, "ok");
+  expect(body.status).toEqual("ok");
 });
 
-Deno.test("GET /api/v1/health does not require Origin header", async () => {
+it("GET /api/v1/health does not require Origin header", async () => {
   const handler = createTestRouter();
   const request = new Request(`${BACKEND_ORIGIN}/api/v1/health`);
   const response = await handler(request);
 
-  assertEquals(response.status, 200);
+  expect(response.status).toEqual(200);
 });
 
-Deno.test("Responses include X-Request-Id header", async () => {
+it("Responses include X-Request-Id header", async () => {
   const handler = createTestRouter();
   const request = new Request(`${BACKEND_ORIGIN}/api/v1/health`);
   const response = await handler(request);
 
   const requestId = response.headers.get("X-Request-Id");
-  assertEquals(typeof requestId, "string");
-  assertEquals(requestId!.length > 0, true);
+  expect(typeof requestId).toEqual("string");
+  expect(requestId!.length > 0).toEqual(true);
 });
 
-Deno.test("Responses include Content-Type: application/json", async () => {
+it("Responses include Content-Type: application/json", async () => {
   const handler = createTestRouter();
   const request = new Request(`${BACKEND_ORIGIN}/api/v1/health`);
   const response = await handler(request);
 
-  assertEquals(response.headers.get("Content-Type"), "application/json");
+  expect(response.headers.get("Content-Type")).toEqual("application/json");
 });
 
 // --- Origin validation ---
 
-Deno.test("Non-health endpoints reject requests without valid Origin", async () => {
+it("Non-health endpoints reject requests without valid Origin", async () => {
   const handler = createTestRouter();
   const request = new Request(`${BACKEND_ORIGIN}/api/v1/terrain/lookup?lat=45&lon=6`, {
     headers: { Origin: "http://evil.example.com" },
   });
   const response = await handler(request);
 
-  assertEquals(response.status, 403);
+  expect(response.status).toEqual(403);
   const body = await response.json();
-  assertEquals(body.code, "FORBIDDEN_ORIGIN");
+  expect(body.code).toEqual("FORBIDDEN_ORIGIN");
 });
 
-Deno.test({
-  name: "Non-health endpoints accept requests from allowed origins",
-  sanitizeResources: false,
-  fn: async () => {
+it("Non-health endpoints accept requests from allowed origins", async () => {
     const handler = createTestRouter();
     const request = new Request(`${BACKEND_ORIGIN}/api/v1/terrain/lookup?lat=45&lon=6`, {
       headers: { Origin: FRONTEND_ORIGIN },
@@ -98,27 +95,23 @@ Deno.test({
 
     // Should not be 403; the request reaches the handler (may get 502 since
     // Overpass isn't available in test, but that proves origin check passed)
-    assertEquals(response.status !== 403, true);
+    expect(response.status !== 403).toEqual(true);
     await response.text(); // consume body
-  },
-});
+  });
 
 // --- CORS headers ---
 
-Deno.test("CORS headers are set for allowed origin", async () => {
+it("CORS headers are set for allowed origin", async () => {
   const handler = createTestRouter();
   const request = new Request(`${BACKEND_ORIGIN}/api/v1/health`, {
     headers: { Origin: FRONTEND_ORIGIN },
   });
   const response = await handler(request);
 
-  assertEquals(
-    response.headers.get("Access-Control-Allow-Origin"),
-    FRONTEND_ORIGIN,
-  );
+  expect(response.headers.get("Access-Control-Allow-Origin")).toEqual(FRONTEND_ORIGIN);
 });
 
-Deno.test("OPTIONS preflight returns CORS headers", async () => {
+it("OPTIONS preflight returns CORS headers", async () => {
   const handler = createTestRouter();
   const request = new Request(`${BACKEND_ORIGIN}/api/v1/terrain/lookup`, {
     method: "OPTIONS",
@@ -129,58 +122,52 @@ Deno.test("OPTIONS preflight returns CORS headers", async () => {
   });
   const response = await handler(request);
 
-  assertEquals(response.status, 204);
-  assertEquals(
-    response.headers.get("Access-Control-Allow-Origin"),
-    FRONTEND_ORIGIN,
-  );
-  assertStringIncludes(
-    response.headers.get("Access-Control-Allow-Methods") ?? "",
-    "GET",
-  );
+  expect(response.status).toEqual(204);
+  expect(response.headers.get("Access-Control-Allow-Origin")).toEqual(FRONTEND_ORIGIN);
+  expect(response.headers.get("Access-Control-Allow-Methods") ?? "").toContain("GET");
 });
 
 // --- Coordinate validation ---
 
-Deno.test("GET /api/v1/terrain/lookup rejects invalid latitude", async () => {
+it("GET /api/v1/terrain/lookup rejects invalid latitude", async () => {
   const handler = createTestRouter();
   const request = new Request(`${BACKEND_ORIGIN}/api/v1/terrain/lookup?lat=91&lon=6`, {
     headers: { Origin: FRONTEND_ORIGIN },
   });
   const response = await handler(request);
 
-  assertEquals(response.status, 400);
+  expect(response.status).toEqual(400);
   const body = await response.json();
-  assertEquals(body.code, "INVALID_COORDINATES");
+  expect(body.code).toEqual("INVALID_COORDINATES");
 });
 
-Deno.test("GET /api/v1/terrain/lookup rejects invalid longitude", async () => {
+it("GET /api/v1/terrain/lookup rejects invalid longitude", async () => {
   const handler = createTestRouter();
   const request = new Request(`${BACKEND_ORIGIN}/api/v1/terrain/lookup?lat=45&lon=181`, {
     headers: { Origin: FRONTEND_ORIGIN },
   });
   const response = await handler(request);
 
-  assertEquals(response.status, 400);
+  expect(response.status).toEqual(400);
   const body = await response.json();
-  assertEquals(body.code, "INVALID_COORDINATES");
+  expect(body.code).toEqual("INVALID_COORDINATES");
 });
 
-Deno.test("GET /api/v1/terrain/lookup rejects missing parameters", async () => {
+it("GET /api/v1/terrain/lookup rejects missing parameters", async () => {
   const handler = createTestRouter();
   const request = new Request(`${BACKEND_ORIGIN}/api/v1/terrain/lookup?lat=45`, {
     headers: { Origin: FRONTEND_ORIGIN },
   });
   const response = await handler(request);
 
-  assertEquals(response.status, 400);
+  expect(response.status).toEqual(400);
   const body = await response.json();
-  assertEquals(body.code, "INVALID_COORDINATES");
+  expect(body.code).toEqual("INVALID_COORDINATES");
 });
 
 // --- Batch endpoint validation ---
 
-Deno.test("POST /api/v1/terrain/batch rejects more than 100 coordinates", async () => {
+it("POST /api/v1/terrain/batch rejects more than 100 coordinates", async () => {
   const handler = createTestRouter();
   const coordinates = Array.from({ length: 101 }, (_, i) => ({
     lat: 45 + i * 0.001,
@@ -196,12 +183,12 @@ Deno.test("POST /api/v1/terrain/batch rejects more than 100 coordinates", async 
   });
   const response = await handler(request);
 
-  assertEquals(response.status, 400);
+  expect(response.status).toEqual(400);
   const body = await response.json();
-  assertEquals(body.code, "BATCH_TOO_LARGE");
+  expect(body.code).toEqual("BATCH_TOO_LARGE");
 });
 
-Deno.test("POST /api/v1/terrain/batch rejects invalid coordinates in batch", async () => {
+it("POST /api/v1/terrain/batch rejects invalid coordinates in batch", async () => {
   const handler = createTestRouter();
   const coordinates = [
     { lat: 45, lon: 6 },
@@ -217,21 +204,21 @@ Deno.test("POST /api/v1/terrain/batch rejects invalid coordinates in batch", asy
   });
   const response = await handler(request);
 
-  assertEquals(response.status, 400);
+  expect(response.status).toEqual(400);
   const body = await response.json();
-  assertEquals(body.code, "INVALID_COORDINATES");
+  expect(body.code).toEqual("INVALID_COORDINATES");
 });
 
 // --- 404 for unknown routes ---
 
-Deno.test("Unknown routes return 404", async () => {
+it("Unknown routes return 404", async () => {
   const handler = createTestRouter();
   const request = new Request(`${BACKEND_ORIGIN}/api/v1/unknown`, {
     headers: { Origin: FRONTEND_ORIGIN },
   });
   const response = await handler(request);
 
-  assertEquals(response.status, 404);
+  expect(response.status).toEqual(404);
   const body = await response.json();
-  assertEquals(body.code, "NOT_FOUND");
+  expect(body.code).toEqual("NOT_FOUND");
 });

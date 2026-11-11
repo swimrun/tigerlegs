@@ -2,11 +2,11 @@
 
 Date: 2026-11-10
 
-## Status
+## 1. Status
 
 Draft. No decision has been taken; this record collects concepts and open questions. It extends option E of [ADR-0010](./0010-tigerlegs-mcp-server-and-strava-integration.md) (on-device Gemini Nano via the Prompt API). The first prototype of Part 1 exists in the shared chat (`training-agent.ts`); Part 2 is not implemented.
 
-## Context
+## 2. Context
 
 Using the chat prototype, the user saw "downloading model" and no spinner after typing a prompt. That observation mixes two different waits that have different causes, different durations and different design answers. This ADR keeps them apart:
 
@@ -21,7 +21,7 @@ Using the chat prototype, the user saw "downloading model" and no spinner after 
 
 The two must not share one status line: a download progress message shown as the answer to a prompt makes the chat look broken, and a "thinking" animation during a download hides that a multi-GB transfer is happening.
 
-## Part 1: model lifecycle
+## 3. Part 1: model lifecycle
 
 States come from `LanguageModel.availability()`: `unavailable`, `downloadable`, `downloading`, `available` (plus `absent` when the API does not exist).
 
@@ -29,7 +29,7 @@ States come from `LanguageModel.availability()`: `unavailable`, `downloadable`, 
 - **`downloading`:** show progress as a status, separate from any generation feedback.
 - **`unavailable` / `absent`:** say why (browser, hardware, language) and point to the manual path. Language and browser hints are in `chat-hints.ts`.
 
-### Size disclosure
+### 3.1 Size disclosure
 
 Show a short, expandable note next to the install action:
 
@@ -40,13 +40,13 @@ Show a short, expandable note next to the install action:
 
 Figures change between releases; copy states the documented requirement, not the anecdote, and is checked against the Chrome documentation at implementation time.
 
-## Part 2: think thread
+## 4. Part 2: think thread
 
-### Can Gemini Nano think?
+### 4.1 Can Gemini Nano think?
 
 Not natively. The Prompt API streams plain text and has no separate reasoning channel. Gemini's documented "thinking" (Google, n.d.) is a feature of the cloud Gemini API models and is not exposed on device. A think thread is therefore either *synthetic* (prompted) or *fake* (UI only).
 
-### Options
+### 4.2 Options
 
 | Option | What it is | For | Against |
 | --- | --- | --- | --- |
@@ -57,18 +57,18 @@ Not natively. The Prompt API streams plain text and has no separate reasoning ch
 
 Working hypothesis, to validate: **B** with **A** phrases as decoration inside it, and **C** as an experiment on week rearranging. D is parked until a task needs multi-step plans. Anything shown must be labelled so decoration cannot be mistaken for the model's own reasoning.
 
-### Constraints for C
+### 4.3 Constraints for C
 
 - The streamed text is cumulative; the parser must be deterministic and tolerant of unclosed or malformed tags, falling back to showing everything as the answer.
 - The reasoning panel is collapsed by default and never applied to the schedule; only schema-validated output is applied, after user confirmation (evidence rule from ADR-0010).
 - Output languages are limited to what Nano supports (en, de, fr, es, ja); the site's Dutch falls back as described in ADR-0010.
 - Thought text may contain training data; it stays on device like all Nano I/O.
 
-## Decision
+## 5. Decision
 
 None yet.
 
-## Consequences and validation
+## 6. Consequences and validation
 
 - Part 1: verify the `downloadable` → `downloading` → `available` transitions and that no prompt triggers a download unasked. Prototype exists in the shared chat; validate on a clean Chrome profile.
 - Part 2: prompt Nano with a `<reasoning>` contract on 10–20 real week-rearranging requests; measure tag compliance, latency and answer quality against the same prompts without it.

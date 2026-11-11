@@ -3,6 +3,7 @@ import { type ChatAgent, type ChatSuggestion, createFaqAgent } from "../client/c
 import { getPageChat, subscribePageChat } from "../client/chat-store.ts";
 import { freeformHint, isChromeBrowser, isNanoLanguage } from "../client/chat-hints.ts";
 import { isLang, type Lang } from "../client/language.ts";
+import { type ChatStrings, STRINGS } from "../client/chat.strings.ts";
 
 interface Message {
   role: "user" | "assistant";
@@ -10,66 +11,38 @@ interface Message {
   followUps?: ChatSuggestion[];
 }
 
-interface Strings {
-  title: string;
-  prototype: string;
-  typing: string;
-  suggested: string;
-  yourQuestion: string;
-  placeholder: string;
-  ask: string;
-  loadFailed: string;
-  error: string;
+const bubble = "w-fit max-w-[85%] rounded px-3 py-2 text-sm";
+
+/**
+ * A chat message as text, with two line conventions an agent can use: "# Heading" is a bold heading and
+ * consecutive "- item" lines are a bulleted list. Every other line is a paragraph; a message without
+ * either convention renders as the single paragraph it always was.
+ */
+export function ChatText({ text, className }: { text: string; className: string }) {
+  const blocks: ({ kind: "p" | "h"; text: string } | { kind: "ul"; items: string[] })[] = [];
+  for (const line of text.split("\n")) {
+    const last = blocks.at(-1);
+    if (line.startsWith("- ")) {
+      if (last?.kind === "ul") last.items.push(line.slice(2));
+      else blocks.push({ kind: "ul", items: [line.slice(2)] });
+    } else if (line.startsWith("# ")) {
+      blocks.push({ kind: "h", text: line.slice(2) });
+    } else {
+      blocks.push({ kind: "p", text: line });
+    }
+  }
+  if (blocks.length === 1 && blocks[0].kind === "p") return <p className={className}>{text}</p>;
+  return (
+    <div className={`${className} space-y-1`}>
+      {blocks.map((block, index) =>
+        block.kind === "ul"
+          ? <ul key={index} className="list-disc space-y-1 pl-5">{block.items.map((item, at) => <li key={at}>{item}</li>)}</ul>
+          : <p key={index} className={block.kind === "h" ? "font-semibold" : undefined}>{block.text}</p>
+      )}
+    </div>
+  );
 }
 
-const STRINGS: Record<Lang, Strings> = {
-  en: {
-    title: "Ask the tiger",
-    prototype: "prototype",
-    typing: "The tiger is typing…",
-    suggested: "Suggested questions",
-    yourQuestion: "Your question",
-    placeholder: "Ask something…",
-    ask: "Ask",
-    loadFailed: "The tiger could not load its questions. Reload the page to try again.",
-    error: "Sorry, something went wrong. Please try again.",
-  },
-  nl: {
-    title: "Vraag het de tijger",
-    prototype: "prototype",
-    typing: "De tijger is aan het typen…",
-    suggested: "Voorgestelde vragen",
-    yourQuestion: "Jouw vraag",
-    placeholder: "Vraag iets…",
-    ask: "Vraag",
-    loadFailed: "De tijger kon zijn vragen niet laden. Herlaad de pagina om het opnieuw te proberen.",
-    error: "Sorry, er ging iets mis. Probeer het opnieuw.",
-  },
-  fr: {
-    title: "Demande au tigre",
-    prototype: "prototype",
-    typing: "Le tigre est en train d'écrire…",
-    suggested: "Questions suggérées",
-    yourQuestion: "Ta question",
-    placeholder: "Pose une question…",
-    ask: "Demander",
-    loadFailed: "Le tigre n'a pas pu charger ses questions. Recharge la page pour réessayer.",
-    error: "Désolé, une erreur s'est produite. Réessaie.",
-  },
-  de: {
-    title: "Frag den Tiger",
-    prototype: "Prototyp",
-    typing: "Der Tiger tippt…",
-    suggested: "Vorgeschlagene Fragen",
-    yourQuestion: "Deine Frage",
-    placeholder: "Frag etwas…",
-    ask: "Fragen",
-    loadFailed: "Der Tiger konnte seine Fragen nicht laden. Lade die Seite neu, um es erneut zu versuchen.",
-    error: "Entschuldigung, etwas ist schiefgelaufen. Bitte versuche es erneut.",
-  },
-};
-
-const bubble = "w-fit max-w-[85%] rounded px-3 py-2 text-sm";
 const pill =
   "rounded-full border border-stone-900 bg-amber-200 px-3 py-1 text-sm font-medium hover:bg-amber-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-stone-950";
 
@@ -102,7 +75,7 @@ function TypingIndicator({ label, status }: { label: string; status?: string | n
   );
 }
 
-function ChatPanel({ chat, t, id, placeholder }: { chat: ChatAgent; t: Strings; id: string; placeholder: string }) {
+function ChatPanel({ chat, t, id, placeholder }: { chat: ChatAgent; t: ChatStrings; id: string; placeholder: string }) {
   const [suggestions, setSuggestions] = useState<ChatSuggestion[] | null>(null);
   const [loadFailed, setLoadFailed] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -180,12 +153,10 @@ function ChatPanel({ chat, t, id, placeholder }: { chat: ChatAgent; t: Strings; 
             ))}
           </ul>
         )}
-      <div ref={log} role="log" aria-live="polite" className="mt-3 max-h-60 space-y-2 overflow-y-auto">
+      <div ref={log} role="log" aria-live="polite" tabIndex={0} className="mt-3 max-h-60 space-y-2 overflow-y-auto focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-600">
         {messages.map((m, i) => (
           <div key={i} className="space-y-1">
-            <p className={m.role === "user" ? `${bubble} ml-auto bg-stone-900 text-white` : `${bubble} bg-white`}>
-              {m.text}
-            </p>
+            <ChatText text={m.text} className={m.role === "user" ? `${bubble} ml-auto bg-stone-900 text-white` : `${bubble} bg-white`} />
             {i === messages.length - 1 && m.followUps?.filter((f) => !asked.includes(f.id)).map((f) => (
               <button key={f.id} type="button" disabled={busy} className={pill}
                 onClick={() => ask(f.label, { id: f.id, prompt: f.prompt, shown: true, completes: f.completes })}>

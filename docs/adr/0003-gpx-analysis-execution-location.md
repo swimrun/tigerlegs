@@ -2,11 +2,11 @@
 
 Date: 2026-06-15
 
-## Status
+## 1. Status
 
 Accepted
 
-## Context
+## 2. Context
 
 The GPX Swimrun Analyzer now requires a Deno backend service to
 proxy external API calls (OpenStreetMap, Komoot) and securely store
@@ -24,7 +24,7 @@ The analysis pipeline includes:
 5. Distance calculation (Haversine over all trackpoint pairs)
 6. Landscape feature lookup (external API calls — always server-side)
 
-## Quality Criteria
+## 3. Quality Criteria
 
 | Criterion | Weight | Description |
 |-----------|--------|-------------|
@@ -37,9 +37,9 @@ The analysis pipeline includes:
 | Battery/device load | Low | Mobile browsers should not overheat on large files |
 | Deployment simplicity | Low | Fewer moving parts are easier to maintain |
 
-## Options
+## 4. Options
 
-### Option A: Client-side analysis, server-side API proxy only (recommended)
+### 4.1 Option A: Client-side analysis, server-side API proxy only (recommended)
 
 The browser performs all GPX parsing, speed analysis, segmentation,
 and distance calculation. The Deno backend is used only for:
@@ -71,7 +71,7 @@ and distance calculation. The Deno backend is used only for:
 - Progressive processing with progress indicator
 - Warn at >50,000 trackpoints, suggest simplification
 
-### Option B: Server-side analysis with file upload
+### 4.2 Option B: Server-side analysis with file upload
 
 The user uploads the GPX file to the Deno backend, which performs
 all analysis and returns segment data to render.
@@ -93,7 +93,7 @@ all analysis and returns segment data to render.
 - Increases backend complexity and attack surface
 - Free-tier hosting limits (e.g. Deno Deploy) may be hit quickly
 
-### Option C: Hybrid — client-side with server fallback
+### 4.3 Option C: Hybrid — client-side with server fallback
 
 Client performs analysis by default. If processing exceeds a time
 threshold (e.g. 10 seconds) or the browser signals low memory, the
@@ -112,7 +112,7 @@ client offers to upload the file for server-side processing.
 - Still requires server capacity for fallback cases
 - Edge cases in determining when to offer fallback
 
-## Decision
+## 5. Decision
 
 **Option A: Client-side analysis with server-side API proxy only.**
 
@@ -135,7 +135,7 @@ Rationale:
    server-side later if needed. The architecture does not preclude
    Option C in the future.
 
-## Consequences
+## 6. Consequences
 
 - GPX files are processed entirely in the browser; the backend
   never receives or stores GPX file content

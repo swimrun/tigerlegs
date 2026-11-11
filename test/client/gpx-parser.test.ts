@@ -1,4 +1,4 @@
-import { assertEquals } from "@std/assert";
+import { expect, it } from "vitest";
 import { DOMParser } from "@xmldom/xmldom";
 import {
   parseCoordinate,
@@ -19,7 +19,7 @@ ${content}
 
 // --- Valid GPX parsing ---
 
-Deno.test("parseGPX - valid GPX string parses correctly", () => {
+it("parseGPX - valid GPX string parses correctly", () => {
   const gpxData: GPXData = {
     waypoints: [
       {
@@ -54,54 +54,51 @@ Deno.test("parseGPX - valid GPX string parses correctly", () => {
   const xml = gpxDataToXml(gpxData);
   const result = parseGPX(xml);
 
-  assertEquals(result.ok, true);
+  expect(result.ok).toEqual(true);
   if (!result.ok) return;
 
-  assertEquals(result.value.waypoints.length, 1);
-  assertEquals(result.value.waypoints[0].name, "Start");
-  assertEquals(result.value.waypoints[0].symbol, "200");
-  assertEquals(result.value.waypoints[0].description, "Start of swim");
-  assertEquals(result.value.waypoints[0].coordinate.lat, 45.123456);
-  assertEquals(result.value.waypoints[0].coordinate.lon, 5.678901);
-  assertEquals(result.value.waypoints[0].elevation, 235);
+  expect(result.value.waypoints.length).toEqual(1);
+  expect(result.value.waypoints[0].name).toEqual("Start");
+  expect(result.value.waypoints[0].symbol).toEqual("200");
+  expect(result.value.waypoints[0].description).toEqual("Start of swim");
+  expect(result.value.waypoints[0].coordinate.lat).toEqual(45.123456);
+  expect(result.value.waypoints[0].coordinate.lon).toEqual(5.678901);
+  expect(result.value.waypoints[0].elevation).toEqual(235);
 
-  assertEquals(result.value.tracks.length, 1);
-  assertEquals(result.value.tracks[0].name, "Morning Run");
-  assertEquals(result.value.tracks[0].trackpoints.length, 2);
-  assertEquals(result.value.tracks[0].trackpoints[0].index, 0);
-  assertEquals(result.value.tracks[0].trackpoints[1].index, 1);
-  assertEquals(
-    result.value.tracks[0].trackpoints[0].timestamp,
-    "2024-06-15T08:30:00Z",
-  );
+  expect(result.value.tracks.length).toEqual(1);
+  expect(result.value.tracks[0].name).toEqual("Morning Run");
+  expect(result.value.tracks[0].trackpoints.length).toEqual(2);
+  expect(result.value.tracks[0].trackpoints[0].index).toEqual(0);
+  expect(result.value.tracks[0].trackpoints[1].index).toEqual(1);
+  expect(result.value.tracks[0].trackpoints[0].timestamp).toEqual("2024-06-15T08:30:00Z");
 });
 
 // --- Invalid XML returns error Result ---
 
-Deno.test("parseGPX - invalid XML returns error Result", () => {
+it("parseGPX - invalid XML returns error Result", () => {
   const result = parseGPX("<gpx><unclosed>");
-  assertEquals(result.ok, false);
+  expect(result.ok).toEqual(false);
   if (result.ok) return;
-  assertEquals(result.error, "File could not be parsed");
+  expect(result.error).toEqual("File could not be parsed");
 });
 
-Deno.test("parseGPX - completely garbled input returns error Result", () => {
+it("parseGPX - completely garbled input returns error Result", () => {
   const result = parseGPX("this is not xml at all ><< }}");
-  assertEquals(result.ok, false);
+  expect(result.ok).toEqual(false);
   if (result.ok) return;
-  assertEquals(result.error, "File could not be parsed");
+  expect(result.error).toEqual("File could not be parsed");
 });
 
-Deno.test("parseGPX - empty string returns error Result", () => {
+it("parseGPX - empty string returns error Result", () => {
   const result = parseGPX("");
-  assertEquals(result.ok, false);
+  expect(result.ok).toEqual(false);
   if (result.ok) return;
-  assertEquals(result.error, "Empty GPX content provided");
+  expect(result.error).toEqual("Empty GPX content provided");
 });
 
 // --- Empty track (no trkpt) returns error Result ---
 
-Deno.test("parseGPX - empty track with no trkpt returns error Result", () => {
+it("parseGPX - empty track with no trkpt returns error Result", () => {
   const xml = wrapGPX(`
   <trk>
     <name>Empty Track</name>
@@ -109,26 +106,26 @@ Deno.test("parseGPX - empty track with no trkpt returns error Result", () => {
   </trk>`);
 
   const result = parseGPX(xml);
-  assertEquals(result.ok, false);
+  expect(result.ok).toEqual(false);
   if (result.ok) return;
-  assertEquals(result.error, "No track data was found");
+  expect(result.error).toEqual("No track data was found");
 });
 
-Deno.test("parseGPX - GPX with only waypoints and no tracks returns error", () => {
+it("parseGPX - GPX with only waypoints and no tracks returns error", () => {
   const xml = wrapGPX(`
   <wpt lat="45.0" lon="5.0">
     <name>Just a waypoint</name>
   </wpt>`);
 
   const result = parseGPX(xml);
-  assertEquals(result.ok, false);
+  expect(result.ok).toEqual(false);
   if (result.ok) return;
-  assertEquals(result.error, "No track data was found");
+  expect(result.error).toEqual("No track data was found");
 });
 
 // --- Coordinates preserved to 6 decimal places ---
 
-Deno.test("parseGPX - coordinates preserved to 6 decimal places", () => {
+it("parseGPX - coordinates preserved to 6 decimal places", () => {
   const xml = wrapGPX(`
   <trk>
     <name>Test</name>
@@ -140,15 +137,15 @@ Deno.test("parseGPX - coordinates preserved to 6 decimal places", () => {
   </trk>`);
 
   const result = parseGPX(xml);
-  assertEquals(result.ok, true);
+  expect(result.ok).toEqual(true);
   if (!result.ok) return;
 
   const tp = result.value.tracks[0].trackpoints[0];
-  assertEquals(tp.coordinate.lat, 45.123457); // rounded to 6 decimals
-  assertEquals(tp.coordinate.lon, 5.987654); // rounded to 6 decimals
+  expect(tp.coordinate.lat).toEqual(45.123457); // rounded to 6 decimals
+  expect(tp.coordinate.lon).toEqual(5.987654); // rounded to 6 decimals
 });
 
-Deno.test("parseCoordinate - preserves to 6 decimal places", () => {
+it("parseCoordinate - preserves to 6 decimal places", () => {
   const parser = new DOMParser();
   const doc = parser.parseFromString(
     '<trkpt lat="45.1234569" lon="-5.9876541"/>',
@@ -157,11 +154,11 @@ Deno.test("parseCoordinate - preserves to 6 decimal places", () => {
   const element = doc.documentElement as unknown as Element;
 
   const coord = parseCoordinate(element);
-  assertEquals(coord.lat, 45.123457);
-  assertEquals(coord.lon, -5.987654);
+  expect(coord.lat).toEqual(45.123457);
+  expect(coord.lon).toEqual(-5.987654);
 });
 
-Deno.test("parseCoordinate - preserves exact 6-digit values", () => {
+it("parseCoordinate - preserves exact 6-digit values", () => {
   const parser = new DOMParser();
   const doc = parser.parseFromString(
     '<trkpt lat="45.123456" lon="5.678901"/>',
@@ -170,13 +167,13 @@ Deno.test("parseCoordinate - preserves exact 6-digit values", () => {
   const element = doc.documentElement as unknown as Element;
 
   const coord = parseCoordinate(element);
-  assertEquals(coord.lat, 45.123456);
-  assertEquals(coord.lon, 5.678901);
+  expect(coord.lat).toEqual(45.123456);
+  expect(coord.lon).toEqual(5.678901);
 });
 
 // --- Elevation rounded to integer ---
 
-Deno.test("parseGPX - elevation rounded to integer", () => {
+it("parseGPX - elevation rounded to integer", () => {
   const xml = wrapGPX(`
   <trk>
     <name>Test</name>
@@ -194,17 +191,17 @@ Deno.test("parseGPX - elevation rounded to integer", () => {
   </trk>`);
 
   const result = parseGPX(xml);
-  assertEquals(result.ok, true);
+  expect(result.ok).toEqual(true);
   if (!result.ok) return;
 
-  assertEquals(result.value.tracks[0].trackpoints[0].elevation, 235); // rounds up
-  assertEquals(result.value.tracks[0].trackpoints[1].elevation, 234); // rounds down
-  assertEquals(result.value.tracks[0].trackpoints[2].elevation, 235); // .5 rounds up
+  expect(result.value.tracks[0].trackpoints[0].elevation).toEqual(235); // rounds up
+  expect(result.value.tracks[0].trackpoints[1].elevation).toEqual(234); // rounds down
+  expect(result.value.tracks[0].trackpoints[2].elevation).toEqual(235); // .5 rounds up
 });
 
 // --- Timestamps truncated to seconds ---
 
-Deno.test("parseGPX - timestamps truncated to 1-second ISO 8601", () => {
+it("parseGPX - timestamps truncated to 1-second ISO 8601", () => {
   const xml = wrapGPX(`
   <trk>
     <name>Test</name>
@@ -221,20 +218,14 @@ Deno.test("parseGPX - timestamps truncated to 1-second ISO 8601", () => {
   </trk>`);
 
   const result = parseGPX(xml);
-  assertEquals(result.ok, true);
+  expect(result.ok).toEqual(true);
   if (!result.ok) return;
 
-  assertEquals(
-    result.value.tracks[0].trackpoints[0].timestamp,
-    "2024-06-15T08:30:00Z",
-  );
-  assertEquals(
-    result.value.tracks[0].trackpoints[1].timestamp,
-    "2024-06-15T08:30:05Z",
-  );
+  expect(result.value.tracks[0].trackpoints[0].timestamp).toEqual("2024-06-15T08:30:00Z");
+  expect(result.value.tracks[0].trackpoints[1].timestamp).toEqual("2024-06-15T08:30:05Z");
 });
 
-Deno.test("parseGPX - timestamps without milliseconds preserved as-is", () => {
+it("parseGPX - timestamps without milliseconds preserved as-is", () => {
   const xml = wrapGPX(`
   <trk>
     <name>Test</name>
@@ -247,16 +238,13 @@ Deno.test("parseGPX - timestamps without milliseconds preserved as-is", () => {
   </trk>`);
 
   const result = parseGPX(xml);
-  assertEquals(result.ok, true);
+  expect(result.ok).toEqual(true);
   if (!result.ok) return;
 
-  assertEquals(
-    result.value.tracks[0].trackpoints[0].timestamp,
-    "2024-06-15T08:30:00Z",
-  );
+  expect(result.value.tracks[0].trackpoints[0].timestamp).toEqual("2024-06-15T08:30:00Z");
 });
 
-Deno.test("parseGPX - trackpoints without timestamps return null", () => {
+it("parseGPX - trackpoints without timestamps return null", () => {
   const xml = wrapGPX(`
   <trk>
     <name>Test</name>
@@ -268,15 +256,15 @@ Deno.test("parseGPX - trackpoints without timestamps return null", () => {
   </trk>`);
 
   const result = parseGPX(xml);
-  assertEquals(result.ok, true);
+  expect(result.ok).toEqual(true);
   if (!result.ok) return;
 
-  assertEquals(result.value.tracks[0].trackpoints[0].timestamp, null);
+  expect(result.value.tracks[0].trackpoints[0].timestamp).toEqual(null);
 });
 
 // --- Additional structural tests ---
 
-Deno.test("parseWaypoints - parses waypoints from document", () => {
+it("parseWaypoints - parses waypoints from document", () => {
   const xml = wrapGPX(`
   <wpt lat="45.0" lon="5.0">
     <ele>100.8</ele>
@@ -295,16 +283,16 @@ Deno.test("parseWaypoints - parses waypoints from document", () => {
   const doc = parser.parseFromString(xml, "application/xml") as unknown as Document;
   const waypoints = parseWaypoints(doc);
 
-  assertEquals(waypoints.length, 2);
-  assertEquals(waypoints[0].name, "WP1");
-  assertEquals(waypoints[0].symbol, "200");
-  assertEquals(waypoints[0].description, "First waypoint");
-  assertEquals(waypoints[0].elevation, 101); // rounded
-  assertEquals(waypoints[1].name, "WP2");
-  assertEquals(waypoints[1].elevation, 200); // rounded
+  expect(waypoints.length).toEqual(2);
+  expect(waypoints[0].name).toEqual("WP1");
+  expect(waypoints[0].symbol).toEqual("200");
+  expect(waypoints[0].description).toEqual("First waypoint");
+  expect(waypoints[0].elevation).toEqual(101); // rounded
+  expect(waypoints[1].name).toEqual("WP2");
+  expect(waypoints[1].elevation).toEqual(200); // rounded
 });
 
-Deno.test("parseTracks - parses tracks with sequential trackpoint indices", () => {
+it("parseTracks - parses tracks with sequential trackpoint indices", () => {
   const xml = wrapGPX(`
   <trk>
     <name>Trail</name>
@@ -321,19 +309,18 @@ Deno.test("parseTracks - parses tracks with sequential trackpoint indices", () =
   const doc = parser.parseFromString(xml, "application/xml") as unknown as Document;
   const tracks = parseTracks(doc);
 
-  assertEquals(tracks.length, 1);
-  assertEquals(tracks[0].name, "Trail");
-  assertEquals(tracks[0].trackpoints.length, 3);
+  expect(tracks.length).toEqual(1);
+  expect(tracks[0].name).toEqual("Trail");
+  expect(tracks[0].trackpoints.length).toEqual(3);
   // Sequential indices across segments
-  assertEquals(tracks[0].trackpoints[0].index, 0);
-  assertEquals(tracks[0].trackpoints[1].index, 1);
-  assertEquals(tracks[0].trackpoints[2].index, 2);
+  expect(tracks[0].trackpoints[0].index).toEqual(0);
+  expect(tracks[0].trackpoints[1].index).toEqual(1);
+  expect(tracks[0].trackpoints[2].index).toEqual(2);
 });
 
 // --- Property-Based Tests ---
 
 import fc from "fast-check";
-import { assert } from "@std/assert";
 import { arbitraryGPXData } from "../generators.ts";
 
 /**
@@ -347,20 +334,19 @@ import { arbitraryGPXData } from "../generators.ts";
  * - Timestamps to 1-second precision
  * - Idempotent (parsing same string twice yields identical results)
  */
-Deno.test("Property 2: GPX parse round-trip preserves coordinate and temporal data", () => {
-  fc.assert(
-    fc.property(arbitraryGPXData, (originalData) => {
+it("Property 2: GPX parse round-trip preserves coordinate and temporal data", () => {
+  fc.assert(fc.property(arbitraryGPXData, (originalData) => {
       const xml = gpxDataToXml(originalData);
       const result = parseGPX(xml);
 
       // Must parse successfully
-      assert(result.ok, `Failed to parse generated GPX: ${!result.ok ? result.error : ""}`);
+      expect(result.ok, `Failed to parse generated GPX: ${!result.ok ? result.error : ""}`).toBeTruthy();
       if (!result.ok) return;
 
       const parsed = result.value;
 
       // Same number of waypoints
-      assertEquals(parsed.waypoints.length, originalData.waypoints.length);
+      expect(parsed.waypoints.length).toEqual(originalData.waypoints.length);
 
       // Verify each waypoint's coordinate and elevation
       for (let i = 0; i < originalData.waypoints.length; i++) {
@@ -370,22 +356,22 @@ Deno.test("Property 2: GPX parse round-trip preserves coordinate and temporal da
         // Coordinates preserved to 6 decimal places
         const expectedLat = Math.round(orig.coordinate.lat * 1_000_000) / 1_000_000;
         const expectedLon = Math.round(orig.coordinate.lon * 1_000_000) / 1_000_000;
-        assertEquals(got.coordinate.lat, expectedLat);
-        assertEquals(got.coordinate.lon, expectedLon);
+        expect(got.coordinate.lat).toEqual(expectedLat);
+        expect(got.coordinate.lon).toEqual(expectedLon);
 
         // Elevation preserved to integer
-        assertEquals(got.elevation, Math.round(orig.elevation));
+        expect(got.elevation).toEqual(Math.round(orig.elevation));
       }
 
       // Same number of tracks
-      assertEquals(parsed.tracks.length, originalData.tracks.length);
+      expect(parsed.tracks.length).toEqual(originalData.tracks.length);
 
       // Verify each track's trackpoints
       for (let t = 0; t < originalData.tracks.length; t++) {
         const origTrack = originalData.tracks[t];
         const gotTrack = parsed.tracks[t];
 
-        assertEquals(gotTrack.trackpoints.length, origTrack.trackpoints.length);
+        expect(gotTrack.trackpoints.length).toEqual(origTrack.trackpoints.length);
 
         for (let p = 0; p < origTrack.trackpoints.length; p++) {
           const origTp = origTrack.trackpoints[p];
@@ -394,42 +380,37 @@ Deno.test("Property 2: GPX parse round-trip preserves coordinate and temporal da
           // Coordinates preserved to 6 decimal places
           const expectedLat = Math.round(origTp.coordinate.lat * 1_000_000) / 1_000_000;
           const expectedLon = Math.round(origTp.coordinate.lon * 1_000_000) / 1_000_000;
-          assertEquals(gotTp.coordinate.lat, expectedLat);
-          assertEquals(gotTp.coordinate.lon, expectedLon);
+          expect(gotTp.coordinate.lat).toEqual(expectedLat);
+          expect(gotTp.coordinate.lon).toEqual(expectedLon);
 
           // Elevation preserved to integer
-          assertEquals(gotTp.elevation, Math.round(origTp.elevation));
+          expect(gotTp.elevation).toEqual(Math.round(origTp.elevation));
 
           // Timestamps preserved to 1-second precision
           if (origTp.timestamp !== null) {
-            assert(gotTp.timestamp !== null, "Expected timestamp to be preserved");
+            expect(gotTp.timestamp !== null, "Expected timestamp to be preserved").toBeTruthy();
             // Both should be truncated to second precision
             const origDate = new Date(origTp.timestamp);
             const gotDate = new Date(gotTp.timestamp!);
             // Within 1 second of each other (truncation to seconds)
-            assert(
-              Math.abs(origDate.getTime() - gotDate.getTime()) < 1000,
-              `Timestamps differ by more than 1 second: ${origTp.timestamp} vs ${gotTp.timestamp}`,
-            );
+            expect(Math.abs(origDate.getTime() - gotDate.getTime()) < 1000, `Timestamps differ by more than 1 second: ${origTp.timestamp} vs ${gotTp.timestamp}`).toBeTruthy();
           } else {
-            assertEquals(gotTp.timestamp, null);
+            expect(gotTp.timestamp).toEqual(null);
           }
 
           // Sequential index preserved
-          assertEquals(gotTp.index, p);
+          expect(gotTp.index).toEqual(p);
         }
       }
 
       // Idempotency: parsing the same XML string twice yields identical results
       const result2 = parseGPX(xml);
-      assert(result2.ok);
+      expect(result2.ok).toBeTruthy();
       if (!result2.ok) return;
 
-      assertEquals(parsed.waypoints, result2.value.waypoints);
-      assertEquals(parsed.tracks, result2.value.tracks);
-    }),
-    { numRuns: 50 },
-  );
+      expect(parsed.waypoints).toEqual(result2.value.waypoints);
+      expect(parsed.tracks).toEqual(result2.value.tracks);
+    }), { numRuns: 50 });
 });
 
 /**
@@ -441,7 +422,7 @@ Deno.test("Property 2: GPX parse round-trip preserves coordinate and temporal da
  * a Result with ok: false and a non-empty error message.
  * The function SHALL never throw an exception for malformed input.
  */
-Deno.test("Property 3: Invalid XML produces error result", () => {
+it("Property 3: Invalid XML produces error result", () => {
   // Generate arbitrary non-XML strings that are unlikely to be valid XML
   const arbitraryNonXml = fc.oneof(
     // Random strings
@@ -458,15 +439,14 @@ Deno.test("Property 3: Invalid XML produces error result", () => {
     ),
   );
 
-  fc.assert(
-    fc.property(arbitraryNonXml, (input) => {
+  fc.assert(fc.property(arbitraryNonXml, (input) => {
       // Should never throw
       let result;
       try {
         result = parseGPX(input);
       } catch (e) {
         // Property violated: parseGPX should never throw
-        assert(false, `parseGPX threw an exception for input: ${JSON.stringify(input.slice(0, 50))}. Error: ${e}`);
+        expect(false, `parseGPX threw an exception for input: ${JSON.stringify(input.slice(0, 50))}. Error: ${e}`).toBeTruthy();
         return;
       }
 
@@ -474,12 +454,7 @@ Deno.test("Property 3: Invalid XML produces error result", () => {
       // that's fine — the property only concerns truly invalid XML.
       // But if it's not ok, the error message must be non-empty.
       if (!result.ok) {
-        assert(
-          result.error.length > 0,
-          "Error message must be non-empty when parsing fails",
-        );
+        expect(result.error.length > 0, "Error message must be non-empty when parsing fails").toBeTruthy();
       }
-    }),
-    { numRuns: 100 },
-  );
+    }), { numRuns: 100 });
 });

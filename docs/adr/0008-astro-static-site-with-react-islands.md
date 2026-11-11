@@ -2,11 +2,11 @@
 
 Date: 2026-11-01
 
-## Status
+## 1. Status
 
 Accepted for implementation on 2026-11-01 following the project owner's request to implement this ADR on a feature branch.
 
-## Context
+## 2. Context
 
 Before this migration, TigerLegs built static HTML, CSS and browser JavaScript with Deno tasks. The extractor, About page and generated Markdown guidebook shared visual conventions, but their page shells were maintained separately. The requested direction is one consistent layout and navigation, with directly linkable pages rather than a different menu on every page.
 
@@ -18,7 +18,7 @@ The project owner explicitly requires a **React-based interactive frontend**, no
 
 [ADR-0009](./0009-react-for-interactive-frontend.md) records the separate React framework choice, its familiarity and learning rationale, and alternatives. This ADR compares site frameworks under that UI constraint; its matrix is not evidence that React is superior to Vue or Angular.
 
-## Research method: Multi-criteria decision making
+## 3. Research method: Multi-criteria decision making
 
 Use the **Multi-criteria decision making** workshop method from ICT Research Methods. Its stated purpose is to "Improve the quality of complex decisions"; its ingredients include "Reliable information about the different alternatives" and "A lack of prejudice" (ICT Research Methods, n.d.).
 
@@ -26,7 +26,7 @@ The method calls for investigating alternatives, criteria and their weights, inv
 
 The criteria derive from the project owner's requests for consistent styling, static Pages hosting, directly linkable HTML pages and a React-based interactive frontend. **Weights and scores are provisional architectural judgments**, not measurements or stakeholder-approved results. The project owner and maintainers should review them before accepting this ADR; primary-source documentation supports capabilities, but does not establish migration cost or actual performance.
 
-### Hard constraints
+### 3.1 Hard constraints
 
 An eligible implementation must:
 
@@ -38,13 +38,13 @@ An eligible implementation must:
 
 These constraints are not tradeable against a higher weighted score.
 
-## Alternatives
+## 4. Alternatives
 
-### A. Keep the existing Deno static build
+### 4.1 A. Keep the existing Deno static build
 
 Keep the current HTML pages and Markdown renderer, extracting a shared template where necessary. This has the lowest immediate migration risk and retains the existing toolchain. It meets the static hosting constraints but, unchanged, fails the React frontend requirement. Adding a React build and UI migration would be a different variant requiring evaluation. It is the baseline, not a deliberately weak alternative.
 
-### B. Astro static output with a React extractor
+### 4.2 B. Astro static output with a React extractor
 
 Use Astro for build-time HTML pages, shared layouts and Markdown content, with its React integration for the interactive frontend. Build the extractor as a coordinated React application mounted in an Astro page. Reuse the existing pure TypeScript analysis modules and Web Worker; integrate Leaflet through a React component with explicit mount/update/unmount lifecycle management.
 
@@ -52,25 +52,25 @@ Astro documents static, prerendered deployment to GitHub Pages (Astro, n.d.-a). 
 
 This matches a documentation-heavy site with one interactive analysis page. Astro is not a React-only SPA. Migrating the UI to React is required by this proposal, but rewriting the analysis algorithms is not. Browser-dependent map and Worker setup must run on the client, not during static rendering.
 
-### C. Next.js static export
+### 4.3 C. Next.js static export
 
 Use Next.js with `output: 'export'`. This is a valid static-hosting alternative: "When running `next build`, Next.js generates an HTML file per route" (Vercel, n.d.).
 
 Rejecting Next.js because it cannot run on Pages would be incorrect. The constraint is that runtime server features cannot be used in the exported site. Next.js offers a React-centred route model and a possible later server deployment, but that future capability is not currently required; maintainers would need to enforce static-export restrictions.
 
-### D. Vite + React SPA
+### 4.4 D. Vite + React SPA
 
 Use Vite to build a React app with shared components and a browser router. Vite documents static deployment and GitHub Pages base-path configuration (Vite, n.d.).
 
 The plain SPA variant does **not** meet the per-page HTML constraint. Hash routing makes client routes addressable but does not generate separate HTML pages; a 404 fallback is not equivalent to native static routing. A prerendering or multipage layer could make this option eligible, but would require a separate design and evaluation. Its score below is diagnostic only and does not make the plain SPA eligible.
 
-### E. Eleventy with browser TypeScript
+### 4.5 E. Eleventy with browser TypeScript
 
 Use a static-site generator for page templates and documentation, keeping the extractor as browser JavaScript. Eleventy provides a JavaScript-based static-site build alternative (Eleventy, n.d.).
 
 This is a credible content-first option with shared templates, but the browser-TypeScript variant fails the React frontend requirement. Adding React would require additional build integration and a UI migration, with a new evaluation of that variant.
 
-## Provisional decision matrix
+## 5. Provisional decision matrix
 
 Scores: **1 = weak fit, 3 = adequate fit, 5 = strong fit**. Intermediate scores express relative fit. All scores concern the proposed configurations above, not universal rankings of frameworks.
 
@@ -93,7 +93,7 @@ Astro's lead comes from native static page composition and selective interactivi
 
 **Sensitivity check:** if avoiding migration becomes the dominant priority, moving 20 percentage points to migration simplicity (35%) from shared layouts (10%) and selective interactivity (10%) changes Deno's score to **3.90** and Astro's to **3.95**; Deno remains ineligible without a React migration. Among eligible variants, moving 15 percentage points from selective interactivity (5%) to React integration (25%) reduces Astro's lead over Next.js from **0.50** to **0.20**. These overlapping criteria should also be reviewed for double counting; a demand for React-based page composition throughout, rather than only the interactive application, would warrant revisiting the choice.
 
-## Decision
+## 6. Decision
 
 Prefer **B: Astro static output with a React-based interactive frontend**, subject to stakeholder review and a successful migration prototype.
 
@@ -101,7 +101,7 @@ Use a shared Astro layout for the extractor, About page, guidebook and ADR pages
 
 Use ordinary static navigation initially. SPA-like navigation is optional later and must preserve direct links, accessibility and browser history. On GitHub Pages there is no backend router to align: the build's route-to-file mapping must match the public links. Any later API routing belongs to a separate backend decision.
 
-## Consequences and acceptance evidence
+## 7. Consequences and acceptance evidence
 
 - Add a site-build toolchain and dependencies during migration; retain Deno for analysis tests and existing non-site tasks. The exact package manager and build orchestration remain implementation decisions.
 - Keep map/table/selection coordination intact. Do not split tightly coupled extractor state across islands merely to use the framework.
@@ -115,7 +115,7 @@ Use ordinary static navigation initially. SPA-like navigation is optional later 
 
 Merge and deployment remain gated by the validation above. This decision does not supersede the browser-local analysis decision in [ADR-0003](./0003-gpx-analysis-execution-location.md).
 
-## Implementation
+## 8. Implementation
 
 The feature branch introduces Astro static file-format routes, a shared `src/layouts/SiteLayout.astro`, and a coordinated React extractor in `src/components/`. Deno builds the analysis Worker and prepares sample/image assets; npm builds the site into `dist/`. GitHub Actions publishes that directory only after analysis, type and browser tests pass. All nine ADRs are generated at `adr/*.html`, including links between ADRs and chapter 13.
 

@@ -2,27 +2,27 @@
 
 Date: 2026-11-10
 
-## Status
+## 1. Status
 
-Accepted on 11 November 2026: the back end is Node.js with TypeScript (see [Decision](#decision)).
-The decision was taken before the persistence part of the spike (C10) was measured, which is the main risk; the [revisit triggers](#consequences-and-revisit-triggers) say what would reopen it.
+Accepted on 11 November 2026: the back end is Node.js with TypeScript (see [Decision](#11-decision)).
+The decision was taken before the persistence part of the spike (C10) was measured, which is the main risk; the [revisit triggers](#12-consequences-and-revisit-triggers) say what would reopen it.
 It builds on [ADR-0002](./0002-use-deno-with-typescript.md), [ADR-0004](./0004-host-deno-backend-on-eu-vps.md), [ADR-0005](./0005-rest-json-api-for-multi-client-support.md) and [ADR-0013](./0013-back-end-is-optional.md); the fate of ADR-0002 and ADR-0004 follows in #61.
 
-## Context
+## 2. Context
 
 The back end is optional and a premium feature ([ADR-0013](./0013-back-end-is-optional.md)): saved and shared courses, a hosted terrain service on our own Overpass server (#57), the MCP server and Strava integration ([ADR-0010](./0010-tigerlegs-mcp-server-and-strava-integration.md)) and training plans (spec 003).
 It runs as a container on a small EU VPS (ADR-0004).
 Today it is a small Deno service with a disk cache; ADR-0002 chose Deno and TypeScript for the whole project, when the server needs were minimal.
 Issue #13 asks whether that holds once persistence, accounts and external APIs come in.
 
-### Overpass does not decide the language
+### 2.1 Overpass does not decide the language
 
 The Overpass API is plain HTTP: a POST with a query in Overpass QL, answered with JSON (OpenStreetMap Wiki, n.d.-a, n.d.-b).
 The example on the wiki uses `fetch` in JavaScript, but any language that can send an HTTP request can do the same; there is no JavaScript-only Overpass API.
 The advantage TypeScript has here is different: the browser already contains the working client (`queryOverpass`, with backoff and cache), and a TypeScript back end could reuse it and the water-detection code.
 That is a code-sharing argument (C4), not an Overpass argument.
 
-### Deno after October 2026
+### 2.2 Deno after October 2026
 
 On 9 October 2026 Cloudflare announced that Deno joins it: Ryan Dahl and Bert Belder lead an effort to merge Deno's `celld` into Cloudflare's `workerd` and to make self-hosting of the Workers programming model a first-class option (Cloudflare, 2026).
 For the Deno runtime itself, a Deno team member states in the project's issue tracker (Deno, 2026): the runtime stays MIT licensed and forkable; the Deno Company maintains it until October 2027 with monthly 2.9.x LTS releases (bug and security fixes); no new features are developed, and feature pull requests are closed; the team is trying to place Deno in a foundation but has nothing to report.
@@ -35,14 +35,14 @@ What this means for us:
 - Our own exposure is moderate: 45 source and test files use `Deno.*` APIs, 38 import `@std/*` from JSR, and `deno test` and `deno task` run the tests and builds, while the site itself is built with Astro and npm. The back end is 6 files.
 - Deno KV and Deno Deploy are platform services; we use neither, and we should not start. Persistence for the premium features is PostgreSQL in a container, which works the same on every option below and keeps us free to host in the EU.
 
-### Java and .NET: what the LTS releases offer, and under which licence
+### 2.3 Java and .NET: what the LTS releases offer, and under which licence
 
 - **OpenJDK or Oracle JDK.** The Oracle JDK builds are made from the same OpenJDK source; vendor and licensing write-ups find no meaningful performance difference between them and Temurin, Corretto or Zulu on the same Java version, and the difference left is the licence: OpenJDK is GPLv2 with the Classpath Exception, while Oracle JDK 17, 21 and 25 are free in production under Oracle's No-Fee Terms and Conditions, but only until a year after the next LTS (OpenLogic, n.d.). So the language and runtime features below come with the free OpenJDK distributions too; a Temurin or Corretto build avoids the licence question altogether (Adoptium, n.d.).
 - **Startup time.** Project Leyden's ahead-of-time cache is part of OpenJDK itself (from JDK 24, improved in 25) and speeds up the start of a Spring Boot application without a different JDK (InfoQ, 2025; Halbritter, 2026). GraalVM Native Image compiles to a native binary instead, with a very short start and low memory; Spring Boot, Quarkus and Micronaut support it. GraalVM is a separate distribution: Oracle GraalVM is free in production under the GraalVM Free Terms and Conditions, and there is a Community Edition (GraalVM, n.d.). CRaC (a checkpointed process) is a third route, offered by some OpenJDK vendors. Published numbers differ per application and are vendor or blog figures: to be measured in our spike.
 - **Project Valhalla.** Value classes (JEP 401), the Java counterpart of structs that flatten data in memory, are integrated as a *preview* feature in JDK 28 (March 2027), disabled by default, and not expected to be final even in JDK 29, the next LTS (InfoQ, 2026). They are not in Java 25 and cannot be relied upon for this decision; like everything in OpenJDK they will come to all builds.
 - **.NET 10.** The .NET runtime is licensed under MIT and is a .NET Foundation project (.NET Foundation, n.d.); .NET 10 is LTS until 14 November 2028 (Microsoft, n.d.). That ASP.NET Core was far behind Java servers such as Jetty is an old picture: for years it has been at or near the top of the TechEmpower results. Those results were archived (see below), so no current neutral comparison exists for .NET 10 against Java 25, and we measure ourselves.
 
-### Server-side analysis for weak devices
+### 2.4 Server-side analysis for weak devices
 
 An option to keep open: let the back end do some of the GPX analysis for devices that are too slow, such as old phones or simple browsers, as a premium or fallback service.
 That bends ADR-0003 (analysis in the browser, the GPX file stays on the device): the file would be uploaded, so it must be opt-in, processed in the EU and not stored, and the privacy review of roadmap M9 applies.
@@ -50,7 +50,7 @@ First find out whether the need is real: today the analysis of the Rügen record
 If the back end does run the analysis, TypeScript decides it: a Node.js (or Deno) back end runs the very code the browser runs, one implementation with one set of tests, while every other language needs a second implementation that must stay equal to the first (the official-split tests of the Cannes and Rondje Eilanden recordings would be the parity check).
 Weighing this in C4 is a decision of the owner; the sensitivity below shows what it does to the totals.
 
-### Does Astro put pressure on the choice?
+### 2.5 Does Astro put pressure on the choice?
 
 Little. The site is Astro in its default static mode on GitHub Pages: "By default, your entire Astro site will be prerendered, and static HTML pages will be sent to the browser", and an adapter (Node.js, Cloudflare, Netlify, Vercel) is only needed for pages rendered on demand (Astro, n.d.-a). A static site that calls a separate API needs no adapter, and in static mode Astro endpoints only run at build time (Astro, n.d.-b). So the back end is a separate service behind a REST/JSON contract (ADR-0005), and Astro does not care what it is written in.
 
@@ -72,7 +72,7 @@ Where pressure could appear:
 - **Toolchains in the repository.** Astro and Playwright already need Node, and today Deno runs the tests. A Java, Kotlin or .NET back end adds a JDK or SDK and a build tool (Gradle or Maven) to every contributor's machine and to CI; a Node back end adds none. This is part of C4.
 - **Origins and cookies.** The site lives at `swimrun.group/tigerlegs`. A back end on a subdomain of the same site (for example `api.swimrun.group`) lets sign-in cookies work without cross-site settings, and CORS is already handled (`ALLOWED_ORIGINS`). This holds for every option.
 
-### If an LLM writes the code anyway
+### 2.6 If an LLM writes the code anyway
 
 Raw speed does not decide this back end, which will see few requests; the interesting question is what changes when a language model writes most of the code.
 It lowers the cost of writing in an unfamiliar language and so favours languages with a strong compiler (Rust, Go, Kotlin, C#, Java): the compiler catches many mistakes a model makes before they run.
@@ -81,18 +81,18 @@ Models also write best where the training data is richest, which favours TypeScr
 Rust frameworks such as Actix and Axum are reported among the fastest in blog comparisons of the last TechEmpower round; that is not verified here and does not matter at our load.
 What Rust offers at our scale is a very small image and memory use and a strict compiler; what it costs is a smaller batteries-included ecosystem for accounts and OAuth, a steeper language to review, and a library that is still pre-1.0.
 
-### What the owner has said (11 November 2026)
+### 2.7 What the owner has said (11 November 2026)
 
 Interest in Java and in getting to know it better, in Spring Boot or another Java microservice framework (Micronaut, Quarkus, Javalin), in Project Leyden for the start-up time, and in Spring Data JDBC for its support of the aggregate pattern; a long-standing interest in Domain-Driven Design; and a liking for database migrations, as known from EF Core and Flyway.
 These are inputs for C1 and for C10, not scores; the C1 scores stay the owner's.
 
-## Method
+## 3. Method
 
 The comparison follows the [ICT Research Methods multi-criteria decision making method](https://ictresearchmethods.nl/workshop/multi-criteria-decision-making/), as ADR-0009 did: a preparation phase (alternatives, criteria, weights, the stakeholders involved) and an evaluation phase (judge each option per criterion), with time to iterate between judging the options and adjusting the criteria (ICT Research Methods, n.d.).
 The page gives no scoring scale or formula, so this record chooses the plain weighted sum: scores run from 1 (poor) to 5 (excellent), weights add up to 100, and the total is the sum of weight times score.
 The stakeholder is the project owner (learning goals, own time, self-hosting in Europe); contributors and later coaches and organisers can be added when they exist.
 
-## Alternatives
+## 4. Alternatives
 
 Only supported releases are considered: Java 25 is an LTS release, available from Temurin from September 2025 until at least September 2031 (Adoptium, n.d.); .NET 10 is an LTS release of November 2025 with support until 14 November 2028 (Microsoft, n.d.).
 .NET 11 (STS) was released today and is left out for that reason.
@@ -110,7 +110,7 @@ Only supported releases are considered: Java 25 is an LTS release, available fro
 | **Go**           | Go                            | Small static binary, very light on a small VPS                                                                                                                                                                                                     |
 | **Axum**         | Rust                          | A Rust web library on hyper and tower, MIT, maintained by the Tokio project; among the fastest web stacks, tiny memory and image; pre-1.0 (0.8 on crates.io) (Tokio, n.d.)                                                                         |
 
-## Criteria and weights (draft)
+## 5. Criteria and weights (draft)
 
 | #   | Criterion                                                            | Weight | What it asks                                                                                                                                                    |
 | --- | -------------------------------------------------------------------- | ------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -127,7 +127,7 @@ Only supported releases are considered: Java 25 is an LTS release, available fro
 
 C8 is named *autonomy* here. *Sovereignty* is also used for this idea, but the word has other uses; what is meant is the ability to run, move and fix our own service without asking a vendor.
 
-### C4 and C6: a portable core, enforced, and the test runner
+### 5.1 C4 and C6: a portable core, enforced, and the test runner
 
 A TypeScript back end only shares code with the front end if the shared modules stay free of Deno and of the browser.
 That is an architecture rule, so it is enforced by tooling and not by review (`tsconfig.shared.json`, `test/portability.test.ts`, two CI steps):
@@ -145,7 +145,7 @@ Whether Vitest accepts TypeScript that Node's stripping rejects (enums), and whe
 
 **Dependency audit.** `deno audit` reads `deno.lock` (Deno, n.d.), which holds 411 npm packages; `package-lock.json` holds 647. The Storybook chain `@storybook/react-vite` → `glob` → `minimatch`, which `npm audit` reports (4 moderate), is only in the second file, so `deno audit` cannot see it. `npm audit --omit=dev`, now a CI step, reports 0 vulnerabilities for what ships: the findings are in development tooling.
 
-### C5: what the roadmap will ask of the ecosystem
+### 5.2 C5: what the roadmap will ask of the ecosystem
 
 The weight of C5 is low now and will grow with the roadmap (M9 to M12):
 
@@ -158,7 +158,7 @@ The weight of C5 is low now and will grow with the roadmap (M9 to M12):
 A payment provider is a REST and webhook integration, so every option can do it; what differs is whether an official client library exists in our language and how much of the work we write ourselves (a small surface: create a payment, receive a webhook, check the status).
 Node.js, .NET and Python have official libraries; Java, Go and Rust would use a community library or direct HTTP calls.
 
-### C7: supply chain
+### 5.3 C7: supply chain
 
 Poisoned dependencies are the most active attack on software in 2026, and npm is by far the main target: in the first half of 2026 npm accounted for about four in five of the malicious packages indexed by one security vendor, PyPI for about one in eleven, and Go, Cargo and NuGet for about one in a hundred each, with Maven Central not in the list (Phoenix Security, 2026; a vendor report, so the proportions are indicative).
 Worm-like campaigns (Shai-Hulud and its successors) steal maintainers' tokens and republish themselves into the packages those maintainers control; on 4 August 2026 one such attack began in packages such as keyv and flat-cache and spread to hundreds of packages with more than two billion monthly installs (eSecurity Planet, 2026).
@@ -166,7 +166,7 @@ So Node.js scores low on C7, and the front end is exposed already: Astro, React 
 Mitigations apply to any option and lower the exposure but do not remove it: install from the lock file only (`npm ci`), do not run dependency install scripts, wait a few days before taking new releases, keep few direct dependencies, and pin and verify.
 A Java, Go or .NET back end has a smaller attack surface for the server itself because the platform brings more in its standard library and its frameworks pull fewer small packages; the front end stays on npm in every case.
 
-### C10: the database
+### 5.4 C10: the database
 
 The back end will store accounts, teams and app groups, courses and their variants, swimrunner profiles and saved recordings (roadmap M9, M10, M12).
 PostgreSQL is the working assumption for all of it, and it covers more than tables: JSONB columns for flexible course documents, and the PostGIS extension for geometry (course lines, bounding boxes, the nearest course for a recording).
@@ -175,7 +175,7 @@ The choice of database is independent of the language: every option below has a 
 Is the database the bottleneck? Not at our scale: the heavy computation stays in the browser (ADR-0003), the server does mostly small reads and writes, and the usual causes of slow queries (missing indexes, one query per row, no spatial index) are design matters, not language matters. Spatial queries need a GiST index, connections need a pool, and a small VPS must share its memory between the database and the service; we measure with realistic data in the spike instead of guessing. The slower dependency today is the shared public Overpass server, which is why #57 exists.
 A persistent-storage decision record (PostgreSQL with PostGIS, files, caches) follows this one (#63).
 
-### Persistence for a domain model with aggregates
+### 5.5 Persistence for a domain model with aggregates
 
 The owner works in Domain-Driven Design and values persistence that follows the aggregate pattern: one repository per aggregate root, consistency inside an aggregate, and references between aggregates by id.
 The model we expect has aggregates such as a course (with its variants and legs), a team or app group (with its members), a swimrunner profile and a recording, where a recording refers to a course by id instead of containing it.
@@ -189,7 +189,7 @@ What each ecosystem offers for that:
 
 So Java with Spring Data JDBC, .NET with EF Core and Python with SQLAlchemy have the best-documented fit with the aggregate pattern; of the Java frameworks only Spring Data JDBC is built around it, Micronaut Data JDBC comes close in mechanics and Quarkus follows the JPA model, and the scores for C10 reflect that (Spring Boot 5, Micronaut and Quarkus 4).
 
-### Transactions, integrity and growth (Node.js)
+### 5.6 Transactions, integrity and growth (Node.js)
 
 The question is whether the TypeScript route gives ACID inside an aggregate and a way to eventual consistency between aggregates when the system grows.
 PostgreSQL itself provides the ACID guarantees; what matters is that the mapper uses them well.
@@ -206,7 +206,7 @@ The MikroORM page on the unit of work says the changes run in a transaction "if 
 
 **Flyway in Node.js.** Flyway is a Java tool with a command line and an official container image that supports its Community, Teams and Enterprise editions (Redgate, n.d.), so a Node.js back end uses it the same way as a Java one: a container that applies the SQL migrations before the service starts. Wrappers such as `node-flywaydb` exist but need a JVM on the machine, and Node-native tools (umzug, node-pg-migrate, MikroORM's own migrator) are the alternative if the JVM image is unwelcome; the SQL files stay the same either way.
 
-### Database migrations
+### 5.7 Database migrations
 
 The owner likes migrations, as known from EF Core and from Flyway in Java: schema changes that are versioned, reviewable and repeatable. There are two styles, and the tools of the options fall in one or both:
 
@@ -217,7 +217,7 @@ Flyway and Liquibase are separate tools with a command line and a container imag
 PostGIS asks for hand-written SQL in any case (`CREATE EXTENSION postgis`, spatial indexes), so SQL migrations are the common ground and a generator from the ORM is an aid to draft them, not the source of truth.
 The working assumption is therefore: SQL migrations with Flyway, whatever the language, and the choice of ORM does not decide this.
 
-## Evaluation (provisional)
+## 6. Evaluation (provisional)
 
 Scores 1 to 5. C1 is left to the owner. The C3 score of Deno is measured; the other C3 scores are estimates to be measured in a spike. The rest are judgements from the reasons above and open to challenge; they are mine, not the owner's, and the TypeScript options profit from C4. C8 and C9 for Deno reflect the events of October 2026: the objective reason is not that Cloudflare owns it (the runtime stays MIT and forkable) but that its own maintainers stop developing it after October 2027 unless a foundation or a fork takes over. Until then Deno remains a usable choice with monthly security and bug-fix releases; the owner can weigh C9 lower.
 
@@ -236,14 +236,14 @@ Scores 1 to 5. C1 is left to the owner. The C3 score of Deno is measured; the ot
 
 Measured for Deno on 2026-11-10: the API image is 117 MB and the idle container uses 21.7 MiB of memory (`docker stats`, no traffic, health endpoint answering).
 
-### Performance of the LTS releases
+### 6.1 Performance of the LTS releases
 
 There is no neutral, current cross-framework benchmark to lean on: the TechEmpower Framework Benchmarks were archived on 24 March 2026, and their last round (23, February 2025) predates both .NET 10 and Java 25 (Kalium, 2026).
 Blog posts claim that .NET 10 reaches start times under 100 ms with Native AOT and that Java's Project Leyden AOT cache cuts Spring Boot's start by half or more; those are secondary claims that we have not verified.
 For this back end, raw throughput hardly matters: it will see few requests.
 What matters is the idle memory, the image size and the start time in a container, and those are measured, not read off a benchmark: the spike below builds the same small service (health endpoint plus one Overpass query with backoff) on each shortlisted option.
 
-### Java with GraalVM Native Image: how much trouble?
+### 6.2 Java with GraalVM Native Image: how much trouble?
 
 The frameworks do most of the work: Quarkus, Micronaut and Spring Boot process the application at build time, so a REST service with PostgreSQL is a supported path in all three, and a community repository of reachability metadata covers the common libraries (Oracle, n.d.).
 The cost is in the build, not in running it: a native build takes minutes (eight to ten minutes in a pipeline is a common report) and wants about 8 GB of memory (Tech Holder, 2026; a blog post), more than the 5.8 GiB our Docker Desktop has today.
@@ -253,7 +253,7 @@ Project Leyden's AOT cache in OpenJDK is the lighter route: no separate compiler
 For a back end that runs all day on a VPS, start time hardly matters and memory does, so the spike measures idle memory of the JVM (with a small heap and a cheap garbage collector), with Leyden, and as a native image, before we decide that native is worth its build cost.
 GraalVM does not by itself favour Java over Node.js: it narrows the memory gap at the price of build time and compatibility work.
 
-### C1 and the totals (11 November 2026)
+### 6.3 C1 and the totals (11 November 2026)
 
 The owner confirmed 3 for Node.js with TypeScript ("fine, known from this project") and that server-side analysis stays an open option for later (C4 weight stays 10).
 The owner then gave the other C1 scores (11 November 2026); only Deno, which the owner did not mention, keeps my proposal of 3 ("known from this project").
@@ -274,7 +274,7 @@ The owner then gave the other C1 scores (11 November 2026); only Deno, which the
 Node.js leads Spring Boot by 35 points, and Spring Boot, Go, Axum, ASP.NET Core and Deno lie within 15 points of each other behind it.
 That is inside the margin of my provisional scores, so the spike decides.
 
-### The total
+### 6.4 The total
 
 Total = subtotal + 20 × C1. A point of familiarity is worth 20 points, so the owner's scores can add 20 to 100 points to each option.
 On the provisional subtotals Node.js leads with 340; Go and Axum follow at 300, then FastAPI and ASP.NET Core at 295, Deno at 290 and the Java frameworks between 275 and 285.
@@ -282,7 +282,7 @@ Node.js lost 30 points against the first version (supply chain, C7, and the data
 The lead is mostly C4 (it shares code with the front end) and C8 and C9 (no vendor control, a healthy foundation).
 With the owner's scores the totals are 400 for Node.js and 365 for Spring Boot. The owner's gap in C1 is one point in Spring Boot's favour; at a gap of three points (60 points) Spring Boot would pass Node.js, and a better subtotal after the spike would close the rest.
 
-## Spike phase 1: measured (11 November 2026)
+## 7. Spike phase 1: measured (11 November 2026)
 
 The spike in `spikes/backend/` (#65, PR #70) builds the same service on four stacks: a health endpoint and a water endpoint that queries Overpass with exponential backoff (1, 2, 4 s).
 Each container ran with 1 CPU and 1 GB against a stand-in Overpass (`fake-overpass/`) that answers a fixed JSON, so the real Overpass is not loaded and the local one does not disturb the measurement.
@@ -309,7 +309,7 @@ What this says, and what it does not:
 
 Not yet measured: the PostgreSQL read with a Flyway migration and a PostGIS column (C10), and the native-image variants (build time and memory, and idle memory of the binary).
 
-## Sensitivity
+## 8. Sensitivity
 
 - If the back end never analyses GPX (C4 weight 0, its 10 points to C1), the TypeScript options lose their edge and the owner's preference decides between Node.js, Go, Axum, ASP.NET Core and the Java frameworks.
 - If memory on the VPS must stay very small (C3 weight 25), Go, Axum and Deno gain and the JVM options lose unless the measured numbers say otherwise.
@@ -318,7 +318,7 @@ Not yet measured: the PostgreSQL read with a Flyway migration and a PostGIS colu
 - If supply chain weighs as much as autonomy (C7 weight 15), Node.js loses another 10 and the gap to Go and Axum closes.
 - If autonomy and governance are weighed even higher (C8 and C9 together 30), Deno falls further.
 
-## Decision tree
+## 9. Decision tree
 
 The method page lists a technique "like a 'decision tree'" among the ingredients (ICT Research Methods, n.d.). This is the path this decision took, with the numbers found at each node:
 
@@ -328,21 +328,21 @@ No option was knocked out at the first node: all ten can be self-hosted in the E
 The lead at the second node (35 points) was inside the error of the provisional scores, so the spike was the tiebreaker, and it confirmed the lead on memory (C3) without a difference on the backoff client (C2).
 The last node is the sensitivity check: the choice flips to Spring Boot if shared code with the front end (C4) is not wanted at all.
 
-## Lack of prejudice
+## 10. Lack of prejudice
 
 The method names "a lack of prejudice" as an ingredient (ICT Research Methods, n.d.). What we did, and what we did not manage:
 
 - **Done.** The criteria and weights were fixed before the scores were filled in; every option was scored on the same criteria, including the ones the owner favours; scores carry a source or are labelled provisional; the owner's familiarity (C1) is a weighted criterion and not a veto, and was scored last, after the other scores were visible; memory and image size were measured and not taken from reputation; the sensitivity section says what would flip the result; sources against our own direction were included (the Gatsby precedent and the Hacker News critics for Astro, the supply-chain reports for npm).
 - **Not done, and the reader should know.** The provisional scores were written by an AI assistant, whose training data favours widely discussed stacks (Node.js, Spring Boot, .NET), and the weights are the draft's: the owner scored C1 and corrected none of them. The Node.js spike is a bare `http` server and the others use frameworks, so the memory comparison shows the floor of Node.js, not a like-for-like framework test. Each ready time is one run. C10 (the database and the aggregate pattern), where Node.js scores 4 against 5 for Spring Boot, was not measured. No one outside the project has reviewed the scores; a colleague who did not take part should read this record before the revisit triggers are relied on.
 
-## Decision
+## 11. Decision
 
 The back end is **Node.js (version 24) with TypeScript**, run with Node's own type stripping and type-checked with `tsc`, on PostgreSQL with PostGIS and with SQL migrations applied by Flyway in an initialisation container.
 It is a separate service behind the REST/JSON contract of ADR-0005, optional as ADR-0013 says, and the front end stays Astro and React.
 The shared analysis modules stay portable between browser, Deno tooling and Node.js, enforced by `tsconfig.shared.json` and `test/portability.test.ts` (see C4 and C6).
 Whether the data layer is MikroORM or hand-written repositories is decided in the data-access ADR (ADR-0016, #71), on the transactions, concurrency and aggregate points above; the database itself follows in #63.
 
-## Consequences and revisit triggers
+## 12. Consequences and revisit triggers
 
 - ADR-0002 (Deno with TypeScript) and ADR-0004 (a Deno back end on an EU VPS) no longer describe the back end; Deno remains the runner of the repository's tests and tasks until #61 decides.
 - The shared modules `gpx-parser` and `water` (through `overpass-cache`) still depend on the DOM and the browser Cache API and must be freed before the back end can reuse them.

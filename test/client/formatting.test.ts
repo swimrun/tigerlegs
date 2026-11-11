@@ -1,5 +1,5 @@
 import fc from "fast-check";
-import { assert, assertEquals } from "@std/assert";
+import { expect, it } from "vitest";
 import {
   calculateTotals,
   pairSegmentsForDisplay,
@@ -43,50 +43,33 @@ const arbitrarySegmentArray: fc.Arbitrary<Segment[]> = fc
 // --- Property 10: Segment display formatting follows type-specific rules ---
 // **Validates: Requirements 3.5, 3.6, 3.7, 5.1**
 
-Deno.test("Property 10.1: roundSwimDistance always produces a multiple of 50", () => {
-  fc.assert(
-    fc.property(
+it("Property 10.1: roundSwimDistance always produces a multiple of 50", () => {
+  fc.assert(fc.property(
       fc.double({ min: 0, max: 100000, noNaN: true }),
       (metres) => {
         const rounded = roundSwimDistance(metres);
-        assert(
-          rounded % 50 === 0,
-          `roundSwimDistance(${metres}) = ${rounded}, expected multiple of 50`,
-        );
+        expect(rounded % 50 === 0, `roundSwimDistance(${metres}) = ${rounded}, expected multiple of 50`).toBeTruthy();
       },
-    ),
-    { numRuns: 200 },
-  );
+    ), { numRuns: 200 });
 });
 
-Deno.test("Property 10.2: roundRunDistance always produces a value with exactly 1 decimal place when formatted", () => {
-  fc.assert(
-    fc.property(
+it("Property 10.2: roundRunDistance always produces a value with exactly 1 decimal place when formatted", () => {
+  fc.assert(fc.property(
       fc.double({ min: 0, max: 1000, noNaN: true }),
       (km) => {
         const rounded = roundRunDistance(km);
         const formatted = rounded.toFixed(1);
         // Verify the formatted string has exactly one decimal place
         const parts = formatted.split(".");
-        assert(
-          parts.length === 2 && parts[1].length === 1,
-          `roundRunDistance(${km}).toFixed(1) = "${formatted}", expected exactly 1 decimal place`,
-        );
+        expect(parts.length === 2 && parts[1].length === 1, `roundRunDistance(${km}).toFixed(1) = "${formatted}", expected exactly 1 decimal place`).toBeTruthy();
         // Verify parsing back gives the same value (no precision loss)
-        assertEquals(
-          parseFloat(formatted),
-          rounded,
-          `Parsing "${formatted}" back should equal ${rounded}`,
-        );
+        expect(parseFloat(formatted), `Parsing "${formatted}" back should equal ${rounded}`).toEqual(rounded);
       },
-    ),
-    { numRuns: 200 },
-  );
+    ), { numRuns: 200 });
 });
 
-Deno.test("Property 10.3: pairSegmentsForDisplay never produces empty strings (always a number or '—')", () => {
-  fc.assert(
-    fc.property(
+it("Property 10.3: pairSegmentsForDisplay never produces empty strings (always a number or '—')", () => {
+  fc.assert(fc.property(
       arbitrarySegmentArray,
       fc.boolean(),
       (segments, swimFirst) => {
@@ -94,80 +77,45 @@ Deno.test("Property 10.3: pairSegmentsForDisplay never produces empty strings (a
 
         for (const pair of pairs) {
           // swimDistanceM must be non-empty
-          assert(
-            pair.swimDistanceM.length > 0,
-            `swimDistanceM should not be empty, got ""`,
-          );
+          expect(pair.swimDistanceM.length > 0, `swimDistanceM should not be empty, got ""`).toBeTruthy();
           // runDistanceKm must be non-empty
-          assert(
-            pair.runDistanceKm.length > 0,
-            `runDistanceKm should not be empty, got ""`,
-          );
+          expect(pair.runDistanceKm.length > 0, `runDistanceKm should not be empty, got ""`).toBeTruthy();
           // Each value must be either "—" or a valid number string
           if (pair.swimDistanceM !== "—") {
             const parsed = Number(pair.swimDistanceM);
-            assert(
-              !isNaN(parsed),
-              `swimDistanceM "${pair.swimDistanceM}" should be a valid number or "—"`,
-            );
+            expect(!isNaN(parsed), `swimDistanceM "${pair.swimDistanceM}" should be a valid number or "—"`).toBeTruthy();
           }
           if (pair.runDistanceKm !== "—") {
             const parsed = Number(pair.runDistanceKm);
-            assert(
-              !isNaN(parsed),
-              `runDistanceKm "${pair.runDistanceKm}" should be a valid number or "—"`,
-            );
+            expect(!isNaN(parsed), `runDistanceKm "${pair.runDistanceKm}" should be a valid number or "—"`).toBeTruthy();
           }
         }
       },
-    ),
-    { numRuns: 100 },
-  );
+    ), { numRuns: 100 });
 });
 
-Deno.test("Property 10.4: calculateTotals produces strings that are valid numbers", () => {
-  fc.assert(
-    fc.property(
+it("Property 10.4: calculateTotals produces strings that are valid numbers", () => {
+  fc.assert(fc.property(
       arbitrarySegmentArray,
       (segments) => {
         const totals = calculateTotals(segments);
 
         // totalRunKm should be a valid number
         const runVal = Number(totals.totalRunKm);
-        assert(
-          !isNaN(runVal),
-          `totalRunKm "${totals.totalRunKm}" should be a valid number`,
-        );
-        assert(
-          runVal >= 0,
-          `totalRunKm should be non-negative, got ${runVal}`,
-        );
+        expect(!isNaN(runVal), `totalRunKm "${totals.totalRunKm}" should be a valid number`).toBeTruthy();
+        expect(runVal >= 0, `totalRunKm should be non-negative, got ${runVal}`).toBeTruthy();
 
         // totalSwimM should be a valid number
         const swimVal = Number(totals.totalSwimM);
-        assert(
-          !isNaN(swimVal),
-          `totalSwimM "${totals.totalSwimM}" should be a valid number`,
-        );
-        assert(
-          swimVal >= 0,
-          `totalSwimM should be non-negative, got ${swimVal}`,
-        );
+        expect(!isNaN(swimVal), `totalSwimM "${totals.totalSwimM}" should be a valid number`).toBeTruthy();
+        expect(swimVal >= 0, `totalSwimM should be non-negative, got ${swimVal}`).toBeTruthy();
 
         // totalRunKm should have exactly 1 decimal place
         const parts = totals.totalRunKm.split(".");
-        assert(
-          parts.length === 2 && parts[1].length === 1,
-          `totalRunKm "${totals.totalRunKm}" should have exactly 1 decimal place`,
-        );
+        expect(parts.length === 2 && parts[1].length === 1, `totalRunKm "${totals.totalRunKm}" should have exactly 1 decimal place`).toBeTruthy();
 
         // totalSwimM should be a multiple of 50 (swim rounding rule)
-        assert(
-          swimVal % 50 === 0,
-          `totalSwimM ${swimVal} should be a multiple of 50`,
-        );
+        expect(swimVal % 50 === 0, `totalSwimM ${swimVal} should be a multiple of 50`).toBeTruthy();
       },
-    ),
-    { numRuns: 100 },
-  );
+    ), { numRuns: 100 });
 });

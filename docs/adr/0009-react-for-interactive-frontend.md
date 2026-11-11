@@ -2,11 +2,11 @@
 
 Date: 2026-11-01
 
-## Status
+## 1. Status
 
 Accepted. Implemented alongside the Astro migration in [ADR-0008](./0008-astro-static-site-with-react-islands.md); deployment remains subject to PR review and validation.
 
-## Context
+## 2. Context
 
 The project owner wants a React-based frontend, building on existing familiarity and learning React more deeply. The owner considers React simpler to work with than Vue and Angular. This is a project-specific preference and learning objective, not evidence that React is universally simpler or technically superior.
 
@@ -19,13 +19,13 @@ We separate two decisions:
 
 Choosing React does not itself choose Astro, require an SPA, or introduce a backend.
 
-## Evaluation method
+## 3. Evaluation method
 
 Apply the [ICT Research Methods multi-criteria decision making method](https://ictresearchmethods.nl/workshop/multi-criteria-decision-making/), which calls for investigating alternatives, criteria and weights and involving stakeholders (ICT Research Methods, n.d.). Here the project owner's familiarity and learning objective are the primary criteria; static deployment compatibility, integration effort and preservation of existing analysis are also relevant.
 
 This is a qualitative comparison rather than an invented numerical benchmark. We do not first require React and then use that requirement to prove React wins. Documentation supports integration capabilities; relative learning effort is the owner's stated judgment, and migration effort remains unmeasured.
 
-## Alternatives and project-specific trade-offs
+## 4. Alternatives and project-specific trade-offs
 
 | Option | Reasons to consider | Reasons not to choose here |
 | --- | --- | --- |
@@ -37,7 +37,7 @@ This is a qualitative comparison rather than an invented numerical benchmark. We
 
 Astro lists React, Vue, Preact and Svelte among its official integrations, and Angular among community-maintained integrations (Astro, n.d.). Vue documents single-file components that encapsulate template, logic and styling (Vue.js, n.d.). Angular documents deployment tooling (Angular, n.d.). These are capability observations, not claims that any framework cannot host a static frontend.
 
-### Do Astro, GitHub Pages or Deno favour something other than React?
+### 4.1 Do Astro, GitHub Pages or Deno favour something other than React?
 
 - **Astro:** no blocker. It officially integrates React and Vue. Its framework components can render static HTML or hydrate on the client, allowing a React extractor inside static documentation pages (Astro, n.d.).
 - **GitHub Pages:** the static output and URL requirements belong to the build/routing design in ADR-0008, not React's component model. React does not inherently require runtime SSR or a backend. A plain client-router SPA still needs special handling for direct links, regardless of its UI framework.
@@ -46,7 +46,7 @@ Astro lists React, Vue, Preact and Svelte among its official integrations, and A
 
 There is currently no demonstrated project-specific benefit that outweighs choosing the framework the owner knows and wants to learn. Reconsider if representative measurements or the future maintenance team provide contrary evidence.
 
-## Decision
+## 5. Decision
 
 Use **React with TypeScript for the interactive extractor frontend**.
 
@@ -54,7 +54,7 @@ Keep analysis, distance calculation and worker jobs in framework-independent Typ
 
 If Astro is accepted, use its React integration for one coordinated extractor application rather than independent islands for tightly coupled map/table state. Static documentation and page routing can remain Astro/Markdown. If another static page framework is chosen, the React decision can still stand.
 
-## Consequences and validation
+## 6. Consequences and validation
 
 - The UI migration must preserve existing behaviour, accessibility, translations, file warnings, strategy consent and linked map/table selection.
 - Leaflet remains usable directly; adopting an additional React map wrapper is a separate implementation choice, not required by this ADR.
