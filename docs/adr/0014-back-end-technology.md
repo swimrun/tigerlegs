@@ -238,6 +238,32 @@ Node.js lost 30 points against the first version (supply chain, C7, and the data
 The lead is mostly C4 (it shares code with the front end) and C8 and C9 (no vendor control, a healthy foundation).
 If the owner rates Spring Boot 5 and Node.js 3 on C1, the totals are 385 and 400; at Node.js 2 they are 385 and 380, and Spring Boot passes Node.js; a Java option passes Node.js when the owner's gap is about two to three points or more.
 
+## Spike phase 1: measured (11 November 2026)
+
+The spike in `spikes/backend/` (#65, PR #70) builds the same service on five stacks: a health endpoint and a water endpoint that queries Overpass with exponential backoff (1, 2, 4 s).
+Each container ran with 1 CPU and 1 GB against a stand-in Overpass (`fake-overpass/`) that answers a fixed JSON, so the real Overpass is not loaded and the local one does not disturb the measurement.
+Memory is idle after start, and after 100 water requests with a unique bounding box each.
+Deno is the idle baseline only: no service was built on it in this phase.
+
+| Stack                  | Image  | Ready  | Idle MiB | After load MiB |
+| ---------------------- | ------ | ------ | -------- | -------------- |
+| Node.js 24             | 159 MB | 1.16 s | 27.4     | 39.2           |
+| ASP.NET Core (.NET 10) | 250 MB | 1.08 s | 19.7     | 27.2           |
+| Spring Boot (JVM)      | 360 MB | 6.17 s | 174.1    | 186.6          |
+| Spring Boot + Leyden   | 410 MB | 7.69 s | 188.3    | 202.6          |
+| Micronaut              | 354 MB | 4.37 s | 136.7    | 163.3          |
+| Deno (baseline)        | 117 MB | n/a    | 21.7     | n/a            |
+
+What this says, and what it does not:
+
+- Idle memory orders the stacks as the evaluation guessed for C3: ASP.NET Core and Node.js use 20 to 30 MiB, the JVM stacks 135 to 190 MiB, about six to eight times more. On a VPS of 1 GB that is a cost, not a blocker.
+- The "ready" times were taken while the machine was busy and are noisy. Repeating the start of the Spring Boot containers afterwards, the application reported 3.8 to 4.8 s for the plain JVM and 2.0 to 4.0 s with Leyden. So Leyden does start faster, and the 7.69 s in the table is a measurement artefact, not a property of Leyden. A clean repeat is still needed before a ready time is quoted.
+- Leyden's price is visible and real: the AOT cache is 53 MB (the image grows by 50 MB) and idle memory was about 14 MiB higher.
+- The four backoff tests (two retries then success, three failures then an error, a 400 not retried, no wait on a first-try success) pass in all four service stacks, run in containers. The retry logic is about equally small in each; C2 does not separate them.
+- The C1 scores are untouched: this phase says nothing about which language the owner prefers to write.
+
+Not yet measured: the PostgreSQL read with a Flyway migration and a PostGIS column (C10), and the native-image variants (build time and memory, and idle memory of the binary).
+
 ## Sensitivity
 
 - If the back end never analyses GPX (C4 weight 0, its 10 points to C1), the TypeScript options lose their edge and the owner's preference decides between Node.js, Go, Axum, ASP.NET Core and the Java frameworks.
@@ -250,7 +276,7 @@ If the owner rates Spring Boot 5 and Node.js 3 on C1, the totals are 385 and 400
 ## Next steps
 
 1. The owner sets the C1 scores (and corrects the weights), then the totals are computed.
-2. A spike per surviving option measures C3 (image size, idle memory, start time, and for Java also the JVM, Leyden and native variants including the native build time and memory) and tries one real task: the Overpass query with backoff and a cache, a health endpoint and a PostgreSQL read, in a container.
+2. Phase 1 of the spike is done (see above). Phase 2 adds the PostgreSQL read and the native-image variants. The plan was a spike per surviving option that measures C3 (image size, idle memory, start time, and for Java also the JVM, Leyden and native variants including the native build time and memory) and tries one real task: the Overpass query with backoff and a cache, a health endpoint and a PostgreSQL read, in a container.
 3. Iterate between the scores and the criteria, as the method asks, then record the decision (this ADR becomes Proposed) and the fate of ADR-0002 (#61).
 
 ## References
