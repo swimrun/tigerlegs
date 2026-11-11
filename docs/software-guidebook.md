@@ -91,11 +91,11 @@ Behind these stories, the system detects segments with three strategies, which T
 
 *Table 1*: Strategies for detecting swim and run segments.
 
-| Strategy | Evidence | Needs |
-| --- | --- | --- |
-| Waypoint | `<sym>` codes or names on waypoints | Waypoints in the GPX file |
-| Speed | Speed drops when swimming | Timestamps on trackpoints |
-| Landscape | Water or land at sampled coordinates | The terrain API |
+| Strategy  | Evidence                             | Needs                     |
+| --------- | ------------------------------------ | ------------------------- |
+| Waypoint  | `<sym>` codes or names on waypoints  | Waypoints in the GPX file |
+| Speed     | Speed drops when swimming            | Timestamps on trackpoints |
+| Landscape | Water or land at sampled coordinates | The terrain API           |
 
 The waypoint strategy is the most precise when the organiser marked the swim starts and ends.
 The speed strategy works for any recorded activity, but speed is only indirect evidence.
@@ -111,14 +111,14 @@ Table 2 lists the six use cases, who uses them and which user story and Kiro req
 
 *Table 2*: Use cases and the stories and requirements behind them.
 
-| Use case | Actors | User story | Requirement |
-| --- | --- | --- | --- |
-| UC-1: Upload a GPX file | Athlete, organiser | US-1 | Req 1 |
-| UC-2: View segment distances | Athlete, organiser | US-3, US-5 | Req 3, 5 |
-| UC-3: View the course map | Athlete | US-4 | Req 4 |
-| UC-4: Highlight a segment | Athlete | US-6 | Req 6 |
-| UC-5: View aid stations | Athlete | US-8 | Req 8 |
-| UC-6: Select a track | Athlete | US-9 | Req 9 |
+| Use case                     | Actors             | User story | Requirement |
+| ---------------------------- | ------------------ | ---------- | ----------- |
+| UC-1: Upload a GPX file      | Athlete, organiser | US-1       | Req 1       |
+| UC-2: View segment distances | Athlete, organiser | US-3, US-5 | Req 3, 5    |
+| UC-3: View the course map    | Athlete            | US-4       | Req 4       |
+| UC-4: Highlight a segment    | Athlete            | US-6       | Req 6       |
+| UC-5: View aid stations      | Athlete            | US-8       | Req 8       |
+| UC-6: Select a track         | Athlete            | US-9       | Req 9       |
 
 Use cases UC-2 and UC-3 include UC-1, because both need an uploaded file.
 UC-4, UC-5 and UC-6 extend the use case they build on: highlighting and aid stations extend the map, and track selection extends the upload.
@@ -153,17 +153,17 @@ Table 3 gives the segment distances as the organisers published them.
 
 *Table 3*: Published segment distances of the Vertical SwimRunMan Laffrey 2026.
 
-| # | Run (km) | Swim (m) | Cumulative (km) |
-| --- | --- | --- | --- |
-| 1 | | 400 | 0.4 |
-| 2 | 5.2 | 400 | 5.6 |
-| 3 | 0.3 | 2200 | 6.3 |
-| 4 | 1.4 | 400 | 9.9 |
-| 5 | 0.2 | 600 | 10.5 |
-| 6 | 6.7 | 1000 | 17.8 |
-| 7 | 4.9 | 1100 | 23.7 |
-| 8 | 6.1 | | 29.1 |
-| **Total** | 24.8 | 6100 | 30.9 |
+| #         | Run (km) | Swim (m) | Cumulative (km) |
+| --------- | -------- | -------- | --------------- |
+| 1         |          | 400      | 0.4             |
+| 2         | 5.2      | 400      | 5.6             |
+| 3         | 0.3      | 2200     | 6.3             |
+| 4         | 1.4      | 400      | 9.9             |
+| 5         | 0.2      | 600      | 10.5            |
+| 6         | 6.7      | 1000     | 17.8            |
+| 7         | 4.9      | 1100     | 23.7            |
+| 8         | 6.1      |          | 29.1            |
+| **Total** | 24.8     | 6100     | 30.9            |
 
 The test file is `test-data/vertical_swimrunman_2026-22910326-1781510068-71.gpx`.
 On a comparable Laffrey file the system measured 24.7 km of running and 6250 m of swimming, so its swim total is 150 m longer than the published one.
@@ -174,16 +174,16 @@ Table 4 shows the same course in that form, with the swim first.
 
 *Table 4*: The same course as swim and run pairs, swim first.
 
-| # | Swim (m) | Run (km) |
-| --- | --- | --- |
-| 1 | 400 | 5.2 |
-| 2 | 400 | 0.3 |
-| 3 | 2200 | 1.4 |
-| 4 | 400 | 0.2 |
-| 5 | 600 | 6.7 |
-| 6 | 1000 | 4.9 |
-| 7 | 1100 | 6.1 |
-| **Total** | 6100 | 24.8 |
+| #         | Swim (m) | Run (km) |
+| --------- | -------- | -------- |
+| 1         | 400      | 5.2      |
+| 2         | 400      | 0.3      |
+| 3         | 2200     | 1.4      |
+| 4         | 400      | 0.2      |
+| 5         | 600      | 6.7      |
+| 6         | 1000     | 4.9      |
+| 7         | 1100     | 6.1      |
+| **Total** | 6100     | 24.8     |
 
 A course that starts with a run would show the run first by default, and a toggle would swap the order.
 Figure 5 shows the paddles that the organisers published for this course.
@@ -262,13 +262,13 @@ Table 5 lists the documents and the question each one answers.
 
 *Table 5*: Documents and the questions they answer.
 
-| Document | Where | What it shows |
-| --- | --- | --- |
-| README | [README.md](../README.md) | What the tool is and how to run it |
-| Software guidebook | this file | Context, structure, domain model and glossary |
-| Architecture decision records | [docs/adr/](./adr/) | Why we chose a design, and what we rejected |
-| Specifications | [.kiro/specs/](../.kiro/specs/) | Requirements, design and tasks per feature |
-| Source code and tests | [src/](../src/), [test/](../test/) | What the system does, in executable form |
+| Document                      | Where                              | What it shows                                 |
+| ----------------------------- | ---------------------------------- | --------------------------------------------- |
+| README                        | [README.md](../README.md)          | What the tool is and how to run it            |
+| Software guidebook            | this file                          | Context, structure, domain model and glossary |
+| Architecture decision records | [docs/adr/](./adr/)                | Why we chose a design, and what we rejected   |
+| Specifications                | [.kiro/specs/](../.kiro/specs/)    | Requirements, design and tasks per feature    |
+| Source code and tests         | [src/](../src/), [test/](../test/) | What the system does, in executable form      |
 
 The first four documents explain what, how and why, while the code and tests are the only part that is guaranteed to be current.
 
@@ -309,16 +309,16 @@ Table 6 lists each component and the file that holds it.
 
 *Table 6*: Components of the browser app.
 
-| Component | File | Responsibility |
-| --- | --- | --- |
-| GPX parser | `src/client/gpx-parser.ts` | Turns GPX text into `GPXData` |
-| Waypoint strategy | `src/client/waypoint-classifier.ts` | Finds segments from `<sym>` codes or names |
-| Speed strategy | `src/client/speed-analyzer.ts` | Finds segments from speed changes |
-| Landscape strategy | `src/client/landscape-client.ts` | Finds segments from terrain at sampled points |
-| Strategy combiner | `src/client/strategy-combiner.ts` | Picks the best strategy per trackpoint |
-| Analysis | `src/client/analyze.ts` | Runs the pipeline and adds distances |
-| Segment builder | `src/client/segment-builder.ts` | Totals, rounding and paired table rows |
-| UI | `src/components/Extractor.tsx`, `CourseMap.tsx`, `SegmentTable.tsx` | React upload, map, table and highlighting |
+| Component          | File                                                                | Responsibility                                |
+| ------------------ | ------------------------------------------------------------------- | --------------------------------------------- |
+| GPX parser         | `src/client/gpx-parser.ts`                                          | Turns GPX text into `GPXData`                 |
+| Waypoint strategy  | `src/client/waypoint-classifier.ts`                                 | Finds segments from `<sym>` codes or names    |
+| Speed strategy     | `src/client/speed-analyzer.ts`                                      | Finds segments from speed changes             |
+| Landscape strategy | `src/client/landscape-client.ts`                                    | Finds segments from terrain at sampled points |
+| Strategy combiner  | `src/client/strategy-combiner.ts`                                   | Picks the best strategy per trackpoint        |
+| Analysis           | `src/client/analyze.ts`                                             | Runs the pipeline and adds distances          |
+| Segment builder    | `src/client/segment-builder.ts`                                     | Totals, rounding and paired table rows        |
+| UI                 | `src/components/Extractor.tsx`, `CourseMap.tsx`, `SegmentTable.tsx` | React upload, map, table and highlighting     |
 
 The analysis component is the entry point for the UI: it runs the strategies that apply, combines them and computes each segment's distance.
 The current page skips the landscape strategy, because it needs the backend.
@@ -503,6 +503,22 @@ The schedule never leaves the device: the model runs locally and Chrome owns its
 The UI follows the page language in all four site languages, but the model itself understands English, French and German, not Dutch (ADR-0010), so the interface says so.
 The component takes the model as an optional prop, so tests and Storybook stories inject a fake and the real browser API stays at the edge.
 
+### 7.6 Back end: aggregate, repository and unit of work (planned)
+
+The back end does not exist yet ([ADR-0013](./adr/0013-back-end-is-optional.md), [ADR-0014](./adr/0014-back-end-technology.md)).
+This section states the patterns its code will follow, so that they are agreed before the first line is written.
+Patterns are described here, in the Code chapter, and not in chapter 5: chapter 5 holds the principles we value, while a pattern is a way of building a part of the code.
+The reasoning behind the choice of data layer is in [ADR-0016](./adr/0016-data-access-layer.md), which is still a draft.
+
+- **Aggregate.** "A cluster of domain objects that can be treated as a single unit", and "transactions should not cross aggregate boundaries" (Fowler, n.d.-a). The term is also used in UML, where it does not mean a DDD aggregate (Fowler, n.d.-a).
+  We put concepts that have a composition or aggregation relation in the model into one aggregate, with the owning concept as the aggregate root. The invariants that must always hold decide what is inside; for the rest, consistency between aggregates is eventual.
+  The candidate aggregates are a course (with its variants and legs), a team or app group (with its members), a swimrunner profile and a recording, where a recording refers to a course by id.
+- **Repository.** "Mediates between the domain and data mapping layers using a collection-like interface for accessing domain objects" (Fowler, n.d.-b). One repository per aggregate root; aggregates are loaded and saved whole.
+- **Unit of work.** "Maintains a list of objects affected by a business transaction and coordinates the writing out of changes and the resolution of concurrency problems" (Fowler, n.d.-c). It is the mechanism that saves, not the aggregate. The rule is one aggregate root per use case and one flush per use case, so that a transaction does not cross aggregate boundaries.
+- **Optimistic concurrency.** The aggregate root carries a version; of two users who change the same aggregate the first commit wins, and the second gets a conflict error instead of overwriting the change.
+
+The front end uses none of these. It follows the GPX rule instead, pure functions that return new values and never mutate their input, as `applyMoves` does for the training week (section 7.5).
+
 ## 8. Data
 
 This chapter describes where the system keeps data.
@@ -523,13 +539,13 @@ Table 7 lists the numeric `<sym>` values in the test files, which come from the 
 
 *Table 7*: Waypoint `<sym>` values in Openrunner files.
 
-| `<sym>` value | Meaning |
-| --- | --- |
-| `200` | Start of a swim section |
-| `201` | End of a swim section |
-| `3` | Aid station (ravitaillement) |
-| `206` | Start of a vertical kilometre |
-| `49` | Hot food aid station |
+| `<sym>` value | Meaning                       |
+| ------------- | ----------------------------- |
+| `200`         | Start of a swim section       |
+| `201`         | End of a swim section         |
+| `3`           | Aid station (ravitaillement)  |
+| `206`         | Start of a vertical kilometre |
+| `49`          | Hot food aid station          |
 
 These numeric codes are not part of the GPX standard, and other applications such as Garmin, Komoot or Strava may use other schemes.
 The system detects swims in two ways: it first matches `<sym>` 200 and 201, and falls back to waypoint names that start with "Début SWIM" or "Fin SWIM".
@@ -575,11 +591,11 @@ For development you can run your own Overpass server, with a one-time import of 
 
 Tests follow the test pyramid: many fast tests at the bottom, few slow ones at the top.
 
-| Level | Tool | Location | What it covers |
-|---|---|---|---|
+| Level                   | Tool                                        | Location                       | What it covers                                                                                                 |
+| ----------------------- | ------------------------------------------- | ------------------------------ | -------------------------------------------------------------------------------------------------------------- |
 | Unit and property-based | Deno test runner, `@std/assert`, fast-check | `test/client/`, `test/shared/` | Pure domain functions: GPX parsing, classification, confidence, chat agent, session store, language resolution |
-| Integration (back end) | Deno test runner | `test/server/` | The Overpass proxy and its cache |
-| End-to-end | Playwright on the built static site | `test/site/` | Deep links, menu, language switch, fake login, terrain consent, mobile layout |
+| Integration (back end)  | Deno test runner                            | `test/server/`                 | The Overpass proxy and its cache                                                                               |
+| End-to-end              | Playwright on the built static site         | `test/site/`                   | Deep links, menu, language switch, fake login, terrain consent, mobile layout                                  |
 
 Rules:
 
@@ -600,22 +616,23 @@ Table 8 lists the ADRs and what each decides.
 
 *Table 8*: Architecture decision records.
 
-| ADR | Decision |
-| --- | --- |
-| [0001](./adr/0001-record-architecture-decisions.md) | Record architecture decisions |
-| [0002](./adr/0002-use-deno-with-typescript.md) | Use Deno with TypeScript |
-| [0003](./adr/0003-gpx-analysis-execution-location.md) | Choose where the GPX analysis runs |
-| [0004](./adr/0004-host-deno-backend-on-eu-vps.md) | Host the backend on an EU VPS |
-| [0005](./adr/0005-rest-json-api-for-multi-client-support.md) | Offer a REST/JSON API |
-| [0006](./adr/0006-open-source-gis-stack.md) | Use an open-source GIS stack |
-| [0007](./adr/0007-compact-segment-table-format.md) | Show a compact paired segment table |
-| [0008](./adr/0008-astro-static-site-with-react-islands.md) | Astro static pages with a React-based interactive frontend; compare alternatives using multi-criteria decision making |
-| [0009](./adr/0009-react-for-interactive-frontend.md) | Use React for the interactive frontend; owner familiarity and learning goals, compared with Vue, Angular and other options |
-| [0010](./adr/0010-tigerlegs-mcp-server-and-strava-integration.md) | Draft: expose training data through a TigerLegs MCP server with Strava as a data source; no decision yet |
-| [0011](./adr/0011-model-lifecycle-and-think-thread-for-on-device-chat.md) | Draft: separate the one-off model download from the per-prompt think thread in the on-device chat; no decision |
-| [0012](./adr/0012-persistent-chat-across-pages.md) | Proposed: keep the chat across pages with Astro view transitions and a persisted island |
-| [0013](./adr/0013-back-end-is-optional.md) | Draft: the back end is optional and a premium feature; the front end works without it; no decision |
-| [0014](./adr/0014-back-end-technology.md) | Draft: back-end technology compared with multi-criteria decision making (Deno, Node.js, Python, Java 25 with Spring Boot, Micronaut, Quarkus or Javalin, .NET 10, Go, Rust); no decision |
+| ADR                                                                       | Decision                                                                                                                                                                                                       |
+| ------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [0001](./adr/0001-record-architecture-decisions.md)                       | Record architecture decisions                                                                                                                                                                                  |
+| [0002](./adr/0002-use-deno-with-typescript.md)                            | Use Deno with TypeScript                                                                                                                                                                                       |
+| [0003](./adr/0003-gpx-analysis-execution-location.md)                     | Choose where the GPX analysis runs                                                                                                                                                                             |
+| [0004](./adr/0004-host-deno-backend-on-eu-vps.md)                         | Host the backend on an EU VPS                                                                                                                                                                                  |
+| [0005](./adr/0005-rest-json-api-for-multi-client-support.md)              | Offer a REST/JSON API                                                                                                                                                                                          |
+| [0006](./adr/0006-open-source-gis-stack.md)                               | Use an open-source GIS stack                                                                                                                                                                                   |
+| [0007](./adr/0007-compact-segment-table-format.md)                        | Show a compact paired segment table                                                                                                                                                                            |
+| [0008](./adr/0008-astro-static-site-with-react-islands.md)                | Astro static pages with a React-based interactive frontend; compare alternatives using multi-criteria decision making                                                                                          |
+| [0009](./adr/0009-react-for-interactive-frontend.md)                      | Use React for the interactive frontend; owner familiarity and learning goals, compared with Vue, Angular and other options                                                                                     |
+| [0010](./adr/0010-tigerlegs-mcp-server-and-strava-integration.md)         | Draft: expose training data through a TigerLegs MCP server with Strava as a data source; no decision yet                                                                                                       |
+| [0011](./adr/0011-model-lifecycle-and-think-thread-for-on-device-chat.md) | Draft: separate the one-off model download from the per-prompt think thread in the on-device chat; no decision                                                                                                 |
+| [0012](./adr/0012-persistent-chat-across-pages.md)                        | Proposed: keep the chat across pages with Astro view transitions and a persisted island                                                                                                                        |
+| [0013](./adr/0013-back-end-is-optional.md)                                | Draft: the back end is optional and a premium feature; the front end works without it; no decision                                                                                                             |
+| [0014](./adr/0014-back-end-technology.md)                                 | Accepted: the back end is Node.js with TypeScript, chosen with multi-criteria decision making, a decision tree and a spike that measured memory and image size against Spring Boot, Micronaut and ASP.NET Core |
+| [0016](./adr/0016-data-access-layer.md)                                   | Draft: the data layer of the back end (ORM or repositories, PostgreSQL driver, optimistic concurrency, transactions); no decision yet                                                                          |
 
 ADR-0008 implements a shared Astro layout and directly linkable HTML pages, with the interactive extractor implemented in React and no runtime backend. Astro itself is not React-based; it supplies static page composition around the React application. Existing TypeScript analysis modules remain reusable. All ADRs are built into HTML pages and linked from this chapter. The ADR includes a provisional weighted comparison of the previous Deno-only site build, Astro, Next.js static export, Vite + React SPA and Eleventy, following the [ICT Research Methods multi-criteria decision making method](https://ictresearchmethods.nl/workshop/multi-criteria-decision-making/).
 
@@ -626,6 +643,9 @@ ADR-0008 implements a shared Astro layout and directly linkable HTML pages, with
 - Cavoukian, A. (2011). *Privacy by design: The 7 foundational principles*. Information and Privacy Commissioner of Ontario. https://www.ipc.on.ca/wp-content/uploads/resources/7foundationalprinciples.pdf
 - Cockburn, A. (2001). *Writing effective use cases*. Addison-Wesley.
 - file-extensions.com. (n.d.). *GPX file format*. Retrieved June 15, 2026, from https://file-extensions.com/docs/gpx
+- Fowler, M. (n.d.-a). *DDD aggregate* [Bliki]. Retrieved November 11, 2026, from https://martinfowler.com/bliki/DDD_Aggregate.html
+- Fowler, M. (n.d.-b). *Repository* [Patterns of enterprise application architecture]. Retrieved November 11, 2026, from https://martinfowler.com/eaaCatalog/repository.html
+- Fowler, M. (n.d.-c). *Unit of work* [Patterns of enterprise application architecture]. Retrieved November 11, 2026, from https://martinfowler.com/eaaCatalog/unitOfWork.html
 - Garmin. (n.d.). *Connect IQ basics*. Retrieved November 1, 2026, from https://developer.garmin.com/connect-iq/connect-iq-basics/
 - Geofabrik. (n.d.). *OpenStreetMap data extracts*. Retrieved November 10, 2026, from https://download.geofabrik.de/
 - Gruber, T. (2008). Ontology. In L. Liu & M. T. Özsu (Eds.), *Encyclopedia of Database Systems*. Springer. https://tomgruber.org/writing/definition-of-ontology
@@ -652,58 +672,58 @@ Table 9 lists the terms in the order in which you meet them when you follow a GP
 
 *Table 9*: Domain glossary.
 
-| Term | Meaning | Example |
-| --- | --- | --- |
-| Track | Ordered recording of positions of the whole course | The Vertical SwimRunMan GPX holds one track |
-| Trackpoint | One position in a track, with latitude, longitude and optional elevation and time | `lat="54.4" lon="13.4"` |
-| Waypoint | A named point of interest, separate from the track | "Début SWIM" |
-| `<sym>` | Symbol code on a waypoint; 200 marks a swim start and 201 a swim end | A waypoint with `<sym>200</sym>` starts a swim |
-| Segment | Consecutive trackpoints that are all swim or all run, with a distance | Swim of 400 m |
-| Swim, run, unclassified | The three labels a segment can have | Run of 2.1 km |
-| Transition | The point where one segment ends and the next begins | The beach exit after a swim |
-| Hysteresis | Memory in a threshold decision: once a transition counts as passed, nearby noisy GPS fixes cannot un-pass it | The watch advances to leg 5 once, even when swim-degraded GPS jitters around the transition radius |
-| Distance to next transition | Distance along the track from a position to the next transition | "Next transition in 1.2 km" |
-| Question | A prompt the athlete sends to the chat, by clicking a label or typing | "But can tigers actually swim?" |
-| Static answer | A fixed answer from the FAQ catalog, consisting of a brief answer and optionally more | The tiger answer in `faq.en.json` |
-| Brief answer | The short first reply to a question | "Yes. Tigers are among the few big cats that like water." |
-| More | The longer second reply, offered through the *Tell me more* follow-up | Why swimrun courses vary in distance |
-| Dynamic answer | An answer an LLM generates for a free-text question (planned, issue #10) | A reply about a specific wetsuit |
-| Fallback | The reply to free text while no LLM is integrated | "There is no actual LLM integration yet.." |
-| Language | One of English, Dutch, French or German; each has its own FAQ catalog | `faq.nl.json` |
-| Strategy | A method to detect segments: waypoint, speed or landscape | Waypoint strategy |
-| Confidence | How sure a strategy is about a trackpoint; the combiner keeps the highest | 0.9 from waypoints beats 0.4 from speed |
-| Terrain | Land or water at a coordinate, from OpenStreetMap | A lake point returns water |
-| Sampling interval | Wanted distance between sampled trackpoints for terrain queries | 50 m |
-| Gap | Distance between two consecutive samples | With a 50 m interval and 200 m steps, the gap can exceed 50 m |
-| Sparse track | Track whose trackpoints lie far apart | A watch that records every 200 m |
-| Paired segment table | Table with one row per run and swim pair ([ADR-0007](./adr/0007-compact-segment-table-format.md)) | Row: run 2.1 km, swim 400 m |
-| Run-first, swim-first | Which segment type opens a paired row; run-first is the default | A toggle above the table |
-| Aid station | Food and drink point, usually on land | A waypoint on a run |
+| Term                        | Meaning                                                                                                      | Example                                                                                            |
+| --------------------------- | ------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------- |
+| Track                       | Ordered recording of positions of the whole course                                                           | The Vertical SwimRunMan GPX holds one track                                                        |
+| Trackpoint                  | One position in a track, with latitude, longitude and optional elevation and time                            | `lat="54.4" lon="13.4"`                                                                            |
+| Waypoint                    | A named point of interest, separate from the track                                                           | "Début SWIM"                                                                                       |
+| `<sym>`                     | Symbol code on a waypoint; 200 marks a swim start and 201 a swim end                                         | A waypoint with `<sym>200</sym>` starts a swim                                                     |
+| Segment                     | Consecutive trackpoints that are all swim or all run, with a distance                                        | Swim of 400 m                                                                                      |
+| Swim, run, unclassified     | The three labels a segment can have                                                                          | Run of 2.1 km                                                                                      |
+| Transition                  | The point where one segment ends and the next begins                                                         | The beach exit after a swim                                                                        |
+| Hysteresis                  | Memory in a threshold decision: once a transition counts as passed, nearby noisy GPS fixes cannot un-pass it | The watch advances to leg 5 once, even when swim-degraded GPS jitters around the transition radius |
+| Distance to next transition | Distance along the track from a position to the next transition                                              | "Next transition in 1.2 km"                                                                        |
+| Question                    | A prompt the athlete sends to the chat, by clicking a label or typing                                        | "But can tigers actually swim?"                                                                    |
+| Static answer               | A fixed answer from the FAQ catalog, consisting of a brief answer and optionally more                        | The tiger answer in `faq.en.json`                                                                  |
+| Brief answer                | The short first reply to a question                                                                          | "Yes. Tigers are among the few big cats that like water."                                          |
+| More                        | The longer second reply, offered through the *Tell me more* follow-up                                        | Why swimrun courses vary in distance                                                               |
+| Dynamic answer              | An answer an LLM generates for a free-text question (planned, issue #10)                                     | A reply about a specific wetsuit                                                                   |
+| Fallback                    | The reply to free text while no LLM is integrated                                                            | "There is no actual LLM integration yet.."                                                         |
+| Language                    | One of English, Dutch, French or German; each has its own FAQ catalog                                        | `faq.nl.json`                                                                                      |
+| Strategy                    | A method to detect segments: waypoint, speed or landscape                                                    | Waypoint strategy                                                                                  |
+| Confidence                  | How sure a strategy is about a trackpoint; the combiner keeps the highest                                    | 0.9 from waypoints beats 0.4 from speed                                                            |
+| Terrain                     | Land or water at a coordinate, from OpenStreetMap                                                            | A lake point returns water                                                                         |
+| Sampling interval           | Wanted distance between sampled trackpoints for terrain queries                                              | 50 m                                                                                               |
+| Gap                         | Distance between two consecutive samples                                                                     | With a 50 m interval and 200 m steps, the gap can exceed 50 m                                      |
+| Sparse track                | Track whose trackpoints lie far apart                                                                        | A watch that records every 200 m                                                                   |
+| Paired segment table        | Table with one row per run and swim pair ([ADR-0007](./adr/0007-compact-segment-table-format.md))            | Row: run 2.1 km, swim 400 m                                                                        |
+| Run-first, swim-first       | Which segment type opens a paired row; run-first is the default                                              | A toggle above the table                                                                           |
+| Aid station                 | Food and drink point, usually on land                                                                        | A waypoint on a run                                                                                |
 
 Table 10 defines the terms about map data, the terrain service and the infrastructure around it, in alphabetical order.
 
 *Table 10*: Map data and infrastructure glossary.
 
-| Term | Meaning | Example |
-| --- | --- | --- |
-| Area cache | Browser store of the Overpass answers per coarse bounding box, kept for a week, so a second analysis of the same area needs no request; it holds public map data only, never GPX content | The Cache API entry for one 0.05 degree grid cell |
-| Bounding box (bbox) | Rectangle on the map given by its south, west, north and east edge; an Overpass query is limited to one | `52.15,4.85,52.35,5.05` |
-| Coarse bounding box | The track's bounding box grown outward to a 0.05 degree grid (about 5 km), so the request shows the neighbourhood of the track and not the track itself | The query area for the Rondje Eilanden |
-| Container, image | A container is an isolated process started from an image, which packages a program with what it needs to run; the same image runs on a laptop and on a server | The back end image built from the `Dockerfile` |
-| Docker Compose, profile | A Compose file describes several containers that run together; a profile marks services that start only when asked for | The local Overpass server, profile `overpass`, in `docker-compose.yml` |
-| Exponential backoff | Retrying a request after a wait that doubles each time (here 1, 2 and 4 seconds), as busy Overpass servers ask for | A 502 answer is followed by a retry after 1 s |
-| Extract | The OpenStreetMap data of one region as a file, a part of the complete planet file | The Netherlands extract |
-| Fixture | Recorded data that a test uses instead of asking the outside world | `test/fixtures/rondje-eilanden-overpass.json` |
-| Geofabrik | A German company that processes OpenStreetMap data and publishes ready-made regional extracts for download | `download.geofabrik.de/europe/netherlands-latest.osm.pbf` |
-| Mirror | Another public Overpass server with the same data, tried when the first one is busy | `overpass.kumi.systems` |
-| Multi-criteria decision making (MCDM) | Choosing between options by judging each against weighted criteria, and iterating between judging the options and adjusting the criteria | The weighted comparison of back-end technologies in [ADR-0014](./adr/0014-back-end-technology.md) |
-| OpenStreetMap (OSM) | The open, collaboratively edited map database that TigerLegs takes its water data from, under the ODbL licence | A lake drawn as a `natural=water` area |
-| Oracle test | A test that compares the extractor with an official, independent result | The ÖTILLÖ Cannes split from RaceDayMap |
-| Overpass API | A read-only service that answers queries on OpenStreetMap data | `overpass-api.de` |
-| Overpass QL | The query language of the Overpass API | `way["natural"="water"](bbox);out geom;` |
-| PBF | Protocolbuffer Binary Format, a compact binary file format for OpenStreetMap data, smaller and faster to read than the XML formats, so the usual format of downloads | `netherlands-latest.osm.pbf` |
-| Quality of service | What a user can rely on from a service, such as availability and speed; the planned premium Overpass server offers more of it than the shared public servers | No rate limit on our own server |
-| Ratchet | A passing test that pins today's error of an approach, so a change may make it smaller but not larger | The pinned swim and run error of the speed strategy on the Rondje Eilanden |
+| Term                                  | Meaning                                                                                                                                                                                  | Example                                                                                           |
+| ------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| Area cache                            | Browser store of the Overpass answers per coarse bounding box, kept for a week, so a second analysis of the same area needs no request; it holds public map data only, never GPX content | The Cache API entry for one 0.05 degree grid cell                                                 |
+| Bounding box (bbox)                   | Rectangle on the map given by its south, west, north and east edge; an Overpass query is limited to one                                                                                  | `52.15,4.85,52.35,5.05`                                                                           |
+| Coarse bounding box                   | The track's bounding box grown outward to a 0.05 degree grid (about 5 km), so the request shows the neighbourhood of the track and not the track itself                                  | The query area for the Rondje Eilanden                                                            |
+| Container, image                      | A container is an isolated process started from an image, which packages a program with what it needs to run; the same image runs on a laptop and on a server                            | The back end image built from the `Dockerfile`                                                    |
+| Docker Compose, profile               | A Compose file describes several containers that run together; a profile marks services that start only when asked for                                                                   | The local Overpass server, profile `overpass`, in `docker-compose.yml`                            |
+| Exponential backoff                   | Retrying a request after a wait that doubles each time (here 1, 2 and 4 seconds), as busy Overpass servers ask for                                                                       | A 502 answer is followed by a retry after 1 s                                                     |
+| Extract                               | The OpenStreetMap data of one region as a file, a part of the complete planet file                                                                                                       | The Netherlands extract                                                                           |
+| Fixture                               | Recorded data that a test uses instead of asking the outside world                                                                                                                       | `test/fixtures/rondje-eilanden-overpass.json`                                                     |
+| Geofabrik                             | A German company that processes OpenStreetMap data and publishes ready-made regional extracts for download                                                                               | `download.geofabrik.de/europe/netherlands-latest.osm.pbf`                                         |
+| Mirror                                | Another public Overpass server with the same data, tried when the first one is busy                                                                                                      | `overpass.kumi.systems`                                                                           |
+| Multi-criteria decision making (MCDM) | Choosing between options by judging each against weighted criteria, and iterating between judging the options and adjusting the criteria                                                 | The weighted comparison of back-end technologies in [ADR-0014](./adr/0014-back-end-technology.md) |
+| OpenStreetMap (OSM)                   | The open, collaboratively edited map database that TigerLegs takes its water data from, under the ODbL licence                                                                           | A lake drawn as a `natural=water` area                                                            |
+| Oracle test                           | A test that compares the extractor with an official, independent result                                                                                                                  | The ÖTILLÖ Cannes split from RaceDayMap                                                           |
+| Overpass API                          | A read-only service that answers queries on OpenStreetMap data                                                                                                                           | `overpass-api.de`                                                                                 |
+| Overpass QL                           | The query language of the Overpass API                                                                                                                                                   | `way["natural"="water"](bbox);out geom;`                                                          |
+| PBF                                   | Protocolbuffer Binary Format, a compact binary file format for OpenStreetMap data, smaller and faster to read than the XML formats, so the usual format of downloads                     | `netherlands-latest.osm.pbf`                                                                      |
+| Quality of service                    | What a user can rely on from a service, such as availability and speed; the planned premium Overpass server offers more of it than the shared public servers                             | No rate limit on our own server                                                                   |
+| Ratchet                               | A passing test that pins today's error of an approach, so a change may make it smaller but not larger                                                                                    | The pinned swim and run error of the speed strategy on the Rondje Eilanden                        |
 
 Sources: PBF (OpenStreetMap Wiki, n.d.-a), Geofabrik (Geofabrik, n.d.), Overpass API and Overpass QL (OpenStreetMap Wiki, n.d.-b, n.d.-c), multi-criteria decision making (ICT Research Methods, n.d.).
 
@@ -728,21 +748,21 @@ Table 10 shows the mapping and names where it breaks down.
 
 *Table 10*: Mapping of swimrun concepts to a train journey.
 
-| SwimRun concept | Train journey equivalent | Where the analogy breaks |
-| --- | --- | --- |
-| Track | The recorded journey from A to B | A race course is fixed; a journey is one run of a timetable |
-| Trackpoint | One position fix of the train | None |
-| Waypoint | A station or signal on the line | Stations come from the timetable, not from the recording |
-| `<sym>` 200 and 201 | Marker for tunnel entrance and exit | Symbol codes are specific to Garmin |
-| Segment | A stretch of line with one surface, such as a tunnel | Swim and run alternate by design; tunnels are exceptions |
-| Swim and run | Tunnel and open track | Both domains have two main classes |
-| Transition | A tunnel portal | Athletes change gear at a transition; trains do not |
-| Distance to next transition | "Next station in 3.2 km" | A train display counts stations, not surface changes |
-| Waypoint strategy | Read the timetable and the signal list | Needs that data to exist |
-| Speed strategy | Notice that the train slows down in a tunnel | Speed is weak evidence in both domains |
-| Landscape strategy | Look up the line on a map to find the tunnel | Needs an external map |
-| Sampling interval and gap | Check the map every 500 m and miss a 200 m tunnel | None |
-| Sparse track | A recording with one ping per minute | None |
+| SwimRun concept             | Train journey equivalent                             | Where the analogy breaks                                    |
+| --------------------------- | ---------------------------------------------------- | ----------------------------------------------------------- |
+| Track                       | The recorded journey from A to B                     | A race course is fixed; a journey is one run of a timetable |
+| Trackpoint                  | One position fix of the train                        | None                                                        |
+| Waypoint                    | A station or signal on the line                      | Stations come from the timetable, not from the recording    |
+| `<sym>` 200 and 201         | Marker for tunnel entrance and exit                  | Symbol codes are specific to Garmin                         |
+| Segment                     | A stretch of line with one surface, such as a tunnel | Swim and run alternate by design; tunnels are exceptions    |
+| Swim and run                | Tunnel and open track                                | Both domains have two main classes                          |
+| Transition                  | A tunnel portal                                      | Athletes change gear at a transition; trains do not         |
+| Distance to next transition | "Next station in 3.2 km"                             | A train display counts stations, not surface changes        |
+| Waypoint strategy           | Read the timetable and the signal list               | Needs that data to exist                                    |
+| Speed strategy              | Notice that the train slows down in a tunnel         | Speed is weak evidence in both domains                      |
+| Landscape strategy          | Look up the line on a map to find the tunnel         | Needs an external map                                       |
+| Sampling interval and gap   | Check the map every 500 m and miss a 200 m tunnel    | None                                                        |
+| Sparse track                | A recording with one ping per minute                 | None                                                        |
 
 The mapping shows the core concept: a classified stretch of a route, with a boundary where the class changes.
 The landscape strategy performs the mapping from the track domain to the terrain domain: it maps a trackpoint coordinate to a terrain class through OpenStreetMap.

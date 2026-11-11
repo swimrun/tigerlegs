@@ -43,9 +43,23 @@ The spike decides what documentation cannot: each requirement above becomes a te
 ## PostgreSQL drivers
 
 The question is which driver talks to PostgreSQL, and whether the transaction guarantees are real for it.
-MikroORM ships `@mikro-orm/postgresql`, which "works with cockroachdb too", and `@mikro-orm/pglite` for an embedded PostgreSQL in WASM, which could serve fast tests (MikroORM, n.d.-b).
-The documentation states that "all changes computed during `em.flush()` are executed inside a database transaction by default" and names Cloudflare D1 as the one driver without explicit transactions (MikroORM, n.d.-b).
+MikroORM ships `@mikro-orm/postgresql`, which "works with cockroachdb too", and `@mikro-orm/pglite` for an embedded PostgreSQL in WASM, which could serve fast tests (MikroORM, n.d.-c).
+The documentation states that "all changes computed during `em.flush()` are executed inside a database transaction by default" and names Cloudflare D1 as the one driver without explicit transactions (MikroORM, n.d.-c).
 Which client library `@mikro-orm/postgresql` uses underneath, and which other PostgreSQL clients exist for the other options, is not in the pages read and is to be found out before the comparison (to check: the `pg` package and `postgres`).
+
+## Sources on aggregates and the unit of work
+
+The patterns, in the words of their sources, and what each ecosystem says about them:
+
+- **Aggregate.** "A cluster of domain objects that can be treated as a single unit"; "transactions should not cross aggregate boundaries"; "aggregates are the basic element of transfer of data storage - you request to load or save whole aggregates" (Fowler, n.d.-b).
+- **Repository.** "Mediates between the domain and data mapping layers using a collection-like interface for accessing domain objects" (Fowler, n.d.-c).
+- **Unit of work.** "Maintains a list of objects affected by a business transaction and coordinates the writing out of changes and the resolution of concurrency problems" (Fowler, n.d.-a).
+- **Spring Data JDBC** is built on these ideas: "each aggregate has exactly one aggregate root", everything reachable from the root belongs to the aggregate, references across aggregates are consistent eventually and not at all times, and there is no lazy loading, so an aggregate loads and saves as a whole; child entities are deleted and recreated when it is saved, so large aggregates are costly to write (Spring, n.d.).
+- **Entity Framework Core.** Microsoft's guidance for DDD uses persistence-ignorant entities, private fields and read-only collections that the aggregate root controls, value objects as owned types, one repository per aggregate and the `DbContext` as unit of work (Microsoft, 2021).
+- **SQLAlchemy.** The classical mapping makes the ORM depend on the domain model and not the other way round, so "our domain model classes stay blissfully unaware of the database" (Percival & Gregory, n.d.).
+- **MikroORM.** "MikroORM uses the Identity Map pattern to track objects. Whenever you fetch an object from the database, MikroORM will keep a reference to this object inside its `UnitOfWork`", and "when you call `em.flush()`, all computed changes are queried inside a database transaction (if supported by given driver)" (MikroORM, n.d.-b). Its documentation does not present aggregates or DDD.
+
+The patterns are also described in the Code chapter of the [software guidebook](../software-guidebook.md#76-back-end-aggregate-repository-and-unit-of-work-planned).
 
 ## Criteria (draft, weights to be set by the owner)
 
@@ -86,6 +100,11 @@ Which client library `@mikro-orm/postgresql` uses underneath, and which other Po
 
 - Fowler, M. (n.d.-a). *Unit of work* [Patterns of enterprise application architecture]. Retrieved November 11, 2026, from https://martinfowler.com/eaaCatalog/unitOfWork.html
 - Fowler, M. (n.d.-b). *DDD aggregate* [Bliki]. Retrieved November 11, 2026, from https://martinfowler.com/bliki/DDD_Aggregate.html
+- Fowler, M. (n.d.-c). *Repository* [Patterns of enterprise application architecture]. Retrieved November 11, 2026, from https://martinfowler.com/eaaCatalog/repository.html
 - ICT Research Methods. (n.d.). *Multi-criteria decision making*. Retrieved November 10, 2026, from https://ictresearchmethods.nl/workshop/multi-criteria-decision-making/
+- Microsoft. (2021). *Implementing the infrastructure persistence layer with Entity Framework Core* [.NET microservices architecture]. Retrieved November 11, 2026, from https://learn.microsoft.com/en-us/dotnet/architecture/microservices/microservice-ddd-cqrs-patterns/infrastructure-persistence-layer-implementation-entity-framework-core
 - MikroORM. (n.d.-a). *Transactions and concurrency* [Documentation]. Retrieved November 11, 2026, from https://mikro-orm.io/docs/transactions
-- MikroORM. (n.d.-b). *Usage with SQL drivers* [Documentation]. Retrieved November 11, 2026, from https://mikro-orm.io/docs/usage-with-sql
+- MikroORM. (n.d.-b). *Unit of work and identity map*. Retrieved November 11, 2026, from https://mikro-orm.io/docs/unit-of-work
+- MikroORM. (n.d.-c). *Usage with SQL drivers* [Documentation]. Retrieved November 11, 2026, from https://mikro-orm.io/docs/usage-with-sql
+- Percival, H., & Gregory, B. (n.d.). *Repository pattern* [Chapter 2]. In *Architecture patterns with Python*. Retrieved November 11, 2026, from https://www.cosmicpython.com/book/chapter_02_repository.html
+- Spring. (n.d.). *Domain-driven design and relational databases* [Spring Data JDBC reference]. Retrieved November 11, 2026, from https://docs.spring.io/spring-data/relational/reference/jdbc/domain-driven-design.html
