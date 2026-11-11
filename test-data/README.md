@@ -95,3 +95,10 @@ References follow APA 7, as AGENTS.md requires.
 - RaceDayMap. (n.d.). *ÖTILLÖ Swimrun Cannes: World Series* [Interactive course map and leg table]. Retrieved November 10, 2026, from https://app.racedaymap.com/otillo-swimrun-cannes/world-series (12 runs and 11 swims, total 40.40 km, run 33.10 km, swim 7.30 km; this is the reference used in the Cannes test)
 
 The two Cannes sources differ by 0.37 km of running and 0.18 km of swimming; the test uses the RaceDayMap figures.
+
+## Timestamps in the samples
+
+The sample files keep their timestamps, because the speed analysis needs them to tell swimming from running and the extractor shows the moving and event time.
+Heart rate, cadence and power are stripped from the samples.
+The date is kept on purpose: it identifies the edition of an event, courses differ between editions (for example a swim crossing that was dropped after a government restriction), and an edition means something to people.
+Normalising the clock to a fixed start time while keeping the date as metadata of the variant is possible later; see the software guidebook, section 6.6.

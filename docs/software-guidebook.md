@@ -474,6 +474,7 @@ package "Course (idealized track)" {
   class CourseVariant <<entity>> {
     name
     description
+    valid for: editions, months
   }
   class CourseLine <<value>> {
     positions, no time
@@ -573,7 +574,7 @@ The words, as the extractor and training pages need them:
   The extractor shows a course when it loads an official GPX file.
 - A **recording** is a carried-out track: an athlete's GPX or FIT file with time and, when the device recorded it, speed and heart rate. The swim and run segments detected on it belong to it. The GPX file of an executed training is a recording once the athlete saves it from the extractor; saving is the athlete's choice and we do not sync or keep a training log.
 - The extractor page treats both as "a GPX file". A sample such as the Rondje Eilanden file is a recording of one athlete with heart rate, cadence and power stripped (`test-data/README.md`); that stripping is how a course is made from a recording.
-- A course has **variants**: one way of doing it, with a description and its own typical GPX line. Race day and training, high and low water, and the water bird breeding season (from April to June some islands are avoided for the sake of nature) are variants. The extractor lists them per course: Het Rondje Eilanden has *race day* (the race starts with swim A of about 400 m along the island, because the island is full of people on race day) and *training* (swim A is run instead), and Rhederlaag has the recording as swum, high water, low water and the breeding season. Only the variants whose typical GPX file exists can be loaded; the others are announced as "GPX to be added".
+- A course has **variants**: one way of doing it, with a description and its own typical GPX line. Race day and training, high and low water, and the water bird breeding season (from April to June some islands are avoided for the sake of nature) are variants. A variant can be valid only for some editions or months: the breeding season is a period of months, and courses change from year to year. The extractor lists them per course: Het Rondje Eilanden has *race day* (the race starts with swim A of about 400 m along the island, because the island is full of people on race day) and *training* (swim A is run instead), and Rhederlaag has the recording as swum, high water, low water and the breeding season. Only the variants whose typical GPX file exists can be loaded; the others are announced as "GPX to be added".
 - A **swimrun group** is a set of athletes: a duo, a team or a larger training group.
 - A **training plan** leads to goal events: one A event and B or C events before it (roadmap M10). Its **planned sessions** are what the training page shows, and a session can have a structure of steps for intervals, intensity and rest. We do not build a training log: Strava, Garmin and Polar are dedicated platforms for executed training, so a session points at the activity there, or at a recording the athlete saved, and keeps a small adherence snapshot.
 
@@ -594,6 +595,7 @@ Decisions behind the model, each of which can be reversed in the data-layer ADR:
 4. **Goal events live inside the plan.** A shared event aggregate (an ÖTILLÖ race that many athletes aim at) is possible later; see the open questions.
 5. **The structure of a session is a tree of steps** (a repeat contains steps), flattened when exported.
 6. **No training log of our own.** Comparing a planned with an executed session is better done by dedicated services, so a planned session holds a reference to the executed activity (`ExecutedActivityRef`) and a high-level `Adherence` snapshot, and no trace or sensor data. The reference points at the platform that recorded it, or at a recording the athlete saved from the GPX of that training, which is then personal data under the erasure rule for athletes (above).
+7. **Timestamps in a course are kept.** The speed analysis needs them to tell swimming from running. Two refinements are open: shifting the clock so that every course starts at the same fixed time, and keeping the date as separate metadata of the variant. The date stays because it identifies the edition: courses change between editions, and an edition means something to people. As the owner recalls it (not yet sourced), the first Ötillö Rügen in 2025 still had the big swim crossing, which was changed after the second edition because of a government restriction.
 
 What the structure maps to. Garmin's FIT workout file "must contain a File Id message, a Workout message, and one or more Workout Step messages"; a step has a duration type and value, a target type and value and an intensity ("Active", "Rest", "Warmup", "Cooldown", "Recovery", "Interval" or "Other"), and a repeat block is a step placed after the steps to repeat, with the index of the first step and the number of repetitions (Garmin, n.d.-b).
 Our roles (warm-up, work, rest, cool-down) map onto those intensities, and the tree becomes the flat list with a repeat step on export.
@@ -743,10 +745,16 @@ class CourseVariant <<entity>> {
   -id: VariantId
   -name: string
   -description: string
+  -validity: Validity | null
   -line: CourseLine
   -legs: Leg[1..*]
   +distanceM(): number
   +distanceOf(kind: SegmentType): number
+}
+class Validity <<value>> {
+  +fromYear: number | null
+  +toYear: number | null
+  +months: number[0..12]
 }
 class CourseLine <<value>> {
   +points: LinePoint[2..*]
@@ -841,6 +849,7 @@ class CourseFromRecording <<domain service>> {
 
 Course *-- "1..*" CourseVariant
 CourseVariant *-- "1" CourseLine
+CourseVariant *-- "0..1" Validity
 CourseLine *-- "2..*" LinePoint
 CourseVariant *-- "1..*" Leg
 Leg ..> SegmentType
