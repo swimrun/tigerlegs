@@ -119,6 +119,24 @@ Only supported releases are considered: Java 25 is an LTS release, available fro
 
 C8 is named *autonomy* here. *Sovereignty* is also used for this idea, but the word has other uses; what is meant is the ability to run, move and fix our own service without asking a vendor.
 
+### C4 and C6: a portable core, enforced, and the test runner
+
+A TypeScript back end only shares code with the front end if the shared modules stay free of Deno and of the browser.
+That is an architecture rule, so it is enforced by tooling and not by review (`tsconfig.shared.json`, `test/portability.test.ts`, two CI steps):
+
+1. **Compiler rule.** `npm run check:shared` compiles the listed modules with only Node's types (no `Deno` namespace, no DOM) and with `erasableSyntaxOnly`, which rejects what Node's type stripping cannot run: enums, runtime namespaces and parameter properties (Node.js, n.d.).
+2. **Load test.** A Deno test starts `node` and imports every listed module, so Node 24 itself proves that it can load them. The module list is the `include` of the tsconfig, a single source.
+3. **Both runners.** The spike's tests already run on `node:test`; the repository's tests run on Deno. Running one shared suite under both is the next step and is not done yet (it needs the shared tests to move from `Deno.test` and `@std/assert` to `node:test` and `node:assert`).
+
+Nine modules pass today: `gps-filter`, `speed-analyzer`, `segment-builder`, `segment-cleaner`, `rest-detector`, `strategy-combiner`, `waypoint-classifier`, `training-week` and `overpass`.
+The check found two leaks that keep other modules out of the list: `gpx-parser.ts` is typed against the DOM (`Element`, `Document`) although it parses with xmldom, and `water.ts` imports `overpass-cache.ts`, which uses the browser Cache API (so `analyze.ts` follows). Both are small to fix: a cache interface that the back end implements differently, and xmldom's own types for the parser.
+
+**Test runner.** Node's type stripping removes the pressure to adopt one for the back end: `node:test` is built in and needs no dependency (Node.js, n.d.).
+Vitest is already in the repository (version 5, for the Storybook tests in a browser), so a second `environment: 'node'` project would cost no new dependency, but it is a different runner from the one the repository's 42 test files use, and a Vitest run would have to be added next to `deno test`.
+Whether Vitest accepts TypeScript that Node's stripping rejects (enums), and whether it is faster, are not measured here. The portability rule above matters more than the runner: keep the shared tests on the common denominator (`node:test` and `node:assert`) and both runners can execute them.
+
+**Dependency audit.** `deno audit` reads `deno.lock` (Deno, n.d.), which holds 411 npm packages; `package-lock.json` holds 647. The Storybook chain `@storybook/react-vite` → `glob` → `minimatch`, which `npm audit` reports (4 moderate), is only in the second file, so `deno audit` cannot see it. `npm audit --omit=dev`, now a CI step, reports 0 vulnerabilities for what ships: the findings are in development tooling.
+
 ### C5: what the roadmap will ask of the ecosystem
 
 The weight of C5 is low now and will grow with the roadmap (M9 to M12):
@@ -290,6 +308,7 @@ Not yet measured: the PostgreSQL read with a Flyway migration and a PostGIS colu
 - Bytebase. (2026). *Database deployment tools for DevOps teams in 2026* [Blog]. https://www.bytebase.com/blog/database-deployment-tools.md
 - Cloudflare. (2026, October 9). *Deno joins Cloudflare*. https://blog.cloudflare.com/deno-joins-cloudflare
 - Cloudflare. (n.d.). *About Cloudflare*. Retrieved November 11, 2026, from https://www.cloudflare.com/about-overview/
+- Deno. (n.d.). *deno audit* [CLI reference]. Retrieved November 11, 2026, from https://docs.deno.com/runtime/reference/cli/audit/
 - Deno. (2026). *The state of Deno after the Cloudflare announcement* (Issue 37030) [Issue tracker]. GitHub. Retrieved November 10, 2026, from https://github.com/denoland/deno/issues/37030
 - eSecurity Planet. (2026). *GitHub account breach fuels Shai-Hulud npm supply chain attack*. https://esecurityplanet.com/threats/github-account-breach-fuels-shai-hulud-npm-supply-chain-attack/
 - GraalVM. (n.d.). *Downloads*. Retrieved November 10, 2026, from https://www.graalvm.org/downloads/
@@ -314,6 +333,7 @@ Not yet measured: the PostgreSQL read with a Flyway migration and a PostGIS colu
 - Mollie. (n.d.). *API client libraries*. Retrieved November 11, 2026, from https://docs.mollie.com/docs/libraries
 - .NET Foundation. (n.d.). *dotnet/runtime* [Repository and licence]. GitHub. Retrieved November 10, 2026, from https://github.com/dotnet/runtime
 - Next.js. (2026, March 25). *Next.js across platforms* [Adapter API announcement]. https://nextjs.org/nextjs-across-platforms
+- Node.js. (n.d.). *Modules: TypeScript*. Retrieved November 11, 2026, from https://nodejs.org/api/typescript.html
 - OpenLogic. (n.d.). *Java experts on OpenJDK vs. Oracle JDK*. https://www.openlogic.com/blog/java-experts-openjdk-vs-oracle-jdk
 - OpenStreetMap Wiki. (n.d.-a). *Overpass API*. Retrieved November 10, 2026, from https://wiki.openstreetmap.org/wiki/Overpass_API
 - OpenStreetMap Wiki. (n.d.-b). *Overpass API/Overpass QL*. Retrieved November 10, 2026, from https://wiki.openstreetmap.org/wiki/Overpass_API/Overpass_QL
