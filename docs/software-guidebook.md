@@ -228,7 +228,7 @@ This chapter lists the choices that the team did not make freely.
 
 The following constraints apply:
 
-- The system runs on Deno and TypeScript ([ADR-0002](./adr/0002-use-deno-with-typescript.md)), so browser and server share code.
+- The front end and its tests run on Deno and TypeScript ([ADR-0002](./adr/0002-use-deno-with-typescript.md)); the back end runs on Node.js with TypeScript ([ADR-0014](./adr/0014-back-end-technology.md)). Browser and server still share code: the modules listed in `tsconfig.shared.json` must load under both.
 - The system uses an open-source GIS stack: OpenStreetMap, Leaflet and custom Haversine code ([ADR-0006](./adr/0006-open-source-gis-stack.md)).
 - The backend runs on a VPS in the EU, because location data is personal data under GDPR ([ADR-0004](./adr/0004-host-deno-backend-on-eu-vps.md)).
 - GPX files can be up to 10 MB with up to 50,000 trackpoints ([ADR-0003](./adr/0003-gpx-analysis-execution-location.md)).
@@ -286,11 +286,11 @@ Figure 6 shows the two containers and how they communicate.
 
 *Figure 6*: C4 container diagram.
 
-![Container diagram: the browser app talks to the Deno backend, which uses a disk cache and the Overpass API.](diagrams/container.svg)
+![Container diagram: the browser app talks to the Node.js backend, which uses a disk cache and the Overpass API.](diagrams/container.svg)
 
 The browser app does the analysis and draws the map. Astro generates static HTML during the build; React owns the interactive extractor. GitHub Pages serves the resulting assets without a runtime application backend. The current Pages app requests terrain directly from Overpass only after opt-in.
 
-The diagram also shows the optional Deno terrain API, not a requirement of the Pages deployment. That API checks the `Origin` header on every API route except the health check and caches terrain answers on disk. The Astro development server uses port 8123; run the optional API separately if testing it, rather than starting both on the same port.
+The diagram also shows the optional Node.js terrain API, not a requirement of the Pages deployment. That API checks the `Origin` header on every API route except the health check and caches terrain answers on disk. The Astro development server uses port 8123; run the optional API separately if testing it, rather than starting both on the same port.
 
 The dashed watch data field is planned, not built ([spec](../specs/001-garmin-datafield/spec.md), roadmap M4).
 It would build on the Connect IQ SDK and its Monkey C language; Garmin's developer documentation explains the app types and the simulator (Garmin, n.d.).
@@ -394,7 +394,7 @@ Person(developer, "Developer", "Records test fixtures")
 System_Boundary(tigerlegs, "TigerLegs") {
   Container(browser, "Browser app", "TypeScript, Leaflet", "Analyses the GPX file in a Web Worker. queryOverpass retries a busy server with exponential backoff (1, 2, 4 s)")
   ContainerDb(areaCache, "Area cache", "Cache API in the browser, 7 days", "Overpass answers per coarse bounding box; public map data only")
-  Container(backend, "Back end API", "Deno, Docker container", "Optional. A terrain proxy today, premium features later. The front end works without it")
+  Container(backend, "Back end API", "Node.js, Docker container", "Optional. A terrain proxy today, premium features later. The front end works without it")
   ContainerDb(terrainCache, "Terrain cache", "Files on disk", "Cached Overpass answers on the server")
   Container(ownOverpass, "Own Overpass server", "Docker container, EU VPS", "Quality of service for paying users: no rate limits, own regions", $tags="planned")
   Container(localOverpass, "Local Overpass server", "wiktorn/overpass-api, Docker Compose profile 'overpass'", "http://127.0.0.1:8081, data in overpass-data/ (git-ignored)", $tags="dev")
@@ -430,7 +430,7 @@ Overpass speaks plain HTTP with a query in Overpass QL, so the front end and bac
 This chapter explains how the source code is organised.
 
 The source lives in three folders: `src/client` for the browser, `src/server` for the backend and `src/shared` for types and distance calculation.
-Tests sit next to the code (`*.test.ts`) or in `test/`.
+Tests sit next to the code (`*.test.ts`) or in `test/`. The back end in `src/server` runs on Node.js (`npm run server`, type stripping, no build step) and its tests run with Vitest (`npm run test:server`); `npm run check:server` compiles it with only Node's types. Deno does not run them.
 Most tests are property-based: they state a rule that must hold for generated inputs, such as the maximum gap between samples.
 `deno task build` bundles the browser code into `public/app.js` with `deno bundle`, which is an experimental Deno command.
 
@@ -557,7 +557,7 @@ This chapter describes how to monitor the system.
 
 The static frontend has no application-server health endpoint. GitHub Actions reports build/test/deployment status.
 
-The optional Deno API exposes `GET /api/v1/health`; it needs no `Origin` header, so a monitor can call it when that service is deployed.
+The optional Node.js API exposes `GET /api/v1/health`; it needs no `Origin` header, so a monitor can call it when that service is deployed.
 
 ## 12. Development environment
 

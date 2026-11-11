@@ -31,5 +31,6 @@
     "jsx": "react-jsx",
     "jsxImportSource": "react",
     "lib": ["deno.ns", "dom", "dom.iterable", "esnext"]
-  }
+  },
+  "test": { "exclude": ["src/server"] }
 }

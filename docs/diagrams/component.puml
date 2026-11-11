@@ -3,7 +3,7 @@
 
 title Component diagram of the browser app
 
-Container(backend, "Backend", "Deno", "Terrain requests")
+Container(backend, "Backend", "Node.js", "Terrain requests")
 
 Container_Boundary(browser, "Browser app") {
   Component(ui, "UI", "app.ts", "Upload, map, table and highlighting")

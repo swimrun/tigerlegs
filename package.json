@@ -10,7 +10,10 @@
     "test:site": "playwright test",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build -o storybook-static",
-    "test:a11y": "vitest run --project storybook"
+    "test:a11y": "vitest run --project storybook",
+    "server": "node src/server/server.ts",
+    "test:server": "vitest run --config vitest.server.config.ts",
+    "check:server": "tsc -p tsconfig.server.json"
   },
   "dependencies": {
     "@astrojs/react": "^7.1.2",
