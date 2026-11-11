@@ -34,8 +34,8 @@ import SiteLayout from '../layouts/SiteLayout.astro';
           <li>Choose or drop a <code>.gpx</code> file, or try a sample. If it contains several tracks, choose one before analysis starts.</li>
           <li>Use the strategy checkboxes to enable waypoints or speed. Terrain is optional and off by default. Large tracks are analysed in a background worker; files above 50,000 points ask for confirmation.</li>
           <li>Each table row pairs a run and a swim. Click a distance or map line to select that segment; click again to deselect. Keyboard: Tab, then Enter or Space; Escape clears selection. Hover still previews unselected segments.</li>
-          <li>Use <em>Swim first</em> to change the pairing and column order, and <em>Cumulative distance</em> to show the distance covered after each row.</li>
-          <li>Switch <em>Include breaks</em> on to see pauses as separate rows. Off by default.</li>
+          <li>Use <em>Show swim first</em> to change the pairing and column order, and <em>Show total so far</em> to show the distance covered after each row.</li>
+          <li>Switch <em>Show breaks</em> on to see pauses as separate rows. Off by default.</li>
         </ol>
       </section>
 
@@ -62,7 +62,7 @@ import SiteLayout from '../layouts/SiteLayout.astro';
 
       <section class="space-y-2">
         <h2 class="border-l-4 border-amber-500 pl-3 text-lg font-semibold">Your data</h2>
-        <p>Your GPX file is analysed in your browser and is not uploaded. Terrain data is off by default. Only if you switch on "Use terrain data" does TigerLegs send a coarse area around the track (a bounding box snapped outward to a grid of about 5 km, not the track itself) to the <a class="underline" href="https://overpass-api.de">Overpass API</a>, which serves OpenStreetMap data. Overpass can see your IP address, like any website. Your device location is never read.</p>
+        <p>Your GPX file is analysed in your browser and is not uploaded. Terrain data is off by default. Only if you answer "Yes, use terrain data" when TigerLegs asks does it send a coarse area around the track (a bounding box snapped outward to a grid of about 5 km, not the track itself) to the <a class="underline" href="https://overpass-api.de">Overpass API</a>, which serves OpenStreetMap data. Overpass can see your IP address, like any website. Your device location is never read.</p>
       </section>
 
       <section class="space-y-2">
@@ -84,8 +84,8 @@ import SiteLayout from '../layouts/SiteLayout.astro';
           <li>Kies of sleep een <code>.gpx</code>-bestand, of probeer een voorbeeld. Bevat het meerdere sporen, kies er dan één voordat de analyse begint.</li>
           <li>Met de selectievakjes kies je waypoints of snelheid. Terreindata is optioneel en staat standaard uit. Grote sporen worden in een achtergrondworker geanalyseerd; boven 50.000 punten wordt om bevestiging gevraagd.</li>
           <li>Elke tabelrij bevat een run en een swim. Klik op een afstand of kaartlijn om dat segment te selecteren; klik opnieuw om te deselecteren. Toetsenbord: Tab, daarna Enter of spatie; Escape wist de selectie. Aanwijzen blijft werken als er niets geselecteerd is.</li>
-          <li>Met <em>Swim first</em> verander je de paren en kolomvolgorde; <em>Cumulative distance</em> toont de afgelegde afstand na elke rij.</li>
-          <li>Zet <em>Include breaks</em> aan om pauzes als aparte rijen te zien. Standaard uit.</li>
+          <li>Met <em>Show swim first</em> verander je de paren en kolomvolgorde; <em>Show total so far</em> toont de afgelegde afstand na elke rij.</li>
+          <li>Zet <em>Show breaks</em> aan om pauzes als aparte rijen te zien. Standaard uit.</li>
         </ol>
       </section>
 
@@ -112,7 +112,7 @@ import SiteLayout from '../layouts/SiteLayout.astro';
 
       <section class="space-y-2">
         <h2 class="border-l-4 border-amber-500 pl-3 text-lg font-semibold">Jouw gegevens</h2>
-        <p>Je GPX-bestand wordt in je browser geanalyseerd en niet geüpload. Terreindata staat standaard uit. Alleen als je "Use terrain data" aanzet, stuurt TigerLegs een grof gebied rond het spoor (een bounding box, naar buiten afgerond op een raster van ongeveer 5 km, niet het spoor zelf) naar de <a class="underline" href="https://overpass-api.de">Overpass API</a>, die OpenStreetMap-data levert. Overpass kan je IP-adres zien, zoals elke website. Je apparaatlocatie wordt nooit uitgelezen.</p>
+        <p>Je GPX-bestand wordt in je browser geanalyseerd en niet geüpload. Terreindata staat standaard uit. Alleen als je "Yes, use terrain data" antwoordt wanneer TigerLegs het vraagt, stuurt het een grof gebied rond het spoor (een bounding box, naar buiten afgerond op een raster van ongeveer 5 km, niet het spoor zelf) naar de <a class="underline" href="https://overpass-api.de">Overpass API</a>, die OpenStreetMap-data levert. Overpass kan je IP-adres zien, zoals elke website. Je apparaatlocatie wordt nooit uitgelezen.</p>
       </section>
 
       <section class="space-y-2">
@@ -134,8 +134,8 @@ import SiteLayout from '../layouts/SiteLayout.astro';
           <li>Choisissez ou déposez un fichier <code>.gpx</code>, ou essayez un exemple. S'il contient plusieurs traces, choisissez-en une avant l'analyse.</li>
           <li>Les cases permettent d'activer les waypoints ou la vitesse. Le terrain est optionnel et désactivé par défaut. Les grandes traces sont analysées en arrière-plan ; au-delà de 50 000 points, une confirmation est demandée.</li>
           <li>Chaque ligne associe une course et une nage. Cliquez sur une distance ou un tracé pour sélectionner le segment ; cliquez à nouveau pour le désélectionner. Au clavier : Tab, puis Entrée ou Espace ; Échap efface la sélection. Le survol reste disponible sans sélection active.</li>
-          <li><em>Swim first</em> change les paires et l'ordre des colonnes ; <em>Cumulative distance</em> affiche la distance parcourue après chaque ligne.</li>
-          <li>Activez <em>Include breaks</em> pour voir les pauses comme lignes séparées. Désactivé par défaut.</li>
+          <li><em>Show swim first</em> change les paires et l'ordre des colonnes ; <em>Show total so far</em> affiche la distance parcourue après chaque ligne.</li>
+          <li>Activez <em>Show breaks</em> pour voir les pauses comme lignes séparées. Désactivé par défaut.</li>
         </ol>
       </section>
 
@@ -162,7 +162,7 @@ import SiteLayout from '../layouts/SiteLayout.astro';
 
       <section class="space-y-2">
         <h2 class="border-l-4 border-amber-500 pl-3 text-lg font-semibold">Vos données</h2>
-        <p>Votre fichier GPX est analysé dans votre navigateur et n'est pas téléversé. Les données de terrain sont désactivées par défaut. Seulement si vous activez « Use terrain data », TigerLegs envoie une zone grossière autour de la trace (un rectangle englobant arrondi vers l'extérieur sur une grille d'environ 5 km, pas la trace elle-même) à l'<a class="underline" href="https://overpass-api.de">API Overpass</a>, qui fournit les données OpenStreetMap. Overpass peut voir votre adresse IP, comme tout site web. La position de votre appareil n'est jamais lue.</p>
+        <p>Votre fichier GPX est analysé dans votre navigateur et n'est pas téléversé. Les données de terrain sont désactivées par défaut. Seulement si vous répondez « Yes, use terrain data » quand TigerLegs le demande, il envoie une zone grossière autour de la trace (un rectangle englobant arrondi vers l'extérieur sur une grille d'environ 5 km, pas la trace elle-même) à l'<a class="underline" href="https://overpass-api.de">API Overpass</a>, qui fournit les données OpenStreetMap. Overpass peut voir votre adresse IP, comme tout site web. La position de votre appareil n'est jamais lue.</p>
       </section>
 
       <section class="space-y-2">
@@ -184,8 +184,8 @@ import SiteLayout from '../layouts/SiteLayout.astro';
           <li>Wähle eine <code>.gpx</code>-Datei, ziehe sie in das Upload-Feld oder probiere ein Beispiel. Enthält sie mehrere Tracks, wähle vor der Analyse einen aus.</li>
           <li>Mit den Kontrollkästchen aktivierst du Wegpunkte oder Geschwindigkeit. Geländedaten sind optional und standardmäßig aus. Große Tracks werden im Hintergrund analysiert; über 50.000 Punkte ist eine Bestätigung erforderlich.</li>
           <li>Jede Tabellenzeile kombiniert einen Lauf und eine Schwimmstrecke. Klicke auf eine Distanz oder Kartenlinie, um das Segment auszuwählen; ein weiterer Klick hebt die Auswahl auf. Tastatur: Tab, dann Eingabe oder Leertaste; Escape löscht die Auswahl. Ohne aktive Auswahl bleibt die Vorschau beim Darüberfahren verfügbar.</li>
-          <li><em>Swim first</em> ändert die Paare und Spaltenreihenfolge; <em>Cumulative distance</em> zeigt die zurückgelegte Distanz nach jeder Zeile.</li>
-          <li>Schalte <em>Include breaks</em> ein, um Pausen als eigene Zeilen zu sehen. Standardmäßig aus.</li>
+          <li><em>Show swim first</em> ändert die Paare und Spaltenreihenfolge; <em>Show total so far</em> zeigt die zurückgelegte Distanz nach jeder Zeile.</li>
+          <li>Schalte <em>Show breaks</em> ein, um Pausen als eigene Zeilen zu sehen. Standardmäßig aus.</li>
         </ol>
       </section>
 
@@ -212,7 +212,7 @@ import SiteLayout from '../layouts/SiteLayout.astro';
 
       <section class="space-y-2">
         <h2 class="border-l-4 border-amber-500 pl-3 text-lg font-semibold">Deine Daten</h2>
-        <p>Deine GPX-Datei wird in deinem Browser analysiert und nicht hochgeladen. Geländedaten sind standardmäßig aus. Nur wenn du „Use terrain data“ einschaltest, sendet TigerLegs ein grobes Gebiet um die Spur (eine Bounding Box, nach außen auf ein Raster von etwa 5 km gerundet, nicht die Spur selbst) an die <a class="underline" href="https://overpass-api.de">Overpass API</a>, die OpenStreetMap-Daten liefert. Overpass kann deine IP-Adresse sehen, wie jede Website. Der Standort deines Geräts wird nie ausgelesen.</p>
+        <p>Deine GPX-Datei wird in deinem Browser analysiert und nicht hochgeladen. Geländedaten sind standardmäßig aus. Nur wenn du auf die Frage von TigerLegs mit „Yes, use terrain data“ antwortest, sendet es ein grobes Gebiet um die Spur (eine Bounding Box, nach außen auf ein Raster von etwa 5 km gerundet, nicht die Spur selbst) an die <a class="underline" href="https://overpass-api.de">Overpass API</a>, die OpenStreetMap-Daten liefert. Overpass kann deine IP-Adresse sehen, wie jede Website. Der Standort deines Geräts wird nie ausgelesen.</p>
       </section>
 
       <section class="space-y-2">

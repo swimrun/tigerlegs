@@ -53,6 +53,7 @@ This serves the frontend only; GPX analysis stays in the browser. The optional N
 | `npm run check:shared`            | Check the shared modules are portable |
 | `npx playwright install chromium` | Install the test browser (once)       |
 | `npm run test:site`               | Test the built site in the browser    |
+| `npm run test:features`           | Run the Gherkin acceptance criteria   |
 | `npm run test:a11y`               | Test the components for accessibility |
 | `deno task lint`                  | Lint the code                         |
 | `deno task fmt`                   | Format the code                       |

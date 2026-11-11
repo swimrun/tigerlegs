@@ -77,7 +77,7 @@ export function renderTable(
   const headings = [
     "#",
     ...types.map((type) => type === "swim" ? "Swim (m)" : "Run (km)"),
-    ...(config.showCumulative ? ["Cumulative (km)"] : []),
+    ...(config.showCumulative ? ["Total so far (km)"] : []),
     "Detected by",
     "Confidence",
   ];
