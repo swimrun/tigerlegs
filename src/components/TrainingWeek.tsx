@@ -179,21 +179,6 @@ export default function TrainingWeek({ languageModel }: Props) {
         <h2 id="levers-title" className="text-lg font-bold">{t.leversTitle}</h2>
         <p className="text-sm text-stone-600">{t.leversHint}</p>
         <div className="flex flex-wrap items-end gap-3">
-          <details className="relative text-sm" data-rest-days>
-            <summary className="cursor-pointer rounded border border-stone-900 bg-white px-2 py-1">
-              <span className="font-medium">{t.restDaysLabel}: </span>
-              {restDays.length > 0 ? DAYS.filter((day) => restDays.includes(day)).map((day) => t.days[day]).join(", ") : t.restDaysNone}
-            </summary>
-            <fieldset className="absolute z-10 mt-1 space-y-1 rounded border border-stone-900 bg-white p-2 shadow">
-              <legend className="sr-only">{t.restDaysLabel}</legend>
-              {DAYS.map((day) => (
-                <label key={day} className="flex items-center gap-2">
-                  <input type="checkbox" checked={restDays.includes(day)} onChange={() => toggleRestDay(day)} />
-                  {t.days[day]}
-                </label>
-              ))}
-            </fieldset>
-          </details>
           {(Object.keys(LEVER_LIMITS) as (keyof PlanLevers)[]).map((key) => (
             <label key={key} className="block text-sm">
               <span className="block font-medium">{t.leverLabels[key]}</span>
@@ -214,6 +199,21 @@ export default function TrainingWeek({ languageModel }: Props) {
           >
             {t.generate}
           </button>
+          <details className="relative ml-auto text-sm" data-rest-days>
+            <summary className="cursor-pointer rounded border border-stone-900 bg-white px-2 py-1">
+              <span className="font-medium">{t.restDaysLabel}: </span>
+              {restDays.length > 0 ? DAYS.filter((day) => restDays.includes(day)).map((day) => t.days[day]).join(", ") : t.restDaysNone}
+            </summary>
+            <fieldset className="absolute right-0 z-10 mt-1 space-y-1 rounded border border-stone-900 bg-white p-2 shadow">
+              <legend className="sr-only">{t.restDaysLabel}</legend>
+              {DAYS.map((day) => (
+                <label key={day} className="flex items-center gap-2">
+                  <input type="checkbox" checked={restDays.includes(day)} onChange={() => toggleRestDay(day)} />
+                  {t.days[day]}
+                </label>
+              ))}
+            </fieldset>
+          </details>
         </div>
       </section>
 
