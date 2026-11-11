@@ -1,7 +1,8 @@
 ---
-import { Image } from "astro:assets";
+import { getImage, Image } from "astro:assets";
 import { ClientRouter } from "astro:transitions";
 import logo from "../assets/tigerlegs-logo-web.png";
+import roarrAvatar from "../assets/roarr-avatar.svg";
 import config from "../../deno.json";
 import Chatbot from "../components/Chatbot.tsx";
 interface Props {
@@ -10,6 +11,7 @@ interface Props {
   active: "extractor" | "training" | "about" | "guidebook" | "profile";
 }
 const { title, description, active } = Astro.props;
+const avatar = await getImage({ src: roarrAvatar, width: 96, height: 96 });
 const base = import.meta.env.BASE_URL.replace(/\/?$/, "/");
 const languages = [
   { code: "en", flag: "🇬🇧", name: "English" },
@@ -64,7 +66,7 @@ const links = [
       <div class="tiger-stripes"></div>
     </header>
     <slot />
-    <Chatbot client:load transition:persist faqBase={`${base}chat/faq`} />
+    <Chatbot client:load transition:persist faqBase={`${base}chat/faq`} avatarSrc={avatar.src} />
     <script>import "../client/language-switch.ts";</script>
     <footer class="mx-auto max-w-7xl px-4 pb-8 text-xs text-stone-600">
       &copy; 2026 IT Off the Wall BV · <a class="underline" href={`${base}about.html`}>About</a>
