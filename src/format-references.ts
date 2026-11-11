@@ -1,3 +1,4 @@
+import { readFile, writeFile } from "node:fs/promises";
 /**
  * Writes the reference list of a document as a bullet list: one bullet per source, without a blank
  * line between sources. APA puts a blank line between references; bullets keep the Markdown source
@@ -35,10 +36,10 @@ export function bulletReferences(markdown: string): string {
 }
 
 if (import.meta.main) {
-  for (const file of Deno.args) {
-    const before = await Deno.readTextFile(file);
+  for (const file of process.argv.slice(2)) {
+    const before = await readFile(file, "utf8");
     const after = bulletReferences(before);
-    if (after !== before) await Deno.writeTextFile(file, after);
+    if (after !== before) await writeFile(file, after);
     console.log(`${after === before ? "unchanged" : "converted"}: ${file}`);
   }
 }

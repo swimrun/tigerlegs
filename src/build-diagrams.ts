@@ -1,3 +1,6 @@
+import { spawn } from "node:child_process";
+import { readdir, readFile, writeFile } from "node:fs/promises";
+
 /**
  * PlantUML (and C4-PlantUML) diagrams live as fenced ```plantuml blocks inside the Markdown, so one
  * file holds the text and its diagram and the Markdown preview can draw it. This renders each block
@@ -23,22 +26,28 @@ export function extractPlantUml(markdown: string): PlantUmlBlock[] {
   });
 }
 
-async function render(source: string): Promise<Uint8Array> {
-  const process = new Deno.Command("plantuml", { args: ["-tsvg", "-pipe"], stdin: "piped", stdout: "piped", stderr: "piped" }).spawn();
-  const writer = process.stdin.getWriter();
-  await writer.write(new TextEncoder().encode(source));
-  await writer.close();
-  const { code, stdout, stderr } = await process.output();
-  if (code !== 0) throw new Error(new TextDecoder().decode(stderr));
-  return stdout;
+async function render(source: string): Promise<Buffer> {
+  const child = spawn("plantuml", ["-tsvg", "-pipe"], { stdio: ["pipe", "pipe", "pipe"] });
+  const out: Buffer[] = [];
+  const err: Buffer[] = [];
+  child.stdout.on("data", (chunk: Buffer) => out.push(chunk));
+  child.stderr.on("data", (chunk: Buffer) => err.push(chunk));
+  const done = new Promise<number | null>((resolve, reject) => {
+    child.on("error", reject);
+    child.on("close", resolve);
+  });
+  child.stdin.end(source);
+  const code = await done;
+  if (code !== 0) throw new Error(Buffer.concat(err).toString("utf8"));
+  return Buffer.concat(out);
 }
 
 if (import.meta.main) {
   let count = 0;
-  for await (const entry of Deno.readDir("docs")) {
-    if (!entry.isFile || !entry.name.endsWith(".md")) continue;
-    for (const block of extractPlantUml(await Deno.readTextFile(`docs/${entry.name}`))) {
-      await Deno.writeFile(`docs/diagrams/${block.name}.svg`, await render(block.source));
+  for (const entry of await readdir("docs", { withFileTypes: true })) {
+    if (!entry.isFile() || !entry.name.endsWith(".md")) continue;
+    for (const block of extractPlantUml(await readFile(`docs/${entry.name}`, "utf8"))) {
+      await writeFile(`docs/diagrams/${block.name}.svg`, await render(block.source));
       count++;
     }
   }

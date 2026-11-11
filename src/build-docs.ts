@@ -1,3 +1,4 @@
+import { copyFile, mkdir, readdir } from "node:fs/promises";
 import { marked } from "marked";
 import { extractPlantUml } from "./build-diagrams.ts";
 
@@ -60,18 +61,15 @@ export function renderDocument(source: string, base = "", isAdr = false): string
 }
 
 if (import.meta.main) {
-  await Deno.copyFile(
+  await copyFile(
     "assets/swimrun-paddles-laffrey-vertical-2026.png",
     "public/img/swimrun-paddles-laffrey-vertical-2026.png",
   );
 
-  await Deno.mkdir("public/diagrams", { recursive: true });
-  for await (const entry of Deno.readDir("docs/diagrams")) {
-    if (entry.name.endsWith(".svg")) {
-      await Deno.copyFile(
-        `docs/diagrams/${entry.name}`,
-        `public/diagrams/${entry.name}`,
-      );
+  await mkdir("public/diagrams", { recursive: true });
+  for (const name of await readdir("docs/diagrams")) {
+    if (name.endsWith(".svg")) {
+      await copyFile(`docs/diagrams/${name}`, `public/diagrams/${name}`);
     }
   }
 }

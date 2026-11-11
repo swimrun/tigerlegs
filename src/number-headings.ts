@@ -1,3 +1,4 @@
+import { readFile, writeFile } from "node:fs/promises";
 /**
  * Numbers the section headings of a Markdown document: `## 3. Title` for a section and `### 3.2 Title` for a
  * subsection, counted in order, so that a reader can refer to "section 3.2". The title line (`#`) and headings
@@ -38,10 +39,10 @@ export function numberHeadings(markdown: string): string {
 }
 
 if (import.meta.main) {
-  for (const file of Deno.args) {
-    const before = await Deno.readTextFile(file);
+  for (const file of process.argv.slice(2)) {
+    const before = await readFile(file, "utf8");
     const after = numberHeadings(before);
-    if (after !== before) await Deno.writeTextFile(file, after);
+    if (after !== before) await writeFile(file, after);
     console.log(`${after === before ? "unchanged" : "numbered"}: ${file}`);
   }
 }
