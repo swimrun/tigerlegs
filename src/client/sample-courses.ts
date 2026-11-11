@@ -91,9 +91,9 @@ export const SAMPLE_COURSES: readonly SampleCourse[] = [
     id: "ruegen",
     name: "Ötillö Rügen",
     variants: [{
-      id: "standard",
-      label: "Standard",
-      description: "The Ötillö Rügen SwimRun World Series.",
+      id: "recorded-2026-05-16",
+      label: "As recorded, 16 May 2026",
+      description: "The Ötillö Rügen SwimRun World Series, recorded on 16 May 2026.",
       file: "ruegen-swimrun.gpx",
       source: "Ötillö_Rügen_met_Sander_SwimRun_World_Serious_.gpx",
     }],
