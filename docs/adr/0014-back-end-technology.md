@@ -199,6 +199,11 @@ That fits one aggregate, one transaction.
 For eventual consistency across aggregates the MikroORM transaction page says nothing about domain events or an outbox, so that part is ours to build: the usual pattern is to write the event to an outbox table in the same transaction as the aggregate change and let a separate process publish it. I have not sourced that pattern here, so it is to be checked before it is relied on.
 This matches how Spring Data JDBC treats references between aggregates, as eventually and not always consistent (Spring, n.d.-a), so the model does not need to change when the system grows; the tooling around it is what Node.js has less of than Spring.
 
+**Unit of work is not the aggregate.** They are two patterns that work together. Fowler describes a unit of work as something that "maintains a list of objects affected by a business transaction and coordinates the writing out of changes and the resolution of concurrency problems" (Fowler, n.d.-a); an aggregate is "a cluster of domain objects that can be treated as a single unit", and "transactions should not cross aggregate boundaries" (Fowler, n.d.-b). The unit of work is the mechanism that saves; the aggregate is the rule for what may be saved together.
+MikroORM's unit of work (like EF Core's `DbContext`) can track many aggregates and write them all in one transaction, which breaks that rule unless we keep it ourselves: one use case changes one aggregate root, then flushes once.
+In MikroORM `em.persist()` only marks a new entity as managed, entities loaded from the database need no `persist` and are written by `em.flush()`, and `await em.persist(user).flush()` chains the two (MikroORM, n.d.-a); `flush` computes the changes and runs them in a transaction, so there is no separate commit step to write. The two calls are the same split as `Add` and `SaveChanges` in EF Core. Spring Data JDBC has no persistence context at all: saving the aggregate root is the whole operation (Spring, n.d.-a).
+The MikroORM page on the unit of work says the changes run in a transaction "if supported by given driver". PostgreSQL has its own driver package, `@mikro-orm/postgresql`, and the SQL documentation states that "all changes computed during `em.flush()` are executed inside a database transaction by default"; the only driver limitation it names is Cloudflare D1 (MikroORM, n.d.-f). Because a claim in documentation is not a test, the persistence spike includes a test that a failure between two writes rolls both back.
+
 **Flyway in Node.js.** Flyway is a Java tool with a command line and an official container image that supports its Community, Teams and Enterprise editions (Redgate, n.d.), so a Node.js back end uses it the same way as a Java one: a container that applies the SQL migrations before the service starts. Wrappers such as `node-flywaydb` exist but need a JVM on the machine, and Node-native tools (umzug, node-pg-migrate, MikroORM's own migrator) are the alternative if the JVM image is unwelcome; the SQL files stay the same either way.
 
 ### Database migrations
@@ -341,7 +346,7 @@ Whether the data layer is MikroORM or hand-written repositories is decided in th
 
 - ADR-0002 (Deno with TypeScript) and ADR-0004 (a Deno back end on an EU VPS) no longer describe the back end; Deno remains the runner of the repository's tests and tasks until #61 decides.
 - The shared modules `gpx-parser` and `water` (through `overpass-cache`) still depend on the DOM and the browser Cache API and must be freed before the back end can reuse them.
-- Persistence is the first back-end task: a PostgreSQL read with a PostGIS column through the chosen data layer, a Flyway migration, one transaction around an aggregate and one outbox write. If this is painful, the decision is reopened in favour of Spring Boot.
+- Persistence is the first back-end task: a PostgreSQL read with a PostGIS column through the chosen data layer, a Flyway migration, one transaction around an aggregate with a test that a failure between two writes rolls both back, and one outbox write. If this is painful, the decision is reopened in favour of Spring Boot.
 - Reopen the decision when: shared code with the front end is no longer wanted (with C4 at weight 0 and C1 at 30, Spring Boot scores 395 against 380 for Node.js, Go and Axum and 375 for ASP.NET Core); the phase-2 persistence work fails as above; a supply-chain incident hits a dependency the back end needs; Node.js or its governing foundation changes course.
 - The native-image variants of the JVM stacks were not measured; they matter only if the JVM is reconsidered.
 
@@ -359,6 +364,8 @@ Whether the data layer is MikroORM or hand-written repositories is decided in th
 - Deno. (n.d.). *deno audit* [CLI reference]. Retrieved November 11, 2026, from https://docs.deno.com/runtime/reference/cli/audit/
 - Deno. (2026). *The state of Deno after the Cloudflare announcement* (Issue 37030) [Issue tracker]. GitHub. Retrieved November 10, 2026, from https://github.com/denoland/deno/issues/37030
 - eSecurity Planet. (2026). *GitHub account breach fuels Shai-Hulud npm supply chain attack*. https://esecurityplanet.com/threats/github-account-breach-fuels-shai-hulud-npm-supply-chain-attack/
+- Fowler, M. (n.d.-a). *Unit of work* [Patterns of enterprise application architecture]. Retrieved November 11, 2026, from https://martinfowler.com/eaaCatalog/unitOfWork.html
+- Fowler, M. (n.d.-b). *DDD aggregate* [Bliki]. Retrieved November 11, 2026, from https://martinfowler.com/bliki/DDD_Aggregate.html
 - GraalVM. (n.d.). *Downloads*. Retrieved November 10, 2026, from https://www.graalvm.org/downloads/
 - Hacker News. (2026). *Cloudflare acquires Deno* [Discussion]. Retrieved November 10, 2026, from https://news.ycombinator.com/item?id=50019911
 - Halbritter, M. (2026, February). *Supercharge your JVM performance with Project Leyden and Spring Boot* [Slides]. https://mhalbritter.github.io/slides/2026-02%20-%20Supercharge%20your%20JVM%20performance%20with%20Project%20Leyden%20and%20Spring%20Boot.pdf
@@ -379,6 +386,7 @@ Whether the data layer is MikroORM or hand-written repositories is decided in th
 - MikroORM. (n.d.-c). *Migrations*. Retrieved November 11, 2026, from https://mikro-orm.io/docs/migrations
 - MikroORM. (n.d.-d). *Custom types*. Retrieved November 11, 2026, from https://mikro-orm.io/docs/custom-types
 - MikroORM. (n.d.-e). *Transactions and concurrency* [Documentation]. Retrieved November 11, 2026, from https://mikro-orm.io/docs/transactions
+- MikroORM. (n.d.-f). *Usage with SQL drivers* [Documentation]. Retrieved November 11, 2026, from https://mikro-orm.io/docs/usage-with-sql
 - mmooss. (2026). Comment on *Cloudflare acquires Astro* [Discussion]. Hacker News. https://news.ycombinator.com/item?id=46646645
 - Mollie. (n.d.). *API client libraries*. Retrieved November 11, 2026, from https://docs.mollie.com/docs/libraries
 - .NET Foundation. (n.d.). *dotnet/runtime* [Repository and licence]. GitHub. Retrieved November 10, 2026, from https://github.com/dotnet/runtime
