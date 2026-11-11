@@ -11,3 +11,6 @@ export function resolveLang(saved: string | null, browserLanguage: string): Lang
   const browser = browserLanguage.toLowerCase().slice(0, 2);
   return isLang(browser) ? browser : "en";
 }
+
+/** The names of the site languages in English, for telling a model which language to write in (not a UI text). */
+export const LANGUAGE_NAMES: Record<Lang, string> = { en: "English", nl: "Dutch", fr: "French", de: "German" };

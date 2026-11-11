@@ -1,4 +1,4 @@
-import { assertEquals } from "@std/assert";
+import { expect, it } from "vitest";
 import {
   assistAvailability,
   getLanguageModel,
@@ -31,33 +31,33 @@ function fakeModel(response: string, log: { prompts: string[]; destroyed: boolea
   };
 }
 
-Deno.test("getLanguageModel - null when the browser has no Prompt API", () => {
-  assertEquals(getLanguageModel({}), null);
+it("getLanguageModel - null when the browser has no Prompt API", () => {
+  expect(getLanguageModel({})).toEqual(null);
 });
 
-Deno.test("getLanguageModel - returns the global LanguageModel when present", () => {
+it("getLanguageModel - returns the global LanguageModel when present", () => {
   const model = { availability: () => Promise.resolve("available" as const) };
-  assertEquals(getLanguageModel({ LanguageModel: model }) !== null, true);
+  expect(getLanguageModel({ LanguageModel: model }) !== null).toEqual(true);
 });
 
-Deno.test("assistAvailability - absent without a model, else the browser's answer", async () => {
-  assertEquals(await assistAvailability(null), "absent");
+it("assistAvailability - absent without a model, else the browser's answer", async () => {
+  expect(await assistAvailability(null)).toEqual("absent");
   const log = { prompts: [], destroyed: false };
-  assertEquals(await assistAvailability(fakeModel("{}", log)), "available");
+  expect(await assistAvailability(fakeModel("{}", log))).toEqual("available");
 });
 
-Deno.test("proposeChange - sends schedule and instruction, parses moves, destroys the session", async () => {
+it("proposeChange - sends schedule and instruction, parses moves, destroys the session", async () => {
   const log = { prompts: [] as string[], destroyed: false };
   const response = JSON.stringify({ moves: [{ id: "trail", toDay: "Mon", reason: "travel" }] });
   const reply = await proposeChange(fakeModel(response, log), WEEK, "Move the trail run to Monday.");
-  assertEquals(reply, { kind: "moves", moves: [{ id: "trail", toDay: "Mon", reason: "travel" }] });
-  assertEquals(log.prompts.length, 1);
-  assertEquals(log.prompts[0].includes("trail"), true);
-  assertEquals(log.prompts[0].includes("Move the trail run to Monday."), true);
-  assertEquals(log.destroyed, true);
+  expect(reply).toEqual({ kind: "moves", moves: [{ id: "trail", toDay: "Mon", reason: "travel" }], restDays: [] });
+  expect(log.prompts.length).toEqual(1);
+  expect(log.prompts[0].includes("trail")).toEqual(true);
+  expect(log.prompts[0].includes("Move the trail run to Monday.")).toEqual(true);
+  expect(log.destroyed).toEqual(true);
 });
 
-Deno.test("proposeChange - destroys the session even when the response is malformed", async () => {
+it("proposeChange - destroys the session even when the response is malformed", async () => {
   const log = { prompts: [] as string[], destroyed: false };
   let threw = false;
   try {
@@ -65,11 +65,11 @@ Deno.test("proposeChange - destroys the session even when the response is malfor
   } catch {
     threw = true;
   }
-  assertEquals(threw, true);
-  assertEquals(log.destroyed, true);
+  expect(threw).toEqual(true);
+  expect(log.destroyed).toEqual(true);
 });
 
-Deno.test("parseReply - a clarification with two known sessions wins over empty moves", () => {
+it("parseReply - a clarification with two known sessions wins over empty moves", () => {
   const json = JSON.stringify({
     moves: [],
     clarification: {
@@ -80,7 +80,7 @@ Deno.test("parseReply - a clarification with two known sessions wins over empty 
       ],
     },
   });
-  assertEquals(parseReply(json, WEEK), {
+  expect(parseReply(json, WEEK)).toEqual({
     kind: "clarification",
     clarification: {
       question: "Which run do you mean?",
@@ -92,7 +92,7 @@ Deno.test("parseReply - a clarification with two known sessions wins over empty 
   });
 });
 
-Deno.test("parseReply - clarification options naming unknown sessions are dropped", () => {
+it("parseReply - clarification options naming unknown sessions are dropped", () => {
   const json = JSON.stringify({
     moves: [],
     clarification: {
@@ -104,10 +104,10 @@ Deno.test("parseReply - clarification options naming unknown sessions are droppe
     },
   });
   // One remaining option is no choice: fall back to the (empty) moves.
-  assertEquals(parseReply(json, WEEK), { kind: "moves", moves: [] });
+  expect(parseReply(json, WEEK)).toEqual({ kind: "moves", moves: [], restDays: [] });
 });
 
-Deno.test("parseReply - a missing option label falls back to the session title", () => {
+it("parseReply - a missing option label falls back to the session title", () => {
   const json = JSON.stringify({
     moves: [],
     clarification: {
@@ -116,21 +116,49 @@ Deno.test("parseReply - a missing option label falls back to the session title",
     },
   });
   const reply = parseReply(json, WEEK);
-  assertEquals(reply.kind, "clarification");
+  expect(reply.kind).toEqual("clarification");
   if (reply.kind === "clarification") {
-    assertEquals(reply.clarification.options.map((option) => option.label), [
+    expect(reply.clarification.options.map((option) => option.label)).toEqual([
       "Trail run",
       "Run intervals",
     ]);
   }
 });
 
-Deno.test("parseReply - moves win when no usable clarification is present", () => {
+it("parseReply - moves win when no usable clarification is present", () => {
   const json = JSON.stringify({ moves: [{ id: "trail", toDay: "Fri", reason: "empty day" }] });
-  assertEquals(parseReply(json, WEEK), {
+  expect(parseReply(json, WEEK)).toEqual({
     kind: "moves",
     moves: [{ id: "trail", toDay: "Fri", reason: "empty day" }],
+    restDays: [],
   });
+});
+
+it("parseReply - restDays are read, kept in week order and cleaned of unknown days", () => {
+  const json = JSON.stringify({ moves: [], restDays: ["Fri", "Wed", "Funday", "Wed"] });
+  expect(parseReply(json, WEEK)).toEqual({ kind: "moves", moves: [], restDays: ["Wed", "Fri"] });
+});
+
+it("proposeChange tells the model the rest days and the system prompt forbids moving onto them", async () => {
+  const prompts: string[] = [];
+  const systems: string[] = [];
+  const model: LanguageModelStatic = {
+    availability: () => Promise.resolve("available"),
+    create: (options) => {
+      systems.push(options?.initialPrompts?.[0]?.content ?? "");
+      return Promise.resolve({
+        prompt: (input: string) => {
+          prompts.push(input);
+          return Promise.resolve(JSON.stringify({ moves: [] }));
+        },
+        destroy: () => {},
+      });
+    },
+  };
+  await proposeChange(model, WEEK, "Move the trail run", undefined, ["Wed"]);
+  expect(prompts[0].includes('Rest days: ["Wed"]')).toBeTruthy();
+  expect(systems[0].includes("never move a session onto a rest day")).toBeTruthy();
+  expect(systems[0].includes("return that day in restDays")).toBeTruthy();
 });
 
 const MIXED: TrainingSession[] = [
@@ -143,9 +171,9 @@ const clarify = (...ids: string[]) =>
     clarification: { question: "Move which run?", options: ids.map((id) => ({ id, label: id })) },
   });
 
-Deno.test("narrowByDiscipline - a run instruction never offers the swim", () => {
+it("narrowByDiscipline - a run instruction never offers the swim", () => {
   const reply = parseReply(clarify("trail", "intervals", "ow-swim"), MIXED);
-  assertEquals(narrowByDiscipline(reply, MIXED, "I want to run every other day"), {
+  expect(narrowByDiscipline(reply, MIXED, "I want to run every other day")).toEqual({
     kind: "clarification",
     clarification: {
       question: "Move which run?",
@@ -154,12 +182,12 @@ Deno.test("narrowByDiscipline - a run instruction never offers the swim", () => 
   });
 });
 
-Deno.test("narrowByDiscipline - leaves the model's options alone when no discipline is named", () => {
+it("narrowByDiscipline - leaves the model's options alone when no discipline is named", () => {
   const reply = parseReply(clarify("trail", "intervals", "ow-swim"), MIXED);
-  assertEquals(narrowByDiscipline(reply, MIXED, "I am travelling Thursday"), reply);
+  expect(narrowByDiscipline(reply, MIXED, "I am travelling Thursday")).toEqual(reply);
 });
 
-Deno.test("proposeChange - one candidate left after narrowing is used without asking", async () => {
+it("proposeChange - one candidate left after narrowing is used without asking", async () => {
   const answers = [
     clarify("trail", "ow-swim"),
     JSON.stringify({ moves: [{ id: "trail", toDay: "Mon", reason: "Runs spread out." }] }),
@@ -177,7 +205,23 @@ Deno.test("proposeChange - one candidate left after narrowing is used without as
       }),
   };
   const reply = await proposeChange(model, MIXED, "Move my run to Monday");
-  assertEquals(reply.kind, "moves");
-  assertEquals(prompts.length, 2);
-  assertEquals(prompts[1].includes('session id "trail"'), true);
+  expect(reply.kind).toEqual("moves");
+  expect(prompts.length).toEqual(2);
+  expect(prompts[1].includes('session id "trail"')).toEqual(true);
+});
+
+it("proposeChange asks the model for reasons in the page language", async () => {
+  const systems: string[] = [];
+  const outputs: unknown[] = [];
+  const model: LanguageModelStatic = {
+    availability: () => Promise.resolve("available"),
+    create: (options) => {
+      systems.push(options?.initialPrompts?.[0]?.content ?? "");
+      outputs.push(options?.expectedOutputs);
+      return Promise.resolve({ prompt: () => Promise.resolve(JSON.stringify({ moves: [] })), destroy: () => {} });
+    },
+  };
+  await proposeChange(model, WEEK, "Verschiebe den Lauf", undefined, [], "de");
+  expect(systems[0].includes("Write every reason and every question in German.")).toBeTruthy();
+  expect(outputs[0]).toEqual([{ type: "text", languages: ["de"] }]);
 });

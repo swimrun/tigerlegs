@@ -29,12 +29,16 @@ jobs:
           node-version-file: .nvmrc
           cache: npm
       - run: npm ci
+      - name: Audit shipped dependencies
+        run: npm run audit:prod
       - name: Test
-        run: deno task test
+        run: npm test
       - name: Test the Node.js back end
         run: npm run test:server
       - name: Check the back end compiles with only Node's types
         run: npm run check:server
+      - name: Check that shared modules stay portable
+        run: npm run check:shared
       - name: Build site
         run: deno task build
       - name: Check site types

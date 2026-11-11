@@ -1,0 +1,37 @@
+{
+  "compilerOptions": {
+    "target": "ES2023",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "lib": [
+      "ES2023"
+    ],
+    "types": [
+      "node"
+    ],
+    "strict": true,
+    "noEmit": true,
+    "allowImportingTsExtensions": true,
+    "erasableSyntaxOnly": true,
+    "verbatimModuleSyntax": true,
+    "skipLibCheck": true
+  },
+  "include": [
+    "src/client/gps-filter.ts",
+    "src/client/speed-analyzer.ts",
+    "src/client/segment-builder.ts",
+    "src/client/segment-cleaner.ts",
+    "src/client/rest-detector.ts",
+    "src/client/strategy-combiner.ts",
+    "src/client/waypoint-classifier.ts",
+    "src/client/training-week.ts",
+    "src/client/overpass.ts",
+    "src/shared/domain/kernel.ts",
+    "src/shared/domain/geometry.ts",
+    "src/shared/domain/course/course.ts",
+    "src/shared/domain/recording/recording.ts",
+    "src/shared/domain/course-from-recording.ts",
+    "src/shared/domain/repositories.ts",
+    "src/shared/domain/in-memory-repositories.ts"
+  ]
+}

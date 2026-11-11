@@ -7,6 +7,9 @@
     "dev": "ASTRO_TELEMETRY_DISABLED=1 astro dev",
     "preview": "ASTRO_TELEMETRY_DISABLED=1 astro preview",
     "check": "ASTRO_TELEMETRY_DISABLED=1 astro check",
+    "test": "vitest run --config vitest.unit.config.ts",
+    "check:shared": "tsc -p tsconfig.shared.json",
+    "audit:prod": "npm audit --omit=dev",
     "test:site": "playwright test",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build -o storybook-static",
@@ -16,6 +19,7 @@
     "check:server": "tsc -p tsconfig.server.json"
   },
   "dependencies": {
+    "@ag-ui/core": "^1.0.4",
     "@astrojs/react": "^7.1.2",
     "@xmldom/xmldom": "^0.9.0",
     "astro": "^7.4.4",

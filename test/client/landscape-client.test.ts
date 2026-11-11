@@ -4,7 +4,7 @@
  * **Validates: Requirements 14.2, 14.3, 14.4, 14.5, 14.8, 14.9**
  */
 import fc from "fast-check";
-import { assert, assertEquals } from "@std/assert";
+import { expect, it } from "vitest";
 import {
   sampleCoordinates,
   detectByLandscape,
@@ -88,42 +88,32 @@ function arbitraryLandWithRoadData(
 
 // --- Property 17: Coordinate sampling interval constraint ---
 
-Deno.test("Property 17.1: sampleCoordinates always includes first and last trackpoint", () => {
-  fc.assert(
-    fc.property(arbitraryTrackLine(2, 100), (trackpoints) => {
+it("Property 17.1: sampleCoordinates always includes first and last trackpoint", () => {
+  fc.assert(fc.property(arbitraryTrackLine(2, 100), (trackpoints) => {
       const interval = 50; // 50 metres
       const samples = sampleCoordinates(trackpoints, interval);
 
       // First trackpoint must be first sample
-      assertEquals(samples[0].lat, trackpoints[0].coordinate.lat);
-      assertEquals(samples[0].lon, trackpoints[0].coordinate.lon);
+      expect(samples[0].lat).toEqual(trackpoints[0].coordinate.lat);
+      expect(samples[0].lon).toEqual(trackpoints[0].coordinate.lon);
 
       // Last trackpoint must be last sample
       const lastTp = trackpoints[trackpoints.length - 1];
       const lastSample = samples[samples.length - 1];
-      assertEquals(lastSample.lat, lastTp.coordinate.lat);
-      assertEquals(lastSample.lon, lastTp.coordinate.lon);
-    }),
-    { numRuns: 200 },
-  );
+      expect(lastSample.lat).toEqual(lastTp.coordinate.lat);
+      expect(lastSample.lon).toEqual(lastTp.coordinate.lon);
+    }), { numRuns: 200 });
 });
 
-Deno.test("Property 17.2: sampleCoordinates output length is >= 2 for input with >= 2 trackpoints", () => {
-  fc.assert(
-    fc.property(arbitraryTrackLine(2, 100), (trackpoints) => {
+it("Property 17.2: sampleCoordinates output length is >= 2 for input with >= 2 trackpoints", () => {
+  fc.assert(fc.property(arbitraryTrackLine(2, 100), (trackpoints) => {
       const samples = sampleCoordinates(trackpoints, 50);
-      assert(
-        samples.length >= 2,
-        `Expected at least 2 samples, got ${samples.length}`,
-      );
-    }),
-    { numRuns: 200 },
-  );
+      expect(samples.length >= 2, `Expected at least 2 samples, got ${samples.length}`).toBeTruthy();
+    }), { numRuns: 200 });
 });
 
-Deno.test("Property 17.3: distance between consecutive samples never exceeds the sampling interval plus the largest trackpoint gap", () => {
-  fc.assert(
-    fc.property(
+it("Property 17.3: distance between consecutive samples never exceeds the sampling interval plus the largest trackpoint gap", () => {
+  fc.assert(fc.property(
       arbitraryTrackLine(2, 50),
       fc.integer({ min: 10, max: 100 }),
       (trackpoints, intervalMetres) => {
@@ -147,77 +137,52 @@ Deno.test("Property 17.3: distance between consecutive samples never exceeds the
 
         for (let i = 1; i < samples.length; i++) {
           const dist = haversineDistance(samples[i - 1], samples[i]);
-          assert(
-            dist <= maxAllowed,
-            `Distance between sample ${i - 1} and ${i} is ${dist * 1000}m, ` +
-              `exceeds interval + max step of ${maxAllowed * 1000}m`,
-          );
+          expect(dist <= maxAllowed, `Distance between sample ${i - 1} and ${i} is ${dist * 1000}m, ` +
+              `exceeds interval + max step of ${maxAllowed * 1000}m`).toBeTruthy();
         }
       },
-    ),
-    { numRuns: 200 },
-  );
+    ), { numRuns: 200 });
 });
 
 // --- Property 18: Landscape segment creation from terrain data ---
 
-Deno.test("Property 18.1: detectByLandscape with all-water terrain produces only swim segments", () => {
-  fc.assert(
-    fc.property(
+it("Property 18.1: detectByLandscape with all-water terrain produces only swim segments", () => {
+  fc.assert(fc.property(
       arbitraryUniformTerrainResults("water", 2, 50),
       ({ trackpoints, terrainResults }) => {
         const result = detectByLandscape(trackpoints, terrainResults);
-        assertEquals(result.strategy, "landscape");
+        expect(result.strategy).toEqual("landscape");
 
         // All segments should be swim
         for (const seg of result.segments) {
-          assertEquals(
-            seg.type,
-            "swim",
-            `Expected all segments to be swim, got ${seg.type}`,
-          );
+          expect(seg.type, `Expected all segments to be swim, got ${seg.type}`).toEqual("swim");
         }
 
         // Should produce at least one segment (since we have 2+ consecutive water points)
-        assert(
-          result.segments.length >= 1,
-          `Expected at least 1 swim segment, got ${result.segments.length}`,
-        );
+        expect(result.segments.length >= 1, `Expected at least 1 swim segment, got ${result.segments.length}`).toBeTruthy();
       },
-    ),
-    { numRuns: 200 },
-  );
+    ), { numRuns: 200 });
 });
 
-Deno.test("Property 18.2: detectByLandscape with all-land terrain produces only run segments", () => {
-  fc.assert(
-    fc.property(
+it("Property 18.2: detectByLandscape with all-land terrain produces only run segments", () => {
+  fc.assert(fc.property(
       arbitraryUniformTerrainResults("land", 2, 50),
       ({ trackpoints, terrainResults }) => {
         const result = detectByLandscape(trackpoints, terrainResults);
-        assertEquals(result.strategy, "landscape");
+        expect(result.strategy).toEqual("landscape");
 
         // All segments should be run
         for (const seg of result.segments) {
-          assertEquals(
-            seg.type,
-            "run",
-            `Expected all segments to be run, got ${seg.type}`,
-          );
+          expect(seg.type, `Expected all segments to be run, got ${seg.type}`).toEqual("run");
         }
 
         // Should produce at least one segment
-        assert(
-          result.segments.length >= 1,
-          `Expected at least 1 run segment, got ${result.segments.length}`,
-        );
+        expect(result.segments.length >= 1, `Expected at least 1 run segment, got ${result.segments.length}`).toBeTruthy();
       },
-    ),
-    { numRuns: 200 },
-  );
+    ), { numRuns: 200 });
 });
 
-Deno.test("Property 18.3: calculateLandscapeConfidence always returns value in [0.1, 1.0]", () => {
+it("Property 18.3: calculateLandscapeConfidence always returns value in [0.1, 1.0]", () => {
   // Generate arbitrary terrain results with mixed types
   const arbitraryTerrainPoints = fc.array(
     fc.record({
@@ -233,29 +198,19 @@ Deno.test("Property 18.3: calculateLandscapeConfidence always returns value in [
 
   const arbitrarySegmentType = fc.constantFrom("swim" as const, "run" as const);
 
-  fc.assert(
-    fc.property(
+  fc.assert(fc.property(
       arbitraryTerrainPoints,
       arbitrarySegmentType,
       (points, segmentType) => {
         const confidence = calculateLandscapeConfidence(points, segmentType);
-        assert(
-          confidence >= 0.1,
-          `Confidence ${confidence} is below minimum 0.1`,
-        );
-        assert(
-          confidence <= 1.0,
-          `Confidence ${confidence} exceeds maximum 1.0`,
-        );
+        expect(confidence >= 0.1, `Confidence ${confidence} is below minimum 0.1`).toBeTruthy();
+        expect(confidence <= 1.0, `Confidence ${confidence} exceeds maximum 1.0`).toBeTruthy();
       },
-    ),
-    { numRuns: 300 },
-  );
+    ), { numRuns: 300 });
 });
 
-Deno.test("Property 18.4: calculateLandscapeConfidence with hasRoadData for run segments always returns >= 0.9", () => {
-  fc.assert(
-    fc.property(
+it("Property 18.4: calculateLandscapeConfidence with hasRoadData for run segments always returns >= 0.9", () => {
+  fc.assert(fc.property(
       arbitraryLandWithRoadData(1, 30),
       (points) => {
         // Ensure at least one point has hasRoadData = true
@@ -266,12 +221,7 @@ Deno.test("Property 18.4: calculateLandscapeConfidence with hasRoadData for run 
         }
 
         const confidence = calculateLandscapeConfidence(points, "run");
-        assert(
-          confidence >= 0.9,
-          `Confidence ${confidence} should be >= 0.9 when hasRoadData is true for run segment`,
-        );
+        expect(confidence >= 0.9, `Confidence ${confidence} should be >= 0.9 when hasRoadData is true for run segment`).toBeTruthy();
       },
-    ),
-    { numRuns: 200 },
-  );
+    ), { numRuns: 200 });
 });

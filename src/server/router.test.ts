@@ -1,4 +1,4 @@
-import { expect, test, vi } from "vitest";
+import { expect, it, vi } from "vitest";
 import { BACKEND_ORIGIN, FRONTEND_ORIGIN } from "./config.ts";
 import { createRouter, type RouterConfig } from "./router.ts";
 import type { CacheStore } from "./cache.ts";
@@ -45,7 +45,7 @@ function createTestRouter(overrides?: Partial<RouterConfig>) {
 
 // --- Health endpoint ---
 
-test("GET /api/v1/health returns status ok", async () => {
+it("GET /api/v1/health returns status ok", async () => {
   const handler = createTestRouter();
   const request = new Request(`${BACKEND_ORIGIN}/api/v1/health`);
   const response = await handler(request);
@@ -55,7 +55,7 @@ test("GET /api/v1/health returns status ok", async () => {
   expect(body.status).toBe("ok");
 });
 
-test("GET /api/v1/health does not require Origin header", async () => {
+it("GET /api/v1/health does not require Origin header", async () => {
   const handler = createTestRouter();
   const request = new Request(`${BACKEND_ORIGIN}/api/v1/health`);
   const response = await handler(request);
@@ -63,7 +63,7 @@ test("GET /api/v1/health does not require Origin header", async () => {
   expect(response.status).toBe(200);
 });
 
-test("Responses include X-Request-Id header", async () => {
+it("Responses include X-Request-Id header", async () => {
   const handler = createTestRouter();
   const request = new Request(`${BACKEND_ORIGIN}/api/v1/health`);
   const response = await handler(request);
@@ -73,7 +73,7 @@ test("Responses include X-Request-Id header", async () => {
   expect(requestId!.length > 0).toBe(true);
 });
 
-test("Responses include Content-Type: application/json", async () => {
+it("Responses include Content-Type: application/json", async () => {
   const handler = createTestRouter();
   const request = new Request(`${BACKEND_ORIGIN}/api/v1/health`);
   const response = await handler(request);
@@ -83,7 +83,7 @@ test("Responses include Content-Type: application/json", async () => {
 
 // --- Origin validation ---
 
-test("Non-health endpoints reject requests without valid Origin", async () => {
+it("Non-health endpoints reject requests without valid Origin", async () => {
   const handler = createTestRouter();
   const request = new Request(`${BACKEND_ORIGIN}/api/v1/terrain/lookup?lat=45&lon=6`, {
     headers: { Origin: "http://evil.example.com" },
@@ -95,7 +95,7 @@ test("Non-health endpoints reject requests without valid Origin", async () => {
   expect(body.code).toBe("FORBIDDEN_ORIGIN");
 });
 
-test("Non-health endpoints accept requests from allowed origins", async () => {
+it("Non-health endpoints accept requests from allowed origins", async () => {
   // The upstream Overpass server is busy: the request must still get past the origin check and end in a 502.
   vi.stubGlobal("fetch", () => Promise.resolve(new Response("busy", { status: 503 })));
   try {
@@ -115,7 +115,7 @@ test("Non-health endpoints accept requests from allowed origins", async () => {
 
 // --- CORS headers ---
 
-test("CORS headers are set for allowed origin", async () => {
+it("CORS headers are set for allowed origin", async () => {
   const handler = createTestRouter();
   const request = new Request(`${BACKEND_ORIGIN}/api/v1/health`, {
     headers: { Origin: FRONTEND_ORIGIN },
@@ -125,7 +125,7 @@ test("CORS headers are set for allowed origin", async () => {
   expect(response.headers.get("Access-Control-Allow-Origin")).toEqual(FRONTEND_ORIGIN);
 });
 
-test("OPTIONS preflight returns CORS headers", async () => {
+it("OPTIONS preflight returns CORS headers", async () => {
   const handler = createTestRouter();
   const request = new Request(`${BACKEND_ORIGIN}/api/v1/terrain/lookup`, {
     method: "OPTIONS",
@@ -143,7 +143,7 @@ test("OPTIONS preflight returns CORS headers", async () => {
 
 // --- Coordinate validation ---
 
-test("GET /api/v1/terrain/lookup rejects invalid latitude", async () => {
+it("GET /api/v1/terrain/lookup rejects invalid latitude", async () => {
   const handler = createTestRouter();
   const request = new Request(`${BACKEND_ORIGIN}/api/v1/terrain/lookup?lat=91&lon=6`, {
     headers: { Origin: FRONTEND_ORIGIN },
@@ -155,7 +155,7 @@ test("GET /api/v1/terrain/lookup rejects invalid latitude", async () => {
   expect(body.code).toBe("INVALID_COORDINATES");
 });
 
-test("GET /api/v1/terrain/lookup rejects invalid longitude", async () => {
+it("GET /api/v1/terrain/lookup rejects invalid longitude", async () => {
   const handler = createTestRouter();
   const request = new Request(`${BACKEND_ORIGIN}/api/v1/terrain/lookup?lat=45&lon=181`, {
     headers: { Origin: FRONTEND_ORIGIN },
@@ -167,7 +167,7 @@ test("GET /api/v1/terrain/lookup rejects invalid longitude", async () => {
   expect(body.code).toBe("INVALID_COORDINATES");
 });
 
-test("GET /api/v1/terrain/lookup rejects missing parameters", async () => {
+it("GET /api/v1/terrain/lookup rejects missing parameters", async () => {
   const handler = createTestRouter();
   const request = new Request(`${BACKEND_ORIGIN}/api/v1/terrain/lookup?lat=45`, {
     headers: { Origin: FRONTEND_ORIGIN },
@@ -181,7 +181,7 @@ test("GET /api/v1/terrain/lookup rejects missing parameters", async () => {
 
 // --- Batch endpoint validation ---
 
-test("POST /api/v1/terrain/batch rejects more than 100 coordinates", async () => {
+it("POST /api/v1/terrain/batch rejects more than 100 coordinates", async () => {
   const handler = createTestRouter();
   const coordinates = Array.from({ length: 101 }, (_, i) => ({
     lat: 45 + i * 0.001,
@@ -202,7 +202,7 @@ test("POST /api/v1/terrain/batch rejects more than 100 coordinates", async () =>
   expect(body.code).toBe("BATCH_TOO_LARGE");
 });
 
-test("POST /api/v1/terrain/batch rejects invalid coordinates in batch", async () => {
+it("POST /api/v1/terrain/batch rejects invalid coordinates in batch", async () => {
   const handler = createTestRouter();
   const coordinates = [
     { lat: 45, lon: 6 },
@@ -225,7 +225,7 @@ test("POST /api/v1/terrain/batch rejects invalid coordinates in batch", async ()
 
 // --- 404 for unknown routes ---
 
-test("Unknown routes return 404", async () => {
+it("Unknown routes return 404", async () => {
   const handler = createTestRouter();
   const request = new Request(`${BACKEND_ORIGIN}/api/v1/unknown`, {
     headers: { Origin: FRONTEND_ORIGIN },

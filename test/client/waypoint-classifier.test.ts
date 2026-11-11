@@ -1,4 +1,4 @@
-import { assertEquals, assert } from "@std/assert";
+import { expect, it } from "vitest";
 import fc from "fast-check";
 import {
   classifyWaypoint,
@@ -29,22 +29,18 @@ function makeWaypoint(overrides: Partial<Waypoint> = {}): Waypoint {
 // sym "3" or name containing "ravitaillement" → "aid-station";
 // otherwise → "other"
 
-Deno.test("Property 4.1: sym '200' always classifies as swim-start regardless of name", () => {
-  fc.assert(
-    fc.property(
+it("Property 4.1: sym '200' always classifies as swim-start regardless of name", () => {
+  fc.assert(fc.property(
       fc.string({ minLength: 0, maxLength: 100 }),
       (randomName) => {
         const wp = makeWaypoint({ symbol: "200", name: randomName });
-        assertEquals(classifyWaypoint(wp), "swim-start");
+        expect(classifyWaypoint(wp)).toEqual("swim-start");
       },
-    ),
-    { numRuns: 100 },
-  );
+    ), { numRuns: 100 });
 });
 
-Deno.test("Property 4.2: name containing 'début swim' always classifies as swim-start regardless of sym", () => {
-  fc.assert(
-    fc.property(
+it("Property 4.2: name containing 'début swim' always classifies as swim-start regardless of sym", () => {
+  fc.assert(fc.property(
       fc.string({ minLength: 0, maxLength: 30 }),
       fc.string({ minLength: 0, maxLength: 30 }),
       fc.string({ minLength: 0, maxLength: 10 }),
@@ -53,16 +49,13 @@ Deno.test("Property 4.2: name containing 'début swim' always classifies as swim
         fc.pre(!["200", "201", "3", "49"].includes(sym));
         const name = `${prefix}Début SWIM${suffix}`;
         const wp = makeWaypoint({ symbol: sym, name });
-        assertEquals(classifyWaypoint(wp), "swim-start");
+        expect(classifyWaypoint(wp)).toEqual("swim-start");
       },
-    ),
-    { numRuns: 100 },
-  );
+    ), { numRuns: 100 });
 });
 
-Deno.test("Property 4.3: sym '201' always classifies as swim-end regardless of name", () => {
-  fc.assert(
-    fc.property(
+it("Property 4.3: sym '201' always classifies as swim-end regardless of name", () => {
+  fc.assert(fc.property(
       fc.string({ minLength: 0, maxLength: 100 }),
       (randomName) => {
         // Exclude names that would trigger swim-start first (higher priority)
@@ -74,16 +67,13 @@ Deno.test("Property 4.3: sym '201' always classifies as swim-end regardless of n
         fc.pre(!randomName.toLowerCase().includes("zwem start"));
         fc.pre(!randomName.toLowerCase().includes("begin zwem"));
         const wp = makeWaypoint({ symbol: "201", name: randomName });
-        assertEquals(classifyWaypoint(wp), "swim-end");
+        expect(classifyWaypoint(wp)).toEqual("swim-end");
       },
-    ),
-    { numRuns: 100 },
-  );
+    ), { numRuns: 100 });
 });
 
-Deno.test("Property 4.4: name containing 'fin swim' always classifies as swim-end (when not matching swim-start)", () => {
-  fc.assert(
-    fc.property(
+it("Property 4.4: name containing 'fin swim' always classifies as swim-end (when not matching swim-start)", () => {
+  fc.assert(fc.property(
       fc.string({ minLength: 0, maxLength: 30 }),
       fc.string({ minLength: 0, maxLength: 30 }),
       fc.string({ minLength: 0, maxLength: 10 }),
@@ -107,16 +97,13 @@ Deno.test("Property 4.4: name containing 'fin swim' always classifies as swim-en
         fc.pre(!name.toLowerCase().includes("zwem start"));
         fc.pre(!name.toLowerCase().includes("begin zwem"));
         const wp = makeWaypoint({ symbol: sym, name });
-        assertEquals(classifyWaypoint(wp), "swim-end");
+        expect(classifyWaypoint(wp)).toEqual("swim-end");
       },
-    ),
-    { numRuns: 100 },
-  );
+    ), { numRuns: 100 });
 });
 
-Deno.test("Property 4.5: sym '3' always classifies as aid-station (when not matching swim-start or swim-end)", () => {
-  fc.assert(
-    fc.property(
+it("Property 4.5: sym '3' always classifies as aid-station (when not matching swim-start or swim-end)", () => {
+  fc.assert(fc.property(
       fc.string({ minLength: 0, maxLength: 100 }),
       (randomName) => {
         // Exclude names that would trigger higher-priority classifications
@@ -136,16 +123,13 @@ Deno.test("Property 4.5: sym '3' always classifies as aid-station (when not matc
         fc.pre(!lower.includes("zwem eind"));
         fc.pre(!lower.includes("einde zwem"));
         const wp = makeWaypoint({ symbol: "3", name: randomName });
-        assertEquals(classifyWaypoint(wp), "aid-station");
+        expect(classifyWaypoint(wp)).toEqual("aid-station");
       },
-    ),
-    { numRuns: 100 },
-  );
+    ), { numRuns: 100 });
 });
 
-Deno.test("Property 4.6: name containing 'ravitaillement' always classifies as aid-station (when not matching swim patterns)", () => {
-  fc.assert(
-    fc.property(
+it("Property 4.6: name containing 'ravitaillement' always classifies as aid-station (when not matching swim patterns)", () => {
+  fc.assert(fc.property(
       fc.string({ minLength: 0, maxLength: 30 }),
       fc.string({ minLength: 0, maxLength: 30 }),
       fc.string({ minLength: 0, maxLength: 10 }),
@@ -170,16 +154,13 @@ Deno.test("Property 4.6: name containing 'ravitaillement' always classifies as a
         fc.pre(!lower.includes("einde zwem"));
         const name = `${prefix}Ravitaillement${suffix}`;
         const wp = makeWaypoint({ symbol: sym, name });
-        assertEquals(classifyWaypoint(wp), "aid-station");
+        expect(classifyWaypoint(wp)).toEqual("aid-station");
       },
-    ),
-    { numRuns: 100 },
-  );
+    ), { numRuns: 100 });
 });
 
-Deno.test("Property 4.7: waypoints with no matching sym or name pattern classify as 'other'", () => {
-  fc.assert(
-    fc.property(
+it("Property 4.7: waypoints with no matching sym or name pattern classify as 'other'", () => {
+  fc.assert(fc.property(
       arbitraryWaypoint,
       (wp) => {
         // Exclude all known sym values
@@ -209,11 +190,9 @@ Deno.test("Property 4.7: waypoints with no matching sym or name pattern classify
         fc.pre(!lower.includes("verzorging"));
         fc.pre(!lower.includes("voeding"));
         fc.pre(!lower.includes("verpflegung"));
-        assertEquals(classifyWaypoint(wp), "other");
+        expect(classifyWaypoint(wp)).toEqual("other");
       },
-    ),
-    { numRuns: 200 },
-  );
+    ), { numRuns: 200 });
 });
 
 // --- Property 6: Unpaired swim-start detection ---
@@ -221,9 +200,8 @@ Deno.test("Property 4.7: waypoints with no matching sym or name pattern classify
 //
 // If swimStarts.length > swimEnds.length, validateSwimPairing returns { valid: false }
 
-Deno.test("Property 6: validateSwimPairing returns invalid when swim-starts outnumber swim-ends", () => {
-  fc.assert(
-    fc.property(
+it("Property 6: validateSwimPairing returns invalid when swim-starts outnumber swim-ends", () => {
+  fc.assert(fc.property(
       // Generate N swim-start waypoints (at least 1)
       fc.integer({ min: 1, max: 20 }),
       // Generate M swim-end waypoints where M < N
@@ -261,20 +239,14 @@ Deno.test("Property 6: validateSwimPairing returns invalid when swim-starts outn
         }
 
         const result = validateSwimPairing(classified);
-        assertEquals(result.valid, false);
-        assert(
-          result.error !== undefined && result.error.length > 0,
-          "Error message should be present when validation fails",
-        );
+        expect(result.valid).toEqual(false);
+        expect(result.error !== undefined && result.error.length > 0, "Error message should be present when validation fails").toBeTruthy();
       },
-    ),
-    { numRuns: 100 },
-  );
+    ), { numRuns: 100 });
 });
 
-Deno.test("Property 6 (inverse): validateSwimPairing returns valid when swim-starts <= swim-ends", () => {
-  fc.assert(
-    fc.property(
+it("Property 6 (inverse): validateSwimPairing returns valid when swim-starts <= swim-ends", () => {
+  fc.assert(fc.property(
       // Generate N swim-start waypoints
       fc.integer({ min: 0, max: 10 }),
       // Generate extra ends (0 or more beyond N)
@@ -311,9 +283,7 @@ Deno.test("Property 6 (inverse): validateSwimPairing returns valid when swim-sta
         }
 
         const result = validateSwimPairing(classified);
-        assertEquals(result.valid, true);
+        expect(result.valid).toEqual(true);
       },
-    ),
-    { numRuns: 100 },
-  );
+    ), { numRuns: 100 });
 });

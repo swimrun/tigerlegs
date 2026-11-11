@@ -46,7 +46,7 @@ Live tracking and race results are out of scope.
 
 This chapter describes what the system does for its users.
 The Kiro specs in `.kiro/specs/gpx-swimrun-analyzer/` hold the detailed requirements; this chapter gives the overview.
-Section 2.1 maps the user stories to use cases, and section 2.2 shows a real course that the system analyses.
+Section 2.2 maps the user stories to use cases, and section 2.3 shows a real course that the system analyses.
 The near-term roadmap is in the README; milestones and the watch-platform strategy are in [ROADMAP.md](./ROADMAP.md) and [PRODUCT_VISION.md](./PRODUCT_VISION.md).
 
 An athlete interacts with the system in four ways.
@@ -68,7 +68,7 @@ Hover still previews a segment when no selection is pinned.
 **Cumulative distance** sums the unrounded distances of the displayed segments and shows the result to one decimal place; displayed breaks contribute only when **Include breaks** is enabled.
 Incomplete pairs use a dash for the missing distance, and boundary disagreements include a conflict label identifying the resolving strategy.
 
-### Upload and analysis controls
+### 2.1 Upload and analysis controls
 
 Choose a GPX file or drop exactly one file onto the upload area; both paths use the same validation and analysis pipeline.
 For a file with several tracks, the selector lists track names and point counts, and analysis waits for the athlete to choose a non-empty track.
@@ -91,11 +91,11 @@ Behind these stories, the system detects segments with three strategies, which T
 
 *Table 1*: Strategies for detecting swim and run segments.
 
-| Strategy | Evidence | Needs |
-| --- | --- | --- |
-| Waypoint | `<sym>` codes or names on waypoints | Waypoints in the GPX file |
-| Speed | Speed drops when swimming | Timestamps on trackpoints |
-| Landscape | Water or land at sampled coordinates | The terrain API |
+| Strategy  | Evidence                             | Needs                     |
+| --------- | ------------------------------------ | ------------------------- |
+| Waypoint  | `<sym>` codes or names on waypoints  | Waypoints in the GPX file |
+| Speed     | Speed drops when swimming            | Timestamps on trackpoints |
+| Landscape | Water or land at sampled coordinates | The terrain API           |
 
 The waypoint strategy is the most precise when the organiser marked the swim starts and ends.
 The speed strategy works for any recorded activity, but speed is only indirect evidence.
@@ -104,21 +104,21 @@ The strategy combiner keeps, per trackpoint, the result with the highest confide
 
 The system also shows aid stations, handles files with several tracks and filters GPS noise during swims; the Kiro specs describe these features.
 
-### 2.1 Use cases
+### 2.2 Use cases
 
 The user stories above describe what an athlete wants; the use cases below describe the features the system offers for it.
 Table 2 lists the six use cases, who uses them and which user story and Kiro requirement each one implements.
 
 *Table 2*: Use cases and the stories and requirements behind them.
 
-| Use case | Actors | User story | Requirement |
-| --- | --- | --- | --- |
-| UC-1: Upload a GPX file | Athlete, organiser | US-1 | Req 1 |
-| UC-2: View segment distances | Athlete, organiser | US-3, US-5 | Req 3, 5 |
-| UC-3: View the course map | Athlete | US-4 | Req 4 |
-| UC-4: Highlight a segment | Athlete | US-6 | Req 6 |
-| UC-5: View aid stations | Athlete | US-8 | Req 8 |
-| UC-6: Select a track | Athlete | US-9 | Req 9 |
+| Use case                     | Actors             | User story | Requirement |
+| ---------------------------- | ------------------ | ---------- | ----------- |
+| UC-1: Upload a GPX file      | Athlete, organiser | US-1       | Req 1       |
+| UC-2: View segment distances | Athlete, organiser | US-3, US-5 | Req 3, 5    |
+| UC-3: View the course map    | Athlete            | US-4       | Req 4       |
+| UC-4: Highlight a segment    | Athlete            | US-6       | Req 6       |
+| UC-5: View aid stations      | Athlete            | US-8       | Req 8       |
+| UC-6: Select a track         | Athlete            | US-9       | Req 9       |
 
 Use cases UC-2 and UC-3 include UC-1, because both need an uploaded file.
 UC-4, UC-5 and UC-6 extend the use case they build on: highlighting and aid stations extend the map, and track selection extends the upload.
@@ -145,7 +145,7 @@ The Kiro specs number these stories and requirements.
 Two further stories, US-2 (waypoint classification) and US-7 (GPX round-trip integrity), are internal processing steps that no user starts, so they are not use cases.
 Accessibility (Req 10) and performance (Req 11) are quality attributes and apply to all use cases; chapter 3 covers them.
 
-### 2.2 Example course: Vertical SwimRunMan Laffrey 2026
+### 2.3 Example course: Vertical SwimRunMan Laffrey 2026
 
 The Vertical SwimRunMan Laffrey 2026 is the main test course.
 It starts with a swim, which is unusual: most swimruns start with a run.
@@ -153,17 +153,17 @@ Table 3 gives the segment distances as the organisers published them.
 
 *Table 3*: Published segment distances of the Vertical SwimRunMan Laffrey 2026.
 
-| # | Run (km) | Swim (m) | Cumulative (km) |
-| --- | --- | --- | --- |
-| 1 | | 400 | 0.4 |
-| 2 | 5.2 | 400 | 5.6 |
-| 3 | 0.3 | 2200 | 6.3 |
-| 4 | 1.4 | 400 | 9.9 |
-| 5 | 0.2 | 600 | 10.5 |
-| 6 | 6.7 | 1000 | 17.8 |
-| 7 | 4.9 | 1100 | 23.7 |
-| 8 | 6.1 | | 29.1 |
-| **Total** | 24.8 | 6100 | 30.9 |
+| #         | Run (km) | Swim (m) | Cumulative (km) |
+| --------- | -------- | -------- | --------------- |
+| 1         |          | 400      | 0.4             |
+| 2         | 5.2      | 400      | 5.6             |
+| 3         | 0.3      | 2200     | 6.3             |
+| 4         | 1.4      | 400      | 9.9             |
+| 5         | 0.2      | 600      | 10.5            |
+| 6         | 6.7      | 1000     | 17.8            |
+| 7         | 4.9      | 1100     | 23.7            |
+| 8         | 6.1      |          | 29.1            |
+| **Total** | 24.8     | 6100     | 30.9            |
 
 The test file is `test-data/vertical_swimrunman_2026-22910326-1781510068-71.gpx`.
 On a comparable Laffrey file the system measured 24.7 km of running and 6250 m of swimming, so its swim total is 150 m longer than the published one.
@@ -174,16 +174,16 @@ Table 4 shows the same course in that form, with the swim first.
 
 *Table 4*: The same course as swim and run pairs, swim first.
 
-| # | Swim (m) | Run (km) |
-| --- | --- | --- |
-| 1 | 400 | 5.2 |
-| 2 | 400 | 0.3 |
-| 3 | 2200 | 1.4 |
-| 4 | 400 | 0.2 |
-| 5 | 600 | 6.7 |
-| 6 | 1000 | 4.9 |
-| 7 | 1100 | 6.1 |
-| **Total** | 6100 | 24.8 |
+| #         | Swim (m) | Run (km) |
+| --------- | -------- | -------- |
+| 1         | 400      | 5.2      |
+| 2         | 400      | 0.3      |
+| 3         | 2200     | 1.4      |
+| 4         | 400      | 0.2      |
+| 5         | 600      | 6.7      |
+| 6         | 1000     | 4.9      |
+| 7         | 1100     | 6.1      |
+| **Total** | 6100     | 24.8     |
 
 A course that starts with a run would show the run first by default, and a toggle would swap the order.
 Figure 5 shows the paddles that the organisers published for this course.
@@ -262,13 +262,13 @@ Table 5 lists the documents and the question each one answers.
 
 *Table 5*: Documents and the questions they answer.
 
-| Document | Where | What it shows |
-| --- | --- | --- |
-| README | [README.md](../README.md) | What the tool is and how to run it |
-| Software guidebook | this file | Context, structure, domain model and glossary |
-| Architecture decision records | [docs/adr/](./adr/) | Why we chose a design, and what we rejected |
-| Specifications | [.kiro/specs/](../.kiro/specs/) | Requirements, design and tasks per feature |
-| Source code and tests | [src/](../src/), [test/](../test/) | What the system does, in executable form |
+| Document                      | Where                              | What it shows                                 |
+| ----------------------------- | ---------------------------------- | --------------------------------------------- |
+| README                        | [README.md](../README.md)          | What the tool is and how to run it            |
+| Software guidebook            | this file                          | Context, structure, domain model and glossary |
+| Architecture decision records | [docs/adr/](./adr/)                | Why we chose a design, and what we rejected   |
+| Specifications                | [.kiro/specs/](../.kiro/specs/)    | Requirements, design and tasks per feature    |
+| Source code and tests         | [src/](../src/), [test/](../test/) | What the system does, in executable form      |
 
 The first four documents explain what, how and why, while the code and tests are the only part that is guaranteed to be current.
 
@@ -293,7 +293,7 @@ The browser app does the analysis and draws the map. Astro generates static HTML
 The diagram also shows the optional Node.js terrain API, not a requirement of the Pages deployment. That API checks the `Origin` header on every API route except the health check and caches terrain answers on disk. The Astro development server uses port 8123; run the optional API separately if testing it, rather than starting both on the same port.
 
 The dashed watch data field is planned, not built ([spec](../specs/001-garmin-datafield/spec.md), roadmap M4).
-It would build on the Connect IQ SDK and its Monkey C language; Garmin's developer documentation explains the app types and the simulator (Garmin, n.d.).
+It would build on the Connect IQ SDK and its Monkey C language; Garmin's developer documentation explains the app types and the simulator (Garmin, n.d.-a).
 It stays a container inside the TigerLegs system rather than a system of its own: in C4 terms a container is a separately deployable unit of one system, and the data field is deployed separately (through the Connect IQ store) but belongs to the same product, team and course model.
 Garmin Connect appears as an external system, like Overpass, because it only transports the exported course to the watch.
 A separate guidebook or a system landscape diagram becomes worthwhile only if a part grows into its own system with its own team or release cycle, for example the accounts backend of roadmap M9.
@@ -309,16 +309,16 @@ Table 6 lists each component and the file that holds it.
 
 *Table 6*: Components of the browser app.
 
-| Component | File | Responsibility |
-| --- | --- | --- |
-| GPX parser | `src/client/gpx-parser.ts` | Turns GPX text into `GPXData` |
-| Waypoint strategy | `src/client/waypoint-classifier.ts` | Finds segments from `<sym>` codes or names |
-| Speed strategy | `src/client/speed-analyzer.ts` | Finds segments from speed changes |
-| Landscape strategy | `src/client/landscape-client.ts` | Finds segments from terrain at sampled points |
-| Strategy combiner | `src/client/strategy-combiner.ts` | Picks the best strategy per trackpoint |
-| Analysis | `src/client/analyze.ts` | Runs the pipeline and adds distances |
-| Segment builder | `src/client/segment-builder.ts` | Totals, rounding and paired table rows |
-| UI | `src/components/Extractor.tsx`, `CourseMap.tsx`, `SegmentTable.tsx` | React upload, map, table and highlighting |
+| Component          | File                                                                | Responsibility                                |
+| ------------------ | ------------------------------------------------------------------- | --------------------------------------------- |
+| GPX parser         | `src/client/gpx-parser.ts`                                          | Turns GPX text into `GPXData`                 |
+| Waypoint strategy  | `src/client/waypoint-classifier.ts`                                 | Finds segments from `<sym>` codes or names    |
+| Speed strategy     | `src/client/speed-analyzer.ts`                                      | Finds segments from speed changes             |
+| Landscape strategy | `src/client/landscape-client.ts`                                    | Finds segments from terrain at sampled points |
+| Strategy combiner  | `src/client/strategy-combiner.ts`                                   | Picks the best strategy per trackpoint        |
+| Analysis           | `src/client/analyze.ts`                                             | Runs the pipeline and adds distances          |
+| Segment builder    | `src/client/segment-builder.ts`                                     | Totals, rounding and paired table rows        |
+| UI                 | `src/components/Extractor.tsx`, `CourseMap.tsx`, `SegmentTable.tsx` | React upload, map, table and highlighting     |
 
 The analysis component is the entry point for the UI: it runs the strategies that apply, combines them and computes each segment's distance.
 The current page skips the landscape strategy, because it needs the backend.
@@ -423,13 +423,210 @@ The free path needs no back end: the browser asks a public Overpass server for t
 The query area is a coarse bounding box, so the request reveals the neighbourhood of the track and not the track itself.
 The back end is optional ([ADR-0013](./adr/0013-back-end-is-optional.md)); the planned premium service adds our own Overpass server behind it, with a quality of service the public servers cannot give (roadmap M12).
 For development a local Overpass container runs from the same `docker-compose.yml` (profile `overpass`), filled once from a Geofabrik extract; see [local-overpass.md](./local-overpass.md).
-Overpass speaks plain HTTP with a query in Overpass QL, so the front end and back end can be written in any language; the language choice is the subject of [ADR-0014](./adr/0014-back-end-technology.md).
+Overpass speaks plain HTTP with a query in Overpass QL, so the front end and back end can be written in any language; the language choice, Node.js with TypeScript, is recorded in [ADR-0014](./adr/0014-back-end-technology.md).
+
+### 6.6 Stored domain model (planned)
+
+Nothing in this section exists in code yet: the prototype keeps every file and plan in the browser, and the back end is optional ([ADR-0013](./adr/0013-back-end-is-optional.md)).
+It records the concepts the back end will store, so that the extractor page, the training page and the data layer ([ADR-0016](./adr/0016-data-access-layer.md)) are built on the same words.
+Figure 11 shows the concepts grouped into aggregates (section 7.6); a dashed arrow between two aggregates is a reference by id, never a contained object.
+
+*Figure 11*: Stored domain model: aggregates and the references between them (planned). The diagram is the PlantUML block below.
+
+```plantuml
+@startuml domain-model-stored
+title Stored domain model: aggregates and the references between them (planned)
+skinparam classAttributeIconSize 0
+skinparam packageStyle rectangle
+hide empty members
+
+package "Athlete" {
+  class Athlete <<root>> {
+    display name
+    language
+    units
+  }
+  class IntensityProfile <<value>> {
+    run threshold pace
+    swim critical speed
+    maximum heart rate
+  }
+  Athlete *-- "0..1" IntensityProfile
+}
+
+package "Swimrun group" {
+  class SwimrunGroup <<root>> {
+    name
+    kind: duo | team | training group
+  }
+  class Membership <<value>> {
+    role: member | admin | coach
+    joined on
+  }
+  SwimrunGroup *-- "2..*" Membership
+}
+
+package "Course (idealized track)" {
+  class Course <<root>> {
+    name
+    visibility
+  }
+  class CourseVariant <<entity>> {
+    name
+    description
+    canonical
+    valid for: editions, months
+  }
+  class CourseLine <<value>> {
+    positions, no time
+  }
+  class Leg <<value>> {
+    kind: swim | run
+    distance
+  }
+  Course *-- "1..*" CourseVariant
+  CourseVariant *-- "1" CourseLine
+  CourseVariant *-- "1..*" Leg
+}
+
+package "Recording (carried-out track)" {
+  class Recording <<root>> {
+    started at
+    source
+    visibility
+  }
+  class Trace <<value>> {
+    positions with time
+    optional speed, heart rate
+  }
+  class RecordedSegment <<value>> {
+    kind: swim | run
+    distance, duration
+  }
+  class ExternalRef <<value>> {
+    provider
+    external id
+  }
+  Recording *-- "1" Trace
+  Recording *-- "0..*" RecordedSegment
+  Recording *-- "0..1" ExternalRef
+}
+
+package "Training plan" {
+  class TrainingPlan <<root>> {
+    period
+    status: draft | approved
+  }
+  class PlanLevers <<value>> {
+    runs, swims, strength, mobility per week
+  }
+  class GoalEvent <<entity>> {
+    name, date
+    priority: A | B | C
+  }
+  TrainingPlan *-- "1" PlanLevers
+  TrainingPlan *-- "1..*" GoalEvent
+}
+
+package "Planned session" {
+  class PlannedSession <<root>> {
+    date
+    discipline
+    status: planned | done | skipped
+    origin: generated | hardcoded | imported
+  }
+  class WorkoutStep <<value>> {
+    role: warm-up | work | rest | cool-down
+    duration: time | distance | open
+    intensity target
+    repeats
+  }
+  class ExecutedActivityRef <<value>> {
+    provider: strava | garmin | polar | recording
+    external id (a recording id for our own)
+  }
+  class Adherence <<value>> {
+    planned and actual duration
+    planned and actual distance
+    compliance
+    computed at
+  }
+  PlannedSession *-- "0..*" WorkoutStep : structure
+  WorkoutStep o-- "0..*" WorkoutStep : repeats
+  PlannedSession *-- "0..1" ExecutedActivityRef : executed as
+  PlannedSession *-- "0..1" Adherence
+}
+
+Membership ..> Athlete : by id
+Course ..> Athlete : owner, by id (private only)
+Recording ..> Athlete : owner, by id
+Recording ..> Course : followed, by id (optional)
+Recording ..> SwimrunGroup : shared with, by id
+TrainingPlan ..> Athlete : for, by id
+TrainingPlan ..> Athlete : approved by coach, by id
+GoalEvent ..> Course : by id (optional)
+PlannedSession ..> TrainingPlan : belongs to, by id
+@enduml
+```
+
+The words, as the extractor and training pages need them:
+
+- A **course** is an idealized track: a line and its legs, each leg a swim or a run, with no athlete, no time, no speed and no heart rate.
+  The extractor shows a course when it loads an official GPX file.
+- A **recording** is a carried-out track: an athlete's GPX or FIT file with time and, when the device recorded it, speed and heart rate. The swim and run segments detected on it belong to it. The GPX file of an executed training is a recording once the athlete saves it from the extractor; saving is the athlete's choice and we do not sync or keep a training log.
+- In the interface a course is a *track* and its variants are *track variants*; in the model and the code they are `Course` and `CourseVariant`, because `Track` already means one recorded line in a GPX file (`src/shared/types.ts`). A rename is possible if that reads better.
+- The extractor page treats both as "a GPX file". A sample such as the Rondje Eilanden file is a recording of one athlete with heart rate, cadence and power stripped (`test-data/README.md`); that stripping is how a course is made from a recording.
+- A course has **variants**: one way of doing it, with a description and its own typical GPX line. Race day and training, high and low water, and the water bird breeding season (from April to June some islands are avoided for the sake of nature) are variants. A variant can be valid only for some editions or months: the breeding season is a period of months, and courses change from year to year. Exactly one variant is the **canonical** one, the main way of doing the course: for Het Rondje Eilanden that is the race day recording of 2025, and its first other variant is the *lintjes opruimen* recording of 2026 (clearing the ribbons after the event, missing the part from island 3 to 5). The extractor marks the canonical variant "Main variant" and a canonical variant always has a GPX file. The extractor lists them per course: Het Rondje Eilanden has *race day* (the race starts with swim A of about 400 m along the island, because the island is full of people on race day) and *training* (swim A is run instead), and Rhederlaag has the recording as swum, high water, low water and the breeding season. Only the variants whose typical GPX file exists can be loaded; the others are announced as "GPX to be added".
+- A **swimrun group** is a set of athletes: a duo, a team or a larger training group.
+- A **training plan** leads to goal events: one A event and B or C events before it (roadmap M10). Its **planned sessions** are what the training page shows, and a session can have a structure of steps for intervals, intensity and rest. We do not build a training log: Strava, Garmin and Polar are dedicated platforms for executed training, so a session points at the activity there, or at a recording the athlete saved, and keeps a small adherence snapshot.
+
+Aggregates, their invariants, and what is allowed to be eventually consistent:
+
+- **Athlete** is personal data. Erasing an athlete is a use case that must reach the other aggregates (section 7.6), through events and not through a database cascade across aggregates.
+- **Swimrun group.** Members are references by id with a role. Inside the group it holds at once: a duo has exactly two members, a group has at least one admin, and no athlete is a member twice. When an athlete is erased the membership is removed eventually, because group and athlete are different aggregates.
+- **Course.** A course has exactly one canonical variant. Legs of a variant are ordered, contiguous and cover the line from start to end, and their distances add up to the length of the line within a tolerance. A course holds no personal data: no time, no sensor data, and no athlete unless it is a private course.
+- **Recording** is personal data and private by default. Its segments are ordered, do not overlap and point at existing positions of the trace, and it always has an owner.
+- **Training plan.** It holds one A event, every B or C event lies before it, and a plan the athlete sees is approved (a draft needs explicit approval, roadmap M10).
+- **Planned session** is its own aggregate and not a part of the plan. Its status is planned, done or skipped: done means linked to an executed activity or ticked by the athlete, skipped is ticked by the athlete. It holds at most one reference to an executed activity (a provider and an external id, or the id of a saved recording; the session holds no trace itself) and at most one adherence snapshot, which exists only when a reference does or the athlete entered it. Its steps must be valid (a repeat has at least one repetition, a step has a duration or is open). The balance between runs and swims in a week is advice ("plan warnings", spec 003) and not an invariant, so moving one session never locks the plan and two edits to different sessions do not conflict.
+
+Decisions behind the model, each of which can be reversed in the data-layer ADR:
+
+1. **The trace and the course line are one value each, not a row per position.** The Rondje Eilanden sample alone has 4,491 positions, and an ORM that loads and saves an aggregate as a whole would then rewrite thousands of rows for one change. A value stored as one column (a PostGIS line, or JSON) keeps the aggregate small.
+2. **A course made from a recording keeps no reference to the recording.** That way erasing the recording does not touch the course, at the price of losing the trail from course to origin. The course carries a source text and attribution instead.
+3. **Planned sessions are separate from the plan**, for the reason above: advice is not an invariant, and a plan of a year has hundreds of sessions.
+4. **Goal events live inside the plan.** A shared event aggregate (an ÖTILLÖ race that many athletes aim at) is possible later; see the open questions.
+5. **The structure of a session is a tree of steps** (a repeat contains steps), flattened when exported.
+6. **No training log of our own.** Comparing a planned with an executed session is better done by dedicated services, so a planned session holds a reference to the executed activity (`ExecutedActivityRef`) and a high-level `Adherence` snapshot, and no trace or sensor data. The reference points at the platform that recorded it, or at a recording the athlete saved from the GPX of that training, which is then personal data under the erasure rule for athletes (above).
+7. **Timestamps in a course are kept.** The speed analysis needs them to tell swimming from running. Two refinements are open: shifting the clock so that every course starts at the same fixed time, and keeping the date as separate metadata of the variant. The date stays because it identifies the edition: courses change between editions, and an edition means something to people. The Rügen sample is from 16 May 2026. As the owner recalls it (not yet sourced), the first Ötillö Rügen, in 2025, still had the big swim crossing, and it was changed after the second edition because of a government restriction; which edition the sample shows, and whether its track has the crossing, is still to be checked.
+
+What the structure maps to. Garmin's FIT workout file "must contain a File Id message, a Workout message, and one or more Workout Step messages"; a step has a duration type and value, a target type and value and an intensity ("Active", "Rest", "Warmup", "Cooldown", "Recovery", "Interval" or "Other"), and a repeat block is a step placed after the steps to repeat, with the index of the first step and the number of repetitions (Garmin, n.d.-b).
+Our roles (warm-up, work, rest, cool-down) map onto those intensities, and the tree becomes the flat list with a repeat step on export.
+
+Import and export are not part of the model: they are importers and exporters at the edge (section 7.7).
+An activity importer turns a GPX, FIT or TCX file into a recording, and a workout exporter turns a planned session into a FIT workout file or, as in spec 003, an iCalendar event.
+What the three services offer is not yet verified; the following comes from search summaries and the Garmin FIT page, and is to be checked in the services' own documentation before it is relied on:
+
+- **Garmin.** The FIT file formats are documented (Garmin, n.d.-b). Pushing a structured workout straight to a watch goes through the Garmin Connect Training API, which a third-party report describes as open to approved business partners only (personal access is read-only) and the developer program as currently on hold. So the realistic first path is a file that the athlete loads herself, if Garmin's apps accept it (to check).
+- **Polar.** The AccessLink API gives read access to exercises with FIT and GPX export; we found no way to upload a structured workout through it.
+- **Adherence and the terms of the services.** Roadmap M11 notes that Strava's API agreement restricts showing a user's data to anyone but that user. An adherence figure derived from a Strava activity and shown to a coach may therefore not be allowed; to check against the agreement before it is built. What Garmin calculates as adherence, and whether any service exposes it through an API, is not yet known either; until then the snapshot can be entered by the athlete or computed in the browser.
+- **Strava.** It accepts FIT, TCX and GPX uploads and exports activities as GPX or TCX; we found no planned workouts in its API. Its terms restrict showing a user's data to others and the use of API data for training models (roadmap M11).
+
+Open questions:
+
+1. May a course be made from a recording of an athlete, and how much of the start and end must be trimmed so that it does not reveal a home address?
+2. Which GPX files are the typical line of each variant that has none yet, and which variant is the existing Rhederlaag recording (its water level is not noted) and is it the canonical one? Variants and the canonical variant are part of the model and the code from the first version; the missing files are the TODO list of #80.
+3. Is a goal event part of one plan, or a shared event that plans refer to by id?
+4. Is a coach a role in a group, or a relation between two athletes?
+5. Is the login account the same aggregate as the athlete profile?
+6. Which adherence figures do we keep (compliance in percent, planned against actual duration and distance), who may see them (the athlete only, or the coach too), and where do they come from when no service may give them to us?
+7. Is the term in the interface and the model *session* (as in `TrainingSession`, specs 002 and 003 and the training page) or *training*?
 
 ## 7. Code
 
 This chapter explains how the source code is organised.
 
 The source lives in three folders: `src/client` for the browser, `src/server` for the backend and `src/shared` for types and distance calculation.
+Texts for the interface are data in external JSON files, one per language, and never inline; the library and the routing per language are decided in [ADR-0017](./adr/0017-localisation.md), and until then per-language TypeScript files are a stopgap (see `AGENTS.md`).
 Tests sit next to the code (`*.test.ts`) or in `test/`. The back end in `src/server` runs on Node.js (`npm run server`, type stripping, no build step) and its tests run with Vitest (`npm run test:server`); `npm run check:server` compiles it with only Node's types. Deno does not run them.
 Most tests are property-based: they state a rule that must hold for generated inputs, such as the maximum gap between samples.
 `deno task build` bundles the browser code into `public/app.js` with `deno bundle`, which is an experimental Deno command.
@@ -461,7 +658,7 @@ The main page has a prototype chatbot, *Ask the tiger*, with clickable FAQ label
 It is not an LLM: it answers the fixed questions and replies "There is no actual LLM integration yet" to anything else.
 
 The component `src/components/Chatbot.tsx` depends only on the `ChatAgent` interface in `src/client/chat-agent.ts`.
-An agent returns a stream of events (`run-started`, `text`, `run-finished`), a small subset of the AG-UI event types.
+An agent returns a stream of events (`run-started`, `text`, `run-finished`), a small subset of the AG-UI event types. `src/client/ag-ui.ts` converts that stream into real AG-UI events with the `@ag-ui/core` package (`RUN_STARTED`, `TEXT_MESSAGE_START`, `TEXT_MESSAGE_CONTENT`, `TEXT_MESSAGE_END`, `RUN_FINISHED`, and `CUSTOM` events for status text and suggestion chips), and the tests check every event against the package's own schemas. The chat interface still reads our `ChatEvent`; reading AG-UI events directly is the step after that, and the package for connecting to AG-UI servers, `@ag-ui/client`, is not used.
 `createFaqAgent` is the static implementation. It fetches `public/chat/faq.<lang>.json` (language, *Tell me more* label, fallback text, and the questions and answers) on first use, validates it with `parseFaq`, and pauses before answering so the chat feels like a conversation: the pause grows with the length of the answer, from 0.7 s up to 2.1 s, while the typing indicator shows.
 Changing a question or answer is a JSON edit, not a code change.
 Each entry has a short `answer` and an optional longer `more`. When `more` exists, the answer comes with a *Tell me more* follow-up button that stays until it is used. A question label leaves the list only once all its answers have been given, so the short answer alone does not remove it.
@@ -495,6 +692,13 @@ The page is labelled as a prototype, nothing is sent anywhere, and confirming a 
 
 The domain lives in `src/client/training-week.ts` as pure, tested functions: `applyMoves` returns a new week and never mutates its input (the GPX rule applied to plans), `changedSessions` diffs a draft against the confirmed baseline, and `parseProposal` validates a model response, dropping moves that name unknown sessions or invalid days.
 
+Rest days are part of the model: `restDays` is the set of days on which no session may be planned (a plan lever, spec 003). The rules live in `training-week.ts` as plain functions and not in a prompt: `restDaysRequested` reads "I need a rest day on Wednesday" in English, Dutch, French and German, `planRestDay` moves the sessions of that day, one by one, to the best other day, `checkMoves` leaves out any model move onto a rest day, and `weekIssues` and `suggestFixes` find what a week still needs (two sessions on a day, runs on consecutive days) and propose single moves for it.
+A request for a rest day is planned by these rules and needs no model. For other instructions the model's job is limited to turning words into moves or into `restDays`, and its answer is checked by the same rules; when it names rest days, the rules plan the moves and its own moves are ignored.
+The chat shows a proposal as a headed bulleted list: the step to apply now, anything left out, and, looking one step ahead, the possible next steps. Only the first step has buttons; the next steps come as chips once it is applied, each as its own proposal.
+
+The levers sit above the week: runs, swims, swimruns, short strength and short mobility sessions per week, and the sports rest days in a multi-select (a sports rest day is a day without sessions, which may be a busy work day, so the interface does not call it a rest day). *Generate week* builds the week from them by fixed rules in `generateWeek`: the same levers and rest days always give the same week, no session lands on a rest day, and a short strength or mobility session (15 minutes in the example week, 20 at most) may share a day with one main session. The example week is what the default levers give: two runs (a trail run and a road run), a swim, a swimrun brick, and two short strength and two short mobility sessions.
+The colours of the training week and the extractor come from the same CSS variables in `src/client/styles.css` (`--color-swim`, `--color-run`, `--color-unclassified` and three more). A trail run is the extractor's run green and a road run its unclassified grey; the extractor cannot tell trail from road, so there every run is green. `test/client/colors.test.ts` fails when a colour is hard-coded again.
+
 The week can always be rearranged by hand with a day selector per session — **AI-assisted, not AI-dependent**, the training twin of "terrain-informed, not terrain-dependent".
 On top of that, `src/client/prompt-api.ts` wraps Chrome's built-in Prompt API (Gemini Nano): `TrainingWeek.tsx` checks `LanguageModel.availability()` and walks the fallback ladder — no API or `unavailable` shows a note that hand rearranging always works, `downloadable` offers an opt-in download with progress, and `available` shows an instruction field.
 A proposal is requested with a JSON-schema `responseConstraint` (move an existing session to another day, with a reason) and shown as a diff the athlete applies or dismisses; the athlete confirms the week explicitly.
@@ -502,6 +706,328 @@ The proposal is evidence; the confirmation is the label.
 The schedule never leaves the device: the model runs locally and Chrome owns its download and updates.
 The UI follows the page language in all four site languages, but the model itself understands English, French and German, not Dutch (ADR-0010), so the interface says so.
 The component takes the model as an optional prop, so tests and Storybook stories inject a fake and the real browser API stays at the edge.
+
+**Planned: a deterministic chat (issue #86).** The training chat becomes a guided chat of three fixed commands that works without a language model: add a rest day or one session, move a session, and go to another screen. A rule-based parser reads each message in the four site languages and picks a command; what a command still lacks it asks for, one slot at a time, with chips as the answers; a complete command is a typed tool call (`add_session`, `move_session`, `set_rest_days`, `navigate`) that the AG-UI adapter emits as `TOOL_CALL_*` events and the page applies to the draft week with one "Apply" chip. A message that is none of the three gets the list of commands, again as chips. The same input always gives the same path, so every branch can be tested without a model.
+
+**Planned: Gemini Nano as an improvement, not a requirement.** When Gemini Nano is present and available, it improves the dialogue in two places and nowhere else: it chooses which of the fixed chips to show for the slot at hand, given the context (the week, what was already answered), and it reads free text that the rules cannot read, so that the user can answer in another order than the fixed one ("a 30 minute trail run on Thursday" in answer to the question for the type). The model only picks from closed lists with a JSON-schema `responseConstraint`: chip ids, and slot values from the same vocabulary as the rules. Its answer is validated by the same rules as typed input, and a timeout or an invalid answer falls back to the fixed chips and to asking again. The model never changes the week and never sees more than the question, the slot and a summary of the week; it runs on the device.
+
+The decision tree is drawn as one overall activity diagram (Figure A) with nested sub-processes that have their own diagram (Figures B to D). PlantUML has no BPMN notation, so these are UML activity diagrams, in which the nested diagrams play the part of BPMN sub-processes; a BPMN tool such as bpmn.io would be a separate choice.
+
+```plantuml
+@startuml training-chat-decision-tree
+title Figure A: the training chat, overall (planned, issue #86)
+
+start
+:Message or chip text arrives;
+:Rule-based parser reads it\nin English, Dutch, French or German;
+if (Which command?) then (1 add a rest day or a session)
+  if (Rest day?) then (yes)
+    if (Day given?) then (no)
+      :Sub-process: Choose chips for the day (Figure C);
+      :Ask the day;
+    else (yes)
+    endif
+    :Tool call set_rest_days;
+  else (a session)
+    :Sub-process: Add a session: fill the slots (Figure B);
+    :Tool call add_session;
+  endif
+elseif (2 move a session) then
+  if (Type, source day and target day all given?) then (yes)
+  else (no)
+    :Sub-process: Ask for what is missing, with chips (Figure C);
+  endif
+  :Tool call move_session;
+elseif (3 navigate) then
+  :Name the screen: Extractor, About, FAQ ...;
+  :Tool call navigate, shown as a link;
+else (none of these)
+  if (Gemini Nano available?) then (yes)
+    :Sub-process: Read free text with the model (Figure D);
+    if (Understood as a command?) then (yes)
+      :Continue with that command;
+    else (no)
+      :Answer: "I don't understand your request,\nplease limit to:" and the commands as chips; <<#lightyellow>>
+      stop
+    endif
+  else (no)
+    :Answer: "I don't understand your request,\nplease limit to:" and the commands as chips; <<#lightyellow>>
+    stop
+  endif
+endif
+:Rules check the call\n(unknown session or day: reject and say why);
+if (Lands on a sports rest day?) then (yes)
+  :Allowed; the session gets the orange warning;
+else (no)
+endif
+:Propose the change with one "Apply" chip;
+if (Apply?) then (yes)
+  :Draft week changes at once;
+  :Shown under "Your changes" with Revert; <<#palegreen>>
+else (dismiss)
+  :Nothing changes;
+endif
+stop
+@enduml
+```
+
+```plantuml
+@startuml training-chat-add-session
+title Figure B: sub-process "add a session": fill the slots (planned)
+
+start
+repeat
+  :Next missing slot, in this order:\ntype, subtype, basis, length, day;
+  :Sub-process: Choose chips for the slot (Figure C);
+  :Ask the question with the chips;
+  :User answers with a chip or with text;
+  :Sub-process: Read the answer (Figure D);
+repeat while (A slot is still missing?) is (yes) not (no)
+:Slots: type (run, swim, strength, mobility),\nsubtype (run: trail, road or mixed; swim: open water or pool;\nstrength: with weight or body mass; mobility: static or dynamic),\nbasis (time by default, or distance), length, day;
+stop
+@enduml
+```
+
+```plantuml
+@startuml training-chat-choose-chips
+title Figure C: sub-process "choose chips" (planned)
+
+start
+:Default chips for the slot, from the fixed vocabulary;
+if (Gemini Nano available and ready?) then (yes)
+  :Ask the model to pick and order chip ids\nfrom the closed list, given the week\nand the slots filled so far (responseConstraint);
+  if (Answer within 1.5 s and every id is in the list?) then (yes)
+    :Use the model's chips, always with a "something else" chip; <<#lightblue>>
+  else (no)
+    :Use the default chips;
+  endif
+else (no)
+  :Use the default chips;
+endif
+stop
+@enduml
+```
+
+```plantuml
+@startuml training-chat-read-answer
+title Figure D: sub-process "read an answer or free text" (planned)
+
+start
+:Rules read the text for any slot,\nnot only the one asked;
+if (Anything recognised?) then (yes)
+  :Fill every slot found\n(a later slot may be filled before an earlier one);
+else (no)
+  if (Gemini Nano available and ready?) then (yes)
+    :Ask the model to fill slots from the same vocabulary\n(responseConstraint, only the text and the question);
+    if (Valid slots within the timeout?) then (yes)
+      :Fill the slots found; <<#lightblue>>
+    else (no)
+      :Ask the question again with the fixed chips;
+    endif
+  else (no)
+    :Ask the question again with the fixed chips;
+  endif
+endif
+:Check each slot value against the rules\n(unknown day, negative length: ask again);
+stop
+@enduml
+```
+
+### 7.6 Back end: aggregate, repository and unit of work (planned)
+
+The back end does not exist yet ([ADR-0013](./adr/0013-back-end-is-optional.md), [ADR-0014](./adr/0014-back-end-technology.md)).
+This section states the patterns its code will follow, so that they are agreed before the first line is written.
+Patterns are described here, in the Code chapter, and not in chapter 5: chapter 5 holds the principles we value, while a pattern is a way of building a part of the code.
+The reasoning behind the choice of data layer is in [ADR-0016](./adr/0016-data-access-layer.md), which is still a draft.
+
+- **Aggregate.** "A cluster of domain objects that can be treated as a single unit", and "transactions should not cross aggregate boundaries" (Fowler, n.d.-a). The term is also used in UML, where it does not mean a DDD aggregate (Fowler, n.d.-a).
+  We put concepts that have a composition or aggregation relation in the model into one aggregate, with the owning concept as the aggregate root. The invariants that must always hold decide what is inside; for the rest, consistency between aggregates is eventual.
+  The candidate aggregates are a course (with its variants and legs), a team or app group (with its members), a swimrunner profile and a recording, where a recording refers to a course by id.
+- **Repository.** "Mediates between the domain and data mapping layers using a collection-like interface for accessing domain objects" (Fowler, n.d.-b). One repository per aggregate root; aggregates are loaded and saved whole.
+- **Unit of work.** "Maintains a list of objects affected by a business transaction and coordinates the writing out of changes and the resolution of concurrency problems" (Fowler, n.d.-c). It is the mechanism that saves, not the aggregate. The rule is one aggregate root per use case and one flush per use case, so that a transaction does not cross aggregate boundaries.
+- **Optimistic concurrency.** The aggregate root carries a version; of two users who change the same aggregate the first commit wins, and the second gets a conflict error instead of overwriting the change.
+
+The front end uses none of these. It follows the GPX rule instead, pure functions that return new values and never mutate their input, as `applyMoves` does for the training week (section 7.5).
+
+### 7.7 Back end: design class diagram of course and recording (planned)
+
+The two aggregates the extractor page needs first are the course and the recording.
+Figure 12 is their design class diagram: types, operations, value objects, the repositories and the domain service that makes a course from a recording.
+Entities have an id and a version for optimistic concurrency ([ADR-0016](./adr/0016-data-access-layer.md)); value objects are immutable.
+The model is implemented in `src/shared/domain/`, in plain TypeScript with no framework, so that the browser and the back end share it: `course/` and `recording/` hold the two aggregates, `geometry.ts` the line and trace values, `course-from-recording.ts` the domain service, `repositories.ts` the interfaces and `in-memory-repositories.ts` test doubles with the version check. Two details differ from the diagram: a leg is a swim or a run (`LegKind`; only a recorded segment can be unclassified), and the repositories are asynchronous and `save` returns nothing, so after a save the aggregate in hand is stale and is reloaded before the next change. The existing types of `src/shared/types.ts` carry over: `Coordinate` and `Trackpoint` become `LinePoint` and `TracePoint`, `Segment` becomes `RecordedSegment` and `StrategyName` stays.
+`Leg`, the version and the ids are new.
+
+*Figure 12*: Design class diagram of the Course and Recording aggregates (planned). The diagram is the PlantUML block below.
+
+```plantuml
+@startuml dcd-course-recording
+title Design class diagram: Course and Recording aggregates (planned)
+skinparam classAttributeIconSize 0
+hide empty members
+
+class Course <<aggregate root>> {
+  -id: CourseId
+  -name: string
+  -visibility: Visibility
+  -ownerId: AthleteId | null
+  -variants: CourseVariant[1..*]
+  -version: number
+  +rename(name: string): void
+  +addVariant(name: string, description: string, line: CourseLine, legs: Leg[]): VariantId
+  +removeVariant(id: VariantId): void
+  +makeCanonical(id: VariantId): void
+  +publish(): void
+}
+class CourseVariant <<entity>> {
+  -id: VariantId
+  -name: string
+  -description: string
+  -canonical: boolean
+  -validity: Validity | null
+  -line: CourseLine
+  -legs: Leg[1..*]
+  +distanceM(): number
+  +distanceOf(kind: SegmentType): number
+}
+class Validity <<value>> {
+  +fromYear: number | null
+  +toYear: number | null
+  +months: number[0..12]
+}
+class CourseLine <<value>> {
+  +points: LinePoint[2..*]
+  +lengthM(): number
+}
+class LinePoint <<value>> {
+  +lat: number
+  +lon: number
+  +elevation: number | null
+}
+class Leg <<value>> {
+  +ordinal: number
+  +kind: SegmentType
+  +startIndex: number
+  +endIndex: number
+  +distanceM: number
+  +name: string | null
+}
+
+class Recording <<aggregate root>> {
+  -id: RecordingId
+  -ownerId: AthleteId
+  -courseId: CourseId | null
+  -startedAt: Instant
+  -source: Source
+  -visibility: Visibility
+  -sharedWith: GroupId[0..*]
+  -trace: Trace
+  -segments: RecordedSegment[0..*]
+  -external: ExternalRef | null
+  -version: number
+  +followCourse(id: CourseId): void
+  +shareWith(group: GroupId): void
+  +replaceSegments(segments: RecordedSegment[]): void
+}
+class Trace <<value>> {
+  +points: TracePoint[2..*]
+  +durationS(): number
+  +distanceM(): number
+}
+class TracePoint <<value>> {
+  +lat: number
+  +lon: number
+  +elevation: number | null
+  +time: Instant
+  +heartRate: number | null
+}
+class RecordedSegment <<value>> {
+  +kind: SegmentType
+  +startIndex: number
+  +endIndex: number
+  +distanceM: number
+  +durationS: number
+  +detectedBy: StrategyName[]
+  +confidence: number
+}
+class ExternalRef <<value>> {
+  +provider: string
+  +externalId: string
+}
+
+enum SegmentType {
+  swim
+  run
+  unclassified
+}
+enum Visibility {
+  private
+  group
+  public
+}
+enum Source {
+  gpxUpload
+  fitUpload
+  provider
+}
+
+interface CourseRepository <<repository>> {
+  +find(id: CourseId): Course | null
+  +add(course: Course): void
+  +save(course: Course): void
+}
+interface RecordingRepository <<repository>> {
+  +find(id: RecordingId): Recording | null
+  +add(recording: Recording): void
+  +save(recording: Recording): void
+  +erase(owner: AthleteId): void
+}
+class CourseFromRecording <<domain service>> {
+  +create(recording: Recording, trimStartM: number, trimEndM: number): Course
+}
+
+Course *-- "1..*" CourseVariant
+CourseVariant *-- "1" CourseLine
+CourseVariant *-- "0..1" Validity
+CourseLine *-- "2..*" LinePoint
+CourseVariant *-- "1..*" Leg
+Leg ..> SegmentType
+
+Recording *-- "1" Trace
+Trace *-- "2..*" TracePoint
+Recording *-- "0..*" RecordedSegment
+Recording *-- "0..1" ExternalRef
+RecordedSegment ..> SegmentType
+Recording ..> Visibility
+Recording ..> Source
+Course ..> Visibility
+
+CourseRepository ..> Course
+RecordingRepository ..> Recording
+CourseFromRecording ..> Recording : reads
+CourseFromRecording ..> Course : creates
+
+note right of Course
+  Invariants: exactly one canonical variant; legs
+  are ordered and contiguous and cover the line;
+  leg distances add up to the line length within
+  a tolerance; no time, sensor data or athlete
+  (unless private).
+end note
+note right of Recording
+  Invariants: segments are ordered, do not overlap
+  and point at positions of the trace; an owner is
+  always set. Stale version on save: ConflictError.
+end note
+note bottom of CourseFromRecording
+  Drops time and sensor data, trims the start and
+  the end, and keeps no reference to the recording.
+end note
+@enduml
+```
+
+The save of a repository throws a conflict error when the version of the aggregate is stale (first commit wins, section 7.6), and one use case changes one aggregate and saves it once.
+`RecordingRepository.erase` removes all recordings of an athlete, which is part of the erasure use case (section 6.6).
+The importers and exporters are not in this diagram: an `ActivityImporter` returns a `Recording` from a file, and a `WorkoutExporter` (later) turns a planned session into a file.
 
 ## 8. Data
 
@@ -523,13 +1049,13 @@ Table 7 lists the numeric `<sym>` values in the test files, which come from the 
 
 *Table 7*: Waypoint `<sym>` values in Openrunner files.
 
-| `<sym>` value | Meaning |
-| --- | --- |
-| `200` | Start of a swim section |
-| `201` | End of a swim section |
-| `3` | Aid station (ravitaillement) |
-| `206` | Start of a vertical kilometre |
-| `49` | Hot food aid station |
+| `<sym>` value | Meaning                       |
+| ------------- | ----------------------------- |
+| `200`         | Start of a swim section       |
+| `201`         | End of a swim section         |
+| `3`           | Aid station (ravitaillement)  |
+| `206`         | Start of a vertical kilometre |
+| `49`          | Hot food aid station          |
 
 These numeric codes are not part of the GPX standard, and other applications such as Garmin, Komoot or Strava may use other schemes.
 The system detects swims in two ways: it first matches `<sym>` 200 and 201, and falls back to waypoint names that start with "Début SWIM" or "Fin SWIM".
@@ -547,7 +1073,7 @@ The frontend is a static GitHub Pages site at `https://swimrun.group/tigerlegs/`
 
 This chapter describes how the system reaches production.
 
-`.github/workflows/pages.yml` installs npm dependencies, runs Deno tests, builds the Worker/assets and Astro pages, checks site types, and runs Playwright browser tests on pull requests and pushes to `main`. Only `main` publishes `dist/` to GitHub Pages. Feature branches do not deploy automatically.
+`.github/workflows/pages.yml` installs npm dependencies, runs the unit tests (`npm test`), builds the Worker/assets and Astro pages, checks site types, and runs Playwright browser tests on pull requests and pushes to `main`. Only `main` publishes `dist/` to GitHub Pages. Feature branches do not deploy automatically.
 
 The build generates `index.html`, `about.html`, `guidebook.html` and one HTML page per ADR. Public links and assets use the `/tigerlegs/` base path; direct navigation does not require a backend router or a 404 SPA fallback. The `README.md` in the repository root holds the build/preview commands.
 
@@ -563,11 +1089,11 @@ The optional Node.js API exposes `GET /api/v1/health`; it needs no `Origin` head
 
 This chapter lists what you need to work on the code.
 
-You need Deno, npm and Node.js 22.23.4 or newer; `.nvmrc` pins Node 24, which CI also uses (`nvm use` picks it up). Run `npm ci` first; npm manages the dependency tree used by both the site build and Deno tests.
+You need Deno, npm and Node.js 22.23.4 or newer; `.nvmrc` pins Node 24, which CI also uses (`nvm use` picks it up). Run `npm ci` first; npm manages the dependency tree used by the site build, the unit tests and Deno.
 
 `deno task dev` prepares the Worker, samples and styling, then starts Astro at `http://localhost:8123/tigerlegs/`. `deno task build` generates the production site in `dist/`; `npm run preview` serves that build locally. No API service is needed for these workflows.
 
-`deno test -A` runs analysis and documentation unit/integration tests. `npm run check` checks the Astro/React code. After building and installing Chromium with `npx playwright install chromium`, `npm run test:site` checks static deep links, ADR publication, React imports/selection, Worker thresholds, terrain consent and mobile layout on a plain static server.
+`npm test` (Vitest) runs the analysis, documentation and domain unit and integration tests. `npm run check` checks the Astro/React code. After building and installing Chromium with `npx playwright install chromium`, `npm run test:site` checks static deep links, ADR publication, React imports/selection, Worker thresholds, terrain consent and mobile layout on a plain static server.
 
 For development you can run your own Overpass server, with a one-time import of a regional extract, so that recording test fixtures does not hit the public servers; see [local-overpass.md](./local-overpass.md) (a service of `docker-compose.yml`, data in the git-ignored `overpass-data/`). The browser client retries a busy public server with exponential backoff and caches the water of an area for a week.
 
@@ -575,11 +1101,11 @@ For development you can run your own Overpass server, with a one-time import of 
 
 Tests follow the test pyramid: many fast tests at the bottom, few slow ones at the top.
 
-| Level | Tool | Location | What it covers |
-|---|---|---|---|
+| Level                   | Tool                                        | Location                       | What it covers                                                                                                 |
+| ----------------------- | ------------------------------------------- | ------------------------------ | -------------------------------------------------------------------------------------------------------------- |
 | Unit and property-based | Deno test runner, `@std/assert`, fast-check | `test/client/`, `test/shared/` | Pure domain functions: GPX parsing, classification, confidence, chat agent, session store, language resolution |
-| Integration (back end) | Deno test runner | `test/server/` | The Overpass proxy and its cache |
-| End-to-end | Playwright on the built static site | `test/site/` | Deep links, menu, language switch, fake login, terrain consent, mobile layout |
+| Integration (back end)  | Deno test runner                            | `test/server/`                 | The Overpass proxy and its cache                                                                               |
+| End-to-end              | Playwright on the built static site         | `test/site/`                   | Deep links, menu, language switch, fake login, terrain consent, mobile layout                                  |
 
 Rules:
 
@@ -590,7 +1116,7 @@ Rules:
 - React components have stories in Storybook (`npm run storybook`, files `src/components/*.stories.tsx`). Each story is also a component test: `npm run test:a11y` runs every story in Chromium through Vitest and fails on any axe accessibility violation (`a11y.test: "error"` in `.storybook/preview.ts`). The *Accessibility* panel in Storybook shows the same findings while developing.
 - Automated checks find only part of the accessibility problems (roughly a third to a half). Keyboard use, focus order and screen-reader wording still need a manual check.
 - Not yet covered: `Extractor` and `CourseMap` (Leaflet, web worker and map tiles need mocks), and the Astro pages and layout, which Storybook does not render.
-- A change is done only when `deno task test`, `deno task build` and (for site changes) `npm run test:site` pass; see [DEFINITION_OF_DONE.md](./DEFINITION_OF_DONE.md).
+- A change is done only when `npm test`, `deno task build` and (for site changes) `npm run test:site` pass; see [DEFINITION_OF_DONE.md](./DEFINITION_OF_DONE.md).
 
 ## 13. Decision log
 
@@ -600,22 +1126,24 @@ Table 8 lists the ADRs and what each decides.
 
 *Table 8*: Architecture decision records.
 
-| ADR | Decision |
-| --- | --- |
-| [0001](./adr/0001-record-architecture-decisions.md) | Record architecture decisions |
-| [0002](./adr/0002-use-deno-with-typescript.md) | Use Deno with TypeScript |
-| [0003](./adr/0003-gpx-analysis-execution-location.md) | Choose where the GPX analysis runs |
-| [0004](./adr/0004-host-deno-backend-on-eu-vps.md) | Host the backend on an EU VPS |
-| [0005](./adr/0005-rest-json-api-for-multi-client-support.md) | Offer a REST/JSON API |
-| [0006](./adr/0006-open-source-gis-stack.md) | Use an open-source GIS stack |
-| [0007](./adr/0007-compact-segment-table-format.md) | Show a compact paired segment table |
-| [0008](./adr/0008-astro-static-site-with-react-islands.md) | Astro static pages with a React-based interactive frontend; compare alternatives using multi-criteria decision making |
-| [0009](./adr/0009-react-for-interactive-frontend.md) | Use React for the interactive frontend; owner familiarity and learning goals, compared with Vue, Angular and other options |
-| [0010](./adr/0010-tigerlegs-mcp-server-and-strava-integration.md) | Draft: expose training data through a TigerLegs MCP server with Strava as a data source; no decision yet |
-| [0011](./adr/0011-model-lifecycle-and-think-thread-for-on-device-chat.md) | Draft: separate the one-off model download from the per-prompt think thread in the on-device chat; no decision |
-| [0012](./adr/0012-persistent-chat-across-pages.md) | Proposed: keep the chat across pages with Astro view transitions and a persisted island |
-| [0013](./adr/0013-back-end-is-optional.md) | Draft: the back end is optional and a premium feature; the front end works without it; no decision |
-| [0014](./adr/0014-back-end-technology.md) | Draft: back-end technology compared with multi-criteria decision making (Deno, Node.js, Python, Java 25 with Spring Boot, Micronaut, Quarkus or Javalin, .NET 10, Go, Rust); no decision |
+| ADR                                                                       | Decision                                                                                                                                                                                                                         |
+| ------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [0001](./adr/0001-record-architecture-decisions.md)                       | Record architecture decisions                                                                                                                                                                                                    |
+| [0002](./adr/0002-use-deno-with-typescript.md)                            | Use Deno with TypeScript                                                                                                                                                                                                         |
+| [0003](./adr/0003-gpx-analysis-execution-location.md)                     | Choose where the GPX analysis runs                                                                                                                                                                                               |
+| [0004](./adr/0004-host-deno-backend-on-eu-vps.md)                         | Host the backend on an EU VPS                                                                                                                                                                                                    |
+| [0005](./adr/0005-rest-json-api-for-multi-client-support.md)              | Offer a REST/JSON API                                                                                                                                                                                                            |
+| [0006](./adr/0006-open-source-gis-stack.md)                               | Use an open-source GIS stack                                                                                                                                                                                                     |
+| [0007](./adr/0007-compact-segment-table-format.md)                        | Show a compact paired segment table                                                                                                                                                                                              |
+| [0008](./adr/0008-astro-static-site-with-react-islands.md)                | Astro static pages with a React-based interactive frontend; compare alternatives using multi-criteria decision making                                                                                                            |
+| [0009](./adr/0009-react-for-interactive-frontend.md)                      | Use React for the interactive frontend; owner familiarity and learning goals, compared with Vue, Angular and other options                                                                                                       |
+| [0010](./adr/0010-tigerlegs-mcp-server-and-strava-integration.md)         | Draft: expose training data through a TigerLegs MCP server with Strava as a data source; no decision yet                                                                                                                         |
+| [0011](./adr/0011-model-lifecycle-and-think-thread-for-on-device-chat.md) | Draft: separate the one-off model download from the per-prompt think thread in the on-device chat; no decision                                                                                                                   |
+| [0012](./adr/0012-persistent-chat-across-pages.md)                        | Proposed: keep the chat across pages with Astro view transitions and a persisted island                                                                                                                                          |
+| [0013](./adr/0013-back-end-is-optional.md)                                | Draft: the back end is optional and a premium feature; the front end works without it; no decision                                                                                                                               |
+| [0014](./adr/0014-back-end-technology.md)                                 | Accepted: the back end is Node.js with TypeScript, chosen with multi-criteria decision making, a decision tree and a spike that measured memory and image size against Spring Boot, Micronaut and ASP.NET Core                   |
+| [0016](./adr/0016-data-access-layer.md)                                   | Draft: the data layer of the back end (ORM or repositories, PostgreSQL driver, optimistic concurrency, transactions); no decision yet                                                                                            |
+| [0017](./adr/0017-localisation.md)                                        | Accepted: localisation with i18next and react-i18next, translations as external data files (YAML preferred, JSON accepted), ICU message syntax preferred, and one URL per language (Astro i18n routing); decided without a spike |
 
 ADR-0008 implements a shared Astro layout and directly linkable HTML pages, with the interactive extractor implemented in React and no runtime backend. Astro itself is not React-based; it supplies static page composition around the React application. Existing TypeScript analysis modules remain reusable. All ADRs are built into HTML pages and linked from this chapter. The ADR includes a provisional weighted comparison of the previous Deno-only site build, Astro, Next.js static export, Vite + React SPA and Eleventy, following the [ICT Research Methods multi-criteria decision making method](https://ictresearchmethods.nl/workshop/multi-criteria-decision-making/).
 
@@ -626,7 +1154,11 @@ ADR-0008 implements a shared Astro layout and directly linkable HTML pages, with
 - Cavoukian, A. (2011). *Privacy by design: The 7 foundational principles*. Information and Privacy Commissioner of Ontario. https://www.ipc.on.ca/wp-content/uploads/resources/7foundationalprinciples.pdf
 - Cockburn, A. (2001). *Writing effective use cases*. Addison-Wesley.
 - file-extensions.com. (n.d.). *GPX file format*. Retrieved June 15, 2026, from https://file-extensions.com/docs/gpx
-- Garmin. (n.d.). *Connect IQ basics*. Retrieved November 1, 2026, from https://developer.garmin.com/connect-iq/connect-iq-basics/
+- Fowler, M. (n.d.-a). *DDD aggregate* [Bliki]. Retrieved November 11, 2026, from https://martinfowler.com/bliki/DDD_Aggregate.html
+- Fowler, M. (n.d.-b). *Repository* [Patterns of enterprise application architecture]. Retrieved November 11, 2026, from https://martinfowler.com/eaaCatalog/repository.html
+- Fowler, M. (n.d.-c). *Unit of work* [Patterns of enterprise application architecture]. Retrieved November 11, 2026, from https://martinfowler.com/eaaCatalog/unitOfWork.html
+- Garmin. (n.d.-a). *Connect IQ basics*. Retrieved November 1, 2026, from https://developer.garmin.com/connect-iq/connect-iq-basics/
+- Garmin. (n.d.-b). *Workout files* [FIT SDK documentation]. Retrieved November 11, 2026, from https://developer.garmin.com/fit/articles/file-types/workout.html
 - Geofabrik. (n.d.). *OpenStreetMap data extracts*. Retrieved November 10, 2026, from https://download.geofabrik.de/
 - Gruber, T. (2008). Ontology. In L. Liu & M. T. Özsu (Eds.), *Encyclopedia of Database Systems*. Springer. https://tomgruber.org/writing/definition-of-ontology
 - Het Rondje Eilanden. (n.d.). *Parcours* [Course map with the length of every swim and run]. Retrieved November 10, 2026, from https://www.hetrondjeeilanden.nl/wedstrijd/parcours/
@@ -652,58 +1184,58 @@ Table 9 lists the terms in the order in which you meet them when you follow a GP
 
 *Table 9*: Domain glossary.
 
-| Term | Meaning | Example |
-| --- | --- | --- |
-| Track | Ordered recording of positions of the whole course | The Vertical SwimRunMan GPX holds one track |
-| Trackpoint | One position in a track, with latitude, longitude and optional elevation and time | `lat="54.4" lon="13.4"` |
-| Waypoint | A named point of interest, separate from the track | "Début SWIM" |
-| `<sym>` | Symbol code on a waypoint; 200 marks a swim start and 201 a swim end | A waypoint with `<sym>200</sym>` starts a swim |
-| Segment | Consecutive trackpoints that are all swim or all run, with a distance | Swim of 400 m |
-| Swim, run, unclassified | The three labels a segment can have | Run of 2.1 km |
-| Transition | The point where one segment ends and the next begins | The beach exit after a swim |
-| Hysteresis | Memory in a threshold decision: once a transition counts as passed, nearby noisy GPS fixes cannot un-pass it | The watch advances to leg 5 once, even when swim-degraded GPS jitters around the transition radius |
-| Distance to next transition | Distance along the track from a position to the next transition | "Next transition in 1.2 km" |
-| Question | A prompt the athlete sends to the chat, by clicking a label or typing | "But can tigers actually swim?" |
-| Static answer | A fixed answer from the FAQ catalog, consisting of a brief answer and optionally more | The tiger answer in `faq.en.json` |
-| Brief answer | The short first reply to a question | "Yes. Tigers are among the few big cats that like water." |
-| More | The longer second reply, offered through the *Tell me more* follow-up | Why swimrun courses vary in distance |
-| Dynamic answer | An answer an LLM generates for a free-text question (planned, issue #10) | A reply about a specific wetsuit |
-| Fallback | The reply to free text while no LLM is integrated | "There is no actual LLM integration yet.." |
-| Language | One of English, Dutch, French or German; each has its own FAQ catalog | `faq.nl.json` |
-| Strategy | A method to detect segments: waypoint, speed or landscape | Waypoint strategy |
-| Confidence | How sure a strategy is about a trackpoint; the combiner keeps the highest | 0.9 from waypoints beats 0.4 from speed |
-| Terrain | Land or water at a coordinate, from OpenStreetMap | A lake point returns water |
-| Sampling interval | Wanted distance between sampled trackpoints for terrain queries | 50 m |
-| Gap | Distance between two consecutive samples | With a 50 m interval and 200 m steps, the gap can exceed 50 m |
-| Sparse track | Track whose trackpoints lie far apart | A watch that records every 200 m |
-| Paired segment table | Table with one row per run and swim pair ([ADR-0007](./adr/0007-compact-segment-table-format.md)) | Row: run 2.1 km, swim 400 m |
-| Run-first, swim-first | Which segment type opens a paired row; run-first is the default | A toggle above the table |
-| Aid station | Food and drink point, usually on land | A waypoint on a run |
+| Term                        | Meaning                                                                                                      | Example                                                                                            |
+| --------------------------- | ------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------- |
+| Track                       | Ordered recording of positions of the whole course                                                           | The Vertical SwimRunMan GPX holds one track                                                        |
+| Trackpoint                  | One position in a track, with latitude, longitude and optional elevation and time                            | `lat="54.4" lon="13.4"`                                                                            |
+| Waypoint                    | A named point of interest, separate from the track                                                           | "Début SWIM"                                                                                       |
+| `<sym>`                     | Symbol code on a waypoint; 200 marks a swim start and 201 a swim end                                         | A waypoint with `<sym>200</sym>` starts a swim                                                     |
+| Segment                     | Consecutive trackpoints that are all swim or all run, with a distance                                        | Swim of 400 m                                                                                      |
+| Swim, run, unclassified     | The three labels a segment can have                                                                          | Run of 2.1 km                                                                                      |
+| Transition                  | The point where one segment ends and the next begins                                                         | The beach exit after a swim                                                                        |
+| Hysteresis                  | Memory in a threshold decision: once a transition counts as passed, nearby noisy GPS fixes cannot un-pass it | The watch advances to leg 5 once, even when swim-degraded GPS jitters around the transition radius |
+| Distance to next transition | Distance along the track from a position to the next transition                                              | "Next transition in 1.2 km"                                                                        |
+| Question                    | A prompt the athlete sends to the chat, by clicking a label or typing                                        | "But can tigers actually swim?"                                                                    |
+| Static answer               | A fixed answer from the FAQ catalog, consisting of a brief answer and optionally more                        | The tiger answer in `faq.en.json`                                                                  |
+| Brief answer                | The short first reply to a question                                                                          | "Yes. Tigers are among the few big cats that like water."                                          |
+| More                        | The longer second reply, offered through the *Tell me more* follow-up                                        | Why swimrun courses vary in distance                                                               |
+| Dynamic answer              | An answer an LLM generates for a free-text question (planned, issue #10)                                     | A reply about a specific wetsuit                                                                   |
+| Fallback                    | The reply to free text while no LLM is integrated                                                            | "There is no actual LLM integration yet.."                                                         |
+| Language                    | One of English, Dutch, French or German; each has its own FAQ catalog                                        | `faq.nl.json`                                                                                      |
+| Strategy                    | A method to detect segments: waypoint, speed or landscape                                                    | Waypoint strategy                                                                                  |
+| Confidence                  | How sure a strategy is about a trackpoint; the combiner keeps the highest                                    | 0.9 from waypoints beats 0.4 from speed                                                            |
+| Terrain                     | Land or water at a coordinate, from OpenStreetMap                                                            | A lake point returns water                                                                         |
+| Sampling interval           | Wanted distance between sampled trackpoints for terrain queries                                              | 50 m                                                                                               |
+| Gap                         | Distance between two consecutive samples                                                                     | With a 50 m interval and 200 m steps, the gap can exceed 50 m                                      |
+| Sparse track                | Track whose trackpoints lie far apart                                                                        | A watch that records every 200 m                                                                   |
+| Paired segment table        | Table with one row per run and swim pair ([ADR-0007](./adr/0007-compact-segment-table-format.md))            | Row: run 2.1 km, swim 400 m                                                                        |
+| Run-first, swim-first       | Which segment type opens a paired row; run-first is the default                                              | A toggle above the table                                                                           |
+| Aid station                 | Food and drink point, usually on land                                                                        | A waypoint on a run                                                                                |
 
 Table 10 defines the terms about map data, the terrain service and the infrastructure around it, in alphabetical order.
 
 *Table 10*: Map data and infrastructure glossary.
 
-| Term | Meaning | Example |
-| --- | --- | --- |
-| Area cache | Browser store of the Overpass answers per coarse bounding box, kept for a week, so a second analysis of the same area needs no request; it holds public map data only, never GPX content | The Cache API entry for one 0.05 degree grid cell |
-| Bounding box (bbox) | Rectangle on the map given by its south, west, north and east edge; an Overpass query is limited to one | `52.15,4.85,52.35,5.05` |
-| Coarse bounding box | The track's bounding box grown outward to a 0.05 degree grid (about 5 km), so the request shows the neighbourhood of the track and not the track itself | The query area for the Rondje Eilanden |
-| Container, image | A container is an isolated process started from an image, which packages a program with what it needs to run; the same image runs on a laptop and on a server | The back end image built from the `Dockerfile` |
-| Docker Compose, profile | A Compose file describes several containers that run together; a profile marks services that start only when asked for | The local Overpass server, profile `overpass`, in `docker-compose.yml` |
-| Exponential backoff | Retrying a request after a wait that doubles each time (here 1, 2 and 4 seconds), as busy Overpass servers ask for | A 502 answer is followed by a retry after 1 s |
-| Extract | The OpenStreetMap data of one region as a file, a part of the complete planet file | The Netherlands extract |
-| Fixture | Recorded data that a test uses instead of asking the outside world | `test/fixtures/rondje-eilanden-overpass.json` |
-| Geofabrik | A German company that processes OpenStreetMap data and publishes ready-made regional extracts for download | `download.geofabrik.de/europe/netherlands-latest.osm.pbf` |
-| Mirror | Another public Overpass server with the same data, tried when the first one is busy | `overpass.kumi.systems` |
-| Multi-criteria decision making (MCDM) | Choosing between options by judging each against weighted criteria, and iterating between judging the options and adjusting the criteria | The weighted comparison of back-end technologies in [ADR-0014](./adr/0014-back-end-technology.md) |
-| OpenStreetMap (OSM) | The open, collaboratively edited map database that TigerLegs takes its water data from, under the ODbL licence | A lake drawn as a `natural=water` area |
-| Oracle test | A test that compares the extractor with an official, independent result | The ÖTILLÖ Cannes split from RaceDayMap |
-| Overpass API | A read-only service that answers queries on OpenStreetMap data | `overpass-api.de` |
-| Overpass QL | The query language of the Overpass API | `way["natural"="water"](bbox);out geom;` |
-| PBF | Protocolbuffer Binary Format, a compact binary file format for OpenStreetMap data, smaller and faster to read than the XML formats, so the usual format of downloads | `netherlands-latest.osm.pbf` |
-| Quality of service | What a user can rely on from a service, such as availability and speed; the planned premium Overpass server offers more of it than the shared public servers | No rate limit on our own server |
-| Ratchet | A passing test that pins today's error of an approach, so a change may make it smaller but not larger | The pinned swim and run error of the speed strategy on the Rondje Eilanden |
+| Term                                  | Meaning                                                                                                                                                                                  | Example                                                                                           |
+| ------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| Area cache                            | Browser store of the Overpass answers per coarse bounding box, kept for a week, so a second analysis of the same area needs no request; it holds public map data only, never GPX content | The Cache API entry for one 0.05 degree grid cell                                                 |
+| Bounding box (bbox)                   | Rectangle on the map given by its south, west, north and east edge; an Overpass query is limited to one                                                                                  | `52.15,4.85,52.35,5.05`                                                                           |
+| Coarse bounding box                   | The track's bounding box grown outward to a 0.05 degree grid (about 5 km), so the request shows the neighbourhood of the track and not the track itself                                  | The query area for the Rondje Eilanden                                                            |
+| Container, image                      | A container is an isolated process started from an image, which packages a program with what it needs to run; the same image runs on a laptop and on a server                            | The back end image built from the `Dockerfile`                                                    |
+| Docker Compose, profile               | A Compose file describes several containers that run together; a profile marks services that start only when asked for                                                                   | The local Overpass server, profile `overpass`, in `docker-compose.yml`                            |
+| Exponential backoff                   | Retrying a request after a wait that doubles each time (here 1, 2 and 4 seconds), as busy Overpass servers ask for                                                                       | A 502 answer is followed by a retry after 1 s                                                     |
+| Extract                               | The OpenStreetMap data of one region as a file, a part of the complete planet file                                                                                                       | The Netherlands extract                                                                           |
+| Fixture                               | Recorded data that a test uses instead of asking the outside world                                                                                                                       | `test/fixtures/rondje-eilanden-overpass.json`                                                     |
+| Geofabrik                             | A German company that processes OpenStreetMap data and publishes ready-made regional extracts for download                                                                               | `download.geofabrik.de/europe/netherlands-latest.osm.pbf`                                         |
+| Mirror                                | Another public Overpass server with the same data, tried when the first one is busy                                                                                                      | `overpass.kumi.systems`                                                                           |
+| Multi-criteria decision making (MCDM) | Choosing between options by judging each against weighted criteria, and iterating between judging the options and adjusting the criteria                                                 | The weighted comparison of back-end technologies in [ADR-0014](./adr/0014-back-end-technology.md) |
+| OpenStreetMap (OSM)                   | The open, collaboratively edited map database that TigerLegs takes its water data from, under the ODbL licence                                                                           | A lake drawn as a `natural=water` area                                                            |
+| Oracle test                           | A test that compares the extractor with an official, independent result                                                                                                                  | The ÖTILLÖ Cannes split from RaceDayMap                                                           |
+| Overpass API                          | A read-only service that answers queries on OpenStreetMap data                                                                                                                           | `overpass-api.de`                                                                                 |
+| Overpass QL                           | The query language of the Overpass API                                                                                                                                                   | `way["natural"="water"](bbox);out geom;`                                                          |
+| PBF                                   | Protocolbuffer Binary Format, a compact binary file format for OpenStreetMap data, smaller and faster to read than the XML formats, so the usual format of downloads                     | `netherlands-latest.osm.pbf`                                                                      |
+| Quality of service                    | What a user can rely on from a service, such as availability and speed; the planned premium Overpass server offers more of it than the shared public servers                             | No rate limit on our own server                                                                   |
+| Ratchet                               | A passing test that pins today's error of an approach, so a change may make it smaller but not larger                                                                                    | The pinned swim and run error of the speed strategy on the Rondje Eilanden                        |
 
 Sources: PBF (OpenStreetMap Wiki, n.d.-a), Geofabrik (Geofabrik, n.d.), Overpass API and Overpass QL (OpenStreetMap Wiki, n.d.-b, n.d.-c), multi-criteria decision making (ICT Research Methods, n.d.).
 
@@ -728,21 +1260,21 @@ Table 10 shows the mapping and names where it breaks down.
 
 *Table 10*: Mapping of swimrun concepts to a train journey.
 
-| SwimRun concept | Train journey equivalent | Where the analogy breaks |
-| --- | --- | --- |
-| Track | The recorded journey from A to B | A race course is fixed; a journey is one run of a timetable |
-| Trackpoint | One position fix of the train | None |
-| Waypoint | A station or signal on the line | Stations come from the timetable, not from the recording |
-| `<sym>` 200 and 201 | Marker for tunnel entrance and exit | Symbol codes are specific to Garmin |
-| Segment | A stretch of line with one surface, such as a tunnel | Swim and run alternate by design; tunnels are exceptions |
-| Swim and run | Tunnel and open track | Both domains have two main classes |
-| Transition | A tunnel portal | Athletes change gear at a transition; trains do not |
-| Distance to next transition | "Next station in 3.2 km" | A train display counts stations, not surface changes |
-| Waypoint strategy | Read the timetable and the signal list | Needs that data to exist |
-| Speed strategy | Notice that the train slows down in a tunnel | Speed is weak evidence in both domains |
-| Landscape strategy | Look up the line on a map to find the tunnel | Needs an external map |
-| Sampling interval and gap | Check the map every 500 m and miss a 200 m tunnel | None |
-| Sparse track | A recording with one ping per minute | None |
+| SwimRun concept             | Train journey equivalent                             | Where the analogy breaks                                    |
+| --------------------------- | ---------------------------------------------------- | ----------------------------------------------------------- |
+| Track                       | The recorded journey from A to B                     | A race course is fixed; a journey is one run of a timetable |
+| Trackpoint                  | One position fix of the train                        | None                                                        |
+| Waypoint                    | A station or signal on the line                      | Stations come from the timetable, not from the recording    |
+| `<sym>` 200 and 201         | Marker for tunnel entrance and exit                  | Symbol codes are specific to Garmin                         |
+| Segment                     | A stretch of line with one surface, such as a tunnel | Swim and run alternate by design; tunnels are exceptions    |
+| Swim and run                | Tunnel and open track                                | Both domains have two main classes                          |
+| Transition                  | A tunnel portal                                      | Athletes change gear at a transition; trains do not         |
+| Distance to next transition | "Next station in 3.2 km"                             | A train display counts stations, not surface changes        |
+| Waypoint strategy           | Read the timetable and the signal list               | Needs that data to exist                                    |
+| Speed strategy              | Notice that the train slows down in a tunnel         | Speed is weak evidence in both domains                      |
+| Landscape strategy          | Look up the line on a map to find the tunnel         | Needs an external map                                       |
+| Sampling interval and gap   | Check the map every 500 m and miss a 200 m tunnel    | None                                                        |
+| Sparse track                | A recording with one ping per minute                 | None                                                        |
 
 The mapping shows the core concept: a classified stretch of a route, with a boundary where the class changes.
 The landscape strategy performs the mapping from the track domain to the terrain domain: it maps a trackpoint coordinate to a terrain class through OpenStreetMap.

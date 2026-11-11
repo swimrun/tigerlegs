@@ -2,11 +2,11 @@
 
 Date: 2026-06-15
 
-## Status
+## 1. Status
 
 Accepted
 
-## Context
+## 2. Context
 
 Swimrun races alternate between swim and run segments. The traditional format used by race organisers (e.g. the Vertical SwimRunMan Laffrey 2026 PDF) uses a table where each row is a single segment:
 
@@ -20,12 +20,12 @@ This produces many empty cells. It wastes space and is impractical when writing 
 
 Additionally, the traditional format often shows false precision (e.g. "387 m" swim or "5.23 km" run) that is meaningless given GPS accuracy and more mportantly - much harder to memorise before a race.
 
-## Decision
+## 3. Decision
 
 **Use a compact paired-row format where each row contains both the
 swim distance and the subsequent run distance for that segment pair.**
 
-### Table format
+### 3.1 Table format
 
 | # | Run �‍♂️ (km) | Swim �‍♀️ (m) |
 |---|-------------|------------|
@@ -50,7 +50,7 @@ Key rules:
    that follows it (default), or swim N and the run that follows it
    (in swim-first mode).
 
-### Rounding rules
+### 3.2 Rounding rules
 
 - **Swim distances**: Rounded to the nearest **50 metres** (not 100m).
   Examples: 387m → 400m, 1125m → 1150m, 2220m → 2200m.
@@ -63,13 +63,13 @@ These rounding rules reflect practical precision:
 - Distances are written on paddles by hand; athletes only need order-of-magnitude precision for pacing decisions
 - Rounder numbers are easier to memorise and recall mid-race
 
-### Cumulative distance (optional column)
+### 3.3 Cumulative distance (optional column)
 
 An optional "Cum." column shows cumulative distance (swim + run)
 after each row, toggleable in the UI. Cumulative distance uses the
 same rounding: 0.1 km for the running total. This is useful for finding which segment you are based on seeing total distance covered on the watch, which most watches have default screen(face) for.
 
-## Consequences
+## 4. Consequences
 
 - The segment table renderer produces paired rows instead of one row per activity
 - The `DisplaySegment` type and `Segment` model need to support the paired-row concept

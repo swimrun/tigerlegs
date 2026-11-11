@@ -2,11 +2,11 @@
 
 Date: 2026-06-15
 
-## Status
+## 1. Status
 
 Accepted
 
-## Context
+## 2. Context
 
 The GPX Swimrun Analyzer requires a Deno backend to proxy external
 API requests (OpenStreetMap, Komoot) and manage API keys securely.
@@ -28,7 +28,7 @@ Key constraints:
   more users = more revenue, so hosting costs should scale with
   usage rather than be fixed overhead
 
-## Quality Criteria
+## 3. Quality Criteria
 
 | Criterion | Weight | Constraint | Description |
 |-----------|--------|------------|-------------|
@@ -41,9 +41,9 @@ Key constraints:
 | Uptime/reliability | Medium | — | 99.9% or better SLA |
 | Maintenance burden | Low | — | Acceptable to manage OS updates and Deno installation manually |
 
-## Options
+## 4. Options
 
-### Option A: EU-based VPS provider (chosen)
+### 4.1 Option A: EU-based VPS provider (chosen)
 
 Run Deno on a standard Linux VPS from an EU-headquartered provider
 with EU-only data centres.
@@ -75,7 +75,7 @@ Candidate providers:
 - Requires own deployment pipeline (systemd + git pull, or Docker)
 - Must manage TLS certificates (Let's Encrypt / Caddy)
 
-### Option B: Deno Deploy (US-based, Deno Company)
+### 4.2 Option B: Deno Deploy (US-based, Deno Company)
 
 Use Deno's managed edge platform.
 
@@ -97,7 +97,7 @@ Use Deno's managed edge platform.
 - Vendor lock-in to Deno Deploy APIs (KV, BroadcastChannel)
 - Free tier may change; no long-term pricing guarantee
 
-### Option C: Large US cloud with EU region (AWS, GCP, Azure)
+### 4.3 Option C: Large US cloud with EU region (AWS, GCP, Azure)
 
 Use a US-headquartered hyperscaler with an EU data centre region.
 
@@ -117,7 +117,7 @@ Use a US-headquartered hyperscaler with an EU data centre region.
 - Over-engineered for a single lightweight Deno process
 - Vendor lock-in to cloud-specific services
 
-## Decision
+## 5. Decision
 
 **Option A: EU-based VPS provider.**
 
@@ -139,7 +139,7 @@ Rationale:
 5. **No lock-in** — Standard Linux; can migrate to any other EU VPS
    provider by copying files and DNS update
 
-## Consequences
+## 6. Consequences
 
 - Requirement 15 (Deno Backend) acceptance criterion 9 is updated:
   the backend SHALL NOT depend on Deno Deploy-specific APIs; it

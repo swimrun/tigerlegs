@@ -1,4 +1,4 @@
-import { assert, assertEquals } from "@std/assert";
+import { expect, it } from "vitest";
 import fc from "fast-check";
 import type {
   ClassifiedWaypoint,
@@ -52,67 +52,67 @@ function makeSegment(overrides: Partial<Segment> = {}): Segment {
 
 // --- roundSwimDistance ---
 
-Deno.test("roundSwimDistance - 387 → 400 (rounds to nearest 50m)", () => {
-  assertEquals(roundSwimDistance(387), 400);
+it("roundSwimDistance - 387 → 400 (rounds to nearest 50m)", () => {
+  expect(roundSwimDistance(387)).toEqual(400);
 });
 
-Deno.test("roundSwimDistance - 1125 → 1150 (rounds to nearest 50m)", () => {
-  assertEquals(roundSwimDistance(1125), 1150);
+it("roundSwimDistance - 1125 → 1150 (rounds to nearest 50m)", () => {
+  expect(roundSwimDistance(1125)).toEqual(1150);
 });
 
-Deno.test("roundSwimDistance - 2220 → 2200 (rounds to nearest 50m)", () => {
-  assertEquals(roundSwimDistance(2220), 2200);
+it("roundSwimDistance - 2220 → 2200 (rounds to nearest 50m)", () => {
+  expect(roundSwimDistance(2220)).toEqual(2200);
 });
 
-Deno.test("roundSwimDistance - 0 → 0", () => {
-  assertEquals(roundSwimDistance(0), 0);
+it("roundSwimDistance - 0 → 0", () => {
+  expect(roundSwimDistance(0)).toEqual(0);
 });
 
-Deno.test("roundSwimDistance - 25 → 50 (midpoint rounds up)", () => {
-  assertEquals(roundSwimDistance(25), 50);
+it("roundSwimDistance - 25 → 50 (midpoint rounds up)", () => {
+  expect(roundSwimDistance(25)).toEqual(50);
 });
 
-Deno.test("roundSwimDistance - 24 → 0 (below midpoint rounds down)", () => {
-  assertEquals(roundSwimDistance(24), 0);
+it("roundSwimDistance - 24 → 0 (below midpoint rounds down)", () => {
+  expect(roundSwimDistance(24)).toEqual(0);
 });
 
-Deno.test("roundSwimDistance - 50 → 50 (already rounded)", () => {
-  assertEquals(roundSwimDistance(50), 50);
+it("roundSwimDistance - 50 → 50 (already rounded)", () => {
+  expect(roundSwimDistance(50)).toEqual(50);
 });
 
-Deno.test("roundSwimDistance - 475 → 500", () => {
-  assertEquals(roundSwimDistance(475), 500);
+it("roundSwimDistance - 475 → 500", () => {
+  expect(roundSwimDistance(475)).toEqual(500);
 });
 
 // --- roundRunDistance ---
 
-Deno.test("roundRunDistance - 5.23 → 5.2 (rounds to nearest 0.1 km)", () => {
-  assertEquals(roundRunDistance(5.23), 5.2);
+it("roundRunDistance - 5.23 → 5.2 (rounds to nearest 0.1 km)", () => {
+  expect(roundRunDistance(5.23)).toEqual(5.2);
 });
 
-Deno.test("roundRunDistance - 1.37 → 1.4 (rounds to nearest 0.1 km)", () => {
-  assertEquals(roundRunDistance(1.37), 1.4);
+it("roundRunDistance - 1.37 → 1.4 (rounds to nearest 0.1 km)", () => {
+  expect(roundRunDistance(1.37)).toEqual(1.4);
 });
 
-Deno.test("roundRunDistance - 0 → 0", () => {
-  assertEquals(roundRunDistance(0), 0);
+it("roundRunDistance - 0 → 0", () => {
+  expect(roundRunDistance(0)).toEqual(0);
 });
 
-Deno.test("roundRunDistance - 10.05 → 10.1 (midpoint rounds up)", () => {
-  assertEquals(roundRunDistance(10.05), 10.1);
+it("roundRunDistance - 10.05 → 10.1 (midpoint rounds up)", () => {
+  expect(roundRunDistance(10.05)).toEqual(10.1);
 });
 
-Deno.test("roundRunDistance - 3.14 → 3.1", () => {
-  assertEquals(roundRunDistance(3.14), 3.1);
+it("roundRunDistance - 3.14 → 3.1", () => {
+  expect(roundRunDistance(3.14)).toEqual(3.1);
 });
 
-Deno.test("roundRunDistance - 0.99 → 1.0", () => {
-  assertEquals(roundRunDistance(0.99), 1.0);
+it("roundRunDistance - 0.99 → 1.0", () => {
+  expect(roundRunDistance(0.99)).toEqual(1.0);
 });
 
 // --- buildSegments ---
 
-Deno.test("buildSegments - simple run-swim-run produces 3 segments", () => {
+it("buildSegments - simple run-swim-run produces 3 segments", () => {
   const trackpoints: Trackpoint[] = [];
   for (let i = 0; i < 10; i++) {
     trackpoints.push(makeTrackpoint(i, 45.0 + i * 0.001, 5.0));
@@ -135,21 +135,21 @@ Deno.test("buildSegments - simple run-swim-run produces 3 segments", () => {
   ];
 
   const result = buildSegments(trackpoints, classifiedWaypoints);
-  assertEquals(result.ok, true);
+  expect(result.ok).toEqual(true);
   if (!result.ok) return;
 
-  assertEquals(result.value.length, 3);
-  assertEquals(result.value[0].type, "run");
-  assertEquals(result.value[1].type, "swim");
-  assertEquals(result.value[2].type, "run");
+  expect(result.value.length).toEqual(3);
+  expect(result.value[0].type).toEqual("run");
+  expect(result.value[1].type).toEqual("swim");
+  expect(result.value[2].type).toEqual("run");
 
   // Segments are numbered sequentially
-  assertEquals(result.value[0].number, 1);
-  assertEquals(result.value[1].number, 2);
-  assertEquals(result.value[2].number, 3);
+  expect(result.value[0].number).toEqual(1);
+  expect(result.value[1].number).toEqual(2);
+  expect(result.value[2].number).toEqual(3);
 });
 
-Deno.test("buildSegments - segments have calculated distances", () => {
+it("buildSegments - segments have calculated distances", () => {
   const trackpoints: Trackpoint[] = [];
   for (let i = 0; i < 10; i++) {
     trackpoints.push(makeTrackpoint(i, 45.0 + i * 0.001, 5.0));
@@ -172,16 +172,16 @@ Deno.test("buildSegments - segments have calculated distances", () => {
   ];
 
   const result = buildSegments(trackpoints, classifiedWaypoints);
-  assertEquals(result.ok, true);
+  expect(result.ok).toEqual(true);
   if (!result.ok) return;
 
   // All segments should have positive distances
   for (const seg of result.value) {
-    assertEquals(seg.distanceKm > 0, true);
+    expect(seg.distanceKm > 0).toEqual(true);
   }
 });
 
-Deno.test("buildSegments - no swim waypoints → single run segment", () => {
+it("buildSegments - no swim waypoints → single run segment", () => {
   const trackpoints: Trackpoint[] = [];
   for (let i = 0; i < 5; i++) {
     trackpoints.push(makeTrackpoint(i, 45.0 + i * 0.001, 5.0));
@@ -189,20 +189,20 @@ Deno.test("buildSegments - no swim waypoints → single run segment", () => {
   const classifiedWaypoints: ClassifiedWaypoint[] = [];
 
   const result = buildSegments(trackpoints, classifiedWaypoints);
-  assertEquals(result.ok, true);
+  expect(result.ok).toEqual(true);
   if (!result.ok) return;
 
-  assertEquals(result.value.length, 1);
-  assertEquals(result.value[0].type, "run");
-  assertEquals(result.value[0].number, 1);
+  expect(result.value.length).toEqual(1);
+  expect(result.value[0].type).toEqual("run");
+  expect(result.value[0].number).toEqual(1);
 });
 
-Deno.test("buildSegments - empty trackpoints → error result", () => {
+it("buildSegments - empty trackpoints → error result", () => {
   const result = buildSegments([], []);
-  assertEquals(result.ok, false);
+  expect(result.ok).toEqual(false);
 });
 
-Deno.test("buildSegments - segments are non-overlapping and contiguous", () => {
+it("buildSegments - segments are non-overlapping and contiguous", () => {
   const trackpoints: Trackpoint[] = [];
   for (let i = 0; i < 20; i++) {
     trackpoints.push(makeTrackpoint(i, 45.0 + i * 0.0005, 5.0));
@@ -239,26 +239,20 @@ Deno.test("buildSegments - segments are non-overlapping and contiguous", () => {
   ];
 
   const result = buildSegments(trackpoints, classifiedWaypoints);
-  assertEquals(result.ok, true);
+  expect(result.ok).toEqual(true);
   if (!result.ok) return;
 
   // Check contiguity: each segment starts where the previous ended (+1)
   for (let i = 1; i < result.value.length; i++) {
-    assertEquals(
-      result.value[i].startTrackpointIndex,
-      result.value[i - 1].endTrackpointIndex + 1,
-    );
+    expect(result.value[i].startTrackpointIndex).toEqual(result.value[i - 1].endTrackpointIndex + 1);
   }
 
   // First segment starts at 0, last ends at trackpoints.length - 1
-  assertEquals(result.value[0].startTrackpointIndex, 0);
-  assertEquals(
-    result.value[result.value.length - 1].endTrackpointIndex,
-    trackpoints.length - 1,
-  );
+  expect(result.value[0].startTrackpointIndex).toEqual(0);
+  expect(result.value[result.value.length - 1].endTrackpointIndex).toEqual(trackpoints.length - 1);
 });
 
-Deno.test("buildSegments - segments alternate between run and swim", () => {
+it("buildSegments - segments alternate between run and swim", () => {
   const trackpoints: Trackpoint[] = [];
   for (let i = 0; i < 20; i++) {
     trackpoints.push(makeTrackpoint(i, 45.0 + i * 0.0005, 5.0));
@@ -281,18 +275,18 @@ Deno.test("buildSegments - segments alternate between run and swim", () => {
   ];
 
   const result = buildSegments(trackpoints, classifiedWaypoints);
-  assertEquals(result.ok, true);
+  expect(result.ok).toEqual(true);
   if (!result.ok) return;
 
   // Adjacent segments must have different types
   for (let i = 1; i < result.value.length; i++) {
-    assertEquals(result.value[i].type !== result.value[i - 1].type, true);
+    expect(result.value[i].type !== result.value[i - 1].type).toEqual(true);
   }
 });
 
 // --- pairSegmentsForDisplay ---
 
-Deno.test("pairSegmentsForDisplay - run-first (default): pairs run N + swim N", () => {
+it("pairSegmentsForDisplay - run-first (default): pairs run N + swim N", () => {
   const segments: Segment[] = [
     makeSegment({ number: 1, type: "run", distanceKm: 5.23 }),
     makeSegment({ number: 2, type: "swim", distanceKm: 0.387 }),
@@ -301,20 +295,20 @@ Deno.test("pairSegmentsForDisplay - run-first (default): pairs run N + swim N", 
   ];
 
   const pairs = pairSegmentsForDisplay(segments, false);
-  assertEquals(pairs.length, 2);
+  expect(pairs.length).toEqual(2);
 
   // Row 1: run 1 + swim 2
-  assertEquals(pairs[0].number, 1);
-  assertEquals(pairs[0].runDistanceKm, "5.2");
-  assertEquals(pairs[0].swimDistanceM, "400");
+  expect(pairs[0].number).toEqual(1);
+  expect(pairs[0].runDistanceKm).toEqual("5.2");
+  expect(pairs[0].swimDistanceM).toEqual("400");
 
   // Row 2: run 3 + swim 4
-  assertEquals(pairs[1].number, 2);
-  assertEquals(pairs[1].runDistanceKm, "1.4");
-  assertEquals(pairs[1].swimDistanceM, "2200");
+  expect(pairs[1].number).toEqual(2);
+  expect(pairs[1].runDistanceKm).toEqual("1.4");
+  expect(pairs[1].swimDistanceM).toEqual("2200");
 });
 
-Deno.test("pairSegmentsForDisplay - run-first: trailing run has swim as '—'", () => {
+it("pairSegmentsForDisplay - run-first: trailing run has swim as '—'", () => {
   const segments: Segment[] = [
     makeSegment({ number: 1, type: "run", distanceKm: 5.0 }),
     makeSegment({ number: 2, type: "swim", distanceKm: 0.4 }),
@@ -322,18 +316,18 @@ Deno.test("pairSegmentsForDisplay - run-first: trailing run has swim as '—'", 
   ];
 
   const pairs = pairSegmentsForDisplay(segments, false);
-  assertEquals(pairs.length, 2);
+  expect(pairs.length).toEqual(2);
 
   // Row 1: run + swim
-  assertEquals(pairs[0].runDistanceKm, "5.0");
-  assertEquals(pairs[0].swimDistanceM, "400");
+  expect(pairs[0].runDistanceKm).toEqual("5.0");
+  expect(pairs[0].swimDistanceM).toEqual("400");
 
   // Row 2: run only, no swim
-  assertEquals(pairs[1].runDistanceKm, "3.0");
-  assertEquals(pairs[1].swimDistanceM, "—");
+  expect(pairs[1].runDistanceKm).toEqual("3.0");
+  expect(pairs[1].swimDistanceM).toEqual("—");
 });
 
-Deno.test("pairSegmentsForDisplay - swim-first: pairs swim N + run N", () => {
+it("pairSegmentsForDisplay - swim-first: pairs swim N + run N", () => {
   const segments: Segment[] = [
     makeSegment({ number: 1, type: "swim", distanceKm: 0.4 }),
     makeSegment({ number: 2, type: "run", distanceKm: 5.23 }),
@@ -342,18 +336,18 @@ Deno.test("pairSegmentsForDisplay - swim-first: pairs swim N + run N", () => {
   ];
 
   const pairs = pairSegmentsForDisplay(segments, true);
-  assertEquals(pairs.length, 2);
+  expect(pairs.length).toEqual(2);
 
   // Row 1: swim 1 + run 2
-  assertEquals(pairs[0].swimDistanceM, "400");
-  assertEquals(pairs[0].runDistanceKm, "5.2");
+  expect(pairs[0].swimDistanceM).toEqual("400");
+  expect(pairs[0].runDistanceKm).toEqual("5.2");
 
   // Row 2: swim 3 + run 4
-  assertEquals(pairs[1].swimDistanceM, "2200");
-  assertEquals(pairs[1].runDistanceKm, "1.4");
+  expect(pairs[1].swimDistanceM).toEqual("2200");
+  expect(pairs[1].runDistanceKm).toEqual("1.4");
 });
 
-Deno.test("pairSegmentsForDisplay - swim-first: race starting with run uses '—' for swim", () => {
+it("pairSegmentsForDisplay - swim-first: race starting with run uses '—' for swim", () => {
   // swimFirst=true but race starts with a run — the first row should have "—" for swim
   const segments: Segment[] = [
     makeSegment({ number: 1, type: "run", distanceKm: 5.0 }),
@@ -363,11 +357,11 @@ Deno.test("pairSegmentsForDisplay - swim-first: race starting with run uses '—
 
   const pairs = pairSegmentsForDisplay(segments, true);
   // In swim-first mode with a leading run: first row has "—" for swim, the run value
-  assertEquals(pairs[0].swimDistanceM, "—");
-  assertEquals(pairs[0].runDistanceKm, "5.0");
+  expect(pairs[0].swimDistanceM).toEqual("—");
+  expect(pairs[0].runDistanceKm).toEqual("5.0");
 });
 
-Deno.test("pairSegmentsForDisplay - run-first: race starting with swim uses '—' for run", () => {
+it("pairSegmentsForDisplay - run-first: race starting with swim uses '—' for run", () => {
   // runFirst (swimFirst=false) but race starts with a swim — the first row has "—" for run
   const segments: Segment[] = [
     makeSegment({ number: 1, type: "swim", distanceKm: 0.4 }),
@@ -376,24 +370,24 @@ Deno.test("pairSegmentsForDisplay - run-first: race starting with swim uses '—
   ];
 
   const pairs = pairSegmentsForDisplay(segments, false);
-  assertEquals(pairs[0].runDistanceKm, "—");
-  assertEquals(pairs[0].swimDistanceM, "400");
+  expect(pairs[0].runDistanceKm).toEqual("—");
+  expect(pairs[0].swimDistanceM).toEqual("400");
 });
 
-Deno.test("pairSegmentsForDisplay - single segment produces one row with dash", () => {
+it("pairSegmentsForDisplay - single segment produces one row with dash", () => {
   const segments: Segment[] = [
     makeSegment({ number: 1, type: "run", distanceKm: 5.23 }),
   ];
 
   const pairs = pairSegmentsForDisplay(segments, false);
-  assertEquals(pairs.length, 1);
-  assertEquals(pairs[0].runDistanceKm, "5.2");
-  assertEquals(pairs[0].swimDistanceM, "—");
+  expect(pairs.length).toEqual(1);
+  expect(pairs[0].runDistanceKm).toEqual("5.2");
+  expect(pairs[0].swimDistanceM).toEqual("—");
 });
 
 // --- calculateTotals ---
 
-Deno.test("calculateTotals - sums all swim and run distances independently", () => {
+it("calculateTotals - sums all swim and run distances independently", () => {
   const segments: Segment[] = [
     makeSegment({ number: 1, type: "run", distanceKm: 5.23 }),
     makeSegment({ number: 2, type: "swim", distanceKm: 0.387 }),
@@ -403,28 +397,28 @@ Deno.test("calculateTotals - sums all swim and run distances independently", () 
 
   const totals = calculateTotals(segments);
   // Total run: 5.23 + 1.37 = 6.6 km → "6.6"
-  assertEquals(totals.totalRunKm, "6.6");
+  expect(totals.totalRunKm).toEqual("6.6");
   // Total swim: (387 + 2220) m = 2607m → rounded to nearest 50 → 2600 → "2600"
   // Actually: totals sum the raw distances then round
   // 0.387 km = 387m, 2.22 km = 2220m → total = 2607m → rounded to 50 = 2600
-  assertEquals(totals.totalSwimM, "2600");
+  expect(totals.totalSwimM).toEqual("2600");
 });
 
-Deno.test("calculateTotals - no segments → zeroes", () => {
+it("calculateTotals - no segments → zeroes", () => {
   const totals = calculateTotals([]);
-  assertEquals(totals.totalRunKm, "0.0");
-  assertEquals(totals.totalSwimM, "0");
+  expect(totals.totalRunKm).toEqual("0.0");
+  expect(totals.totalSwimM).toEqual("0");
 });
 
-Deno.test("calculateTotals - only run segments → swim total is 0", () => {
+it("calculateTotals - only run segments → swim total is 0", () => {
   const segments: Segment[] = [
     makeSegment({ number: 1, type: "run", distanceKm: 5.0 }),
     makeSegment({ number: 2, type: "run", distanceKm: 3.0 }),
   ];
 
   const totals = calculateTotals(segments);
-  assertEquals(totals.totalRunKm, "8.0");
-  assertEquals(totals.totalSwimM, "0");
+  expect(totals.totalRunKm).toEqual("8.0");
+  expect(totals.totalSwimM).toEqual("0");
 });
 
 // --- Property-Based Tests ---
@@ -534,9 +528,8 @@ function buildClassifiedWaypointsFromPairs(
 // --- Property 5: Segmentation produces complete, non-overlapping, alternating coverage ---
 // **Validates: Requirements 2.3, 2.4, 2.5, 2.6, 2.7**
 
-Deno.test("Property 5.1: First segment starts at index 0", () => {
-  fc.assert(
-    fc.property(
+it("Property 5.1: First segment starts at index 0", () => {
+  fc.assert(fc.property(
       arbitraryTrackpointArray.chain((trackpoints) =>
         arbitrarySwimPairs(trackpoints.length).map((pairs) => ({
           trackpoints,
@@ -551,19 +544,13 @@ Deno.test("Property 5.1: First segment starts at index 0", () => {
         const result = buildSegments(trackpoints, classifiedWaypoints);
         if (!result.ok) return; // skip error results (shouldn't happen with valid input)
 
-        assert(
-          result.value[0].startTrackpointIndex === 0,
-          `First segment should start at 0, got ${result.value[0].startTrackpointIndex}`,
-        );
+        expect(result.value[0].startTrackpointIndex === 0, `First segment should start at 0, got ${result.value[0].startTrackpointIndex}`).toBeTruthy();
       },
-    ),
-    { numRuns: 100 },
-  );
+    ), { numRuns: 100 });
 });
 
-Deno.test("Property 5.2: Last segment ends at trackpoints.length - 1", () => {
-  fc.assert(
-    fc.property(
+it("Property 5.2: Last segment ends at trackpoints.length - 1", () => {
+  fc.assert(fc.property(
       arbitraryTrackpointArray.chain((trackpoints) =>
         arbitrarySwimPairs(trackpoints.length).map((pairs) => ({
           trackpoints,
@@ -579,19 +566,13 @@ Deno.test("Property 5.2: Last segment ends at trackpoints.length - 1", () => {
         if (!result.ok) return;
 
         const lastSegment = result.value[result.value.length - 1];
-        assert(
-          lastSegment.endTrackpointIndex === trackpoints.length - 1,
-          `Last segment should end at ${trackpoints.length - 1}, got ${lastSegment.endTrackpointIndex}`,
-        );
+        expect(lastSegment.endTrackpointIndex === trackpoints.length - 1, `Last segment should end at ${trackpoints.length - 1}, got ${lastSegment.endTrackpointIndex}`).toBeTruthy();
       },
-    ),
-    { numRuns: 100 },
-  );
+    ), { numRuns: 100 });
 });
 
-Deno.test("Property 5.3: Each segment starts where the previous one ended + 1 (contiguous, non-overlapping)", () => {
-  fc.assert(
-    fc.property(
+it("Property 5.3: Each segment starts where the previous one ended + 1 (contiguous, non-overlapping)", () => {
+  fc.assert(fc.property(
       arbitraryTrackpointArray.chain((trackpoints) =>
         arbitrarySwimPairs(trackpoints.length).map((pairs) => ({
           trackpoints,
@@ -607,21 +588,15 @@ Deno.test("Property 5.3: Each segment starts where the previous one ended + 1 (c
         if (!result.ok) return;
 
         for (let i = 1; i < result.value.length; i++) {
-          assert(
-            result.value[i].startTrackpointIndex ===
-              result.value[i - 1].endTrackpointIndex + 1,
-            `Segment ${i} should start at ${result.value[i - 1].endTrackpointIndex + 1}, got ${result.value[i].startTrackpointIndex}`,
-          );
+          expect(result.value[i].startTrackpointIndex ===
+              result.value[i - 1].endTrackpointIndex + 1, `Segment ${i} should start at ${result.value[i - 1].endTrackpointIndex + 1}, got ${result.value[i].startTrackpointIndex}`).toBeTruthy();
         }
       },
-    ),
-    { numRuns: 100 },
-  );
+    ), { numRuns: 100 });
 });
 
-Deno.test("Property 5.4: No two adjacent segments have the same type (alternating)", () => {
-  fc.assert(
-    fc.property(
+it("Property 5.4: No two adjacent segments have the same type (alternating)", () => {
+  fc.assert(fc.property(
       arbitraryTrackpointArray.chain((trackpoints) =>
         arbitrarySwimPairs(trackpoints.length).map((pairs) => ({
           trackpoints,
@@ -637,13 +612,8 @@ Deno.test("Property 5.4: No two adjacent segments have the same type (alternatin
         if (!result.ok) return;
 
         for (let i = 1; i < result.value.length; i++) {
-          assert(
-            result.value[i].type !== result.value[i - 1].type,
-            `Adjacent segments ${i - 1} and ${i} should have different types, both are "${result.value[i].type}"`,
-          );
+          expect(result.value[i].type !== result.value[i - 1].type, `Adjacent segments ${i - 1} and ${i} should have different types, both are "${result.value[i].type}"`).toBeTruthy();
         }
       },
-    ),
-    { numRuns: 100 },
-  );
+    ), { numRuns: 100 });
 });

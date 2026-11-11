@@ -1,4 +1,4 @@
-import { assertEquals } from "@std/assert";
+import { expect, it } from "vitest";
 import type { Segment, Trackpoint } from "../../src/shared/types.ts";
 import { detectRestSpans, splitAtRests } from "../../src/client/rest-detector.ts";
 import { cleanSegments } from "../../src/client/segment-cleaner.ts";
@@ -13,33 +13,33 @@ function point(index: number, metres: number): Trackpoint {
   };
 }
 
-Deno.test("rests: GPS jitter cannot turn a sustained rest into moving swim distance", () => {
+it("rests: GPS jitter cannot turn a sustained rest into moving swim distance", () => {
   const points = Array.from({ length: 1501 }, (_, i) => point(i, i % 2 ? 1 : -1));
-  assertEquals(detectRestSpans(points), [{ start: 0, end: 1500, seconds: 1500 }]);
+  expect(detectRestSpans(points)).toEqual([{ start: 0, end: 1500, seconds: 1500 }]);
 });
 
-Deno.test("rests: a genuine slow moving swim and a short pause remain untouched", () => {
-  assertEquals(detectRestSpans(Array.from({ length: 1501 }, (_, i) => point(i, i * 0.3))), []);
-  assertEquals(detectRestSpans(Array.from({ length: 121 }, (_, i) => point(i, 0))), []);
+it("rests: a genuine slow moving swim and a short pause remain untouched", () => {
+  expect(detectRestSpans(Array.from({ length: 1501 }, (_, i) => point(i, i * 0.3)))).toEqual([]);
+  expect(detectRestSpans(Array.from({ length: 121 }, (_, i) => point(i, 0)))).toEqual([]);
 });
 
-Deno.test("rests: missing or reversed timestamps do not establish a rest", () => {
+it("rests: missing or reversed timestamps do not establish a rest", () => {
   const points = Array.from({ length: 1501 }, (_, i) => ({ ...point(i, 0), timestamp: null }));
-  assertEquals(detectRestSpans(points), []);
-  assertEquals(detectRestSpans(Array.from({ length: 1501 }, (_, i) => point(1500 - i, 0))), []);
+  expect(detectRestSpans(points)).toEqual([]);
+  expect(detectRestSpans(Array.from({ length: 1501 }, (_, i) => point(1500 - i, 0)))).toEqual([]);
 });
 
-Deno.test("rests: cleanup preserves rests between same-type laps", () => {
+it("rests: cleanup preserves rests between same-type laps", () => {
   const points = Array.from({ length: 1801 }, (_, i) => point(i, i < 100 ? i * 3 : i < 1700 ? 300 : 300 + (i - 1700) * 3));
   const segment: Segment = {
     number: 1, type: "run", startTrackpointIndex: 0, endTrackpointIndex: 1800,
     distanceKm: 1, confidenceScore: 0.9, detectedBy: ["speed"], gpsFiltered: false,
   };
   const result = cleanSegments(splitAtRests([segment], detectRestSpans(points), points));
-  assertEquals(result.map(segment => segment.type), ["run", "unclassified", "run"]);
+  expect(result.map(segment => segment.type)).toEqual(["run", "unclassified", "run"]);
 });
 
-Deno.test("backyard: three synthetic mixed laps retain swims, runs and inter-lap rests", () => {
+it("backyard: three synthetic mixed laps retain swims, runs and inter-lap rests", () => {
   const points: Trackpoint[] = [];
   let metres = 0;
   const move = (seconds: number, metresPerSecond: number) => {
@@ -55,7 +55,7 @@ Deno.test("backyard: three synthetic mixed laps retain swims, runs and inter-lap
     if (lap < 2) move(1500, 0);
   }
   const analysis = analyzeGpx({ waypoints: [], tracks: [{ name: "Synthetic backyard", trackpoints: points }] });
-  assertEquals(analysis.segments.map(segment => segment.type), [
+  expect(analysis.segments.map(segment => segment.type)).toEqual([
     "run", "swim", "run", "unclassified",
     "run", "swim", "run", "unclassified",
     "run", "swim", "run",

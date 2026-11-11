@@ -1,4 +1,4 @@
-import { assertEquals } from "@std/assert";
+import { expect, it } from "vitest";
 import fc from "fast-check";
 import { buildTableRows } from "../../src/client/table-renderer.ts";
 import { calculateTotals } from "../../src/client/segment-builder.ts";
@@ -21,7 +21,7 @@ function segment(
   };
 }
 
-Deno.test("table pairs runs with swims, with explicit absence at either edge", () => {
+it("table pairs runs with swims, with explicit absence at either edge", () => {
   const segments = [
     segment(1, "swim", 0.387),
     segment(2, "run", 5.23),
@@ -32,20 +32,17 @@ Deno.test("table pairs runs with swims, with explicit absence at either edge", (
     swimFirst: false,
     showCumulative: true,
   });
-  assertEquals(
-    rows.map((row) => [row.pair.runDistanceKm, row.pair.swimDistanceM]),
-    [
+  expect(rows.map((row) => [row.pair.runDistanceKm, row.pair.swimDistanceM])).toEqual([
       ["—", "400"],
       ["5.2", "1150"],
       ["1.4", "—"],
-    ],
-  );
-  assertEquals(rows.map((row) => row.cumulativeKm), ["0.4", "6.7", "8.1"]);
-  assertEquals(rows.map((row) => row.segments.map((s) => s.number)), [[1], [
+    ]);
+  expect(rows.map((row) => row.cumulativeKm)).toEqual(["0.4", "6.7", "8.1"]);
+  expect(rows.map((row) => row.segments.map((s) => s.number))).toEqual([[1], [
     2,
     3,
   ], [4]]);
-  assertEquals(calculateTotals(segments), {
+  expect(calculateTotals(segments)).toEqual({
     totalRunKm: "6.6",
     totalSwimM: "1500",
   });
@@ -53,13 +50,13 @@ Deno.test("table pairs runs with swims, with explicit absence at either edge", (
     swimFirst: true,
     showCumulative: false,
   });
-  assertEquals(swimFirst.map((row) => row.segments.map((s) => s.number)), [[
+  expect(swimFirst.map((row) => row.segments.map((s) => s.number))).toEqual([[
     1,
     2,
   ], [3, 4]]);
 });
 
-Deno.test("breaks never become run/swim distances or pair across a displayed break", () => {
+it("breaks never become run/swim distances or pair across a displayed break", () => {
   const segments = [
     segment(1, "run", 1),
     segment(2, "unclassified", 0.2),
@@ -69,15 +66,15 @@ Deno.test("breaks never become run/swim distances or pair across a displayed bre
     swimFirst: false,
     showCumulative: true,
   });
-  assertEquals(rows.length, 3);
-  assertEquals([rows[1].pair.runDistanceKm, rows[1].pair.swimDistanceM], [
+  expect(rows.length).toEqual(3);
+  expect([rows[1].pair.runDistanceKm, rows[1].pair.swimDistanceM]).toEqual([
     "—",
     "—",
   ]);
-  assertEquals(rows[2].cumulativeKm, "1.7");
+  expect(rows[2].cumulativeKm).toEqual("1.7");
 });
 
-Deno.test("table assigns boundary conflicts and per-pair detection labels", () => {
+it("table assigns boundary conflicts and per-pair detection labels", () => {
   const segments = [segment(1, "run", 1), segment(2, "swim", 0.4)];
   segments[1].detectedBy = ["landscape"];
   const conflict = {
@@ -91,17 +88,13 @@ Deno.test("table assigns boundary conflicts and per-pair detection labels", () =
   }, [
     { ...conflict, strategies: [...conflict.strategies] },
   ]);
-  assertEquals(rows[0].pair.detectedBy, "speed + landscape");
-  assertEquals(rows[0].conflicts.length, 1);
-  assertEquals(
-    buildTableRows([], { swimFirst: false, showCumulative: false }),
-    [],
-  );
+  expect(rows[0].pair.detectedBy).toEqual("speed + landscape");
+  expect(rows[0].conflicts.length).toEqual(1);
+  expect(buildTableRows([], { swimFirst: false, showCumulative: false })).toEqual([]);
 });
 
-Deno.test("property: pairing preserves every segment, distance and selection identity", () => {
-  fc.assert(
-    fc.property(
+it("property: pairing preserves every segment, distance and selection identity", () => {
+  fc.assert(fc.property(
       fc.array(
         fc.record({
           type: fc.constantFrom<SegmentType>("swim", "run", "unclassified"),
@@ -118,38 +111,27 @@ Deno.test("property: pairing preserves every segment, distance and selection ide
           swimFirst,
           showCumulative: true,
         });
-        assertEquals(rows.flatMap((row) => row.segments), segments);
+        expect(rows.flatMap((row) => row.segments)).toEqual(segments);
         for (const row of rows) {
-          assertEquals(row.segments.length <= 2, true);
+          expect(row.segments.length <= 2).toEqual(true);
           if (row.segments.length === 2) {
-            assertEquals(
-              row.segments.map((s) => s.type),
-              swimFirst ? ["swim", "run"] : ["run", "swim"],
-            );
+            expect(row.segments.map((s) => s.type)).toEqual(swimFirst ? ["swim", "run"] : ["run", "swim"]);
           }
-          assertEquals(
-            row.pair.runDistanceKm.length > 0 &&
-              row.pair.swimDistanceM.length > 0,
-            true,
-          );
+          expect(row.pair.runDistanceKm.length > 0 &&
+              row.pair.swimDistanceM.length > 0).toEqual(true);
         }
         // The expectation is computed in whole metres, so it does not depend on the order of float additions.
         const totalMetres = items.reduce((sum, item) => sum + item.distance, 0);
-        assertEquals(
-          rows.at(-1)?.cumulativeKm ?? "0.0",
-          (Math.round(totalMetres / 100) / 10).toFixed(1),
-        );
+        expect(rows.at(-1)?.cumulativeKm ?? "0.0").toEqual((Math.round(totalMetres / 100) / 10).toFixed(1));
       },
-    ),
-    { numRuns: 300 },
-  );
+    ), { numRuns: 300 });
 });
 
-Deno.test("cumulative km rounds an exact tie up, whatever the order of the additions (issue #66)", () => {
+it("cumulative km rounds an exact tie up, whatever the order of the additions (issue #66)", () => {
   // 30.325 km + 30.325 km = 60.650 km; as a float it is just below 60.65, and toFixed(1) gave 60.6.
   const rows = buildTableRows(
     [segment(1, "run", 30.325), segment(2, "run", 30.325)],
     { swimFirst: false, showCumulative: true },
   );
-  assertEquals(rows.at(-1)?.cumulativeKm, "60.7");
+  expect(rows.at(-1)?.cumulativeKm).toEqual("60.7");
 });

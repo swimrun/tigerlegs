@@ -217,3 +217,20 @@ test("About translations and mobile layout survive the shared shell", async ({ p
   await page.goto("./");
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
 });
+
+test("the extractor lists the variants of a course with a description and loads one that has a GPX file", async ({ page }) => {
+  await page.goto("./");
+  const rondje = page.locator('[data-course="rondje-eilanden"]');
+  await expect(rondje.locator("[data-variant]")).toHaveCount(3);
+  await expect(rondje.locator('[data-variant="race-day"]')).toContainText("Main variant");
+  await expect(rondje.locator('[data-variant="lintjes-opruimen"]')).toContainText("island 3 to 5");
+  await expect(rondje.locator('[data-variant="race-day"]')).toContainText("swim A of about 400 m");
+  await expect(rondje.locator('[data-variant="training"]')).toContainText("GPX to be added");
+  const rhederlaag = page.locator('[data-course="rhederlaag"]');
+  await expect(rhederlaag.locator("[data-variant]")).toHaveCount(4);
+  await expect(rhederlaag.locator('[data-variant="bird-breeding-season"]')).toContainText("April to June");
+  await rondje.locator('[data-sample="rondje-eilanden.gpx"]').click();
+  await expect(page.locator("#analysis-status")).toContainText("Analysed");
+  await rondje.locator('[data-sample="rondje-eilanden-lintjes-opruimen.gpx"]').click();
+  await expect(page.locator("#analysis-status")).toContainText("Analysed");
+});

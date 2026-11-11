@@ -10,7 +10,7 @@
  * 4. Extension check is case-insensitive (.GPX, .Gpx, .gPx all valid)
  */
 
-import { assertEquals, assert } from "@std/assert";
+import { expect, it } from "vitest";
 import fc from "fast-check";
 import { validateFile, MAX_FILE_SIZE_BYTES } from "../../src/client/file-upload.ts";
 
@@ -42,9 +42,8 @@ const arbitraryNonGpxExtension: fc.Arbitrary<string> = fc
 /**
  * Property 1: Any file with .gpx extension (case-insensitive) AND size ≤ MAX_FILE_SIZE_BYTES → valid: true
  */
-Deno.test("Property: .gpx file within size limit is always valid", () => {
-  fc.assert(
-    fc.property(
+it("Property: .gpx file within size limit is always valid", () => {
+  fc.assert(fc.property(
       arbitraryBaseName,
       arbitraryGpxExtension,
       fc.integer({ min: 0, max: MAX_FILE_SIZE_BYTES }),
@@ -52,19 +51,16 @@ Deno.test("Property: .gpx file within size limit is always valid", () => {
         const filename = `${baseName}${ext}`;
         const file = new File(["x".repeat(size)], filename);
         const result = validateFile(file);
-        assertEquals(result, { valid: true });
+        expect(result).toEqual({ valid: true });
       },
-    ),
-    { numRuns: 100 },
-  );
+    ), { numRuns: 100 });
 });
 
 /**
  * Property 2: Any file without .gpx extension → valid: false with "Only GPX files are accepted"
  */
-Deno.test("Property: non-.gpx file is always rejected with correct error", () => {
-  fc.assert(
-    fc.property(
+it("Property: non-.gpx file is always rejected with correct error", () => {
+  fc.assert(fc.property(
       arbitraryBaseName,
       arbitraryNonGpxExtension,
       fc.integer({ min: 0, max: 1000 }),
@@ -72,39 +68,33 @@ Deno.test("Property: non-.gpx file is always rejected with correct error", () =>
         const filename = `${baseName}${ext}`;
         const file = new File(["x".repeat(size)], filename);
         const result = validateFile(file);
-        assertEquals(result.valid, false);
-        assertEquals(result.error, "Only GPX files are accepted");
+        expect(result.valid).toEqual(false);
+        expect(result.error).toEqual("Only GPX files are accepted");
       },
-    ),
-    { numRuns: 100 },
-  );
+    ), { numRuns: 100 });
 });
 
 /**
  * Property 2b: File with no extension at all → valid: false
  */
-Deno.test("Property: file with no extension is always rejected", () => {
-  fc.assert(
-    fc.property(
+it("Property: file with no extension is always rejected", () => {
+  fc.assert(fc.property(
       arbitraryBaseName,
       fc.integer({ min: 0, max: 1000 }),
       (baseName, size) => {
         const file = new File(["x".repeat(size)], baseName);
         const result = validateFile(file);
-        assertEquals(result.valid, false);
-        assertEquals(result.error, "Only GPX files are accepted");
+        expect(result.valid).toEqual(false);
+        expect(result.error).toEqual("Only GPX files are accepted");
       },
-    ),
-    { numRuns: 100 },
-  );
+    ), { numRuns: 100 });
 });
 
 /**
  * Property 3: Any file with .gpx extension but size > MAX_FILE_SIZE_BYTES → valid: false with size error
  */
-Deno.test("Property: .gpx file exceeding size limit is always rejected with size error", () => {
-  fc.assert(
-    fc.property(
+it("Property: .gpx file exceeding size limit is always rejected with size error", () => {
+  fc.assert(fc.property(
       arbitraryBaseName,
       arbitraryGpxExtension,
       fc.integer({ min: MAX_FILE_SIZE_BYTES + 1, max: MAX_FILE_SIZE_BYTES + 1000 }),
@@ -112,29 +102,23 @@ Deno.test("Property: .gpx file exceeding size limit is always rejected with size
         const filename = `${baseName}${ext}`;
         const file = new File(["x".repeat(size)], filename);
         const result = validateFile(file);
-        assertEquals(result.valid, false);
-        assertEquals(
-          result.error,
-          "File exceeds the maximum allowed size of 10 MB",
-        );
+        expect(result.valid).toEqual(false);
+        expect(result.error).toEqual("File exceeds the maximum allowed size of 10 MB");
       },
-    ),
-    { numRuns: 50 },
-  );
+    ), { numRuns: 50 });
 });
 
 /**
  * Property 4: Extension check is case-insensitive — all case variants of .gpx are valid
  */
-Deno.test("Property: all case variations of .gpx extension are accepted", () => {
+it("Property: all case variations of .gpx extension are accepted", () => {
   // Exhaustively test all 8 case combinations of "gpx"
   const allCaseVariants = [
     ".gpx", ".gpX", ".gPx", ".gPX",
     ".Gpx", ".GpX", ".GPx", ".GPX",
   ];
 
-  fc.assert(
-    fc.property(
+  fc.assert(fc.property(
       arbitraryBaseName,
       fc.constantFrom(...allCaseVariants),
       fc.integer({ min: 0, max: 1000 }),
@@ -142,28 +126,23 @@ Deno.test("Property: all case variations of .gpx extension are accepted", () => 
         const filename = `${baseName}${ext}`;
         const file = new File(["x".repeat(size)], filename);
         const result = validateFile(file);
-        assertEquals(result, { valid: true });
+        expect(result).toEqual({ valid: true });
       },
-    ),
-    { numRuns: 100 },
-  );
+    ), { numRuns: 100 });
 });
 
 /**
  * Property: boundary condition — file at exactly MAX_FILE_SIZE_BYTES is valid
  */
-Deno.test("Property: .gpx file at exactly max size is valid", () => {
-  fc.assert(
-    fc.property(
+it("Property: .gpx file at exactly max size is valid", () => {
+  fc.assert(fc.property(
       arbitraryBaseName,
       arbitraryGpxExtension,
       (baseName, ext) => {
         const filename = `${baseName}${ext}`;
         const file = new File(["x".repeat(MAX_FILE_SIZE_BYTES)], filename);
         const result = validateFile(file);
-        assertEquals(result, { valid: true });
+        expect(result).toEqual({ valid: true });
       },
-    ),
-    { numRuns: 5 },
-  );
+    ), { numRuns: 5 });
 });

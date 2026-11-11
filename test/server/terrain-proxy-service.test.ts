@@ -1,4 +1,4 @@
-import { assertEquals } from "@std/assert";
+import { expect, it } from "vitest";
 import type { Coordinate, TerrainResult } from "../../src/shared/types.ts";
 import type { CacheStore } from "../../src/server/cache.ts";
 import {
@@ -41,7 +41,7 @@ function createInMemoryCache(): CacheStore & { store: Map<string, { value: Terra
 
 // --- Unit Tests for pointInPolygon (ray casting) ---
 
-Deno.test("pointInPolygon - point inside a simple square", () => {
+it("pointInPolygon - point inside a simple square", () => {
   const polygon: Coordinate[] = [
     { lat: 0, lon: 0 },
     { lat: 0, lon: 1 },
@@ -49,10 +49,10 @@ Deno.test("pointInPolygon - point inside a simple square", () => {
     { lat: 1, lon: 0 },
   ];
   const point: Coordinate = { lat: 0.5, lon: 0.5 };
-  assertEquals(pointInPolygon(point, polygon), true);
+  expect(pointInPolygon(point, polygon)).toEqual(true);
 });
 
-Deno.test("pointInPolygon - point outside a simple square", () => {
+it("pointInPolygon - point outside a simple square", () => {
   const polygon: Coordinate[] = [
     { lat: 0, lon: 0 },
     { lat: 0, lon: 1 },
@@ -60,30 +60,30 @@ Deno.test("pointInPolygon - point outside a simple square", () => {
     { lat: 1, lon: 0 },
   ];
   const point: Coordinate = { lat: 2, lon: 2 };
-  assertEquals(pointInPolygon(point, polygon), false);
+  expect(pointInPolygon(point, polygon)).toEqual(false);
 });
 
-Deno.test("pointInPolygon - point inside a triangle", () => {
+it("pointInPolygon - point inside a triangle", () => {
   const polygon: Coordinate[] = [
     { lat: 0, lon: 0 },
     { lat: 0, lon: 4 },
     { lat: 3, lon: 2 },
   ];
   const point: Coordinate = { lat: 1, lon: 2 };
-  assertEquals(pointInPolygon(point, polygon), true);
+  expect(pointInPolygon(point, polygon)).toEqual(true);
 });
 
-Deno.test("pointInPolygon - point outside a triangle", () => {
+it("pointInPolygon - point outside a triangle", () => {
   const polygon: Coordinate[] = [
     { lat: 0, lon: 0 },
     { lat: 0, lon: 4 },
     { lat: 3, lon: 2 },
   ];
   const point: Coordinate = { lat: 0, lon: 5 };
-  assertEquals(pointInPolygon(point, polygon), false);
+  expect(pointInPolygon(point, polygon)).toEqual(false);
 });
 
-Deno.test("pointInPolygon - point on edge (treated as outside by ray casting)", () => {
+it("pointInPolygon - point on edge (treated as outside by ray casting)", () => {
   const polygon: Coordinate[] = [
     { lat: 0, lon: 0 },
     { lat: 0, lon: 2 },
@@ -95,30 +95,30 @@ Deno.test("pointInPolygon - point on edge (treated as outside by ray casting)", 
   // Ray casting may or may not include edge points - implementation-defined
   // We just verify it returns a boolean without crashing
   const result = pointInPolygon(point, polygon);
-  assertEquals(typeof result, "boolean");
+  expect(typeof result).toEqual("boolean");
 });
 
-Deno.test("pointInPolygon - degenerate polygon with fewer than 3 vertices returns false", () => {
+it("pointInPolygon - degenerate polygon with fewer than 3 vertices returns false", () => {
   // A line (2 points) is not a valid polygon
   const line: Coordinate[] = [
     { lat: 0, lon: 0 },
     { lat: 1, lon: 1 },
   ];
   const point: Coordinate = { lat: 0.5, lon: 0.5 };
-  assertEquals(pointInPolygon(point, line), false);
+  expect(pointInPolygon(point, line)).toEqual(false);
 
   // A single point is not a valid polygon
   const single: Coordinate[] = [{ lat: 0, lon: 0 }];
-  assertEquals(pointInPolygon(point, single), false);
+  expect(pointInPolygon(point, single)).toEqual(false);
 
   // Empty polygon
   const empty: Coordinate[] = [];
-  assertEquals(pointInPolygon(point, empty), false);
+  expect(pointInPolygon(point, empty)).toEqual(false);
 });
 
 // --- Unit Tests for classifyCoordinates ---
 
-Deno.test("classifyCoordinates - point inside water polygon classified as water", () => {
+it("classifyCoordinates - point inside water polygon classified as water", () => {
   const coordinates: Coordinate[] = [{ lat: 0.5, lon: 0.5 }];
   const corridor: CorridorFeatures = {
     waterPolygons: [
@@ -137,12 +137,12 @@ Deno.test("classifyCoordinates - point inside water polygon classified as water"
   };
 
   const results = classifyCoordinates(coordinates, corridor);
-  assertEquals(results.length, 1);
-  assertEquals(results[0].terrainType, "water");
-  assertEquals(results[0].hasRoadData, false);
+  expect(results.length).toEqual(1);
+  expect(results[0].terrainType).toEqual("water");
+  expect(results[0].hasRoadData).toEqual(false);
 });
 
-Deno.test("classifyCoordinates - point outside water polygon classified as land", () => {
+it("classifyCoordinates - point outside water polygon classified as land", () => {
   const coordinates: Coordinate[] = [{ lat: 5, lon: 5 }];
   const corridor: CorridorFeatures = {
     waterPolygons: [
@@ -161,12 +161,12 @@ Deno.test("classifyCoordinates - point outside water polygon classified as land"
   };
 
   const results = classifyCoordinates(coordinates, corridor);
-  assertEquals(results.length, 1);
-  assertEquals(results[0].terrainType, "land");
-  assertEquals(results[0].hasRoadData, false);
+  expect(results.length).toEqual(1);
+  expect(results[0].terrainType).toEqual("land");
+  expect(results[0].hasRoadData).toEqual(false);
 });
 
-Deno.test("classifyCoordinates - point near road classified as land with hasRoadData=true", () => {
+it("classifyCoordinates - point near road classified as land with hasRoadData=true", () => {
   // Road runs along lon=5, from lat=0 to lat=10
   const coordinates: Coordinate[] = [{ lat: 5, lon: 5.00005 }]; // Very close to road
   const corridor: CorridorFeatures = {
@@ -184,12 +184,12 @@ Deno.test("classifyCoordinates - point near road classified as land with hasRoad
   };
 
   const results = classifyCoordinates(coordinates, corridor);
-  assertEquals(results.length, 1);
-  assertEquals(results[0].terrainType, "land");
-  assertEquals(results[0].hasRoadData, true);
+  expect(results.length).toEqual(1);
+  expect(results[0].terrainType).toEqual("land");
+  expect(results[0].hasRoadData).toEqual(true);
 });
 
-Deno.test("classifyCoordinates - point far from road has no road data", () => {
+it("classifyCoordinates - point far from road has no road data", () => {
   // Road at lon=5, point at lon=5.5 (~55km away at equator, well beyond 10m)
   const coordinates: Coordinate[] = [{ lat: 5, lon: 5.5 }];
   const corridor: CorridorFeatures = {
@@ -207,12 +207,12 @@ Deno.test("classifyCoordinates - point far from road has no road data", () => {
   };
 
   const results = classifyCoordinates(coordinates, corridor);
-  assertEquals(results.length, 1);
-  assertEquals(results[0].terrainType, "land");
-  assertEquals(results[0].hasRoadData, false);
+  expect(results.length).toEqual(1);
+  expect(results[0].terrainType).toEqual("land");
+  expect(results[0].hasRoadData).toEqual(false);
 });
 
-Deno.test("classifyCoordinates - empty corridor defaults to land", () => {
+it("classifyCoordinates - empty corridor defaults to land", () => {
   const coordinates: Coordinate[] = [
     { lat: 45.0, lon: 5.0 },
     { lat: 45.1, lon: 5.1 },
@@ -224,14 +224,14 @@ Deno.test("classifyCoordinates - empty corridor defaults to land", () => {
   };
 
   const results = classifyCoordinates(coordinates, corridor);
-  assertEquals(results.length, 2);
+  expect(results.length).toEqual(2);
   for (const r of results) {
-    assertEquals(r.terrainType, "land");
-    assertEquals(r.hasRoadData, false);
+    expect(r.terrainType).toEqual("land");
+    expect(r.hasRoadData).toEqual(false);
   }
 });
 
-Deno.test("classifyCoordinates - water takes priority over road proximity", () => {
+it("classifyCoordinates - water takes priority over road proximity", () => {
   // Point is inside water AND near a road - water should win
   const coordinates: Coordinate[] = [{ lat: 0.5, lon: 0.5 }];
   const corridor: CorridorFeatures = {
@@ -259,11 +259,11 @@ Deno.test("classifyCoordinates - water takes priority over road proximity", () =
   };
 
   const results = classifyCoordinates(coordinates, corridor);
-  assertEquals(results[0].terrainType, "water");
-  assertEquals(results[0].hasRoadData, false);
+  expect(results[0].terrainType).toEqual("water");
+  expect(results[0].hasRoadData).toEqual(false);
 });
 
-Deno.test("classifyCoordinates - multiple coordinates classified correctly", () => {
+it("classifyCoordinates - multiple coordinates classified correctly", () => {
   const coordinates: Coordinate[] = [
     { lat: 0.5, lon: 0.5 }, // inside water
     { lat: 5, lon: 6 },     // outside water, far from road (1 degree away ~ 111km)
@@ -294,16 +294,16 @@ Deno.test("classifyCoordinates - multiple coordinates classified correctly", () 
   };
 
   const results = classifyCoordinates(coordinates, corridor);
-  assertEquals(results[0].terrainType, "water");
-  assertEquals(results[1].terrainType, "land");
-  assertEquals(results[1].hasRoadData, false);
-  assertEquals(results[2].terrainType, "land");
-  assertEquals(results[2].hasRoadData, true);
+  expect(results[0].terrainType).toEqual("water");
+  expect(results[1].terrainType).toEqual("land");
+  expect(results[1].hasRoadData).toEqual(false);
+  expect(results[2].terrainType).toEqual("land");
+  expect(results[2].hasRoadData).toEqual(true);
 });
 
 // --- Unit Tests for lookupTerrain (with cache) ---
 
-Deno.test("lookupTerrain - returns cached results for cached coordinates", async () => {
+it("lookupTerrain - returns cached results for cached coordinates", async () => {
   const cache = createInMemoryCache();
   const coord: Coordinate = { lat: 45.12345, lon: 5.67890 };
   const cachedResult: TerrainResult = {
@@ -321,14 +321,14 @@ Deno.test("lookupTerrain - returns cached results for cached coordinates", async
 
   try {
     const results = await lookupTerrain([coord], cache);
-    assertEquals(results.length, 1);
-    assertEquals(results[0].terrainType, "water");
+    expect(results.length).toEqual(1);
+    expect(results[0].terrainType).toEqual("water");
   } finally {
     globalThis.fetch = originalFetch;
   }
 });
 
-Deno.test("lookupTerrain - queries OSM for cache misses and stores results", async () => {
+it("lookupTerrain - queries OSM for cache misses and stores results", async () => {
   const cache = createInMemoryCache();
   const coord: Coordinate = { lat: 45.12345, lon: 5.67890 };
 
@@ -345,13 +345,13 @@ Deno.test("lookupTerrain - queries OSM for cache misses and stores results", asy
 
   try {
     const results = await lookupTerrain([coord], cache);
-    assertEquals(results.length, 1);
-    assertEquals(results[0].terrainType, "land");
-    assertEquals(results[0].hasRoadData, false);
+    expect(results.length).toEqual(1);
+    expect(results[0].terrainType).toEqual("land");
+    expect(results[0].hasRoadData).toEqual(false);
 
     // Verify it was cached
     const cached = await cache.get("terrain:45.12345:5.67890");
-    assertEquals(cached?.terrainType, "land");
+    expect(cached?.terrainType).toEqual("land");
   } finally {
     globalThis.fetch = originalFetch;
   }
@@ -359,7 +359,7 @@ Deno.test("lookupTerrain - queries OSM for cache misses and stores results", asy
 
 // --- Unit Tests for queryOSM (convenience wrapper) ---
 
-Deno.test("queryOSM - returns terrain results without caching", async () => {
+it("queryOSM - returns terrain results without caching", async () => {
   const coord: Coordinate = { lat: 45.12345, lon: 5.67890 };
 
   // Mock fetch to return a water polygon
@@ -391,9 +391,9 @@ Deno.test("queryOSM - returns terrain results without caching", async () => {
 
   try {
     const results = await queryOSM([coord]);
-    assertEquals(results.length, 1);
+    expect(results.length).toEqual(1);
     // Point is inside the water polygon
-    assertEquals(results[0].terrainType, "water");
+    expect(results[0].terrainType).toEqual("water");
   } finally {
     globalThis.fetch = originalFetch;
   }
@@ -401,7 +401,7 @@ Deno.test("queryOSM - returns terrain results without caching", async () => {
 
 // --- Unit Tests for fetchTrackCorridor ---
 
-Deno.test("fetchTrackCorridor - parses Overpass response into CorridorFeatures", async () => {
+it("fetchTrackCorridor - parses Overpass response into CorridorFeatures", async () => {
   const coordinates: Coordinate[] = [
     { lat: 45.123, lon: 5.678 },
     { lat: 45.124, lon: 5.679 },
@@ -454,18 +454,18 @@ Deno.test("fetchTrackCorridor - parses Overpass response into CorridorFeatures",
 
   try {
     const corridor = await fetchTrackCorridor(coordinates, 30);
-    assertEquals(corridor.waterPolygons.length, 1);
-    assertEquals(corridor.waterPolygons[0].tags.natural, "water");
-    assertEquals(corridor.roads.length, 1);
-    assertEquals(corridor.roads[0].tags.highway, "residential");
-    assertEquals(corridor.paths.length, 1);
-    assertEquals(corridor.paths[0].tags.highway, "path");
+    expect(corridor.waterPolygons.length).toEqual(1);
+    expect(corridor.waterPolygons[0].tags.natural).toEqual("water");
+    expect(corridor.roads.length).toEqual(1);
+    expect(corridor.roads[0].tags.highway).toEqual("residential");
+    expect(corridor.paths.length).toEqual(1);
+    expect(corridor.paths[0].tags.highway).toEqual("path");
   } finally {
     globalThis.fetch = originalFetch;
   }
 });
 
-Deno.test("fetchTrackCorridor - handles empty Overpass response", async () => {
+it("fetchTrackCorridor - handles empty Overpass response", async () => {
   const coordinates: Coordinate[] = [{ lat: 45.0, lon: 5.0 }];
 
   const originalFetch = globalThis.fetch;
@@ -480,15 +480,15 @@ Deno.test("fetchTrackCorridor - handles empty Overpass response", async () => {
 
   try {
     const corridor = await fetchTrackCorridor(coordinates);
-    assertEquals(corridor.waterPolygons.length, 0);
-    assertEquals(corridor.roads.length, 0);
-    assertEquals(corridor.paths.length, 0);
+    expect(corridor.waterPolygons.length).toEqual(0);
+    expect(corridor.roads.length).toEqual(0);
+    expect(corridor.paths.length).toEqual(0);
   } finally {
     globalThis.fetch = originalFetch;
   }
 });
 
-Deno.test("fetchTrackCorridor - handles relation elements with members", async () => {
+it("fetchTrackCorridor - handles relation elements with members", async () => {
   const coordinates: Coordinate[] = [{ lat: 45.0, lon: 5.0 }];
 
   const overpassResponse = {
@@ -526,8 +526,8 @@ Deno.test("fetchTrackCorridor - handles relation elements with members", async (
 
   try {
     const corridor = await fetchTrackCorridor(coordinates);
-    assertEquals(corridor.waterPolygons.length, 1);
-    assertEquals(corridor.waterPolygons[0].tags.natural, "water");
+    expect(corridor.waterPolygons.length).toEqual(1);
+    expect(corridor.waterPolygons[0].tags.natural).toEqual("water");
   } finally {
     globalThis.fetch = originalFetch;
   }

@@ -2,11 +2,11 @@
 
 Date: 2026-06-15
 
-## Status
+## 1. Status
 
 Accepted
 
-## Context
+## 2. Context
 
 The GPX Swimrun Analyzer needs geographic capabilities:
 
@@ -20,9 +20,9 @@ Commercial GIS platforms (ArcGIS by Esri, Google Maps Platform) and
 desktop GIS tools (QGIS) exist, but we need to assess whether they
 are necessary or whether open-source alternatives suffice.
 
-## Options
+## 3. Options
 
-### Option A: Fully open-source stack (chosen)
+### 3.1 Option A: Fully open-source stack (chosen)
 
 | Capability | Solution | License | Cost |
 |-----------|----------|---------|------|
@@ -33,7 +33,7 @@ are necessary or whether open-source alternatives suffice.
 | Geocoding/labeling | Komoot Photon (optional) | Apache-2.0 | Free |
 | Road/path classification | OSM highway tags via Overpass | ODbL | Free |
 
-### Option B: ArcGIS (Esri)
+### 3.2 Option B: ArcGIS (Esri)
 
 #### Pros
 
@@ -48,7 +48,7 @@ are necessary or whether open-source alternatives suffice.
 - Overkill for point-in-polygon + distance calculations
 - Not feasible for an open-source startup project
 
-### Option C: Google Maps Platform
+### 3.3 Option C: Google Maps Platform
 
 #### Pros
 
@@ -62,7 +62,7 @@ are necessary or whether open-source alternatives suffice.
 - Not open-source; creates dependency on Google
 - GDPR concerns with data flowing through US infrastructure
 
-### Option D: QGIS as runtime dependency
+### 3.4 Option D: QGIS as runtime dependency
 
 QGIS is a powerful open-source desktop GIS, but it is an interactive
 application, not a server-side library.
@@ -78,7 +78,7 @@ application, not a server-side library.
 - Cannot be embedded in a Deno backend or browser
 - Requires manual operation — cannot automate for end users
 
-## Decision
+## 4. Decision
 
 **Option A: Fully open-source stack.**
 
@@ -97,7 +97,7 @@ No commercial GIS software is needed. ArcGIS is explicitly excluded
 due to cost. QGIS may be used as a development/debugging tool to
 visually inspect water polygons, but is not a runtime dependency.
 
-## Komoot Ecosystem Assessment
+## 5. Komoot Ecosystem Assessment
 
 Komoot has 53 public repositories on GitHub, but their core routing
 and outdoor navigation engine is proprietary. The relevant open-source
@@ -120,7 +120,7 @@ project is:
 **Conclusion:** OSM via Overpass is our terrain source. Komoot/Photon
 is an optional future addition for place-name labeling only.
 
-## Consequences
+## 6. Consequences
 
 - No commercial GIS licensing costs
 - All spatial data comes from OpenStreetMap (ODbL license — requires

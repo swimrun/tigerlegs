@@ -1,4 +1,4 @@
-import { assertEquals } from "@std/assert";
+import { expect, it } from "vitest";
 import { isLoggedIn, logIn, logOut, type SessionStore } from "../../src/client/fake-session.ts";
 
 function memoryStore(): SessionStore {
@@ -10,11 +10,11 @@ function memoryStore(): SessionStore {
   };
 }
 
-Deno.test("fake session: logged out by default, logIn and logOut toggle", () => {
+it("fake session: logged out by default, logIn and logOut toggle", () => {
   const store = memoryStore();
-  assertEquals(isLoggedIn(store), false);
+  expect(isLoggedIn(store)).toEqual(false);
   logIn(store);
-  assertEquals(isLoggedIn(store), true);
+  expect(isLoggedIn(store)).toEqual(true);
   logOut(store);
-  assertEquals(isLoggedIn(store), false);
+  expect(isLoggedIn(store)).toEqual(false);
 });
