@@ -706,6 +706,132 @@ The schedule never leaves the device: the model runs locally and Chrome owns its
 The UI follows the page language in all four site languages, but the model itself understands English, French and German, not Dutch (ADR-0010), so the interface says so.
 The component takes the model as an optional prop, so tests and Storybook stories inject a fake and the real browser API stays at the edge.
 
+**Planned: a deterministic chat (issue #86).** The training chat becomes a guided chat of three fixed commands that works without a language model: add a rest day or one session, move a session, and go to another screen. A rule-based parser reads each message in the four site languages and picks a command; what a command still lacks it asks for, one slot at a time, with chips as the answers; a complete command is a typed tool call (`add_session`, `move_session`, `set_rest_days`, `navigate`) that the AG-UI adapter emits as `TOOL_CALL_*` events and the page applies to the draft week with one "Apply" chip. A message that is none of the three gets the list of commands, again as chips. The same input always gives the same path, so every branch can be tested without a model.
+
+**Planned: Gemini Nano as an improvement, not a requirement.** When Gemini Nano is present and available, it improves the dialogue in two places and nowhere else: it chooses which of the fixed chips to show for the slot at hand, given the context (the week, what was already answered), and it reads free text that the rules cannot read, so that the user can answer in another order than the fixed one ("a 30 minute trail run on Thursday" in answer to the question for the type). The model only picks from closed lists with a JSON-schema `responseConstraint`: chip ids, and slot values from the same vocabulary as the rules. Its answer is validated by the same rules as typed input, and a timeout or an invalid answer falls back to the fixed chips and to asking again. The model never changes the week and never sees more than the question, the slot and a summary of the week; it runs on the device.
+
+The decision tree is drawn as one overall activity diagram (Figure A) with nested sub-processes that have their own diagram (Figures B to D). PlantUML has no BPMN notation, so these are UML activity diagrams, in which the nested diagrams play the part of BPMN sub-processes; a BPMN tool such as bpmn.io would be a separate choice.
+
+```plantuml
+@startuml training-chat-decision-tree
+title Figure A: the training chat, overall (planned, issue #86)
+
+start
+:Message or chip text arrives;
+:Rule-based parser reads it\nin English, Dutch, French or German;
+if (Which command?) then (1 add a rest day or a session)
+  if (Rest day?) then (yes)
+    if (Day given?) then (no)
+      :Sub-process: Choose chips for the day (Figure C);
+      :Ask the day;
+    else (yes)
+    endif
+    :Tool call set_rest_days;
+  else (a session)
+    :Sub-process: Add a session: fill the slots (Figure B);
+    :Tool call add_session;
+  endif
+elseif (2 move a session) then
+  if (Type, source day and target day all given?) then (yes)
+  else (no)
+    :Sub-process: Ask for what is missing, with chips (Figure C);
+  endif
+  :Tool call move_session;
+elseif (3 navigate) then
+  :Name the screen: Extractor, About, FAQ ...;
+  :Tool call navigate, shown as a link;
+else (none of these)
+  if (Gemini Nano available?) then (yes)
+    :Sub-process: Read free text with the model (Figure D);
+    if (Understood as a command?) then (yes)
+      :Continue with that command;
+    else (no)
+      :Answer: "I don't understand your request,\nplease limit to:" and the commands as chips; <<#lightyellow>>
+      stop
+    endif
+  else (no)
+    :Answer: "I don't understand your request,\nplease limit to:" and the commands as chips; <<#lightyellow>>
+    stop
+  endif
+endif
+:Rules check the call\n(unknown session or day: reject and say why);
+if (Lands on a sports rest day?) then (yes)
+  :Allowed; the session gets the orange warning;
+else (no)
+endif
+:Propose the change with one "Apply" chip;
+if (Apply?) then (yes)
+  :Draft week changes at once;
+  :Shown under "Your changes" with Revert; <<#palegreen>>
+else (dismiss)
+  :Nothing changes;
+endif
+stop
+@enduml
+```
+
+```plantuml
+@startuml training-chat-add-session
+title Figure B: sub-process "add a session": fill the slots (planned)
+
+start
+repeat
+  :Next missing slot, in this order:\ntype, subtype, basis, length, day;
+  :Sub-process: Choose chips for the slot (Figure C);
+  :Ask the question with the chips;
+  :User answers with a chip or with text;
+  :Sub-process: Read the answer (Figure D);
+repeat while (A slot is still missing?) is (yes) not (no)
+:Slots: type (run, swim, strength, mobility),\nsubtype (run: trail, road or mixed; swim: open water or pool;\nstrength: with weight or body mass; mobility: static or dynamic),\nbasis (time by default, or distance), length, day;
+stop
+@enduml
+```
+
+```plantuml
+@startuml training-chat-choose-chips
+title Figure C: sub-process "choose chips" (planned)
+
+start
+:Default chips for the slot, from the fixed vocabulary;
+if (Gemini Nano available and ready?) then (yes)
+  :Ask the model to pick and order chip ids\nfrom the closed list, given the week\nand the slots filled so far (responseConstraint);
+  if (Answer within 1.5 s and every id is in the list?) then (yes)
+    :Use the model's chips, always with a "something else" chip; <<#lightblue>>
+  else (no)
+    :Use the default chips;
+  endif
+else (no)
+  :Use the default chips;
+endif
+stop
+@enduml
+```
+
+```plantuml
+@startuml training-chat-read-answer
+title Figure D: sub-process "read an answer or free text" (planned)
+
+start
+:Rules read the text for any slot,\nnot only the one asked;
+if (Anything recognised?) then (yes)
+  :Fill every slot found\n(a later slot may be filled before an earlier one);
+else (no)
+  if (Gemini Nano available and ready?) then (yes)
+    :Ask the model to fill slots from the same vocabulary\n(responseConstraint, only the text and the question);
+    if (Valid slots within the timeout?) then (yes)
+      :Fill the slots found; <<#lightblue>>
+    else (no)
+      :Ask the question again with the fixed chips;
+    endif
+  else (no)
+    :Ask the question again with the fixed chips;
+  endif
+endif
+:Check each slot value against the rules\n(unknown day, negative length: ask again);
+stop
+@enduml
+```
+
 ### 7.6 Back end: aggregate, repository and unit of work (planned)
 
 The back end does not exist yet ([ADR-0013](./adr/0013-back-end-is-optional.md), [ADR-0014](./adr/0014-back-end-technology.md)).
