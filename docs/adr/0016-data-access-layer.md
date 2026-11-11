@@ -82,18 +82,32 @@ The patterns are also described in the Code chapter of the [software guidebook](
 - Transactions: all writes are queued until `em.flush()`, which wraps them in a single transaction; isolation levels up to `SERIALIZABLE`; pessimistic locking (MikroORM, n.d.-a).
 - Not documented in the pages read: aggregates and DDD, domain events, an outbox, and whether a change to a child entity conflicts through the version of the root. These are the first spike tests.
 
-## Spike tests (each against PostgreSQL in a container)
+## Spike tests (planned; none exist or have been run yet)
+
+Each test runs against PostgreSQL in a container, for MikroORM and for the query-builder option.
 
 1. Two sessions change different children of one aggregate; the second flush is rejected.
 2. A use case writes two rows and fails on the second; neither row exists afterwards.
 3. An aggregate save writes an outbox row in the same transaction; a failure removes both.
 4. A PostGIS geometry and a JSONB column round-trip unchanged.
-5. A change to an aggregate that is loaded without its children does not delete the children.
+5. Partial load: an aggregate root saved without its children loaded leaves the children untouched (an unloaded collection is not an empty one).
+6. Deletion is explicit: removing a child from its aggregate deletes that row, deleting the root deletes its composed children, and a reference to another aggregate (by id) deletes nothing.
+7. Erasure of personal data: after the erasure use case for a swimrunner, no row with their personal data remains in any table, including outbox payloads, caches and stored files.
+
+## Deletion and personal data
+
+Deletion is a design decision for each relation and not an ORM default.
+Inside an aggregate the children are composed, so they follow the root (and an orphan removed from the aggregate is deleted).
+Between aggregates the reference is by id, and a database cascade across that line would cross the aggregate boundary.
+Personal data is the case where that still has to happen: stored routes can reveal where someone lives (#63), so erasing a swimrunner must also erase their recordings, which are another aggregate.
+The options are an explicit erasure use case that deletes across aggregates, an outbox event that triggers the deletion, or a deliberate foreign-key cascade on the tables that hold personal data; the owner decides, and test 7 holds whichever is chosen.
+Backups and caches need their own retention rule, which belongs in the storage record (#63).
+Which cascade and orphan-removal options MikroORM offers is to be checked in the spike.
 
 ## Next steps
 
 1. The owner sets the weights and scores criteria D1 to D9; the evaluation and decision tree follow as in ADR-0014.
-2. Write the five spike tests for MikroORM and for the query-builder option and run them.
+2. Write the seven spike tests for MikroORM and for the query-builder option and run them.
 3. Decide, record the decision and the revisit triggers, and link it from ADR-0014 and ADR-0015.
 
 ## References
