@@ -538,8 +538,20 @@ package "Planned session" {
     intensity target
     repeats
   }
+  class ExecutedActivityRef <<value>> {
+    provider: strava | garmin | polar | file
+    external id
+  }
+  class Adherence <<value>> {
+    planned and actual duration
+    planned and actual distance
+    compliance
+    computed at
+  }
   PlannedSession *-- "0..*" WorkoutStep : structure
   WorkoutStep o-- "0..*" WorkoutStep : repeats
+  PlannedSession *-- "0..1" ExecutedActivityRef : executed as
+  PlannedSession *-- "0..1" Adherence
 }
 
 Membership ..> Athlete : by id
@@ -551,7 +563,6 @@ TrainingPlan ..> Athlete : for, by id
 TrainingPlan ..> Athlete : approved by coach, by id
 GoalEvent ..> Course : by id (optional)
 PlannedSession ..> TrainingPlan : belongs to, by id
-PlannedSession ..> Recording : completed by, by id (optional)
 @enduml
 ```
 
@@ -559,10 +570,10 @@ The words, as the extractor and training pages need them:
 
 - A **course** is an idealized track: a line and its legs, each leg a swim or a run, with no athlete, no time, no speed and no heart rate.
   The extractor shows a course when it loads an official GPX file.
-- A **recording** is a carried-out track: an athlete's GPX or FIT file with time and, when the device recorded it, speed and heart rate. The swim and run segments detected on it belong to it.
+- A **recording** is a carried-out track: an athlete's GPX or FIT file with time and, when the device recorded it, speed and heart rate. The swim and run segments detected on it belong to it. A recording is a saved analysis of one track, as the extractor makes; it is not a training log.
 - The extractor page treats both as "a GPX file". A sample such as the Rondje Eilanden file is a recording of one athlete with heart rate, cadence and power stripped (`test-data/README.md`); that stripping is how a course is made from a recording.
 - A **swimrun group** is a set of athletes: a duo, a team or a larger training group.
-- A **training plan** leads to goal events: one A event and B or C events before it (roadmap M10). Its **planned sessions** are what the training page shows, and a session can have a structure of steps for intervals, intensity and rest.
+- A **training plan** leads to goal events: one A event and B or C events before it (roadmap M10). Its **planned sessions** are what the training page shows, and a session can have a structure of steps for intervals, intensity and rest. What an athlete actually did is not stored here: Strava, Garmin and Polar are dedicated platforms for executed training, so a session only points at the activity there and keeps a small adherence snapshot.
 
 Aggregates, their invariants, and what is allowed to be eventually consistent:
 
@@ -571,7 +582,7 @@ Aggregates, their invariants, and what is allowed to be eventually consistent:
 - **Course.** Legs of a variant are ordered, contiguous and cover the line from start to end, and their distances add up to the length of the line within a tolerance. A course holds no personal data: no time, no sensor data, and no athlete unless it is a private course.
 - **Recording** is personal data and private by default. Its segments are ordered, do not overlap and point at existing positions of the trace, and it always has an owner.
 - **Training plan.** It holds one A event, every B or C event lies before it, and a plan the athlete sees is approved (a draft needs explicit approval, roadmap M10).
-- **Planned session** is its own aggregate and not a part of the plan. Its steps must be valid (a repeat has at least one repetition, a step has a duration or is open). The balance between runs and swims in a week is advice ("plan warnings", spec 003) and not an invariant, so moving one session never locks the plan and two edits to different sessions do not conflict.
+- **Planned session** is its own aggregate and not a part of the plan. Its status is planned, done or skipped: done means linked to an executed activity or ticked by the athlete, skipped is ticked by the athlete. It holds at most one reference to an executed activity (provider and external id, no trace) and at most one adherence snapshot, which exists only when a reference does or the athlete entered it. Its steps must be valid (a repeat has at least one repetition, a step has a duration or is open). The balance between runs and swims in a week is advice ("plan warnings", spec 003) and not an invariant, so moving one session never locks the plan and two edits to different sessions do not conflict.
 
 Decisions behind the model, each of which can be reversed in the data-layer ADR:
 
@@ -580,6 +591,7 @@ Decisions behind the model, each of which can be reversed in the data-layer ADR:
 3. **Planned sessions are separate from the plan**, for the reason above: advice is not an invariant, and a plan of a year has hundreds of sessions.
 4. **Goal events live inside the plan.** A shared event aggregate (an ÖTILLÖ race that many athletes aim at) is possible later; see the open questions.
 5. **The structure of a session is a tree of steps** (a repeat contains steps), flattened when exported.
+6. **Executed training stays on the platform that recorded it.** Comparing a planned with an executed session is better done by dedicated services, so a planned session holds a reference to the activity (`ExecutedActivityRef`) and a high-level `Adherence` snapshot, and no trace or sensor data. This also keeps personal data out of our database, which suits the erasure rule for athletes (above).
 
 What the structure maps to. Garmin's FIT workout file "must contain a File Id message, a Workout message, and one or more Workout Step messages"; a step has a duration type and value, a target type and value and an intensity ("Active", "Rest", "Warmup", "Cooldown", "Recovery", "Interval" or "Other"), and a repeat block is a step placed after the steps to repeat, with the index of the first step and the number of repetitions (Garmin, n.d.-b).
 Our roles (warm-up, work, rest, cool-down) map onto those intensities, and the tree becomes the flat list with a repeat step on export.
@@ -590,6 +602,7 @@ What the three services offer is not yet verified; the following comes from sear
 
 - **Garmin.** The FIT file formats are documented (Garmin, n.d.-b). Pushing a structured workout straight to a watch goes through the Garmin Connect Training API, which a third-party report describes as open to approved business partners only (personal access is read-only) and the developer program as currently on hold. So the realistic first path is a file that the athlete loads herself, if Garmin's apps accept it (to check).
 - **Polar.** The AccessLink API gives read access to exercises with FIT and GPX export; we found no way to upload a structured workout through it.
+- **Adherence and the terms of the services.** Roadmap M11 notes that Strava's API agreement restricts showing a user's data to anyone but that user. An adherence figure derived from a Strava activity and shown to a coach may therefore not be allowed; to check against the agreement before it is built. What Garmin calculates as adherence, and whether any service exposes it through an API, is not yet known either; until then the snapshot can be entered by the athlete or computed in the browser.
 - **Strava.** It accepts FIT, TCX and GPX uploads and exports activities as GPX or TCX; we found no planned workouts in its API. Its terms restrict showing a user's data to others and the use of API data for training models (roadmap M11).
 
 Open questions:
@@ -599,7 +612,8 @@ Open questions:
 3. Is a goal event part of one plan, or a shared event that plans refer to by id?
 4. Is a coach a role in a group, or a relation between two athletes?
 5. Is the login account the same aggregate as the athlete profile?
-6. Is the link between a planned session and the recording that completed it kept on the session, or found by matching on date and course?
+6. Which adherence figures do we keep (compliance in percent, planned against actual duration and distance), who may see them (the athlete only, or the coach too), and where do they come from when no service may give them to us?
+7. Is the term in the interface and the model *session* (as in `TrainingSession`, specs 002 and 003 and the training page) or *training*?
 
 ## 7. Code
 
