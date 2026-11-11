@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { expect, userEvent, within } from "storybook/test";
+import { expect, fireEvent, userEvent, within } from "storybook/test";
 import Chatbot from "./Chatbot.tsx";
 import TrainingWeek from "./TrainingWeek.tsx";
 import type { LanguageModelStatic } from "../client/prompt-api.ts";
@@ -79,5 +79,23 @@ export const ProposeApplyConfirm: Story = {
       await canvas.findByRole("button", { name: "Confirm new week" }),
     );
     await expect(await canvas.findByText(/New week confirmed/)).toBeVisible();
+  },
+};
+
+/** Dragging a session onto another day moves it and lists the change; the selector still works. */
+export const DragAndDrop: Story = {
+  args: { languageModel: null },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const session = (await canvas.findByText("Trail run, 75 min Z2")).closest("li")!;
+    const monday = (await canvas.findByRole("heading", { name: "Monday" })).closest("li")!;
+    const dataTransfer = new DataTransfer();
+    await fireEvent.dragStart(session, { dataTransfer });
+    await fireEvent.dragOver(monday, { dataTransfer });
+    await fireEvent.drop(monday, { dataTransfer });
+    await fireEvent.dragEnd(session, { dataTransfer });
+    await expect(await canvas.findByText("Trail run, 75 min Z2: Thursday → Monday")).toBeVisible();
+    // The selector of the session shows the new day.
+    await expect(await canvas.findByLabelText("Day: Trail run, 75 min Z2")).toHaveValue("Mon");
   },
 };

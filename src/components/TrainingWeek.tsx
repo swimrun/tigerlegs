@@ -17,6 +17,7 @@ interface Strings {
   prototypeNote: string;
   weekTitle: string;
   dayLabel: string;
+  dragHint: string;
   assistAbsent: string;
   assistUnavailable: string;
   assistDownloadable: string;
@@ -47,6 +48,8 @@ const STRINGS: Record<Lang, Strings> = {
       "Design prototype: a hardcoded training week. Changes stay in your browser; nothing is sent to a server or coach yet.",
     weekTitle: "Training week",
     dayLabel: "Day",
+    dragHint:
+      "Drag a session to another day, or use the day selector of the session.",
     assistAbsent:
       "The assistant only works in Google Chrome on a desktop computer; this browser does not offer it. Rearranging by hand always works.",
     assistUnavailable:
@@ -94,6 +97,8 @@ const STRINGS: Record<Lang, Strings> = {
       "Designprototype: een vaste trainingsweek. Wijzigingen blijven in je browser; er wordt nog niets naar een server of coach gestuurd.",
     weekTitle: "Trainingsweek",
     dayLabel: "Dag",
+    dragHint:
+      "Sleep een sessie naar een andere dag, of gebruik de dagkeuze van de sessie.",
     assistAbsent:
       "De assistent werkt alleen in Google Chrome op een desktopcomputer; deze browser biedt hem niet. Handmatig herschikken werkt altijd.",
     assistUnavailable:
@@ -142,6 +147,8 @@ const STRINGS: Record<Lang, Strings> = {
       "Prototype de design : une semaine d'entraînement codée en dur. Les changements restent dans ton navigateur ; rien n'est encore envoyé à un serveur ou à un coach.",
     weekTitle: "Semaine d'entraînement",
     dayLabel: "Jour",
+    dragHint:
+      "Glisse une séance vers un autre jour, ou utilise le sélecteur de jour de la séance.",
     assistAbsent:
       "L'assistant ne fonctionne que dans Google Chrome sur un ordinateur de bureau ; ce navigateur ne le propose pas. La réorganisation manuelle fonctionne toujours.",
     assistUnavailable:
@@ -190,6 +197,8 @@ const STRINGS: Record<Lang, Strings> = {
       "Design-Prototyp: eine fest einprogrammierte Trainingswoche. Änderungen bleiben in deinem Browser; nichts wird bisher an einen Server oder Coach gesendet.",
     weekTitle: "Trainingswoche",
     dayLabel: "Tag",
+    dragHint:
+      "Ziehe eine Einheit auf einen anderen Tag, oder nutze die Tagesauswahl der Einheit.",
     assistAbsent:
       "Der Assistent funktioniert nur in Google Chrome auf einem Desktop-Computer; dieser Browser bietet ihn nicht an. Manuelles Umplanen funktioniert immer.",
     assistUnavailable:
@@ -301,9 +310,16 @@ export default function TrainingWeek({ languageModel }: Props) {
 
   const changes = changedSessions(baseline, week);
 
+  const [draggingId, setDraggingId] = useState<string | null>(null);
+  const [overDay, setOverDay] = useState<Day | null>(null);
   const moveSession = (id: string, toDay: Day) => {
     setWeek((current) => applyMoves(current, [{ id, toDay, reason: "" }]));
     setConfirmed(false);
+  };
+
+  const endDrag = () => {
+    setDraggingId(null);
+    setOverDay(null);
   };
 
   // The chat lives in the site layout; while this page is shown, it moves training sessions.
@@ -318,6 +334,8 @@ export default function TrainingWeek({ languageModel }: Props) {
         {t.prototypeNote}
       </p>
 
+      <p className="text-sm text-stone-600">{t.dragHint}</p>
+
       <ol
         aria-label={t.weekTitle}
         className="grid gap-3 sm:grid-cols-2 lg:grid-cols-7"
@@ -325,16 +343,44 @@ export default function TrainingWeek({ languageModel }: Props) {
         {DAYS.map((day) => (
           <li
             key={day}
-            className="min-h-24 rounded border border-stone-300 bg-white p-2"
+            data-day={day}
+            className={`min-h-24 rounded border bg-white p-2 ${
+              overDay === day && draggingId
+                ? "border-amber-500 bg-amber-50 ring-2 ring-amber-500"
+                : "border-stone-300"
+            }`}
+            onDragOver={(event) => {
+              if (!draggingId) return;
+              event.preventDefault();
+              event.dataTransfer.dropEffect = "move";
+              setOverDay(day);
+            }}
+            onDragLeave={(event) => {
+              if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setOverDay(null);
+            }}
+            onDrop={(event) => {
+              event.preventDefault();
+              const id = draggingId || event.dataTransfer.getData("text/plain");
+              if (id) moveSession(id, day);
+              endDrag();
+            }}
           >
             <h3 className="text-sm font-bold">{t.days[day]}</h3>
             <ul className="mt-2 space-y-2">
               {week.filter((session) => session.day === day).map((session) => (
                 <li
                   key={session.id}
-                  className={`rounded border px-2 py-1 text-xs ${
+                  data-session={session.id}
+                  draggable
+                  onDragStart={(event) => {
+                    event.dataTransfer.setData("text/plain", session.id);
+                    event.dataTransfer.effectAllowed = "move";
+                    setDraggingId(session.id);
+                  }}
+                  onDragEnd={endDrag}
+                  className={`cursor-grab rounded border px-2 py-1 text-xs active:cursor-grabbing ${
                     DISCIPLINE_STYLES[session.discipline]
-                  }`}
+                  } ${draggingId === session.id ? "opacity-50" : ""}`}
                 >
                   <span className="font-semibold">
                     {t.disciplines[session.discipline]}
@@ -368,21 +414,24 @@ export default function TrainingWeek({ languageModel }: Props) {
         <h2 id="changes-title" className="text-lg font-bold">
           {t.changesTitle}
         </h2>
-        {changes.length === 0
-          ? <p className="text-sm text-stone-600">{t.noChanges}</p>
-          : (
-            <ul className="space-y-1 text-sm">
-              {changes.map(({ session, fromDay }) => (
-                <li key={session.id}>
-                  {t.movedFromTo(
-                    session.title,
-                    t.days[fromDay],
-                    t.days[session.day],
-                  )}
-                </li>
-              ))}
-            </ul>
-          )}
+        {/* A live region that is always there, so that a screen reader announces a move, by hand or by drag. */}
+        <div aria-live="polite">
+          {changes.length === 0
+            ? <p className="text-sm text-stone-600">{t.noChanges}</p>
+            : (
+              <ul className="space-y-1 text-sm">
+                {changes.map(({ session, fromDay }) => (
+                  <li key={session.id}>
+                    {t.movedFromTo(
+                      session.title,
+                      t.days[fromDay],
+                      t.days[session.day],
+                    )}
+                  </li>
+                ))}
+              </ul>
+            )}
+        </div>
         {changes.length > 0 && (
           <button
             type="button"
