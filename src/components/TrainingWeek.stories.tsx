@@ -62,7 +62,7 @@ export const ProposeApplyConfirm: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await userEvent.click(
-      await canvas.findByRole("button", { name: /Rearrange with the tiger/ }),
+      await canvas.findByRole("button", { name: /Rearrange with RoARR/ }),
     );
     await userEvent.type(
       await canvas.findByLabelText("Your question"),
@@ -128,7 +128,7 @@ export const RestDayInChat: Story = {
   args: { languageModel: null },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await userEvent.click(await canvas.findByRole("button", { name: /Rearrange with the tiger/ }));
+    await userEvent.click(await canvas.findByRole("button", { name: /Rearrange with RoARR/ }));
     await userEvent.type(await canvas.findByLabelText("Your question"), "I need a rest day on Wednesday{enter}");
     await expect(await canvas.findByText("Sports rest day: Wednesday")).toBeVisible();
     await expect(await canvas.findByText(/Strength: legs, 15 min: Wednesday → Thursday — sports rest day on Wednesday/)).toBeVisible();
@@ -164,8 +164,8 @@ export const GermanRestDay: Story = {
     document.documentElement.lang = "de";
     try {
       await expect(await canvas.findByText("Traillauf, 75 Min. Z2")).toBeVisible();
-      await userEvent.click(await canvas.findByRole("button", { name: /Tiger/ }));
-      await userEvent.type(await canvas.findByLabelText(/Frage/), "Ich will der sontagg als Ruhe.{enter}");
+      await userEvent.click(await canvas.findByRole("button", { name: /RoARR/ }));
+      await userEvent.type(await canvas.findByRole("textbox", { name: /Frage/ }), "Ich will der sontagg als Ruhe.{enter}");
       await expect(await canvas.findByText("Sportruhetag: Sonntag")).toBeVisible();
       await userEvent.click(await canvas.findByRole("button", { name: "Vorschlag anwenden" }));
       await expect(await canvas.findByText(/Angewendet: Sportruhetag: Sonntag/)).toBeVisible();
