@@ -4,7 +4,7 @@ Date: 2026-11-11
 
 ## Status
 
-Draft. The owner has decided the format (translations are data: JSON files, not TypeScript) and wants an i18n framework; the routing, the loading and the library are to decide (issue #84).
+Draft. The owner has decided the format (translations are data in external files, not TypeScript; YAML is preferred as the source for easier maintenance, JSON is accepted), likes the ICU message syntax, and wants an i18n framework; the routing, the loading and the library are to decide (issue #84).
 Until then the per-language TypeScript files (`TrainingWeek.strings.<lang>.ts`, `chat.strings.<lang>.ts`) are a stopgap.
 
 ## Context
@@ -71,31 +71,33 @@ Others exist (Tolgee, Intlayer, next-intl, which is for Next.js); they are left 
 
 ## Criteria and weights (draft)
 
-| #   | Criterion                                 | Weight | What it asks                                                                         |
-| --- | ----------------------------------------- | ------ | ------------------------------------------------------------------------------------ |
-| C1  | Translations are JSON data                | 15     | External files, separate from code (R1)                                              |
-| C2  | Only the active language is loaded        | 10     | Messages of one language per page, so more languages do not grow the download (R2)   |
-| C3  | Plain TypeScript and React islands        | 15     | The same library in the React islands and in the chat agents (R5)                    |
-| C4  | Variables and plurals in the data         | 10     | "{count} sessions did not fit" written in the JSON, without functions (R6)           |
-| C5  | Type safety and completeness checks       | 10     | A missing key or a wrong variable fails a check (R7)                                 |
-| C6  | Fit with Astro routing and a static build | 10     | Works at build time and with one URL per language (R3, R4)                           |
-| C7  | Familiarity                               | 10     | How well the owner knows it or wants to learn it (the owner's to score)              |
-| C8  | Ecosystem and long-term health            | 10     | Maintenance, community, documentation                                                |
-| C9  | Autonomy                                  | 5      | Who owns it, and the licence (criterion C8 of ADR-0014); not yet looked up for these |
-| C10 | Size on the page                          | 5      | What it adds to the JavaScript of a small site                                       |
+| #   | Criterion                                 | Weight | What it asks                                                                                                                |
+| --- | ----------------------------------------- | ------ | --------------------------------------------------------------------------------------------------------------------------- |
+| C1  | Translations are data (YAML or JSON)      | 15     | External files, separate from code; YAML preferred as the source (comments, no quoting noise), converted at build time (R1) |
+| C2  | Only the active language is loaded        | 10     | Messages of one language per page, so more languages do not grow the download (R2)                                          |
+| C3  | Plain TypeScript and React islands        | 15     | The same library in the React islands and in the chat agents (R5)                                                           |
+| C4  | ICU MessageFormat                         | 15     | Variables, plurals and select in the standard ICU syntax, which the owner prefers (R6)                                      |
+| C5  | Type safety and completeness checks       | 10     | A missing key or a wrong variable fails a check (R7)                                                                        |
+| C6  | Fit with Astro routing and a static build | 10     | Works at build time and with one URL per language (R3, R4)                                                                  |
+| C7  | Familiarity                               | 10     | How well the owner knows it or wants to learn it (the owner's to score)                                                     |
+| C8  | Ecosystem and long-term health            | 5      | Maintenance, community, documentation                                                                                       |
+| C9  | Autonomy                                  | 5      | Who owns it, and the licence (criterion C8 of ADR-0014); not yet looked up for these                                        |
+| C10 | Size on the page                          | 5      | What it adds to the JavaScript of a small site                                                                              |
 
 ## Evaluation (provisional)
 
-| Option                     | C1 (15) | C2 (10) | C3 (15) | C4 (10) | C5 (10) | C6 (10) | C7 (10) | C8 (10) | C9 (5) | C10 (5) | Total   |
-| -------------------------- | ------- | ------- | ------- | ------- | ------- | ------- | ------- | ------- | ------ | ------- | ------- |
-| i18next + react-i18next    | 5       | 4       | 5       | 4       | 4       | 4       | 3       | 5       | 3      | 3       | **420** |
-| Paraglide JS               | 5       | 4       | 5       | 4       | 5       | 4       | 3       | 3       | 3      | 5       | **420** |
-| react-intl (FormatJS)      | 5       | 4       | 3       | 5       | 3       | 3       | 3       | 4       | 3      | 2       | **365** |
-| Lingui                     | 4       | 4       | 3       | 5       | 5       | 2       | 3       | 3       | 3      | 5       | **365** |
-| Hand-made TypeScript files | 1       | 2       | 5       | 1       | 4       | 3       | 5       | 2       | 5      | 5       | **310** |
+| Option                     | C1 (15) | C2 (10) | C3 (15) | C4 (15) | C5 (10) | C6 (10) | C7 (10) | C8 (5) | C9 (5) | C10 (5) | Total   |
+| -------------------------- | ------- | ------- | ------- | ------- | ------- | ------- | ------- | ------ | ------ | ------- | ------- |
+| i18next + react-i18next    | 5       | 4       | 5       | 4       | 4       | 4       | 3       | 5      | 3      | 3       | **415** |
+| Paraglide JS               | 5       | 4       | 5       | 3       | 5       | 4       | 3       | 3      | 3      | 5       | **410** |
+| react-intl (FormatJS)      | 5       | 4       | 3       | 5       | 3       | 3       | 3       | 4      | 3      | 2       | **370** |
+| Lingui                     | 4       | 4       | 3       | 5       | 5       | 2       | 3       | 3      | 3      | 5       | **375** |
+| Hand-made TypeScript files | 1       | 2       | 5       | 1       | 4       | 3       | 5       | 2      | 5      | 5       | **305** |
 
 How the scores were obtained: i18next works in plain JavaScript as well as React and keeps resources in JSON (C1, C3), has the largest community (about 3.5 million downloads a week, C8), needs a plugin for ICU (C4) and is about 6 KB with react-i18next (C10); react-intl is ICU native (C4) but about 20 KB (C10) and React first (C3); Lingui is about 2 KB with strong typing (C5, C10) but works through build-time macros whose fit with Astro is to check (C6); Paraglide compiles to typed functions that work anywhere (C3, C5) and is small (C10), but is newer (C8) and how it ships only one language per page is to check (C2); the hand-made files fail C1 and C4 by construction.
-All C7 scores are my placeholder, 3 for every library and 5 for the files the project already uses.
+All C7 scores are my placeholder, 3 for every library and 5 for the files the project already uses; the owner sets them. The owner leans towards Paraglide JS: with 5 for Paraglide and 3 for i18next, Paraglide leads with 430 against 415.
+
+ICU (C4): react-intl is ICU native; i18next needs the official `i18next-icu` plugin, after which only ICU syntax is read; Lingui uses ICU; Paraglide's own message format is not ICU, but an inlang plugin stores ICU messages in JSON files per locale (select, plural, selectordinal, exact matches and offset) (Paraglide JS, n.d.; inlang, n.d.). So react-intl is not the only library with ICU.
 
 ### Dependence on Astro
 
@@ -104,7 +106,7 @@ Who maintains Paraglide JS is not clear from the sources read: its README names 
 
 ### Reading the result
 
-i18next and Paraglide JS tie at 420, so a spike decides, as in ADR-0014. The tie comes from facts in Paraglide's own documentation, which raised two of its scores: it offers per-locale builds that "remove other languages from each locale's client graph" (C2, an option and not the default), and its messages support `plural`, `number`, `datetime` and `relativetime` through formatters (C4, the exact syntax is to check) (Paraglide JS, n.d.).
+i18next and Paraglide JS are close, 415 against 410, so a spike decides, as in ADR-0014. The tie comes from facts in Paraglide's own documentation, which raised two of its scores: it offers per-locale builds that "remove other languages from each locale's client graph" (C2, an option and not the default), and its messages support `plural`, `number`, `datetime` and `relativetime` through formatters (C4) (Paraglide JS, n.d.).
 The loading requirement (C2) does not decide between the libraries: every one of them can receive the messages of a single language, and decision 2 above does that work through routing. "The same library in the islands and the agents" (C3) means that the library offers a plain function that a React component and a plain TypeScript module can both call (`t("key", { day })` or `m.key({ day })`); a library that only offers React hooks cannot be called from the agents, which are not components.
 
 ## Sensitivity
@@ -117,6 +119,21 @@ The loading requirement (C2) does not decide between the libraries: every one of
 ## Spike
 
 Migrate the training page texts to JSON with i18next (with `i18next-icu`) and with Paraglide JS, on the Astro i18n routes of decision 1, and compare: the JavaScript added to the page, whether only the page's language is shipped, how plurals and variables read in the JSON, whether a missing key fails a check, and how the chat agents (plain TypeScript) use each. Record the results in this ADR.
+
+## Two kinds of localisation
+
+The library here is for the **texts of the interface**: static files that ship with the code and change when the code changes.
+The events and profiles that the owner wants to edit later (create, read, update, delete) are **content**: stored in the database and written by users. An i18n library does not do that, and no library in the table is chosen or excluded by it; the data model does it, for example a `LocalizedText` value object (a text per language with a fallback language) on the aggregates that hold names and descriptions, such as the course variant descriptions of the guidebook (section 6.6), which are English only today.
+What the libraries still give that content is the formatting around it: plurals, numbers and dates in the visitor's language, and messages that take a user's text as a variable.
+
+## YAML as the source format
+
+YAML is easier to maintain by hand: it allows comments for translators and multi-line texts without quote noise, which JSON does not. None of the libraries reads YAML directly, so the source is converted at build time: for i18next there is a Vite plugin that bundles locales from JSON or YAML files (`vite-plugin-i18next-loader`, which uses js-yaml); Paraglide JS reads any file format through inlang plugins, and whether a YAML plugin exists is to check, the fallback being a build step that writes the JSON.
+One catch: in YAML a plain value cannot start with `{`, so an ICU message that starts with a variable or a plural must be quoted (`"{count, plural, one {# session} other {# sessions}} did not fit"`), which takes away some of YAML's advantage for ICU texts.
+
+## Translation workflow
+
+Translating apart from the code is what a translation management system does. Weblate is open source (GPL v3), Czech, can be self-hosted, syncs with Git and supports JSON and YAML files and checks ICU strings (Weblate, n.d.; from search summaries, to check). It is not needed yet: with four languages the files can be edited by hand.
 
 ## Consequences and migration
 
@@ -132,9 +149,12 @@ Migrate the training page texts to JSON with i18next (with `i18next-icu`) and wi
 2. Is a first visit redirected by browser language, or only offered a link?
 3. Page titles and descriptions per language: from the same JSON files?
 4. Which library: i18next, Paraglide JS or another? The owner sets the weights and the familiarity scores, then the spike decides.
+5. YAML or JSON as the source format, with a build step for either?
 
 ## References
 
+- inlang. (n.d.). *ICU MessageFormat 1 plugin* [Plugin documentation]. Retrieved November 11, 2026, from https://inlang.com/m/reootnfj/plugin-inlang-messageFormat
+- Weblate. (n.d.). *Supported file formats*. Retrieved November 11, 2026, from https://weblate.readthedocs.io/en/latest/formats.html
 - Paraglide JS. (n.d.). *Paraglide JS* [README and documentation]. GitHub. Retrieved November 11, 2026, from https://github.com/opral/paraglide-js
 - ICT Research Methods. (n.d.). *Multi-criteria decision making*. Retrieved November 10, 2026, from https://ictresearchmethods.nl/workshop/multi-criteria-decision-making/
 - Astro. (n.d.). *Internationalization (i18n) routing*. Retrieved November 11, 2026, from https://docs.astro.build/en/guides/internationalization/

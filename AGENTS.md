@@ -104,10 +104,10 @@ What does NOT count as grounds: "I believe...", "It's generally known that...", 
 
 Bending without resistance erodes trust in the agent's output. But defending a claim without stating grounds is equally worthless — it's just stubbornness.
 
-### Interface texts: external JSON files
+### Interface texts: external data files
 
-Texts that a user reads are data: they live in external JSON files, one per language per feature, never inline in a component or a module, and never in TypeScript.
-Which i18n library reads them, and how each language gets its own URL, is decided in [ADR-0017](./docs/adr/0017-localisation.md) (issue #84). Until that is decided, the per-language TypeScript files (`TrainingWeek.strings.<lang>.ts`, `chat.strings.<lang>.ts`) are a stopgap: do not add new ones, and do not add inline dictionaries.
+Texts that a user reads are data: they live in external files, one per language per feature (YAML preferred as the source, JSON accepted), never inline in a component or a module and never in TypeScript.
+Which i18n library reads them, the ICU message syntax and how each language gets its own URL are decided in [ADR-0017](./docs/adr/0017-localisation.md) (issue #84). Until that is decided, the per-language TypeScript files (`TrainingWeek.strings.<lang>.ts`, `chat.strings.<lang>.ts`) are a stopgap: do not add new ones, and do not add inline dictionaries.
 `test/client/strings.test.ts` fails when a translation dictionary appears inline.
 
 ### Documentation language
