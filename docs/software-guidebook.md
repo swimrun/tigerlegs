@@ -293,7 +293,7 @@ The browser app does the analysis and draws the map. Astro generates static HTML
 The diagram also shows the optional Deno terrain API, not a requirement of the Pages deployment. That API checks the `Origin` header on every API route except the health check and caches terrain answers on disk. The Astro development server uses port 8123; run the optional API separately if testing it, rather than starting both on the same port.
 
 The dashed watch data field is planned, not built ([spec](../specs/001-garmin-datafield/spec.md), roadmap M4).
-It would build on the Connect IQ SDK and its Monkey C language; Garmin's developer documentation explains the app types and the simulator (Garmin, n.d.).
+It would build on the Connect IQ SDK and its Monkey C language; Garmin's developer documentation explains the app types and the simulator (Garmin, n.d.-a).
 It stays a container inside the TigerLegs system rather than a system of its own: in C4 terms a container is a separately deployable unit of one system, and the data field is deployed separately (through the Connect IQ store) but belongs to the same product, team and course model.
 Garmin Connect appears as an external system, like Overpass, because it only transports the exported course to the watch.
 A separate guidebook or a system landscape diagram becomes worthwhile only if a part grows into its own system with its own team or release cycle, for example the accounts backend of roadmap M9.
@@ -425,6 +425,182 @@ The back end is optional ([ADR-0013](./adr/0013-back-end-is-optional.md)); the p
 For development a local Overpass container runs from the same `docker-compose.yml` (profile `overpass`), filled once from a Geofabrik extract; see [local-overpass.md](./local-overpass.md).
 Overpass speaks plain HTTP with a query in Overpass QL, so the front end and back end can be written in any language; the language choice, Node.js with TypeScript, is recorded in [ADR-0014](./adr/0014-back-end-technology.md).
 
+### 6.6 Stored domain model (planned)
+
+Nothing in this section exists in code yet: the prototype keeps every file and plan in the browser, and the back end is optional ([ADR-0013](./adr/0013-back-end-is-optional.md)).
+It records the concepts the back end will store, so that the extractor page, the training page and the data layer ([ADR-0016](./adr/0016-data-access-layer.md)) are built on the same words.
+Figure 11 shows the concepts grouped into aggregates (section 7.6); a dashed arrow between two aggregates is a reference by id, never a contained object.
+
+*Figure 11*: Stored domain model: aggregates and the references between them (planned). The diagram is the PlantUML block below.
+
+```plantuml
+@startuml domain-model-stored
+title Stored domain model: aggregates and the references between them (planned)
+skinparam classAttributeIconSize 0
+skinparam packageStyle rectangle
+hide empty members
+
+package "Athlete" {
+  class Athlete <<root>> {
+    display name
+    language
+    units
+  }
+  class IntensityProfile <<value>> {
+    run threshold pace
+    swim critical speed
+    maximum heart rate
+  }
+  Athlete *-- "0..1" IntensityProfile
+}
+
+package "Swimrun group" {
+  class SwimrunGroup <<root>> {
+    name
+    kind: duo | team | training group
+  }
+  class Membership <<value>> {
+    role: member | admin | coach
+    joined on
+  }
+  SwimrunGroup *-- "2..*" Membership
+}
+
+package "Course (idealized track)" {
+  class Course <<root>> {
+    name
+    visibility
+  }
+  class CourseVariant <<entity>> {
+    name
+  }
+  class CourseLine <<value>> {
+    positions, no time
+  }
+  class Leg <<value>> {
+    kind: swim | run
+    distance
+  }
+  Course *-- "1..*" CourseVariant
+  CourseVariant *-- "1" CourseLine
+  CourseVariant *-- "1..*" Leg
+}
+
+package "Recording (carried-out track)" {
+  class Recording <<root>> {
+    started at
+    source
+    visibility
+  }
+  class Trace <<value>> {
+    positions with time
+    optional speed, heart rate
+  }
+  class RecordedSegment <<value>> {
+    kind: swim | run
+    distance, duration
+  }
+  class ExternalRef <<value>> {
+    provider
+    external id
+  }
+  Recording *-- "1" Trace
+  Recording *-- "0..*" RecordedSegment
+  Recording *-- "0..1" ExternalRef
+}
+
+package "Training plan" {
+  class TrainingPlan <<root>> {
+    period
+    status: draft | approved
+  }
+  class PlanLevers <<value>> {
+    runs, swims, strength, mobility per week
+  }
+  class GoalEvent <<entity>> {
+    name, date
+    priority: A | B | C
+  }
+  TrainingPlan *-- "1" PlanLevers
+  TrainingPlan *-- "1..*" GoalEvent
+}
+
+package "Planned session" {
+  class PlannedSession <<root>> {
+    date
+    discipline
+    status: planned | done | skipped
+    origin: generated | hardcoded | imported
+  }
+  class WorkoutStep <<value>> {
+    role: warm-up | work | rest | cool-down
+    duration: time | distance | open
+    intensity target
+    repeats
+  }
+  PlannedSession *-- "0..*" WorkoutStep : structure
+  WorkoutStep o-- "0..*" WorkoutStep : repeats
+}
+
+Membership ..> Athlete : by id
+Course ..> Athlete : owner, by id (private only)
+Recording ..> Athlete : owner, by id
+Recording ..> Course : followed, by id (optional)
+Recording ..> SwimrunGroup : shared with, by id
+TrainingPlan ..> Athlete : for, by id
+TrainingPlan ..> Athlete : approved by coach, by id
+GoalEvent ..> Course : by id (optional)
+PlannedSession ..> TrainingPlan : belongs to, by id
+PlannedSession ..> Recording : completed by, by id (optional)
+@enduml
+```
+
+The words, as the extractor and training pages need them:
+
+- A **course** is an idealized track: a line and its legs, each leg a swim or a run, with no athlete, no time, no speed and no heart rate.
+  The extractor shows a course when it loads an official GPX file.
+- A **recording** is a carried-out track: an athlete's GPX or FIT file with time and, when the device recorded it, speed and heart rate. The swim and run segments detected on it belong to it.
+- The extractor page treats both as "a GPX file". A sample such as the Rondje Eilanden file is a recording of one athlete with heart rate, cadence and power stripped (`test-data/README.md`); that stripping is how a course is made from a recording.
+- A **swimrun group** is a set of athletes: a duo, a team or a larger training group.
+- A **training plan** leads to goal events: one A event and B or C events before it (roadmap M10). Its **planned sessions** are what the training page shows, and a session can have a structure of steps for intervals, intensity and rest.
+
+Aggregates, their invariants, and what is allowed to be eventually consistent:
+
+- **Athlete** is personal data. Erasing an athlete is a use case that must reach the other aggregates (section 7.6), through events and not through a database cascade across aggregates.
+- **Swimrun group.** Members are references by id with a role. Inside the group it holds at once: a duo has exactly two members, a group has at least one admin, and no athlete is a member twice. When an athlete is erased the membership is removed eventually, because group and athlete are different aggregates.
+- **Course.** Legs of a variant are ordered, contiguous and cover the line from start to end, and their distances add up to the length of the line within a tolerance. A course holds no personal data: no time, no sensor data, and no athlete unless it is a private course.
+- **Recording** is personal data and private by default. Its segments are ordered, do not overlap and point at existing positions of the trace, and it always has an owner.
+- **Training plan.** It holds one A event, every B or C event lies before it, and a plan the athlete sees is approved (a draft needs explicit approval, roadmap M10).
+- **Planned session** is its own aggregate and not a part of the plan. Its steps must be valid (a repeat has at least one repetition, a step has a duration or is open). The balance between runs and swims in a week is advice ("plan warnings", spec 003) and not an invariant, so moving one session never locks the plan and two edits to different sessions do not conflict.
+
+Decisions behind the model, each of which can be reversed in the data-layer ADR:
+
+1. **The trace and the course line are one value each, not a row per position.** The Rondje Eilanden sample alone has 4,491 positions, and an ORM that loads and saves an aggregate as a whole would then rewrite thousands of rows for one change. A value stored as one column (a PostGIS line, or JSON) keeps the aggregate small.
+2. **A course made from a recording keeps no reference to the recording.** That way erasing the recording does not touch the course, at the price of losing the trail from course to origin. The course carries a source text and attribution instead.
+3. **Planned sessions are separate from the plan**, for the reason above: advice is not an invariant, and a plan of a year has hundreds of sessions.
+4. **Goal events live inside the plan.** A shared event aggregate (an ÖTILLÖ race that many athletes aim at) is possible later; see the open questions.
+5. **The structure of a session is a tree of steps** (a repeat contains steps), flattened when exported.
+
+What the structure maps to. Garmin's FIT workout file "must contain a File Id message, a Workout message, and one or more Workout Step messages"; a step has a duration type and value, a target type and value and an intensity ("Active", "Rest", "Warmup", "Cooldown", "Recovery", "Interval" or "Other"), and a repeat block is a step placed after the steps to repeat, with the index of the first step and the number of repetitions (Garmin, n.d.-b).
+Our roles (warm-up, work, rest, cool-down) map onto those intensities, and the tree becomes the flat list with a repeat step on export.
+
+Import and export are not part of the model: they are importers and exporters at the edge (section 7.7).
+An activity importer turns a GPX, FIT or TCX file into a recording, and a workout exporter turns a planned session into a FIT workout file or, as in spec 003, an iCalendar event.
+What the three services offer is not yet verified; the following comes from search summaries and the Garmin FIT page, and is to be checked in the services' own documentation before it is relied on:
+
+- **Garmin.** The FIT file formats are documented (Garmin, n.d.-b). Pushing a structured workout straight to a watch goes through the Garmin Connect Training API, which a third-party report describes as open to approved business partners only (personal access is read-only) and the developer program as currently on hold. So the realistic first path is a file that the athlete loads herself, if Garmin's apps accept it (to check).
+- **Polar.** The AccessLink API gives read access to exercises with FIT and GPX export; we found no way to upload a structured workout through it.
+- **Strava.** It accepts FIT, TCX and GPX uploads and exports activities as GPX or TCX; we found no planned workouts in its API. Its terms restrict showing a user's data to others and the use of API data for training models (roadmap M11).
+
+Open questions:
+
+1. May a course be made from a recording of an athlete, and how much of the start and end must be trimmed so that it does not reveal a home address?
+2. Does a course need variants from the first version, or one line and its legs?
+3. Is a goal event part of one plan, or a shared event that plans refer to by id?
+4. Is a coach a role in a group, or a relation between two athletes?
+5. Is the login account the same aggregate as the athlete profile?
+6. Is the link between a planned session and the recording that completed it kept on the session, or found by matching on date and course?
+
 ## 7. Code
 
 This chapter explains how the source code is organised.
@@ -518,6 +694,175 @@ The reasoning behind the choice of data layer is in [ADR-0016](./adr/0016-data-a
 - **Optimistic concurrency.** The aggregate root carries a version; of two users who change the same aggregate the first commit wins, and the second gets a conflict error instead of overwriting the change.
 
 The front end uses none of these. It follows the GPX rule instead, pure functions that return new values and never mutate their input, as `applyMoves` does for the training week (section 7.5).
+
+### 7.7 Back end: design class diagram of course and recording (planned)
+
+The two aggregates the extractor page needs first are the course and the recording.
+Figure 12 is their design class diagram: types, operations, value objects, the repositories and the domain service that makes a course from a recording.
+Entities have an id and a version for optimistic concurrency ([ADR-0016](./adr/0016-data-access-layer.md)); value objects are immutable.
+The existing types of `src/shared/types.ts` carry over: `Coordinate` and `Trackpoint` become `LinePoint` and `TracePoint`, `Segment` becomes `RecordedSegment` and `StrategyName` stays.
+`Leg`, the version and the ids are new.
+
+*Figure 12*: Design class diagram of the Course and Recording aggregates (planned). The diagram is the PlantUML block below.
+
+```plantuml
+@startuml dcd-course-recording
+title Design class diagram: Course and Recording aggregates (planned)
+skinparam classAttributeIconSize 0
+hide empty members
+
+class Course <<aggregate root>> {
+  -id: CourseId
+  -name: string
+  -visibility: Visibility
+  -ownerId: AthleteId | null
+  -variants: CourseVariant[1..*]
+  -version: number
+  +rename(name: string): void
+  +addVariant(name: string, line: CourseLine, legs: Leg[]): VariantId
+  +removeVariant(id: VariantId): void
+  +publish(): void
+}
+class CourseVariant <<entity>> {
+  -id: VariantId
+  -name: string
+  -line: CourseLine
+  -legs: Leg[1..*]
+  +distanceM(): number
+  +distanceOf(kind: SegmentType): number
+}
+class CourseLine <<value>> {
+  +points: LinePoint[2..*]
+  +lengthM(): number
+}
+class LinePoint <<value>> {
+  +lat: number
+  +lon: number
+  +elevation: number | null
+}
+class Leg <<value>> {
+  +ordinal: number
+  +kind: SegmentType
+  +startIndex: number
+  +endIndex: number
+  +distanceM: number
+  +name: string | null
+}
+
+class Recording <<aggregate root>> {
+  -id: RecordingId
+  -ownerId: AthleteId
+  -courseId: CourseId | null
+  -startedAt: Instant
+  -source: Source
+  -visibility: Visibility
+  -sharedWith: GroupId[0..*]
+  -trace: Trace
+  -segments: RecordedSegment[0..*]
+  -external: ExternalRef | null
+  -version: number
+  +followCourse(id: CourseId): void
+  +shareWith(group: GroupId): void
+  +replaceSegments(segments: RecordedSegment[]): void
+}
+class Trace <<value>> {
+  +points: TracePoint[2..*]
+  +durationS(): number
+  +distanceM(): number
+}
+class TracePoint <<value>> {
+  +lat: number
+  +lon: number
+  +elevation: number | null
+  +time: Instant
+  +heartRate: number | null
+}
+class RecordedSegment <<value>> {
+  +kind: SegmentType
+  +startIndex: number
+  +endIndex: number
+  +distanceM: number
+  +durationS: number
+  +detectedBy: StrategyName[]
+  +confidence: number
+}
+class ExternalRef <<value>> {
+  +provider: string
+  +externalId: string
+}
+
+enum SegmentType {
+  swim
+  run
+  unclassified
+}
+enum Visibility {
+  private
+  group
+  public
+}
+enum Source {
+  gpxUpload
+  fitUpload
+  provider
+}
+
+interface CourseRepository <<repository>> {
+  +find(id: CourseId): Course | null
+  +add(course: Course): void
+  +save(course: Course): void
+}
+interface RecordingRepository <<repository>> {
+  +find(id: RecordingId): Recording | null
+  +add(recording: Recording): void
+  +save(recording: Recording): void
+  +erase(owner: AthleteId): void
+}
+class CourseFromRecording <<domain service>> {
+  +create(recording: Recording, trimStartM: number, trimEndM: number): Course
+}
+
+Course *-- "1..*" CourseVariant
+CourseVariant *-- "1" CourseLine
+CourseLine *-- "2..*" LinePoint
+CourseVariant *-- "1..*" Leg
+Leg ..> SegmentType
+
+Recording *-- "1" Trace
+Trace *-- "2..*" TracePoint
+Recording *-- "0..*" RecordedSegment
+Recording *-- "0..1" ExternalRef
+RecordedSegment ..> SegmentType
+Recording ..> Visibility
+Recording ..> Source
+Course ..> Visibility
+
+CourseRepository ..> Course
+RecordingRepository ..> Recording
+CourseFromRecording ..> Recording : reads
+CourseFromRecording ..> Course : creates
+
+note right of Course
+  Invariants: legs are ordered and contiguous and
+  cover the line; leg distances add up to the line
+  length within a tolerance; no time, sensor data
+  or athlete (unless private).
+end note
+note right of Recording
+  Invariants: segments are ordered, do not overlap
+  and point at positions of the trace; an owner is
+  always set. Stale version on save: ConflictError.
+end note
+note bottom of CourseFromRecording
+  Drops time and sensor data, trims the start and
+  the end, and keeps no reference to the recording.
+end note
+@enduml
+```
+
+The save of a repository throws a conflict error when the version of the aggregate is stale (first commit wins, section 7.6), and one use case changes one aggregate and saves it once.
+`RecordingRepository.erase` removes all recordings of an athlete, which is part of the erasure use case (section 6.6).
+The importers and exporters are not in this diagram: an `ActivityImporter` returns a `Recording` from a file, and a `WorkoutExporter` (later) turns a planned session into a file.
 
 ## 8. Data
 
@@ -646,7 +991,8 @@ ADR-0008 implements a shared Astro layout and directly linkable HTML pages, with
 - Fowler, M. (n.d.-a). *DDD aggregate* [Bliki]. Retrieved November 11, 2026, from https://martinfowler.com/bliki/DDD_Aggregate.html
 - Fowler, M. (n.d.-b). *Repository* [Patterns of enterprise application architecture]. Retrieved November 11, 2026, from https://martinfowler.com/eaaCatalog/repository.html
 - Fowler, M. (n.d.-c). *Unit of work* [Patterns of enterprise application architecture]. Retrieved November 11, 2026, from https://martinfowler.com/eaaCatalog/unitOfWork.html
-- Garmin. (n.d.). *Connect IQ basics*. Retrieved November 1, 2026, from https://developer.garmin.com/connect-iq/connect-iq-basics/
+- Garmin. (n.d.-a). *Connect IQ basics*. Retrieved November 1, 2026, from https://developer.garmin.com/connect-iq/connect-iq-basics/
+- Garmin. (n.d.-b). *Workout files* [FIT SDK documentation]. Retrieved November 11, 2026, from https://developer.garmin.com/fit/articles/file-types/workout.html
 - Geofabrik. (n.d.). *OpenStreetMap data extracts*. Retrieved November 10, 2026, from https://download.geofabrik.de/
 - Gruber, T. (2008). Ontology. In L. Liu & M. T. Özsu (Eds.), *Encyclopedia of Database Systems*. Springer. https://tomgruber.org/writing/definition-of-ontology
 - Het Rondje Eilanden. (n.d.). *Parcours* [Course map with the length of every swim and run]. Retrieved November 10, 2026, from https://www.hetrondjeeilanden.nl/wedstrijd/parcours/
