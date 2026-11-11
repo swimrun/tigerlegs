@@ -517,6 +517,8 @@ You need Deno, npm and Node.js 22.23.4 or newer; `.nvmrc` pins Node 24, which CI
 
 `deno test -A` runs analysis and documentation unit/integration tests. `npm run check` checks the Astro/React code. After building and installing Chromium with `npx playwright install chromium`, `npm run test:site` checks static deep links, ADR publication, React imports/selection, Worker thresholds, terrain consent and mobile layout on a plain static server.
 
+For development you can run your own Overpass server, with a one-time import of a regional extract, so that recording test fixtures does not hit the public servers; see [local-overpass.md](./local-overpass.md) (a service of `docker-compose.yml`, data in the git-ignored `overpass-data/`). The browser client retries a busy public server with exponential backoff and caches the water of an area for a week.
+
 ### 12.1 Test strategy
 
 Tests follow the test pyramid: many fast tests at the bottom, few slow ones at the top.

@@ -54,6 +54,8 @@ Astro supplies the shared layout and static HTML pages; React supplies the inter
 
 GitHub Actions tests and builds the site, then publishes `dist/` to GitHub Pages. No Astro or Node process runs in production. Existing `about.html` and `guidebook.html` URLs and chapter anchors are preserved; chapter 13 links to each generated `adr/*.html` page. See [ADR-0008](./docs/adr/0008-astro-static-site-with-react-islands.md) and [ADR-0009](./docs/adr/0009-react-for-interactive-frontend.md).
 
+Working on the terrain detection? You can run a local Overpass server with Docker instead of using the public ones: see [docs/local-overpass.md](./docs/local-overpass.md).
+
 ## Roadmap
 
 The roadmap shows what is done and what is planned. Checked items are done.
