@@ -167,7 +167,9 @@ export function createTrainingAgent(
       };
     }
     // A rest day asked for in other words: the rules plan it, whatever moves the model suggested.
-    if (result.restDays.length > 0) return restDayProposal(result.restDays);
+    // Days that already are rest days are no news: a small model tends to echo them back, so they are not a request.
+    const newRestDays = result.restDays.filter((day) => !getRestDays().includes(day));
+    if (newRestDays.length > 0) return restDayProposal(newRestDays);
     const { allowed, rejected } = checkMoves(getRestDays(), result.moves);
     const leftOut = rejected.flatMap((move) => {
       const title = titleOf(move.id);

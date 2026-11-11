@@ -123,6 +123,10 @@ it("restDaysRequested ignores days that are not next to a rest word", () => {
   expect(restDaysRequested("Run the rest of the week on Tuesday")).toEqual([]);
 });
 
+it("restDaysRequested finds no rest day in a request for more runs", () => {
+  expect(restDaysRequested("I want more runs!")).toEqual([]);
+});
+
 it("the prototype week has no problems, and a session on a rest day is one", () => {
   expect(weekIssues(PROTOTYPE_WEEK, [])).toEqual([]);
   expect(weekIssues(PROTOTYPE_WEEK, ["Wed"]).map((issue) => issue.kind)).toEqual(["rest-day"]);

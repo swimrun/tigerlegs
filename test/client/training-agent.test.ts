@@ -181,6 +181,20 @@ it("training agent: a rest day asked for in other words is planned by the rules,
   expect(!proposal.text.includes("Swimrun brick"), "the model's move onto the rest day is not offered").toBeTruthy();
 });
 
+it("training agent: rest days the model echoes back are no request, so 'more runs' does not talk about rest days", async () => {
+  const agent = createTrainingAgent({
+    model: badModel([], { restDays: ["Tue", "Thu"], moves: [] }),
+    lang: "en",
+    strings,
+    chrome: true,
+    getWeek: () => PROTOTYPE_WEEK,
+    getRestDays: () => ["Tue", "Thu"],
+    onApply: () => {},
+  });
+  const [reply] = texts(await collect(agent, "I want more runs!"));
+  expect(reply.text.includes("already a sports rest day")).toEqual(false);
+});
+
 it("training agent: a move onto a rest day is left out and says so", async () => {
   const week = applyMoves(PROTOTYPE_WEEK, [{ id: "strength-1", toDay: "Mon", reason: "" }]);
   const agent = createTrainingAgent({
