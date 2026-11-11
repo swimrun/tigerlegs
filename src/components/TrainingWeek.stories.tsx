@@ -138,3 +138,41 @@ export const RestDayInChat: Story = {
     await expect(await canvas.findByLabelText("Day: Flexibility: static + dynamic, 30 min")).toHaveValue("Fri");
   },
 };
+
+/** A change can be reverted on its own, or all changes at once; a reset can be undone until something else changes. */
+export const RevertAndReset: Story = {
+  args: { languageModel: null },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const select = async () => userEvent.selectOptions(await canvas.findByLabelText("Day: Trail run, 75 min Z2"), "Mon");
+    await select();
+    await expect(await canvas.findByText("Trail run, 75 min Z2: Thursday → Monday")).toBeVisible();
+    await userEvent.click(await canvas.findByRole("button", { name: /^Revert/ }));
+    await expect(await canvas.findByText("No changes yet.")).toBeVisible();
+    await select();
+    await userEvent.click(await canvas.findByRole("button", { name: "Reset all changes" }));
+    await expect(await canvas.findByText("No changes yet.")).toBeVisible();
+    await userEvent.click(await canvas.findByRole("button", { name: "Undo reset" }));
+    await expect(await canvas.findByText("Trail run, 75 min Z2: Thursday → Monday")).toBeVisible();
+  },
+};
+
+/** In German the week, the chat and the apply message are all German, even for a misspelled day. */
+export const GermanRestDay: Story = {
+  args: { languageModel: null },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    document.documentElement.lang = "de";
+    try {
+      await expect(await canvas.findByText("Traillauf, 75 Min. Z2")).toBeVisible();
+      await userEvent.click(await canvas.findByRole("button", { name: /Tiger/ }));
+      await userEvent.type(await canvas.findByLabelText(/Frage/), "Ich will der sontagg als Ruhe.{enter}");
+      await expect(await canvas.findByText("Ruhetag: Sonntag")).toBeVisible();
+      await userEvent.click(await canvas.findByRole("button", { name: "Vorschlag anwenden" }));
+      await expect(await canvas.findByText(/Angewendet: Ruhetag: Sonntag/)).toBeVisible();
+      await expect(await canvas.findByText(/unter „Deine Änderungen“ unten/)).toBeVisible();
+    } finally {
+      document.documentElement.lang = "en";
+    }
+  },
+};

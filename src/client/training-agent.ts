@@ -41,7 +41,10 @@ export interface TrainingAgentStrings {
   nextChip: (title: string, from: string, to: string) => string;
   fixReasons: Record<IssueKind, (day: string) => string>;
   apply: string;
-  applied: string;
+  /** What the chat says after a proposal was applied; the summary names what changed. */
+  applied: (summary: string) => string;
+  /** A session's title in the page language (the model itself is shown the English titles). */
+  sessionTitle: (session: TrainingSession) => string;
   dismiss: string;
   dismissed: string;
   days: Record<Day, string>;
@@ -81,10 +84,13 @@ export function createTrainingAgent(
   let waitingInstruction: string | null = null;
   let round = 0;
 
-  const titleOf = (id: string) => getWeek().find((candidate) => candidate.id === id)?.title;
+  const titleOf = (id: string) => {
+    const session = getWeek().find((candidate) => candidate.id === id);
+    return session ? t.sessionTitle(session) : undefined;
+  };
   const moveLine = (move: Move, reason: string) => {
     const session = getWeek().find((candidate) => candidate.id === move.id);
-    return session ? [`- ${t.movedFromTo(session.title, t.days[session.day], t.days[move.toDay])}${reason ? ` — ${reason}` : ""}`] : [];
+    return session ? [`- ${t.movedFromTo(t.sessionTitle(session), t.days[session.day], t.days[move.toDay])}${reason ? ` — ${reason}` : ""}`] : [];
   };
 
   /**
@@ -107,7 +113,7 @@ export function createTrainingAgent(
       for (const { move, resolves } of fixes) {
         const session = after.find((candidate) => candidate.id === move.id);
         if (session) {
-          lines.push(`- ${t.movedFromTo(session.title, t.days[session.day], t.days[move.toDay])} — ${t.fixReasons[resolves.kind](t.days[resolves.day])}`);
+          lines.push(`- ${t.movedFromTo(t.sessionTitle(session), t.days[session.day], t.days[move.toDay])} — ${t.fixReasons[resolves.kind](t.days[resolves.day])}`);
         }
       }
     }
@@ -155,7 +161,7 @@ export function createTrainingAgent(
         text: result.clarification.question,
         followUps: result.clarification.options.map((option) => ({
           id: `option-${round}-${option.id}`,
-          label: option.label,
+          label: titleOf(option.id) ?? option.label,
           prompt: `${lastInstruction} — I mean ${option.label} (session id "${option.id}").`,
         })),
       };
@@ -180,19 +186,28 @@ export function createTrainingAgent(
 
       if (message === APPLY) {
         const { moves, restDays } = pending;
+        // Say what changed and where it went, in the page language, before the week itself changes.
+        const before = getWeek();
+        const summary = [
+          ...restDays.filter((day) => !getRestDays().includes(day)).map((day) => t.restDayBecomes(t.days[day])),
+          ...moves.flatMap((move) => {
+            const session = before.find((candidate) => candidate.id === move.id);
+            return session ? [t.movedFromTo(t.sessionTitle(session), t.days[session.day], t.days[move.toDay])] : [];
+          }),
+        ].join("; ");
         onApply(moves, restDays);
         pending = { moves: [], restDays: [] };
         // One step at a time: what the applied step leaves open comes as chips, each its own proposal.
-        const fixes = suggestFixes(applyMoves(getWeek(), moves), restDays);
+        const after = applyMoves(before, moves);
+        const fixes = suggestFixes(after, restDays);
         nextSteps = fixes.map((fix) => fix.move);
-        const after = applyMoves(getWeek(), moves);
         const chips = fixes.flatMap((fix, index) => {
           const session = after.find((candidate) => candidate.id === fix.move.id);
           return session
-            ? [{ id: `next-${++round}`, label: t.nextChip(session.title, t.days[session.day], t.days[fix.move.toDay]), prompt: `${NEXT}${index}` }]
+            ? [{ id: `next-${++round}`, label: t.nextChip(t.sessionTitle(session), t.days[session.day], t.days[fix.move.toDay]), prompt: `${NEXT}${index}` }]
             : [];
         });
-        yield text(t.applied, chips.length > 0 ? chips : undefined);
+        yield text(t.applied(summary), chips.length > 0 ? chips : undefined);
       } else if (message === DISMISS) {
         pending = { moves: [], restDays: [] };
         yield text(t.dismissed);
@@ -236,7 +251,7 @@ export function createTrainingAgent(
               waitingInstruction = null;
               if (resume) {
                 lastInstruction = resume;
-                yield reply(await proposeChange(model!, getWeek(), resume, undefined, getRestDays()));
+                yield reply(await proposeChange(model!, getWeek(), resume, undefined, getRestDays(), lang));
               } else {
                 yield text(t.assistInstalled);
               }
@@ -247,7 +262,7 @@ export function createTrainingAgent(
         } else {
           if (!message.includes(" — I mean ")) lastInstruction = message;
           try {
-            yield reply(await proposeChange(model!, getWeek(), message, undefined, getRestDays()));
+            yield reply(await proposeChange(model!, getWeek(), message, undefined, getRestDays(), lang));
           } catch {
             yield text(t.assistFailed);
           }

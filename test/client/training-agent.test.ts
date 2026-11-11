@@ -15,7 +15,8 @@ const strings: TrainingAgentStrings = {
   proposalTitle: "Proposal",
   proposalEmpty: "empty",
   apply: "Apply",
-  applied: "applied",
+  applied: (summary) => `applied: ${summary}`,
+  sessionTitle: (session) => session.title,
   dismiss: "Dismiss",
   dismissed: "dismissed",
   days: { Mon: "Mon", Tue: "Tue", Wed: "Wed", Thu: "Thu", Fri: "Fri", Sat: "Sat", Sun: "Sun" },
@@ -144,7 +145,7 @@ Deno.test("training agent: a rest day request is planned by the rules, as a bull
   assertEquals(proposal.followUps?.map((f) => f.label), ["Apply", "Dismiss"]);
 
   const [done] = texts(await collect(agent, proposal.followUps![0].prompt!));
-  assertEquals(done.text, "applied");
+  assertEquals(done.text, "applied: Wed becomes a rest day; Flexibility: static + dynamic, 30 min: Wed → Fri");
   assertEquals(done.followUps, undefined, "a week without problems has no next steps");
   assertEquals(applied.length, 1);
   assertEquals(applied[0].moves.map((move) => [move.id, move.toDay]), [["flex", "Fri"]]);

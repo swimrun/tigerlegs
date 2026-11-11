@@ -26,7 +26,12 @@ interface Strings {
   assistEnable: string;
   assistInstalled: string;
   chatTitle: string;
-  applied: string;
+  applied: (summary: string) => string;
+  sessionTitles: Record<string, string>;
+  revert: string;
+  resetAll: string;
+  resetDone: string;
+  undoReset: string;
   dismissed: string;
   assistDownloading: string;
   instructionPlaceholder: string;
@@ -70,7 +75,7 @@ const STRINGS: Record<Lang, Strings> = {
     assistEnable: "Install Gemini Nano",
     assistInstalled: "Gemini Nano is installed. Ask again.",
     chatTitle: "Rearrange with the tiger",
-    applied: "Applied. Confirm the new week below when you are happy.",
+    applied: (summary) => `Applied: ${summary}. Confirm or revert the changes under "Your changes" below.`,
     dismissed: "Dismissed. Nothing was moved.",
     assistDownloading: "Downloading the model…",
     instructionPlaceholder: "e.g. I am travelling Thursday and Friday",
@@ -83,6 +88,18 @@ const STRINGS: Record<Lang, Strings> = {
     changesTitle: "Your changes",
     noChanges: "No changes yet.",
     movedFromTo: (title, from, to) => `${title}: ${from} → ${to}`,
+    sessionTitles: {
+      strength: "Strength: legs & core, 45 min",
+      "ow-swim": "Open-water swim, 2 km",
+      flex: "Flexibility: static + dynamic, 30 min",
+      trail: "Trail run, 75 min Z2",
+      intervals: "Run intervals, 6×400 m",
+      brick: "Swimrun brick, 2 h",
+    },
+    revert: "Revert",
+    resetAll: "Reset all changes",
+    resetDone: "All changes were reset to the confirmed week.",
+    undoReset: "Undo reset",
     restDay: "Rest day",
     restDayBlocked: (day) => `${day} is a rest day: no session can go there.`,
     nextStepsTitle: "Possible next steps (one at a time)",
@@ -132,7 +149,7 @@ const STRINGS: Record<Lang, Strings> = {
     assistEnable: "Installeer Gemini Nano",
     assistInstalled: "Gemini Nano is geïnstalleerd. Vraag het opnieuw.",
     chatTitle: "Herschik met de tijger",
-    applied: "Toegepast. Bevestig de nieuwe week hieronder als je tevreden bent.",
+    applied: (summary) => `Toegepast: ${summary}. Bevestig of draai de wijzigingen terug onder "Jouw wijzigingen" hieronder.`,
     dismissed: "Genegeerd. Er is niets verplaatst.",
     assistDownloading: "Model wordt gedownload…",
     instructionPlaceholder: "bijv. I am travelling Thursday and Friday",
@@ -146,6 +163,18 @@ const STRINGS: Record<Lang, Strings> = {
     changesTitle: "Jouw wijzigingen",
     noChanges: "Nog geen wijzigingen.",
     movedFromTo: (title, from, to) => `${title}: ${from} → ${to}`,
+    sessionTitles: {
+      strength: "Kracht: benen en core, 45 min",
+      "ow-swim": "Zwemmen in open water, 2 km",
+      flex: "Flexibiliteit: statisch + dynamisch, 30 min",
+      trail: "Trailrun, 75 min Z2",
+      intervals: "Hardloopintervallen, 6×400 m",
+      brick: "Swimrun-koppeltraining, 2 uur",
+    },
+    revert: "Terugdraaien",
+    resetAll: "Alle wijzigingen terugdraaien",
+    resetDone: "Alle wijzigingen zijn teruggezet naar de bevestigde week.",
+    undoReset: "Terugdraaien ongedaan maken",
     restDay: "Rustdag",
     restDayBlocked: (day) => `Op ${day} is het rustdag: daar kan geen sessie heen.`,
     nextStepsTitle: "Mogelijke vervolgstappen (één voor één)",
@@ -195,7 +224,7 @@ const STRINGS: Record<Lang, Strings> = {
     assistEnable: "Installer Gemini Nano",
     assistInstalled: "Gemini Nano est installé. Redemande.",
     chatTitle: "Réorganise avec le tigre",
-    applied: "Appliqué. Confirme la nouvelle semaine ci-dessous quand tu es satisfait·e.",
+    applied: (summary) => `Appliqué : ${summary}. Confirme ou annule les changements sous « Tes changements » ci-dessous.`,
     dismissed: "Ignoré. Rien n'a été déplacé.",
     assistDownloading: "Téléchargement du modèle…",
     instructionPlaceholder: "p. ex. Je voyage jeudi et vendredi",
@@ -209,6 +238,18 @@ const STRINGS: Record<Lang, Strings> = {
     changesTitle: "Tes changements",
     noChanges: "Pas encore de changements.",
     movedFromTo: (title, from, to) => `${title} : ${from} → ${to}`,
+    sessionTitles: {
+      strength: "Renforcement : jambes et gainage, 45 min",
+      "ow-swim": "Nage en eau libre, 2 km",
+      flex: "Souplesse : statique + dynamique, 30 min",
+      trail: "Course en sentier, 75 min Z2",
+      intervals: "Fractionné de course, 6×400 m",
+      brick: "Enchaînement swimrun, 2 h",
+    },
+    revert: "Annuler",
+    resetAll: "Tout annuler",
+    resetDone: "Tous les changements ont été annulés : la semaine confirmée est rétablie.",
+    undoReset: "Rétablir mes changements",
     restDay: "Jour de repos",
     restDayBlocked: (day) => `Le ${day} est un jour de repos : aucune séance ne peut y aller.`,
     nextStepsTitle: "Étapes suivantes possibles (une à la fois)",
@@ -258,7 +299,7 @@ const STRINGS: Record<Lang, Strings> = {
     assistEnable: "Gemini Nano installieren",
     assistInstalled: "Gemini Nano ist installiert. Frag noch einmal.",
     chatTitle: "Mit dem Tiger umplanen",
-    applied: "Angewendet. Bestätige die neue Woche unten, wenn du zufrieden bist.",
+    applied: (summary) => `Angewendet: ${summary}. Bestätige oder verwirf die Änderungen unter „Deine Änderungen“ unten.`,
     dismissed: "Verworfen. Nichts wurde verschoben.",
     assistDownloading: "Modell wird heruntergeladen…",
     instructionPlaceholder: "z. B. Ich bin Donnerstag und Freitag unterwegs",
@@ -272,6 +313,18 @@ const STRINGS: Record<Lang, Strings> = {
     changesTitle: "Deine Änderungen",
     noChanges: "Noch keine Änderungen.",
     movedFromTo: (title, from, to) => `${title}: ${from} → ${to}`,
+    sessionTitles: {
+      strength: "Kraft: Beine und Rumpf, 45 Min.",
+      "ow-swim": "Freiwasserschwimmen, 2 km",
+      flex: "Beweglichkeit: statisch + dynamisch, 30 Min.",
+      trail: "Traillauf, 75 Min. Z2",
+      intervals: "Lauf-Intervalle, 6×400 m",
+      brick: "Swimrun-Koppeleinheit, 2 Std.",
+    },
+    revert: "Rückgängig",
+    resetAll: "Alle Änderungen zurücksetzen",
+    resetDone: "Alle Änderungen wurden auf die bestätigte Woche zurückgesetzt.",
+    undoReset: "Zurücksetzen widerrufen",
     restDay: "Ruhetag",
     restDayBlocked: (day) => `Am ${day} ist Ruhetag: dort kann keine Einheit hin.`,
     nextStepsTitle: "Mögliche nächste Schritte (einer nach dem anderen)",
@@ -354,6 +407,9 @@ export default function TrainingWeek({ languageModel }: Props) {
   const [confirmed, setConfirmed] = useState(false);
   // Fixed rest days: days on which no session may be planned (a plan lever, spec 003).
   const [restDays, setRestDays] = useState<readonly Day[]>([]);
+  const [baselineRest, setBaselineRest] = useState<readonly Day[]>([]);
+  // What a reset replaced, so that it can be undone until something else changes.
+  const [undo, setUndo] = useState<{ week: readonly TrainingSession[]; restDays: readonly Day[] } | null>(null);
   const [notice, setNotice] = useState("");
   const restRef = useRef(restDays);
   restRef.current = restDays;
@@ -361,18 +417,20 @@ export default function TrainingWeek({ languageModel }: Props) {
   // The agent reads the week through a ref, so it always sees manual changes without being recreated.
   const weekRef = useRef(week);
   weekRef.current = week;
+  const titleOf = (session: TrainingSession) => t.sessionTitles[session.id] ?? session.title;
   const agent = useMemo(
     () =>
       createTrainingAgent({
         model,
         lang,
-        strings: t,
+        strings: { ...t, sessionTitle: (session: TrainingSession) => t.sessionTitles[session.id] ?? session.title },
         getWeek: () => weekRef.current,
         getRestDays: () => restRef.current,
         onApply: (moves, rest) => {
           setWeek((current) => applyMoves(current, moves));
           setRestDays(rest);
           setNotice("");
+          setUndo(null);
           setConfirmed(false);
         },
       }),
@@ -389,12 +447,14 @@ export default function TrainingWeek({ languageModel }: Props) {
       return;
     }
     setNotice("");
+    setUndo(null);
     setWeek((current) => applyMoves(current, [{ id, toDay, reason: "" }]));
     setConfirmed(false);
   };
   // Making a day a rest day moves its sessions out by the same rules the assistant uses.
   const toggleRestDay = (day: Day) => {
     setNotice("");
+    setUndo(null);
     if (restDays.includes(day)) {
       setRestDays(restDays.filter((candidate) => candidate !== day));
       return;
@@ -403,6 +463,23 @@ export default function TrainingWeek({ languageModel }: Props) {
     setWeek(applyMoves(week, plan.moves));
     setRestDays(plan.restDays);
     setConfirmed(false);
+  };
+
+  const restChanged = restDays.length !== baselineRest.length || restDays.some((day) => !baselineRest.includes(day));
+  const dirty = changes.length > 0 || restChanged;
+  const resetAll = () => {
+    setUndo({ week, restDays });
+    setWeek(baseline);
+    setRestDays(baselineRest);
+    setNotice(t.resetDone);
+    setConfirmed(false);
+  };
+  const undoReset = () => {
+    if (!undo) return;
+    setWeek(undo.week);
+    setRestDays(undo.restDays);
+    setUndo(null);
+    setNotice("");
   };
 
   const endDrag = () => {
@@ -486,10 +563,10 @@ export default function TrainingWeek({ languageModel }: Props) {
                   <span className="font-semibold">
                     {t.disciplines[session.discipline]}
                   </span>
-                  <p>{session.title}</p>
+                  <p>{titleOf(session)}</p>
                   <label className="mt-1 block">
                     <span className="sr-only">
-                      {`${t.dayLabel}: ${session.title}`}
+                      {`${t.dayLabel}: ${titleOf(session)}`}
                     </span>
                     <select
                       className="w-full rounded border border-stone-900 bg-white px-1 py-0.5 text-xs"
@@ -522,29 +599,61 @@ export default function TrainingWeek({ languageModel }: Props) {
             : (
               <ul className="space-y-1 text-sm">
                 {changes.map(({ session, fromDay }) => (
-                  <li key={session.id}>
-                    {t.movedFromTo(
-                      session.title,
-                      t.days[fromDay],
-                      t.days[session.day],
-                    )}
+                  <li key={session.id} className="flex flex-wrap items-center gap-2">
+                    <span>
+                      {t.movedFromTo(
+                        titleOf(session),
+                        t.days[fromDay],
+                        t.days[session.day],
+                      )}
+                    </span>
+                    <button
+                      type="button"
+                      className="rounded border border-stone-900 bg-white px-2 py-0.5 text-xs font-medium"
+                      onClick={() => moveSession(session.id, fromDay)}
+                    >
+                      {t.revert}
+                      <span className="sr-only">{`: ${titleOf(session)}`}</span>
+                    </button>
                   </li>
                 ))}
               </ul>
             )}
         </div>
-        {changes.length > 0 && (
-          <button
-            type="button"
-            className="rounded bg-stone-900 px-4 py-2 text-sm font-semibold text-white"
-            onClick={() => {
-              setBaseline(week);
-              setConfirmed(true);
-            }}
-          >
-            {t.confirm}
-          </button>
-        )}
+        <div className="flex flex-wrap gap-2">
+          {dirty && (
+            <button
+              type="button"
+              className="rounded bg-stone-900 px-4 py-2 text-sm font-semibold text-white"
+              onClick={() => {
+                setBaseline(week);
+                setBaselineRest(restDays);
+                setUndo(null);
+                setConfirmed(true);
+              }}
+            >
+              {t.confirm}
+            </button>
+          )}
+          {dirty && (
+            <button
+              type="button"
+              className="rounded border border-stone-900 bg-white px-4 py-2 text-sm font-semibold"
+              onClick={resetAll}
+            >
+              {t.resetAll}
+            </button>
+          )}
+          {undo && (
+            <button
+              type="button"
+              className="rounded border border-stone-900 bg-amber-200 px-4 py-2 text-sm font-semibold"
+              onClick={undoReset}
+            >
+              {t.undoReset}
+            </button>
+          )}
+        </div>
         {confirmed && <p role="status" className="text-sm">{t.confirmed}</p>}
       </section>
     </div>

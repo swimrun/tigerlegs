@@ -209,3 +209,19 @@ Deno.test("proposeChange - one candidate left after narrowing is used without as
   assertEquals(prompts.length, 2);
   assertEquals(prompts[1].includes('session id "trail"'), true);
 });
+
+Deno.test("proposeChange asks the model for reasons in the page language", async () => {
+  const systems: string[] = [];
+  const outputs: unknown[] = [];
+  const model: LanguageModelStatic = {
+    availability: () => Promise.resolve("available"),
+    create: (options) => {
+      systems.push(options?.initialPrompts?.[0]?.content ?? "");
+      outputs.push(options?.expectedOutputs);
+      return Promise.resolve({ prompt: () => Promise.resolve(JSON.stringify({ moves: [] })), destroy: () => {} });
+    },
+  };
+  await proposeChange(model, WEEK, "Verschiebe den Lauf", undefined, [], "de");
+  assert(systems[0].includes("Write every reason and every question in German."));
+  assertEquals(outputs[0], [{ type: "text", languages: ["de"] }]);
+});

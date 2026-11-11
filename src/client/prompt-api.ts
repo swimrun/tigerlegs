@@ -8,6 +8,7 @@
  * fr and ja — the chat languages en/fr/de fit, Dutch does not (ADR-0010).
  */
 
+import type { Lang } from "./language.ts";
 import {
   type Day,
   DAYS,
@@ -78,6 +79,11 @@ export async function assistAvailability(
 
 /** Model languages shared with the site: English, French and German (no Dutch). */
 const LANGUAGES = [{ type: "text" as const, languages: ["en", "fr", "de"] }];
+
+const LANGUAGE_NAMES: Record<Lang, string> = { en: "English", nl: "Dutch", fr: "French", de: "German" };
+
+/** The output language to ask the model for: the page language when the model supports it, else all of them. */
+const outputLanguages = (lang: Lang) => lang === "nl" ? LANGUAGES : [{ type: "text" as const, languages: [lang] }];
 
 const SYSTEM_PROMPT = "You rearrange a weekly swimrun training schedule. " +
   "Never add, remove or alter sessions; only move them between days. " +
@@ -222,12 +228,13 @@ export async function proposeChange(
   instruction: string,
   onDownloadProgress?: (loaded: number) => void,
   restDays: readonly Day[] = [],
+  lang: Lang = "en",
 ): Promise<AssistantReply> {
-  const reply = await askModel(model, week, instruction, onDownloadProgress, restDays);
+  const reply = await askModel(model, week, instruction, onDownloadProgress, restDays, lang);
   // One candidate left after narrowing is no question: take it and ask again with that session named.
   if (reply.kind === "clarification" && reply.clarification.options.length === 1 && !instruction.includes("(session id ")) {
     const [only] = reply.clarification.options;
-    return await askModel(model, week, `${instruction} — I mean ${only.label} (session id "${only.id}").`, onDownloadProgress, restDays);
+    return await askModel(model, week, `${instruction} — I mean ${only.label} (session id "${only.id}").`, onDownloadProgress, restDays, lang);
   }
   return reply;
 }
@@ -238,11 +245,12 @@ async function askModel(
   instruction: string,
   onDownloadProgress?: (loaded: number) => void,
   restDays: readonly Day[] = [],
+  lang: Lang = "en",
 ): Promise<AssistantReply> {
   const session = await model.create({
     expectedInputs: LANGUAGES,
-    expectedOutputs: LANGUAGES,
-    initialPrompts: [{ role: "system", content: SYSTEM_PROMPT }],
+    expectedOutputs: outputLanguages(lang),
+    initialPrompts: [{ role: "system", content: `${SYSTEM_PROMPT} Write every reason and every question in ${LANGUAGE_NAMES[lang]}.` }],
     monitor(monitor) {
       monitor.addEventListener(
         "downloadprogress",

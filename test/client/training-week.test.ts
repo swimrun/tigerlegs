@@ -171,3 +171,13 @@ Deno.test("suggestFixes looks one step ahead and moves the later session of a pr
 Deno.test("suggestFixes has nothing to suggest for a week without problems", () => {
   assertEquals(suggestFixes(PROTOTYPE_WEEK, []), []);
 });
+
+Deno.test("restDaysRequested forgives typos in the longer day names", () => {
+  assertEquals(restDaysRequested("Ich will der sontagg als Ruhe."), ["Sun"]);
+  assertEquals(restDaysRequested("ik wil woensdga rust"), ["Wed"]);
+  assertEquals(restDaysRequested("a rest day on wednsday"), ["Wed"]);
+});
+
+Deno.test("restDaysRequested does not take other words for a day", () => {
+  assertEquals(restDaysRequested("I want to rest, sunny weather, a monkey and the sandwich"), []);
+});

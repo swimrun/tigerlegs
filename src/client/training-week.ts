@@ -161,6 +161,28 @@ const REST_WORDS = new Set(["rest", "rust", "rustdag", "repos", "ruhe", "ruhetag
 /** How many words a day name may sit away from the rest word and still belong to it. */
 const REST_WINDOW = 4;
 
+/** Number of single-letter edits (insert, delete, change) between two words. */
+function editDistance(a: string, b: string): number {
+  let previous = Array.from({ length: b.length + 1 }, (_, index) => index);
+  for (let i = 1; i <= a.length; i++) {
+    const row = [i];
+    for (let j = 1; j <= b.length; j++) {
+      row[j] = Math.min(previous[j] + 1, row[j - 1] + 1, previous[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+    }
+    previous = row;
+  }
+  return previous[b.length];
+}
+
+/**
+ * Whether a typed word is a day name, forgiving typos in the longer names ("sontagg" for "sonntag"):
+ * up to two edits for names of seven letters or more, one for five and six, none for shorter ones.
+ */
+function sameWord(token: string, name: string): boolean {
+  const allowed = name.length >= 7 ? 2 : name.length >= 5 ? 1 : 0;
+  return Math.abs(token.length - name.length) <= allowed && editDistance(token, name) <= allowed;
+}
+
 /**
  * The days an instruction asks to be a rest day, in English, Dutch, French or German ("I need a rest day
  * on Wednesday", "ik wil woensdag rust"). A day counts when it stands within a few words of a rest word,
@@ -169,7 +191,7 @@ const REST_WINDOW = 4;
  */
 export function restDaysRequested(instruction: string): Day[] {
   const tokens = instruction.toLowerCase().match(/\p{L}+/gu) ?? [];
-  const dayOf = (token: string): Day | null => DAYS.find((day) => DAY_NAMES[day].includes(token)) ?? null;
+  const dayOf = (token: string): Day | null => DAYS.find((day) => DAY_NAMES[day].some((name) => sameWord(token, name))) ?? null;
   const isRest = (token: string, index: number) =>
     REST_WORDS.has(token) && !(token === "rest" && tokens[index + 1] === "of") ||
     (token === "off" && (tokens[index - 1] === "day" || tokens[index + 1] === "day"));
