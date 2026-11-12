@@ -41,7 +41,7 @@ it("coarseBbox snaps outward to the grid and contains the track", () => {
   expect(n - s >= 2 * BBOX_GRID_DEG).toBeTruthy();
 });
 
-it("Rhederlaag with OSM water: terrain splits the speed-only runs", () => {
+it("Rhederlaag with OSM water: terrain keeps the swims the speed analysis finds and adds some distance", () => {
   const parsed = parseGPX(
     readFileSync(new URL("../../test-data/rhederlaag-swimrun.gpx", import.meta.url), "utf8"),
   );
@@ -56,12 +56,12 @@ it("Rhederlaag with OSM water: terrain splits the speed-only runs", () => {
   expect(withLandscape.strategies.includes("landscape")).toBeTruthy();
   const refined = withLandscape.segments;
   const swims = refined.filter((s) => s.type === "swim");
-  expect(swims.length > analysis.segments.filter((s) => s.type === "swim").length).toBeTruthy();
+  expect(swims.length >= analysis.segments.filter((s) => s.type === "swim").length).toBeTruthy();
 
-  // The 1.6 km "run" at trackpoints 4793-5596 contains a swim of roughly 800 m.
+  // The swim in the middle of the track (the 1.6 km "run" at trackpoints 4793-5596 before issue #98).
   const bigSwim = swims.find((s) => s.startTrackpointIndex <= 4800 && s.endTrackpointIndex >= 5200);
   expect(bigSwim, "expected a swim around trackpoints 4800-5200").toBeTruthy();
-  expect(bigSwim.distanceKm > 0.6 && bigSwim.distanceKm < 1.0).toBeTruthy();
+  expect(bigSwim.distanceKm > 0.6 && bigSwim.distanceKm < 1.2).toBeTruthy();
 
   for (let i = 1; i < refined.length; i++) {
     expect(refined[i].type !== refined[i - 1].type).toBeTruthy();
@@ -70,22 +70,12 @@ it("Rhederlaag with OSM water: terrain splits the speed-only runs", () => {
   expect(Number(withLandscape.totals.totalSwimM) > Number(analysis.totals.totalSwimM)).toBeTruthy();
 });
 
-it("Rhederlaag: recorded terrain finds multiple crossings inside the 2.7 km speed-only run", () => {
+it("Rhederlaag: the speed analysis alone finds the crossings that used to hide in runs of 2 km and more", () => {
   const parsed = parseGPX(readFileSync(new URL("../../test-data/rhederlaag-swimrun.gpx", import.meta.url), "utf8"));
   expect(parsed.ok).toBeTruthy();
   const baseline = analyzeGpx(parsed.value);
-  const longRun = baseline.segments.find(segment =>
-    segment.type === "run" && segment.distanceKm > 2.6 && segment.distanceKm < 2.8
-  );
-  expect(longRun, "the reported 2.7 km region should exist in the speed-only baseline").toBeTruthy();
-  const water = parseWater(JSON.parse(readFileSync(new URL("../fixtures/rhederlaag-overpass.json", import.meta.url), "utf8")));
-  const refined = analyzeGpx(parsed.value, water).segments.filter(segment =>
-    segment.endTrackpointIndex >= longRun.startTrackpointIndex &&
-    segment.startTrackpointIndex <= longRun.endTrackpointIndex
-  );
-  expect(refined.filter(segment => segment.type === "swim").length >= 2).toBeTruthy();
-  for (let i = 1; i < refined.length; i++) {
-    expect(refined[i].type !== refined[i - 1].type).toBeTruthy();
-    expect(refined[i].startTrackpointIndex).toEqual(refined[i - 1].endTrackpointIndex + 1);
-  }
+  // Before issue #98 the speed analysis found runs of 2.3 and 2.7 km that contained several swims.
+  const longRuns = baseline.segments.filter((segment) => segment.type === "run" && segment.distanceKm > 2.0);
+  expect(longRuns.length, "no run longer than 2 km is left").toEqual(0);
+  expect(baseline.segments.filter((segment) => segment.type === "swim").length >= 12).toBeTruthy();
 });

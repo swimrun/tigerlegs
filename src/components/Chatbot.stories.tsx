@@ -30,7 +30,7 @@ export const Collapsed: Story = {};
 export const OpenWithSuggestions: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await userEvent.click(canvas.getByRole("button", { name: /Ask the tiger/ }));
+    await userEvent.click(canvas.getByRole("button", { name: /Ask RoARR/ }));
     await expect(await canvas.findByRole("button", { name: "But can tigers actually swim?" })).toBeVisible();
   },
 };
@@ -38,7 +38,7 @@ export const OpenWithSuggestions: Story = {
 export const Answered: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await userEvent.click(canvas.getByRole("button", { name: /Ask the tiger/ }));
+    await userEvent.click(canvas.getByRole("button", { name: /Ask RoARR/ }));
     await userEvent.click(await canvas.findByRole("button", { name: "But can tigers actually swim?" }));
     await expect(await canvas.findByRole("button", { name: "Tell me more" })).toBeVisible();
   },
@@ -52,6 +52,6 @@ export const Dutch: Story = {
     },
   ],
   play: async ({ canvasElement }) => {
-    await userEvent.click(within(canvasElement).getByRole("button", { name: /Vraag het de tijger/ }));
+    await userEvent.click(within(canvasElement).getByRole("button", { name: /Vraag het RoARR/ }));
   },
 };

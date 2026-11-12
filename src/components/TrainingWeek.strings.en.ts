@@ -15,7 +15,7 @@ export const en: Strings = {
     "Your Chrome can run Gemini Nano, but the model is not installed yet. Installing downloads it once (a few GB); Chrome requires about 22 GB of free disk space as headroom. Your schedule never leaves this device.",
   assistEnable: "Install Gemini Nano",
   assistInstalled: "Gemini Nano is installed. Ask again.",
-  chatTitle: "Rearrange with the tiger",
+  chatTitle: "Rearrange with RoARR",
   applied: (summary) => `Applied: ${summary}. Confirm or revert the changes under "Your changes" below.`,
   dismissed: "Dismissed. Nothing was moved.",
   assistDownloading: "Downloading the model…",
@@ -68,6 +68,8 @@ export const en: Strings = {
   restDayAlready: (day) => `${day} is already a sports rest day.`,
   leftOut: (title, day) => `Left out: ${title} to ${day}, a sports rest day`,
   nextChip: (title, from, to) => `Next: ${title} ${from} → ${to}`,
+  restDayChip: (day) => `Make ${day} a sports rest day`,
+  fixChip: "Fix the problems in my week",
   fixReasons: {
     "rest-day": (day) => `sports rest day on ${day}`,
     clash: (day) => `two sessions on ${day}`,

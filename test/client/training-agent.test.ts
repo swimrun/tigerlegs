@@ -27,6 +27,8 @@ const strings: TrainingAgentStrings = {
   restDayAlready: (day) => `${day} is already a rest day`,
   leftOut: (title, day) => `Left out: ${title} to ${day} (rest day)`,
   nextChip: (title, from, to) => `Next: ${title} ${from} → ${to}`,
+  restDayChip: (day) => `Make ${day} a sports rest day`,
+  fixChip: "Fix the problems in my week",
   fixReasons: {
     "rest-day": (day) => `${day} is a rest day`,
     clash: (day) => `two sessions on ${day}`,
@@ -193,6 +195,29 @@ it("training agent: rest days the model echoes back are no request, so 'more run
   });
   const [reply] = texts(await collect(agent, "I want more runs!"));
   expect(reply.text.includes("already a sports rest day")).toEqual(false);
+});
+
+it("training agent: default chips only offer what applies to the week", async () => {
+  const make = (rest: Day[], week: readonly TrainingSession[] = PROTOTYPE_WEEK) =>
+    createTrainingAgent({ model: null, lang: "en", strings, chrome: true, getWeek: () => week, getRestDays: () => rest, onApply: () => {} });
+  const labels = async (rest: Day[], week?: readonly TrainingSession[]) => (await make(rest, week).suggestions()).map((chip) => chip.label);
+  expect((await labels([])).includes("Make Wed a sports rest day")).toEqual(true);
+  expect((await labels(["Wed"])).includes("Make Wed a sports rest day"), "Wednesday already is a rest day").toEqual(false);
+  // The example week has sessions on Wednesday, so a Wednesday rest day leaves something to fix.
+  expect((await labels(["Wed"])).includes("Fix the problems in my week")).toEqual(true);
+  expect(await labels([], []), "an empty week has nothing to fix").toEqual(["Make Wed a sports rest day"]);
+});
+
+it("training agent: the rest day chip and the fix chip lead to a proposal", async () => {
+  const agent = createTrainingAgent({ model: null, lang: "en", strings, chrome: true, getWeek: () => PROTOTYPE_WEEK, getRestDays: () => ["Tue"], onApply: () => {} });
+  const chips = await agent.suggestions();
+  const rest = chips.find((chip) => chip.id === "chip-rest")!;
+  const [restProposal] = texts(await collect(agent, rest.prompt ?? rest.label));
+  expect(restProposal.text.includes("- Wed becomes a rest day")).toEqual(true);
+  const fix = chips.find((chip) => chip.id === "chip-fix")!;
+  expect(fix, "sessions on a rest day are something to fix").toBeTruthy();
+  const [fixProposal] = texts(await collect(agent, fix.prompt ?? fix.label));
+  expect(fixProposal.followUps?.map((f) => f.label)).toEqual(["Apply", "Dismiss"]);
 });
 
 it("training agent: a move onto a rest day is left out and says so", async () => {

@@ -6,6 +6,8 @@ export interface SpeedAnalyzerConfig {
   swimThresholdKph: number;        // default: 5
   minConsecutive: number;          // default: 5
   stationaryThresholdKph: number;  // default: 0.5
+  /** A speed above this is not a person on foot but a GPS jump or a jittery swim, and is cleaned up (default: 20). */
+  maxPlausibleKph: number;
 }
 
 const DEFAULT_CONFIG: SpeedAnalyzerConfig = {
@@ -13,6 +15,7 @@ const DEFAULT_CONFIG: SpeedAnalyzerConfig = {
   swimThresholdKph: 5,
   minConsecutive: 5,
   stationaryThresholdKph: 0.5,
+  maxPlausibleKph: 30,
 };
 
 /**
@@ -74,8 +77,65 @@ export function applySlidingWindow(
 }
 
 /**
+ * Clean up GPS spikes: a trackpoint that can only be reached from the last good one, and left again for the
+ * next one, at more than `maxKph` is a jump of the fix (a watch under water, a reflection) and not a place the
+ * athlete was. Such a point takes the position of the last good point, so that indexes stay the same.
+ */
+export function despike(trackpoints: Trackpoint[], maxKph: number): Trackpoint["coordinate"][] {
+  const coordinates = trackpoints.map((point) => point.coordinate);
+  const kph = (a: number, b: number): number | null => {
+    const from = trackpoints[a];
+    const to = trackpoints[b];
+    if (from.timestamp === null || to.timestamp === null) return null;
+    const elapsedMs = new Date(to.timestamp).getTime() - new Date(from.timestamp).getTime();
+    if (elapsedMs <= 0) return null;
+    return haversineDistance(coordinates[a], coordinates[b]) / (elapsedMs / (1000 * 3600));
+  };
+  let lastGood = 0;
+  for (let i = 1; i < trackpoints.length - 1; i++) {
+    const inKph = kph(lastGood, i);
+    const outKph = kph(i, i + 1);
+    if (inKph !== null && outKph !== null && inKph > maxKph && outKph > maxKph) {
+      coordinates[i] = coordinates[lastGood];
+    } else {
+      lastGood = i;
+    }
+  }
+  return coordinates;
+}
+
+/**
+ * Speed over a window, from the net displacement between the points half a window before and after each
+ * trackpoint, divided by the time between them. Noisy GPS fixes (a watch under water) add path length when
+ * speeds are taken step by step, so a swim at 2.4 km/h reads as 5 km/h or more; the net displacement does not
+ * grow with the noise. GPS spikes are cleaned up first (see `despike`), and a speed above `maxKph` after that
+ * is returned as null, so that it counts neither as running nor as swimming. Returns null where a timestamp is
+ * missing or no time has passed.
+ */
+export function windowedDisplacementSpeeds(
+  trackpoints: Trackpoint[],
+  windowSize: number,
+  maxKph: number,
+): (number | null)[] {
+  const half = Math.floor(windowSize / 2);
+  const coordinates = despike(trackpoints, maxKph);
+  return trackpoints.map((_, i) => {
+    const a = Math.max(0, i - half);
+    const b = Math.min(trackpoints.length - 1, i + half);
+    if (a === b) return null;
+    const from = trackpoints[a];
+    const to = trackpoints[b];
+    if (from.timestamp === null || to.timestamp === null) return null;
+    const elapsedMs = new Date(to.timestamp).getTime() - new Date(from.timestamp).getTime();
+    if (elapsedMs <= 0) return null;
+    const kph = haversineDistance(coordinates[a], coordinates[b]) / (elapsedMs / (1000 * 3600));
+    return kph > maxKph ? null : kph;
+  });
+}
+
+/**
  * Detect segments from trackpoint speed data.
- * Classifies windowed speeds, finds transitions meeting minConsecutive threshold,
+ * Classifies windowed (net displacement) speeds, finds transitions meeting minConsecutive threshold,
  * and places boundary at midpoint of threshold-crossing sequence.
  */
 export function detectBySpeed(
@@ -107,7 +167,7 @@ export function detectBySpeed(
   }
 
   // Step 2: Apply sliding window
-  const windowedSpeeds = applySlidingWindow(rawSpeeds, cfg.windowSize);
+  const windowedSpeeds = windowedDisplacementSpeeds(trackpoints, cfg.windowSize, cfg.maxPlausibleKph);
 
   // Step 3: Classify each trackpoint (ignoring stationary)
   type Classification = "swim" | "run" | "stationary" | "unknown";

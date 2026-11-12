@@ -15,7 +15,7 @@ export const fr: Strings = {
     "Ton Chrome peut exécuter Gemini Nano, mais le modèle n'est pas encore installé. L'installation le télécharge une seule fois (quelques Go) ; Chrome exige environ 22 Go d'espace disque libre en marge. Ton planning ne quitte jamais cet appareil.",
   assistEnable: "Installer Gemini Nano",
   assistInstalled: "Gemini Nano est installé. Redemande.",
-  chatTitle: "Réorganise avec le tigre",
+  chatTitle: "Réorganise avec RoARR",
   applied: (summary) => `Appliqué : ${summary}. Confirme ou annule les changements sous « Tes changements » ci-dessous.`,
   dismissed: "Ignoré. Rien n'a été déplacé.",
   assistDownloading: "Téléchargement du modèle…",
@@ -69,6 +69,8 @@ export const fr: Strings = {
   restDayAlready: (day) => `Le ${day} est déjà un jour sans sport.`,
   leftOut: (title, day) => `Ignoré : ${title} vers ${day}, un jour sans sport`,
   nextChip: (title, from, to) => `Ensuite : ${title} ${from} → ${to}`,
+  restDayChip: (day) => `Faire du ${day} un jour sans sport`,
+  fixChip: "Corriger les problèmes de ma semaine",
   fixReasons: {
     "rest-day": (day) => `jour sans sport le ${day}`,
     clash: (day) => `deux séances le ${day}`,

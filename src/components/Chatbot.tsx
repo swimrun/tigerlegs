@@ -168,7 +168,7 @@ function ChatPanel({ chat, t, id, placeholder }: { chat: ChatAgent; t: ChatStrin
       </div>
       <form className="mt-3 flex gap-2" onSubmit={(e) => { e.preventDefault(); ask(input); }}>
         <label htmlFor={`${id}-input`} className="sr-only">{t.yourQuestion}</label>
-        <input id={`${id}-input`} value={input} onChange={(e) => setInput(e.target.value)} placeholder={placeholder}
+        <input id={`${id}-input`} autoComplete="off" value={input} onChange={(e) => setInput(e.target.value)} placeholder={placeholder}
           className="min-w-0 flex-1 rounded border border-stone-900 bg-white px-3 py-2 text-sm" />
         <button type="submit" disabled={busy} className="rounded bg-stone-900 px-4 py-2 text-sm font-semibold text-white">{t.ask}</button>
       </form>
@@ -181,13 +181,15 @@ function ChatPanel({ chat, t, id, placeholder }: { chat: ChatAgent; t: ChatStrin
  * conversation restarts when the page language changes, because the FAQ is per language.
  */
 export default function Chatbot(
-  { agent, faqBase = "chat/faq", title, placeholder, defaultOpen = false }: {
+  { agent, faqBase = "chat/faq", title, placeholder, defaultOpen = false, avatarSrc }: {
     /** Answers the questions; defaults to the FAQ agent. The look and feel is the same for every agent. */
     agent?: ChatAgent;
     faqBase?: string;
     title?: string;
     placeholder?: string;
     defaultOpen?: boolean;
+    /** A small picture of the bot beside its name; decorative, the name is the text. */
+    avatarSrc?: string;
   },
 ) {
   const lang = usePageLang();
@@ -208,8 +210,9 @@ export default function Chatbot(
       <h2 id="chat-title" className="text-base font-bold">
         <button type="button" aria-expanded={open} aria-controls="chat-panel" className="flex w-full items-center justify-between gap-2 text-left"
           onClick={() => { setOpen(!open); setEverOpened(true); }}>
-          <span>
-            {title ?? pageChat?.title ?? t.title} <span className="text-xs font-normal uppercase tracking-wide text-stone-600">({t.prototype})</span>
+          <span className="flex items-center gap-2">
+            {avatarSrc && <img src={avatarSrc} alt="" width="48" height="48" className="h-12 w-12 shrink-0 rounded-full border-2 border-stone-900 object-cover" />}
+            <span>{title ?? pageChat?.title ?? t.title} <span className="text-xs font-normal uppercase tracking-wide text-stone-600">({t.prototype})</span></span>
           </span>
           <span aria-hidden="true">{open ? "▾" : "▸"}</span>
         </button>

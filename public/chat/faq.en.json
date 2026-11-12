@@ -40,8 +40,8 @@
     },
     {
       "id": "privacy",
-      "question": "Is my GPX file uploaded?",
-      "answer": "No. The analysis runs in your browser. Terrain data from OpenStreetMap is opt-in, and then only a coarse bounding box is sent, never your trackpoints. See the About page for details."
+      "question": "Is my GPX file uploaded to a server?",
+      "answer": "No. You choose the file in your browser, and the analysis runs there; the file stays on your device and nothing is sent to a TigerLegs server. Terrain data from OpenStreetMap is opt-in, and then only a coarse bounding box and your IP address go to OpenStreetMap's Overpass service, never your trackpoints. See the About page for details."
     }
   ]
 }

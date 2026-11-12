@@ -81,7 +81,7 @@ test("React import, paired table, keyboard selection and presentation controls p
   await page.locator("#gpx-input").setInputFiles(resolve("test-data/rhederlaag-swimrun.gpx"));
   await expect(page.locator("#analysis-status")).toContainText("Analysed", { timeout: 15000 });
   await page.locator("#keep-local").click();
-  await expect(page.locator("#totals-row")).toContainText("1050");
+  await expect(page.locator("#totals-row")).toContainText("3900");
   const buttons = page.locator(".segment-select");
   await buttons.first().focus();
   await page.keyboard.press("Enter");
@@ -142,7 +142,7 @@ test("terrain requires opt-in and failure retains local analysis", async ({ page
   await expect(page.locator("#terrain-warning")).toContainText("coarse bounding box");
   await expect(page.locator("#message")).toContainText("Terrain data unavailable", { timeout: 15000 });
   expect(requests).toBeGreaterThan(0);
-  await expect(page.locator("#totals-row")).toContainText("1050");
+  await expect(page.locator("#totals-row")).toContainText("3900");
   await page.locator("#terrain-off").click();
   await expect(page.locator("#terrain-warning")).toHaveCount(0);
 });
@@ -174,9 +174,10 @@ test("chatbot loads the FAQ, shows a typing indicator and answers", async ({ pag
   await page.goto("./");
   await page.locator("#chat-title").scrollIntoViewIfNeeded();
   await expect(page.getByRole("button", { name: label })).toHaveCount(0);
-  await page.getByRole("button", { name: /Ask the tiger/ }).click();
+  await expect(page.locator("#chat-title img"), "the chat header shows the RoARR avatar").toBeVisible();
+  await page.getByRole("button", { name: /Ask RoARR/ }).click();
   await page.getByRole("button", { name: label }).click();
-  const chat = page.getByRole("region", { name: /Ask the tiger/ });
+  const chat = page.getByRole("region", { name: /Ask RoARR/ });
   await expect(chat.getByRole("status")).toContainText("typing");
   await expect(page.getByRole("log")).toContainText("Tigers are among the few big cats");
   await expect(chat.getByRole("status")).toHaveCount(0);
@@ -195,14 +196,14 @@ test("chatbot follows the page language", async ({ page }) => {
   await page.goto("./");
   await page.locator("#chat-title").scrollIntoViewIfNeeded();
   await page.locator("#language-switch").selectOption("nl");
-  await page.getByRole("button", { name: /Vraag het de tijger/ }).click();
+  await page.getByRole("button", { name: /Vraag het RoARR/ }).click();
   await expect(page.getByRole("list", { name: "Voorgestelde vragen" })).toBeVisible();
 });
 
 test("the chat keeps its conversation across pages and takes the agent of the page", async ({ page }) => {
   await page.goto("./");
   await page.evaluate(() => (globalThis as { __noReload?: boolean }).__noReload = true);
-  await page.getByRole("button", { name: /Ask the tiger/ }).click();
+  await page.getByRole("button", { name: /Ask RoARR/ }).click();
   await page.getByRole("button", { name: "But can tigers actually swim?" }).click();
   await expect(page.getByRole("log")).toContainText("Tigers are among the few big cats");
 
@@ -212,16 +213,16 @@ test("the chat keeps its conversation across pages and takes the agent of the pa
   // Same document (no full reload), same conversation, but now the training agent.
   expect(await page.evaluate(() => (globalThis as { __noReload?: boolean }).__noReload)).toBe(true);
   await expect(page.getByRole("log")).toContainText("Tigers are among the few big cats");
-  await expect(page.getByRole("button", { name: /Rearrange with the tiger/ })).toBeVisible();
+  await expect(page.getByRole("button", { name: /Rearrange with RoARR/ })).toBeVisible();
   await expect(page.getByPlaceholder(/travelling/)).toBeVisible();
 
   await page.getByRole("navigation", { name: "Main menu" }).getByRole("link", { name: "About" }).click();
   await expect(page).toHaveURL(/about\.html$/);
-  await expect(page.getByRole("button", { name: /Ask the tiger/ })).toBeVisible();
+  await expect(page.getByRole("button", { name: /Ask RoARR/ })).toBeVisible();
   await expect(page.getByRole("log")).toContainText("Tigers are among the few big cats");
   // The language survives the swap and the language switch is still bound in the new header.
   await page.locator("#language-switch").selectOption("nl");
-  await expect(page.getByRole("button", { name: /Vraag het de tijger/ })).toBeVisible();
+  await expect(page.getByRole("button", { name: /Vraag het RoARR/ })).toBeVisible();
 });
 
 test("About translations and mobile layout survive the shared shell", async ({ page }) => {
