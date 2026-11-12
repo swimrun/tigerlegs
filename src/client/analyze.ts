@@ -6,7 +6,10 @@ import type {
   StrategyResult,
   Trackpoint,
 } from "../shared/types.ts";
-import { calculateTrackDistance } from "../shared/distance-calculator.ts";
+import { calculateSmoothedDistance, calculateTrackDistance } from "../shared/distance-calculator.ts";
+
+/** Swim distance is measured over positions smoothed over up to 41 points (see calculateSmoothedDistance, issue #98). */
+export const SWIM_SMOOTHING_HALF_WINDOW = 20;
 import { detectBySpeed } from "./speed-analyzer.ts";
 import { detectByWaypoint } from "./waypoint-classifier.ts";
 import {
@@ -106,9 +109,9 @@ export function analyzeGpx(
         : seg.endTrackpointIndex + 1;
       return {
         ...seg,
-        distanceKm: calculateTrackDistance(
-          trackpoints.slice(seg.startTrackpointIndex, end),
-        ),
+        distanceKm: seg.type === "swim"
+          ? calculateSmoothedDistance(trackpoints.slice(seg.startTrackpointIndex, end), SWIM_SMOOTHING_HALF_WINDOW)
+          : calculateTrackDistance(trackpoints.slice(seg.startTrackpointIndex, end)),
       };
     },
   );

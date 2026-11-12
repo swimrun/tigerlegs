@@ -81,7 +81,7 @@ test("React import, paired table, keyboard selection and presentation controls p
   await page.locator("#gpx-input").setInputFiles(resolve("test-data/rhederlaag-swimrun.gpx"));
   await expect(page.locator("#analysis-status")).toContainText("Analysed", { timeout: 15000 });
   await page.locator("#keep-local").click();
-  await expect(page.locator("#totals-row")).toContainText("3900");
+  await expect(page.locator("#totals-row")).toContainText("2450");
   const buttons = page.locator(".segment-select");
   await buttons.first().focus();
   await page.keyboard.press("Enter");
@@ -142,7 +142,7 @@ test("terrain requires opt-in and failure retains local analysis", async ({ page
   await expect(page.locator("#terrain-warning")).toContainText("coarse bounding box");
   await expect(page.locator("#message")).toContainText("Terrain data unavailable", { timeout: 15000 });
   expect(requests).toBeGreaterThan(0);
-  await expect(page.locator("#totals-row")).toContainText("3900");
+  await expect(page.locator("#totals-row")).toContainText("2450");
   await page.locator("#terrain-off").click();
   await expect(page.locator("#terrain-warning")).toHaveCount(0);
 });
