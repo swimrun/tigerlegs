@@ -102,13 +102,13 @@ The near-term roadmap is in the README; milestones and the watch-platform strate
 An athlete interacts with the system in four ways.
 Each way below is a user story with one acceptance criterion in Given/When/Then form.
 
-1. **Upload a GPX file.** As an athlete, I upload a GPX file so that I see the swim and run segments on a map.
+1. **Upload a GPX file.** As an athlete, I want to upload a GPX file so that I see the swim and run segments on a map.
    - Given I opened the page, when I choose a GPX file, then the map shows the track with swim and run segments in different colours.
-2. **See distances.** As an athlete, I see the distance per segment and the totals so that I can prepare my race.
+2. **See distances.** As an athlete, I want to see the distance per segment and the totals so that I can prepare my race.
    - Given a GPX file with two swims and two runs, when the analysis finishes, then the table shows four distances and a swim and run total.
-3. **Link map and table.** As an athlete, I select a map line or a distance in the table so that both views highlight the same segment.
+3. **Link map and table.** As an athlete, I want to select a map line or a distance in the table so that both views highlight the same segment.
    - Given a segment is shown on the map and in the table, when I click its distance or select its button with Enter or Space, then its map line and table row are highlighted; selecting it again deselects it.
-4. **Read a compact table.** As an athlete, I see one row per run and swim pair so that I can write the numbers on a paddle ([ADR-0007](./adr/0007-compact-segment-table-format.md)).
+4. **Read a compact table.** As an athlete, I want to see one row per run and swim pair so that I can write the numbers on a paddle ([ADR-0007](./adr/0007-compact-segment-table-format.md)).
    - Given a course that starts with a run, when the table is shown run-first, then each row shows a run distance and the swim that follows it.
 
 The table defaults to run-first; **Show swim first** (against the default **Show run first**) changes both the pairing and column order.
