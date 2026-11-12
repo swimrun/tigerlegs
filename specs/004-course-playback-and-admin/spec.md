@@ -3,7 +3,7 @@
 **Feature Branch**: `004-course-playback-and-admin`
 **Created**: 2026-11-12
 **Status**: Draft
-**Input**: The owner's request of 12 November 2026 (playback of a GPX file, an admin view to name segments, an idealized track with variants); issue #107 (named legs of official courses), issue #80 (variants of a course and the TODOs for missing GPX files), issue #94 (speed chart, pins on the map), issue #98 (the first swim of the race day recording found as a run), the Course aggregate in the software guidebook (section 6.6), [ADR-0013](../../docs/adr/0013-back-end-is-optional.md) (the back end is optional) and issue #90 (research into a login service). Tracked in issue #108.
+**Input**: The owner's request of 12 November 2026 (playback of a GPX file, an admin view to name segments, an idealized track with variants); issue #107 (named legs of official courses), issue #80 (variants of a course and the TODOs for missing GPX files), issue #94 (speed chart, pins on the map), issue #109 (edit the track, outlier points), issue #98 (the first swim of the race day recording found as a run), the Course aggregate in the software guidebook (section 6.6), [ADR-0013](../../docs/adr/0013-back-end-is-optional.md) (the back end is optional) and issue #90 (research into a login service). Tracked in issue #108.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -60,6 +60,16 @@ The athlete stays in charge of their own file: a recording is analysed in the br
 17. **Given** a recording that misses a part of the course, **When** it is matched, **Then** the missing legs are shown as missing, and the page suggests the variant that fits (for example *Lintjes opruimen*).
 
 18. **Given** a segment that does not fit any leg, or a leg whose found distance is outside the tolerance, **When** the recording is matched, **Then** it is shown as a deviation, so that the owner or the athlete can see where the analysis and the course disagree.
+
+#### Cleaning and cutting the track (issue #109)
+
+23. **Given** a recording, **When** it is analysed, **Then** every trackpoint that implies a speed above the plausible limit (20 km/h by default) is flagged on the map and in a list, and playback and the analysis do not use it until the owner or the athlete keeps it.
+
+24. **Given** a flagged or a selected point, **When** the owner removes it, **Then** the removal is stored as a track edit next to the recording, the totals update and the marker no longer jumps or glides at a speed that was never reached.
+
+25. **Given** a transition point between a swim and a run, **When** the owner drags it along the track, **Then** the two legs change and the edit is stored; the speed limit between swimming and running (5 km/h by default, 3 to 10 km/h) is a separate setting.
+
+26. **Given** a mountain course or a fast athlete, **When** the owner changes the plausible speed limit of the course, **Then** the flags are recalculated for every recording on it.
 
 #### Saving, versions and who may edit
 
