@@ -41,12 +41,7 @@ const PATH_TYPES = new Set(["path", "track", "footway", "bridleway", "cycleway"]
 // --- Overpass API configuration ---
 
 function getOverpassApiUrl(): string {
-  // Deno env access may not be available in all contexts
-  try {
-    return Deno.env.get("OVERPASS_API_URL") ?? "https://overpass-api.de/api/interpreter";
-  } catch {
-    return "https://overpass-api.de/api/interpreter";
-  }
+  return process.env.OVERPASS_API_URL ?? "https://overpass-api.de/api/interpreter";
 }
 
 // --- Point-in-polygon (ray casting algorithm) ---
@@ -254,7 +249,7 @@ export async function fetchTrackCorridor(
     );
   }
 
-  const data: OverpassResponse = await response.json();
+  const data = await response.json() as OverpassResponse;
   return parseOverpassResponse(data);
 }
 

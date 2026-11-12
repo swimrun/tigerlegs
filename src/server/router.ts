@@ -1,3 +1,4 @@
+import { readFile, stat } from "node:fs/promises";
 import type { CacheStore } from "./cache.ts";
 import type { Coordinate } from "../shared/types.ts";
 import { lookupTerrain } from "./terrain-proxy-service.ts";
@@ -91,12 +92,12 @@ async function serveStaticFile(
   filePath: string,
 ): Promise<Response | null> {
   try {
-    const stat = await Deno.stat(filePath);
-    if (!stat.isFile) return null;
+    const info = await stat(filePath);
+    if (!info.isFile()) return null;
 
-    const content = await Deno.readFile(filePath);
+    const content = await readFile(filePath);
     const contentType = getContentType(filePath);
-    return new Response(content, {
+    return new Response(new Uint8Array(content), {
       status: 200,
       headers: { "Content-Type": contentType },
     });
@@ -172,7 +173,7 @@ async function handleTerrainBatch(
 ): Promise<Response> {
   let body: { coordinates?: unknown };
   try {
-    body = await request.json();
+    body = await request.json() as { coordinates?: unknown };
   } catch {
     return errorResponse(
       "Invalid JSON body",

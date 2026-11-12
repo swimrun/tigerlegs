@@ -41,12 +41,13 @@ it("Rhederlaag: segments cover the whole track without gaps", () => {
 });
 
 // Regression snapshot of the current algorithm. The real course has about 12 swims
-// and 12 runs (to be confirmed); tighten these numbers when the algorithm gets there.
+// and 12 runs (to be confirmed). Since the speed is taken as the net displacement over 10 s and not as the mean of
+// one-second steps (issue #98), the speed strategy alone finds 12 and 12; it found 8 and 8 before.
 it("Rhederlaag: swim and run counts and totals (current baseline)", () => {
   const a = analyse();
   const count = (t: string) => a.segments.filter((s) => s.type === t).length;
-  expect(count("swim")).toEqual(8);
-  expect(count("run")).toEqual(8);
-  expect(a.totals.totalRunKm).toEqual("9.0");
-  expect(a.totals.totalSwimM).toEqual("1050");
+  expect(count("swim")).toEqual(12);
+  expect(count("run")).toEqual(12);
+  expect(a.totals.totalRunKm).toEqual("6.2");
+  expect(a.totals.totalSwimM).toEqual("3900");
 });

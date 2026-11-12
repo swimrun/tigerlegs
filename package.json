@@ -10,10 +10,14 @@
     "test": "vitest run --config vitest.unit.config.ts",
     "check:shared": "tsc -p tsconfig.shared.json",
     "audit:prod": "npm audit --omit=dev",
-    "test:site": "playwright test",
+    "test:site": "playwright test --project=site",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build -o storybook-static",
-    "test:a11y": "vitest run --project storybook"
+    "test:a11y": "vitest run --project storybook",
+    "server": "node src/server/server.ts",
+    "test:server": "vitest run --config vitest.server.config.ts",
+    "check:server": "tsc -p tsconfig.server.json",
+    "test:features": "bddgen && playwright test --project=features"
   },
   "dependencies": {
     "@ag-ui/core": "^1.0.4",
@@ -39,6 +43,7 @@
     "@types/react-dom": "^19.2.0",
     "@vitest/browser-playwright": "^5.0.5",
     "fast-check": "^3.22.0",
+    "playwright-bdd": "^9.2.1",
     "storybook": "^10.6.5",
     "tailwindcss": "^4.3.3",
     "typescript": "^5.9.3",

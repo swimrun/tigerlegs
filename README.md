@@ -40,7 +40,7 @@ TIGERLegs stands for *Terrain-Informed Gpx Extractor: LEts Go Swimrun!* (TIGE-R 
 4. Open <http://localhost:8123/tigerlegs/> in your browser.
 5. Upload a GPX file, for example one from the `test-data/` folder.
 
-This serves the frontend only; GPX analysis stays in the browser. The optional Deno API is separate and is not required by the site.
+This serves the frontend only; GPX analysis stays in the browser. The optional Node.js API (`npm run server`, tested with `npm run test:server`) is separate and is not required by the site.
 
 ## 2. Build and test
 
@@ -53,6 +53,7 @@ This serves the frontend only; GPX analysis stays in the browser. The optional D
 | `npm run check:shared`            | Check the shared modules are portable |
 | `npx playwright install chromium` | Install the test browser (once)       |
 | `npm run test:site`               | Test the built site in the browser    |
+| `npm run test:features`           | Run the Gherkin acceptance criteria   |
 | `npm run test:a11y`               | Test the components for accessibility |
 | `deno task lint`                  | Lint the code                         |
 | `deno task fmt`                   | Format the code                       |

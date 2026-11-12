@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { test, expect, type Page } from "@playwright/test";
 import { readFile, readdir } from "node:fs/promises";
 import { resolve } from "node:path";
 
@@ -8,6 +8,17 @@ test.beforeEach(async ({ page }) => {
     return route.abort();
   });
 });
+
+/** Terrain data is asked for in a dialog, when it matters; this answers yes after the analysis. */
+async function enableTerrain(page: Page) {
+  await page.locator("#terrain-ask").click();
+  await page.locator("#use-terrain").click();
+}
+
+/** The sample menu is a closed details element, so that the upload leads the page. */
+async function openSamples(page: Page) {
+  await page.locator("[data-sample-menu] summary").click();
+}
 
 test("static pages and every ADR have shared navigation, direct links and reloads", async ({ page, request }) => {
   const names = (await readdir("docs/adr")).filter(name => name.endsWith(".md"));
@@ -69,7 +80,8 @@ test("React import, paired table, keyboard selection and presentation controls p
   await page.goto("./");
   await page.locator("#gpx-input").setInputFiles(resolve("test-data/rhederlaag-swimrun.gpx"));
   await expect(page.locator("#analysis-status")).toContainText("Analysed", { timeout: 15000 });
-  await expect(page.locator("#totals-row")).toContainText("1050");
+  await page.locator("#keep-local").click();
+  await expect(page.locator("#totals-row")).toContainText("3900");
   const buttons = page.locator(".segment-select");
   await buttons.first().focus();
   await page.keyboard.press("Enter");
@@ -80,12 +92,13 @@ test("React import, paired table, keyboard selection and presentation controls p
   await buttons.first().click();
   await buttons.first().click();
   await expect(page.locator('[aria-pressed="true"]')).toHaveCount(0);
-  await page.locator("#show-cumulative").check();
+  await page.locator("#show-cumulative").check({ force: true });
   await expect(page.locator(".leaflet-control-layers")).toHaveCount(1);
-  await expect(page.locator("thead")).toContainText("Cumulative (km)");
+  await expect(page.locator("thead")).toContainText("Total so far (km)");
   await page.locator("#swim-first").check();
   expect(await page.locator("thead th").nth(1).textContent()).toBe("Swim (m)");
   expect(await page.locator("tbody td").evaluateAll(cells => cells.every(cell => !!cell.textContent?.trim()))).toBe(true);
+  await page.locator("summary", { hasText: "Local strategies" }).click();
   await page.locator("#use-waypoints").uncheck();
   await page.locator("#use-speed").click();
   await expect(page.locator("#use-speed")).toBeChecked();
@@ -100,6 +113,7 @@ test("multi-track choice, large-point confirmation and Worker analysis", async (
   await expect(page.locator("#analysis-status")).toContainText("Choose a track");
   await page.locator("#track-select").selectOption("1");
   await expect(page.locator("#analysis-status")).toContainText("Analysed");
+  await openSamples(page);
   await page.locator('[data-sample="ruegen-swimrun.gpx"]').click();
   await expect(page.locator("#analysis-status")).toContainText("background worker", { timeout: 15000 });
   await expect(page.locator("#analysis-status")).toContainText("Analysed");
@@ -120,15 +134,16 @@ test("terrain requires opt-in and failure retains local analysis", async ({ page
   });
 
   await page.goto("./");
+  await openSamples(page);
   await page.locator('[data-sample="rhederlaag-swimrun.gpx"]').click();
   await expect(page.locator("#analysis-status")).toContainText("Analysed");
   expect(requests).toBe(0);
-  await page.locator("#use-terrain").check();
+  await enableTerrain(page);
   await expect(page.locator("#terrain-warning")).toContainText("coarse bounding box");
   await expect(page.locator("#message")).toContainText("Terrain data unavailable", { timeout: 15000 });
   expect(requests).toBeGreaterThan(0);
-  await expect(page.locator("#totals-row")).toContainText("1050");
-  await page.locator("#use-terrain").uncheck();
+  await expect(page.locator("#totals-row")).toContainText("3900");
+  await page.locator("#terrain-off").click();
   await expect(page.locator("#terrain-warning")).toHaveCount(0);
 });
 
@@ -145,9 +160,10 @@ test("drop uses the same track chooser and mapped terrain refines local results"
   await expect(page.locator("#analysis-status")).toContainText("Choose a track");
   const water = await readFile("test/fixtures/rhederlaag-overpass.json", "utf8");
   await page.route("**/api/interpreter", route => route.fulfill({ contentType: "application/json", body: water }));
+  await openSamples(page);
   await page.locator('[data-sample="rhederlaag-swimrun.gpx"]').click();
   await expect(page.locator("#analysis-status")).toContainText("Analysed");
-  await page.locator("#use-terrain").check();
+  await enableTerrain(page);
   await expect(page.locator("#totals")).toContainText("landscape");
   await expect(page.locator("#message")).toBeEmpty();
   await expect(page.locator(".leaflet-control-layers")).toHaveCount(1);
@@ -158,13 +174,15 @@ test("chatbot loads the FAQ, shows a typing indicator and answers", async ({ pag
   await page.goto("./");
   await page.locator("#chat-title").scrollIntoViewIfNeeded();
   await expect(page.getByRole("button", { name: label })).toHaveCount(0);
-  await page.getByRole("button", { name: /Ask the tiger/ }).click();
+  await expect(page.locator("#chat-title img"), "the chat header shows the RoARR avatar").toBeVisible();
+  await page.getByRole("button", { name: /Ask RoARR/ }).click();
   await page.getByRole("button", { name: label }).click();
-  const chat = page.getByRole("region", { name: /Ask the tiger/ });
+  const chat = page.getByRole("region", { name: /Ask RoARR/ });
   await expect(chat.getByRole("status")).toContainText("typing");
   await expect(page.getByRole("log")).toContainText("Tigers are among the few big cats");
   await expect(chat.getByRole("status")).toHaveCount(0);
-  await expect(chat.getByRole("button", { name: label })).toBeVisible();
+  await expect(chat.getByRole("button", { name: label }), "a chosen question disappears at once").toHaveCount(0);
+  await expect(chat.getByRole("button", { name: "Tell me more" })).toBeVisible();
   await chat.getByRole("button", { name: "Tell me more" }).click();
   await expect(page.getByRole("log")).toContainText("They cool off in it");
   await expect(chat.getByRole("button", { name: label })).toHaveCount(0);
@@ -178,14 +196,14 @@ test("chatbot follows the page language", async ({ page }) => {
   await page.goto("./");
   await page.locator("#chat-title").scrollIntoViewIfNeeded();
   await page.locator("#language-switch").selectOption("nl");
-  await page.getByRole("button", { name: /Vraag het de tijger/ }).click();
+  await page.getByRole("button", { name: /Vraag het RoARR/ }).click();
   await expect(page.getByRole("list", { name: "Voorgestelde vragen" })).toBeVisible();
 });
 
 test("the chat keeps its conversation across pages and takes the agent of the page", async ({ page }) => {
   await page.goto("./");
   await page.evaluate(() => (globalThis as { __noReload?: boolean }).__noReload = true);
-  await page.getByRole("button", { name: /Ask the tiger/ }).click();
+  await page.getByRole("button", { name: /Ask RoARR/ }).click();
   await page.getByRole("button", { name: "But can tigers actually swim?" }).click();
   await expect(page.getByRole("log")).toContainText("Tigers are among the few big cats");
 
@@ -195,16 +213,16 @@ test("the chat keeps its conversation across pages and takes the agent of the pa
   // Same document (no full reload), same conversation, but now the training agent.
   expect(await page.evaluate(() => (globalThis as { __noReload?: boolean }).__noReload)).toBe(true);
   await expect(page.getByRole("log")).toContainText("Tigers are among the few big cats");
-  await expect(page.getByRole("button", { name: /Rearrange with the tiger/ })).toBeVisible();
+  await expect(page.getByRole("button", { name: /Rearrange with RoARR/ })).toBeVisible();
   await expect(page.getByPlaceholder(/travelling/)).toBeVisible();
 
   await page.getByRole("navigation", { name: "Main menu" }).getByRole("link", { name: "About" }).click();
   await expect(page).toHaveURL(/about\.html$/);
-  await expect(page.getByRole("button", { name: /Ask the tiger/ })).toBeVisible();
+  await expect(page.getByRole("button", { name: /Ask RoARR/ })).toBeVisible();
   await expect(page.getByRole("log")).toContainText("Tigers are among the few big cats");
   // The language survives the swap and the language switch is still bound in the new header.
   await page.locator("#language-switch").selectOption("nl");
-  await expect(page.getByRole("button", { name: /Vraag het de tijger/ })).toBeVisible();
+  await expect(page.getByRole("button", { name: /Vraag het RoARR/ })).toBeVisible();
 });
 
 test("About translations and mobile layout survive the shared shell", async ({ page }) => {
@@ -218,19 +236,29 @@ test("About translations and mobile layout survive the shared shell", async ({ p
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
 });
 
-test("the extractor lists the variants of a course with a description and loads one that has a GPX file", async ({ page }) => {
+test("the extractor offers the variants of a course in a dropdown with a description and loads one that has a GPX file", async ({ page }) => {
   await page.goto("./");
+  await expect(page.locator("[data-sample-menu]")).not.toHaveAttribute("open", "");
+  await openSamples(page);
   const rondje = page.locator('[data-course="rondje-eilanden"]');
-  await expect(rondje.locator("[data-variant]")).toHaveCount(3);
-  await expect(rondje.locator('[data-variant="race-day"]')).toContainText("Main variant");
-  await expect(rondje.locator('[data-variant="lintjes-opruimen"]')).toContainText("island 3 to 5");
-  await expect(rondje.locator('[data-variant="race-day"]')).toContainText("swim A of about 400 m");
-  await expect(rondje.locator('[data-variant="training"]')).toContainText("GPX to be added");
+  await expect(rondje.locator("option")).toHaveCount(3);
+  await expect(rondje.locator("[data-variant-description]")).toContainText("Main variant");
+  await expect(rondje.locator("[data-variant-description]")).toContainText("swim A of about 400 m");
+  await rondje.locator("select").selectOption("lintjes-opruimen");
+  await expect(rondje.locator("[data-variant-description]")).toContainText("island 3 to 5");
+  await rondje.locator("select").selectOption("training");
+  await expect(rondje.locator("[data-variant-description]")).toContainText("GPX to be added");
+  await expect(rondje.getByRole("button", { name: "Load" })).toBeDisabled();
   const rhederlaag = page.locator('[data-course="rhederlaag"]');
-  await expect(rhederlaag.locator("[data-variant]")).toHaveCount(4);
-  await expect(rhederlaag.locator('[data-variant="bird-breeding-season"]')).toContainText("April to June");
-  await rondje.locator('[data-sample="rondje-eilanden.gpx"]').click();
+  await expect(rhederlaag.locator("option")).toHaveCount(4);
+  await rhederlaag.locator("select").selectOption("bird-breeding-season");
+  await expect(rhederlaag.locator("[data-variant-description]")).toContainText("April to June");
+  await rondje.locator("select").selectOption("race-day");
+  await rondje.getByRole("button", { name: "Load" }).click();
   await expect(page.locator("#analysis-status")).toContainText("Analysed");
-  await rondje.locator('[data-sample="rondje-eilanden-lintjes-opruimen.gpx"]').click();
+  await rondje.locator("select").selectOption("lintjes-opruimen");
+  await expect(page.locator("#analysis-status")).toContainText("Analysed");
+  await rondje.getByRole("button", { name: "Load" }).click();
   await expect(page.locator("#analysis-status")).toContainText("Analysed");
 });
+
