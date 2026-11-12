@@ -80,3 +80,41 @@ Then("the terrain question is closed", async ({ page }) => {
 Then("no request went to the terrain service", async () => {
   expect(terrainRequests.count).toBe(0);
 });
+
+// The legs bar (issue #94).
+Given("I have loaded the sample of the course {string}", async ({ page }, course: string) => {
+  await page.locator(`[data-course="${course}"]`).getByRole("button", { name: "Load" }).click();
+  await expect(page.locator("#analysis-status")).toContainText("Analysed", { timeout: 15000 });
+});
+
+Then("the legs bar shows swim legs and run legs", async ({ page }) => {
+  await expect(page.locator('[data-legs-bar] [data-leg-type="swim"]').first()).toBeVisible();
+  await expect(page.locator('[data-legs-bar] [data-leg-type="run"]').first()).toBeVisible();
+});
+
+When("I hover the first swim leg", async ({ page }) => {
+  await page.locator('[data-legs-bar] [data-leg-type="swim"]').first().hover();
+});
+
+When("I focus the first run leg with the keyboard", async ({ page }) => {
+  await page.locator('[data-legs-bar] [data-leg-type="run"]').first().focus();
+});
+
+When("I press Enter on the focused leg", async ({ page }) => {
+  await page.keyboard.press("Enter");
+});
+
+Then("the leg panel shows {string} and a distance", async ({ page }, type: string) => {
+  await expect(page.locator("[data-leg-panel]")).toContainText(type);
+  await expect(page.locator("[data-leg-panel]")).toContainText(/\d+ ?(m|km)/);
+});
+
+Then("that leg is selected", async ({ page }) => {
+  await expect(page.locator('[data-legs-bar] [aria-pressed="true"]')).toHaveCount(1);
+});
+
+Then("every leg has a label with its type, number and distance", async ({ page }) => {
+  const labels = await page.locator("[data-legs-bar] [data-leg]").evaluateAll((buttons) => buttons.map((b) => b.getAttribute("aria-label")));
+  expect(labels.length).toBeGreaterThan(5);
+  for (const label of labels) expect(label).toMatch(/^(swim|run|break), leg \d+, [\d.]+ (m|km)/);
+});

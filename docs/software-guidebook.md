@@ -147,6 +147,8 @@ Behind these stories, the system detects segments with three strategies, which T
 | Speed     | Speed drops when swimming            | Timestamps on trackpoints |
 | Landscape | Water or land at sampled coordinates | The terrain API           |
 
+Under the map a **legs bar** shows the legs in order, as wide as their share of the distance, blue for a swim and green for a run (the colours of the table). Hovering or focusing a leg shows a panel with its type, number, distance and, when the file has timestamps, its duration; choosing a leg selects the segment, as in the table. Every leg is a button with a label such as "swim, leg 3, 1.30 km, 32 min 29 s", so the keyboard and a screen reader reach it (issue #94; the model is `barLegs` in `src/client/legs-bar.ts`).
+
 The waypoint strategy is the most precise when the organiser marked the swim starts and ends.
 The speed strategy works for any recorded activity, but speed is only indirect evidence.
 The landscape strategy needs no extra data in the file, but it depends on OpenStreetMap and on how dense the trackpoints are.

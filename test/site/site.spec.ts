@@ -85,13 +85,13 @@ test("React import, paired table, keyboard selection and presentation controls p
   const buttons = page.locator(".segment-select");
   await buttons.first().focus();
   await page.keyboard.press("Enter");
-  await expect(page.locator('[aria-pressed="true"]')).toHaveCount(1);
+  await expect(page.locator('.segment-select[aria-pressed="true"]')).toHaveCount(1);
   await expect(page.locator('.leaflet-overlay-pane path[stroke-width="8"]')).toHaveCount(1);
   await page.keyboard.press("Escape");
-  await expect(page.locator('[aria-pressed="true"]')).toHaveCount(0);
+  await expect(page.locator('.segment-select[aria-pressed="true"]')).toHaveCount(0);
   await buttons.first().click();
   await buttons.first().click();
-  await expect(page.locator('[aria-pressed="true"]')).toHaveCount(0);
+  await expect(page.locator('.segment-select[aria-pressed="true"]')).toHaveCount(0);
   await page.locator("#show-cumulative").check({ force: true });
   await expect(page.locator(".leaflet-control-layers")).toHaveCount(1);
   await expect(page.locator("thead")).toContainText("Total so far (km)");
