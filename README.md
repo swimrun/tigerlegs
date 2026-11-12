@@ -22,7 +22,12 @@ TIGERLegs stands for *Terrain-Informed Gpx Extractor: LEts Go Swimrun!* (TIGE-R 
 
 ## 1. Getting started
 
-1. Install Node.js and Deno. Deno has an [installation guide](https://docs.deno.com/runtime/getting_started/installation/); Node.js can come from your package manager or a version manager that reads `.nvmrc`.
+TODO: Install Vite...
+```bash
+curl -fsSL https://main.viteplus.dev/install.sh | bash
+```
+
+1. Install [Node.js](https://nodejs.org/en/download). Node.js can come from your package manager or a version manager that reads `.nvmrc`.
 2. Clone the repository and open its folder:
 
    ```sh
