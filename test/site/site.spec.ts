@@ -22,9 +22,9 @@ async function openSamples(page: Page) {
 
 test("static pages and every ADR have shared navigation, direct links and reloads", async ({ page, request }) => {
   const names = (await readdir("docs/adr")).filter(name => name.endsWith(".md"));
-  for (const path of ["", "training.html", "about.html", "guidebook.html", ...names.map(name => `adr/${name.slice(0, -3)}.html`)]) {
+  for (const path of ["", "training.html", "pricing.html", "about.html", "guidebook.html", ...names.map(name => `adr/${name.slice(0, -3)}.html`)]) {
     await page.goto(path || "./");
-    await expect(page.locator("#main-menu a")).toHaveText(["Extractorrr", "Training", "About", "Guidebook"]);
+    await expect(page.locator("#main-menu a")).toHaveText(["Extractorrr", "Training", "Pricing", "About", "Guidebook"]);
     await expect(page.locator("#main-menu [aria-current=page]")).toHaveCount(1);
     await page.reload();
     await expect(page.locator("main")).toBeVisible();
