@@ -101,14 +101,20 @@ The athlete stays in charge of their own file: a recording is analysed in the br
 - **FR-012**: The leg names MUST show next to the numbers in the segment table and on the map, in the table that is copied for a paddle or wristband (ADR-0007).
 - **FR-013**: The admin view MUST be limited to owners when accounts exist (issue #90); until then, editing is a local draft that is exported as a course pack.
 
-### Non-Functional Requirements
+### Quality Attributes
 
-- **NFR-001**: Privacy: a course pack holds no personal data, no timestamps of an athlete and no heart rate; a recording stays in the browser and the matching runs there (guidebook, section 5).
-- **NFR-002**: The matching and the leg rules are pure functions in the shared domain (`src/shared/domain`), load under Node without a build step (the portability rule), and are tested with the official legs as the oracle (for example Het Rondje Eilanden, 11 swims and 11 runs).
-- **NFR-003**: Playback and the admin view are usable with the keyboard and a screen reader: every control has a text label, colour is never the only signal, leg changes are announced politely, and `prefers-reduced-motion` is respected.
-- **NFR-004**: A recording of 20,000 points plays at a steady 30 frames per second on a laptop, and does not block the page; the matching runs in the Web Worker (guidebook, section 7.1) for files above the existing threshold.
-- **NFR-005**: Matching is deterministic: the same recording and the same variant always give the same result.
-- **NFR-006**: Texts are data in external files in four languages (ADR-0017); leg names are data of the course and are not translated.
+Qualities are written as quality attribute scenarios, each with a measure that a test can check (guidebook, section 5). A quality that the person using the app notices, such as smooth playback, is also a scenario with a measure, and is part of the features above.
+
+| Quality         | Source                                       | Stimulus                                   | Environment                     | Artifact                    | Response                                                                         | Response measure                                                                                                  |
+| --------------- | -------------------------------------------- | ------------------------------------------ | ------------------------------- | --------------------------- | -------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| Privacy         | Swimrunner                                   | Loads a recording and plays it on a course | Normal use, no account          | Browser app                 | Analysis, matching and playback run in the browser                               | No request carries a trackpoint; a course pack holds no athlete data (guidebook, section 5)                       |
+| Portability     | Developer                                    | Runs the matching on a recording           | Node without a build step       | Shared domain modules       | The matching and the leg rules load and give the same result                     | `check:shared` and the portability test pass; the same output as in the browser                                   |
+| Correctness     | Test suite                                   | Matches the Rondje Eilanden recordings     | Official legs as the oracle     | Matching                    | Every leg gets its segment, deviations are reported                              | 11 swims and 11 runs found for race day; the missing legs of *Lintjes opruimen* are named                         |
+| Smooth playback | Swimrunner                                   | Plays a recording of 20,000 points         | Laptop, current Chrome          | Playback                    | The marker and the readouts keep up                                              | At least 30 frames per second; no task on the main thread longer than 50 ms                                       |
+| Responsiveness  | Swimrunner                                   | Matches a recording to a variant           | File above the worker threshold | Matching in the Web Worker  | The page stays usable while it runs                                              | The result within 5 seconds for 20,000 points; the page answers input within 100 ms                               |
+| Determinism     | Test suite                                   | Matches the same recording twice           | Any                             | Matching                    | The same result                                                                  | Identical output, byte for byte                                                                                   |
+| Accessibility   | Swimrunner using a keyboard or screen reader | Uses playback and the admin view           | Any browser                     | Playback, admin view        | Every control can be reached and read; leg changes are announced politely        | Every control has a text label; a leg change is announced once; reduced motion stops animation (axe stories pass) |
+| Localisation    | Swimrunner                                   | Opens the page in Dutch, French or German  | Any                             | Texts of playback and admin | Texts show in that language; leg names are data and stay as the owner wrote them | No inline text (strings test); key parity of the four files                                                       |
 
 ### Key Entities
 
@@ -152,7 +158,7 @@ Each step can be built and used without the next one.
 ## Execution Status
 
 - [x] User scenarios defined
-- [x] Requirements generated (FR-001…FR-013, NFR-001…NFR-006)
+- [x] Requirements generated (FR-001…FR-013 and eight quality attribute scenarios)
 - [x] Entities identified
 - [ ] Plan (technical design, data model, contracts) not started
 - [ ] Tasks not started
