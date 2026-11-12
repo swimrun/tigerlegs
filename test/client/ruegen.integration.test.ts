@@ -63,7 +63,9 @@ it.skip("Rügen, speed only: the long swims of 1.30 km and 1.62 km are each one 
 });
 
 // Ratchet: today's error in metres off the official totals. A change may make a number smaller (better), not larger.
-const RATCHET = { swimErrorM: 3110, runErrorM: 2540, unclassifiedM: 7670 };
+// Before issue #98 it was 3,104 m of swimming too little and 7.7 km unclassified; the unclassified stretches were the
+// long swims, which now join the sure part of the same swim, and swim distance is measured over smoothed positions.
+const RATCHET = { swimErrorM: 200, runErrorM: 2540, unclassifiedM: 10 };
 it("Rügen, speed only: no worse than the pinned error", () => {
   const result = summarize(analyse().segments);
   const swimErrorM = Math.abs(result.swimM - EXPECTED_SWIM_M);
