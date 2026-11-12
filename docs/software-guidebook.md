@@ -297,6 +297,8 @@ This chapter lists the rules that guide design choices when no constraint decide
 - **Scroll-linked effects never hijack scrolling.** Visual effects may follow the scroll position, but the page always scrolls natively and the effect is decoration only (see section 7.1). Content stays readable without it.
 - **Show system status.** Whenever the system is working and the user waits, the interface shows it. This is Nielsen's first usability heuristic, *visibility of system status* (Nielsen, 1994). In the chat it takes the form of a *typing indicator* (section 7.2). The indicator is also announced to screen readers, and it does not animate for people who prefer reduced motion.
 - **Document decisions.** Significant choices get an ADR, and the team writes documentation in English.
+- **User stories are about the users of the app.** The role in a user story is a person who uses TigerLegs, such as the swimrunner or the owner of a course, and never a developer, a maintainer or another stakeholder in the project: "the roles are about the *creators* of the system, not its *users*. Users of a system don't care about the problems of the system's creators; such stories are not Valuable to them" (Wake, 2012). Work that no user can see (a build step, a refactoring, a specification) is not a user story: it is a task in an issue, or part of the Definition of Done. A story states a benefit for the user, not a deliverable for the team ("As a maintainer, I want a specification" is not a story).
+- **Qualities are written as quality attribute scenarios, with a measure.** A statement like "the system is fast" or "the system is accessible" cannot be tested: "It is meaningless to say that a system will be modifiable. Every system is modifiable with respect to one set of changes and not modifiable with respect to another" (Bass et al., 2003, section 4.3). A quality attribute scenario has six parts: a source of the stimulus, the stimulus, the environment, the artifact, the response and a response measure, "so that the requirement can be tested" (Bass et al., 2003, section 4.3). Given, When, Then fits what a user does and sees, and stays the format for features, including a quality that the user notices (a playback that does not stutter is a feature with a measure). The other qualities (privacy, portability, maintainability, accessibility of the whole app) are written as scenarios in the quality attributes chapter (chapter 3) and in the spec of a feature. Gilb's Planguage is another format for the same need, with a scale and a meter for every quality (Gilb, 2005); it is not used here yet.
 
 ### 5.1 Documentation approach
 
@@ -1266,6 +1268,7 @@ ADR-0008 implements a shared Astro layout and directly linkable HTML pages, with
 
 ## References
 
+- Bass, L., Clements, P., & Kazman, R. (2003). *Software architecture in practice* (2nd ed.). Addison-Wesley. Chapter 4, section 4.3. https://people.ece.ubc.ca/matei/EECE417/BASS/ch04lev1sec3.html
 - Brown, S. (n.d.-a). *The software guidebook*. Leanpub. https://leanpub.com/documenting-software-architecture
 - Brown, S. (n.d.-b). *The C4 model for visualising software architecture*. https://c4model.com/
 - Cavoukian, A. (2011). *Privacy by design: The 7 foundational principles*. Information and Privacy Commissioner of Ontario. https://www.ipc.on.ca/wp-content/uploads/resources/7foundationalprinciples.pdf
@@ -1276,6 +1279,7 @@ ADR-0008 implements a shared Astro layout and directly linkable HTML pages, with
 - Fowler, M. (n.d.-c). *Unit of work* [Patterns of enterprise application architecture]. Retrieved November 11, 2026, from https://martinfowler.com/eaaCatalog/unitOfWork.html
 - Garmin. (n.d.-a). *Connect IQ basics*. Retrieved November 1, 2026, from https://developer.garmin.com/connect-iq/connect-iq-basics/
 - Garmin. (n.d.-b). *Workout files* [FIT SDK documentation]. Retrieved November 11, 2026, from https://developer.garmin.com/fit/articles/file-types/workout.html
+- Gilb, T. (2005). How to quantify quality: Finding scales of measure. *Overload, 13*(70). ACCU. https://accu.org/journals/overload/13/70/gilb_299
 - Geofabrik. (n.d.). *OpenStreetMap data extracts*. Retrieved November 10, 2026, from https://download.geofabrik.de/
 - Gruber, T. (2008). Ontology. In L. Liu & M. T. Özsu (Eds.), *Encyclopedia of Database Systems*. Springer. https://tomgruber.org/writing/definition-of-ontology
 - Het Rondje Eilanden. (n.d.). *Parcours* [Course map with the length of every swim and run]. Retrieved November 10, 2026, from https://www.hetrondjeeilanden.nl/wedstrijd/parcours/
@@ -1291,6 +1295,7 @@ ADR-0008 implements a shared Astro layout and directly linkable HTML pages, with
 - RaceDayMap. (n.d.). *ÖTILLÖ Swimrun Cannes: World Series* [Interactive course map and leg table]. Retrieved November 10, 2026, from https://app.racedaymap.com/otillo-swimrun-cannes/world-series
 - Theunissen, T., Hoppenbrouwers, S., & Overbeek, S. (2022). Approaches for documentation in continuous software development. *Complex Systems Informatics and Modeling Quarterly, 32*, 1–27. https://doi.org/10.7250/csimq.2022-32.01
 - TopoGrafix. (2004). *GPX 1.1 schema documentation*. https://www.topografix.com/GPX/1/1/
+- Wake, B. (2012, November 27). *"As a developer..." is not a user story*. Industrial Logic. https://www.industriallogic.com/blog/as-a-developer-is-not-a-user-story/
 
 ## Appendices
 
