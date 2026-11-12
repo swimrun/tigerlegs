@@ -1,7 +1,7 @@
 import type { ChatStrings } from "./chat.strings.ts";
 
 export const nl: ChatStrings = {
-  title: "Vraag het RoARR",
+  title: "RoARR (Robotic Assistant Request Responder)",
   prototype: "prototype",
   typing: "RoARR is aan het typen…",
   suggested: "Voorgestelde vragen",
