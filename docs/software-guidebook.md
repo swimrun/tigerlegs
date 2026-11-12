@@ -644,7 +644,7 @@ The words, as the extractor and training pages need them:
 - In the interface a course is a *track* and its variants are *track variants*; in the model and the code they are `Course` and `CourseVariant`, because `Track` already means one recorded line in a GPX file (`src/shared/types.ts`). A rename is possible if that reads better.
 - The extractor page treats both as "a GPX file". A sample such as the Rondje Eilanden file is a recording of one athlete with heart rate, cadence and power stripped (`test-data/README.md`); that stripping is how a course is made from a recording.
 - A course has **variants**: one way of doing it, with a description and its own typical GPX line. Race day and training, high and low water, and the water bird breeding season (from April to June some islands are avoided for the sake of nature) are variants. A variant can be valid only for some editions or months: the breeding season is a period of months, and courses change from year to year. Exactly one variant is the **canonical** one, the main way of doing the course: for Het Rondje Eilanden that is the race day recording of 2025, and its first other variant is the *lintjes opruimen* recording of 2026 (clearing the ribbons after the event, missing the part from island 3 to 5). The extractor marks the canonical variant "Main variant" and a canonical variant always has a GPX file. The extractor lists them per course: Het Rondje Eilanden has *race day* (the race starts with swim A of about 400 m along the island, because the island is full of people on race day) and *training* (swim A is run instead), and Rhederlaag has the recording as swum, high water, low water and the breeding season. Only the variants whose typical GPX file exists can be loaded; the others are announced as "GPX to be added".
-- A **track edit** is data next to a recording and never a change of the GPX file: points that the athlete or the owner removed because they are outlier points (wrong positions, mostly multipath), and transition points that were moved. The analysis reads the trace with the edits applied; the original stays whole, because the speed analysis needs the exact timestamps and a round trip of a file must not change it (guidebook, section 2). The speed limits are settings of a recording or a course, not of the model: the swim and run limit and the plausible speed limit.
+- A **track edit** is the set of verdicts and moved transition points that the athlete or the owner chose for a recording: data next to the recording, and the GPX file that was loaded does not change; an edited copy can be exported. What the points and verdicts mean is in section 6.7.
 - A **swimrun group** is a set of athletes: a duo, a team or a larger training group.
 - A **training plan** leads to goal events: one A event and B or C events before it (roadmap M10). Its **planned sessions** are what the training page shows, and a session can have a structure of steps for intervals, intensity and rest. We do not build a training log: Strava, Garmin and Polar are dedicated platforms for executed training, so a session points at the activity there, or at a recording the athlete saved, and keeps a small adherence snapshot.
 - A **planned session** has a discipline and, below it, a subtype: for a run trail, road or mixed; for a swim open water or pool; for strength with weight or body mass; for mobility static or dynamic; a swimrun has none. Next to that it has a focus (easy, long, speed or recovery), a **basis** and a target. Time is the default basis: the target is minutes. On the distance basis the target is metres. The athlete edits the target on the detail screen, never both at once.
@@ -692,6 +692,37 @@ Open questions:
 5. Is the login account the same aggregate as the athlete profile?
 6. Which adherence figures do we keep (compliance in percent, planned against actual duration and distance), who may see them (the athlete only, or the coach too), and where do they come from when no service may give them to us?
 7. Is the term in the interface and the model *session* (as in `TrainingSession`, specs 002 and 003 and the training page) or *training*?
+
+### 6.7 Deep model of a recording: flagged points, glitches and real deviations (planned)
+
+Cleaning up a recording looks like a technical filter, but it is a question about what happened, and the model has to say so. This section records how we name the parts of that question, so that the code and the screens use the same words (chapter 5, "Use the domain language").
+
+**A statistical outlier is not an error.** NIST defines it as "an observation that appears to deviate markedly from other observations in the sample" (NIST/SEMATECH, n.d.); the definition says nothing about the observation being wrong. In Gladwell's book *Outliers* (2008) they are exceptional people, and they are still people. A trackpoint that implies a speed of 30 km/h in the water is an outlier in this sense, and two different things can be behind it:
+
+- a **glitch**: the watch recorded a position where the athlete never was, usually because of multipath, a reflected satellite signal (Swift Navigation, n.d.), for example under water, between tall buildings or among rocks;
+- a **real deviation**: the athlete really went there, for example swimming to a boat of the organisation to report trouble of another team, or to the toilet during a run. The point is a true position, and it is a departure from the official course.
+
+The algorithm cannot tell the two apart, and it does not have to: it **flags** a point (a flagged point is neutral, with the reason and the speed it implies), and the **person decides** the verdict. For a recording of their own that is the athlete; for the recording behind a course it is the owner of the course.
+
+*Table 7*: From a flag to a verdict.
+
+| Step               | Who         | Meaning                                                                                                              | Effect on the analysis and the course                                                                 |
+| ------------------ | ----------- | -------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| Flagged, undecided | The program | The point implies a speed above the plausible speed limit (20 km/h by default, set per course or athlete), or a jump | Not used for speed until decided, and shown on the map and in a list                                  |
+| Glitch             | The person  | A wrong position, not a place the athlete was                                                                        | Left out of the analysis and of every export; the distance is a straight line over the gap            |
+| Real deviation     | The person  | A true position that departs from the idealized course                                                               | Kept in the athlete's recording and analysis; marked as a deviation; not part of the idealized course |
+
+**Deep modelling and supple design.** Evans (2003) names the effort to find the concepts that matter in the domain and to make implicit ones explicit (his chapters 8 and 9), and the design that follows from them *supple design* (chapter 10): "To have a project accelerate as development proceeds demands a design that is inviting to change—a supple design." "Outlier" with a hidden "bad data" meaning is an implicit concept that would have made a "remove outliers" button look harmless. Naming the flag, the glitch and the real deviation makes the concept explicit, and it shows in the design:
+
+- the operations are small functions without side effects: `flagPoints(trace, limits)` returns the flags, and `applyVerdicts(trace, verdicts)` returns a new trace, so that an edit can always be undone and tested with plain values;
+- the names say what they do (a *verdict* is not a *deletion*), which is what Evans calls intention-revealing interfaces;
+- the limits are data of a course or an athlete and not constants in the code (the plausible speed limit, and the limit between swimming and running).
+
+**The original file stays whole, and a copy may be edited.** The GPX file that an athlete loads is never changed: the round trip of a file must not alter it (user story US-7 in the Kiro specs), and the analysis needs its exact timestamps. Editing is still a feature, on a *copy*: the verdicts and the moved transition points are data next to the recording, and the athlete can export an edited copy as a new GPX file, with the glitches left out.
+
+**The idealized course is a different file.** What a course shows, and what an owner may download, is derived from a recording after the verdicts, and it is stripped of everything personal: no timestamps, no speed, no heart rate, cadence or power, and no real deviations (a swim to a boat is not the course). It has a clean line and, as waypoints, every transition between swimming and running, named by the leg names of the course (issue #107), and the **energy stations** of the event, so that a navigation app or a watch can show them too (spec 001 asks the data field to show the next energy station, which is on a run, next to the distance to the next transition to swim or run).
+
+Open questions: how a real deviation is shown on the map (a dashed line, another colour); whether an undecided flag blocks an export or only warns; and whether the plausible speed limit of 20 km/h and the swim and run limit of 5 km/h (range 3 to 10) are kept per course, per athlete, or both.
 
 ## 7. Code
 
@@ -1117,9 +1148,9 @@ TopoGrafix created it in 2002, and file-extensions.com (n.d.) calls it "the de f
 Each waypoint (`<wpt>`) can contain a `<sym>` element with a symbol name.
 The GPX 1.1 specification defines `<sym>` as free-form text, so there is no standard list of values (TopoGrafix, 2004).
 Route planners therefore use their own conventions.
-Table 7 lists the numeric `<sym>` values in the test files, which come from the route planner Openrunner.
+Table 8 lists the numeric `<sym>` values in the test files, which come from the route planner Openrunner.
 
-*Table 7*: Waypoint `<sym>` values in Openrunner files.
+*Table 8*: Waypoint `<sym>` values in Openrunner files.
 
 | `<sym>` value | Meaning                       |
 | ------------- | ----------------------------- |
@@ -1136,14 +1167,14 @@ Support for other conventions, such as the files from racedaymap.com that ÖTILL
 ### 8.2 Training session data (planned)
 
 Nothing here is stored outside the browser yet; it is the shape that the prototype and the stored model (section 6.6) share, so that the training page, the chat tool calls (issue #86) and the planner (issues #85 and #87) use the same fields.
-Table 8 lists the fields of one planned session.
+Table 9 lists the fields of one planned session.
 
-*Table 8*: Fields of a planned session.
+*Table 9*: Fields of a planned session.
 
 | Field         | Values                                           | Notes                                                      |
 | ------------- | ------------------------------------------------ | ---------------------------------------------------------- |
-| `discipline`  | `swim`, `run`, `swimrun`, `strength`, `mobility` | Chooses the subtype list (Table 9)                         |
-| `subtype`     | see Table 9                                      | One value, or none for a swimrun                           |
+| `discipline`  | `swim`, `run`, `swimrun`, `strength`, `mobility` | Chooses the subtype list (Table 10)                         |
+| `subtype`     | see Table 10                                      | One value, or none for a swimrun                           |
 | `focus`       | `easy`, `long`, `speed`, `recovery`              | Speed is intervals; it is not a subtype                    |
 | `basis`       | `time` (default), `distance`                     | Chooses which target field is filled                       |
 | `minutes`     | whole number, at least 1                         | Target on the time basis                                   |
@@ -1151,10 +1182,10 @@ Table 8 lists the fields of one planned session.
 | `day`         | `Mon` to `Sun` in a week of a block              | Moving to a sports rest day is allowed and gives a warning |
 | `title`       | text, not empty                                  | Shown on the card; a generated title is localised          |
 | `description` | text, may be empty                               |                                                            |
-| `steps`       | tree of steps, may be empty                      | Intervals, see Table 10                                    |
+| `steps`       | tree of steps, may be empty                      | Intervals, see Table 11                                    |
 | `origin`      | `generated`, `hardcoded`, `imported`             | An edit by hand marks a generated session as hardcoded     |
 
-*Table 9*: Subtypes by discipline.
+*Table 10*: Subtypes by discipline.
 
 | Discipline | Subtype                  | Colour rule                                                   |
 | ---------- | ------------------------ | ------------------------------------------------------------- |
@@ -1164,7 +1195,7 @@ Table 8 lists the fields of one planned session.
 | `mobility` | `static`, `dynamic`      | Flexibility colour                                            |
 | `swimrun`  | none                     | Swimrun colour                                                |
 
-*Table 10*: Fields of a step of a structured session.
+*Table 11*: Fields of a step of a structured session.
 
 | Field       | Values                                           | Notes                                                          |
 | ----------- | ------------------------------------------------ | -------------------------------------------------------------- |
@@ -1241,9 +1272,9 @@ Rules:
 
 This chapter lists the ADRs, which hold the reasoning behind the architecture.
 
-Table 11 lists the ADRs and what each decides.
+Table 12 lists the ADRs and what each decides.
 
-*Table 11*: Architecture decision records.
+*Table 12*: Architecture decision records.
 
 | ADR                                                                       | Decision                                                                                                                                                                                                                         |
 | ------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -1275,6 +1306,7 @@ ADR-0008 implements a shared Astro layout and directly linkable HTML pages, with
 - Cavoukian, A. (2011). *Privacy by design: The 7 foundational principles*. Information and Privacy Commissioner of Ontario. https://www.ipc.on.ca/wp-content/uploads/resources/7foundationalprinciples.pdf
 - Cockburn, A. (2001). *Writing effective use cases*. Addison-Wesley.
 - file-extensions.com. (n.d.). *GPX file format*. Retrieved June 15, 2026, from https://file-extensions.com/docs/gpx
+- Evans, E. (2003). *Domain-driven design: Tackling complexity in the heart of software*. Addison-Wesley. Chapters 8 to 10. https://www.informit.com/store/domain-driven-design-tackling-complexity-in-the-heart-of-software-9780321125217
 - Fowler, M. (n.d.-a). *DDD aggregate* [Bliki]. Retrieved November 11, 2026, from https://martinfowler.com/bliki/DDD_Aggregate.html
 - Fowler, M. (n.d.-b). *Repository* [Patterns of enterprise application architecture]. Retrieved November 11, 2026, from https://martinfowler.com/eaaCatalog/repository.html
 - Fowler, M. (n.d.-c). *Unit of work* [Patterns of enterprise application architecture]. Retrieved November 11, 2026, from https://martinfowler.com/eaaCatalog/unitOfWork.html
@@ -1282,12 +1314,14 @@ ADR-0008 implements a shared Astro layout and directly linkable HTML pages, with
 - Garmin. (n.d.-b). *Workout files* [FIT SDK documentation]. Retrieved November 11, 2026, from https://developer.garmin.com/fit/articles/file-types/workout.html
 - Gilb, T. (2005). How to quantify quality: Finding scales of measure. *Overload, 13*(70). ACCU. https://accu.org/journals/overload/13/70/gilb_299
 - Geofabrik. (n.d.). *OpenStreetMap data extracts*. Retrieved November 10, 2026, from https://download.geofabrik.de/
+- Gladwell, M. (2008). *Outliers: The story of success*. Little, Brown and Company.
 - Gruber, T. (2008). Ontology. In L. Liu & M. T. Özsu (Eds.), *Encyclopedia of Database Systems*. Springer. https://tomgruber.org/writing/definition-of-ontology
 - Het Rondje Eilanden. (n.d.). *Parcours* [Course map with the length of every swim and run]. Retrieved November 10, 2026, from https://www.hetrondjeeilanden.nl/wedstrijd/parcours/
 - ICT Research Methods. (n.d.). *Multi-criteria decision making*. Retrieved November 10, 2026, from https://ictresearchmethods.nl/workshop/multi-criteria-decision-making/
 - Knuth, D. E. (1984). Literate programming. *The Computer Journal, 27*(2), 97–111. https://doi.org/10.1093/comjnl/27.2.97
 - Larman, C. (2005). *Applying UML and patterns: An introduction to object-oriented analysis and design and iterative development* (3rd ed.). Prentice Hall.
 - Nielsen, J. (1994). *10 usability heuristics for user interface design*. Nielsen Norman Group. https://www.nngroup.com/articles/ten-usability-heuristics/
+- NIST/SEMATECH. (n.d.). *e-Handbook of statistical methods*, section 1.3.5.17, Detection of outliers. Retrieved November 12, 2026, from https://itl.nist.gov/div898/handbook/eda/section3/eda35h.htm
 - OpenStreetMap Wiki. (n.d.-a). *PBF format*. Retrieved November 10, 2026, from https://wiki.openstreetmap.org/wiki/PBF_Format
 - OpenStreetMap Wiki. (n.d.-b). *Overpass API*. Retrieved November 10, 2026, from https://wiki.openstreetmap.org/wiki/Overpass_API
 - OpenStreetMap Wiki. (n.d.-c). *Overpass API/Overpass QL*. Retrieved November 10, 2026, from https://wiki.openstreetmap.org/wiki/Overpass_API/Overpass_QL
@@ -1305,46 +1339,51 @@ ADR-0008 implements a shared Astro layout and directly linkable HTML pages, with
 
 This appendix defines the domain terms, so that you can look up a term when you meet it.
 
-Table 12 lists the terms in the order in which you meet them when you follow a GPX file through the system.
+Table 13 lists the terms in the order in which you meet them when you follow a GPX file through the system.
 
-*Table 12*: Domain glossary.
+*Table 13*: Domain glossary.
 
-| Term                        | Meaning                                                                                                                                                                                                          | Example                                                                                            |
-| --------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
-| Track                       | Ordered recording of positions of the whole course                                                                                                                                                               | The Vertical SwimRunMan GPX holds one track                                                        |
-| Trackpoint                  | One position in a track, with latitude, longitude and optional elevation and time                                                                                                                                | `lat="54.4" lon="13.4"`                                                                            |
-| Outlier point               | A trackpoint that is a wrong position and not a place the athlete was; it implies a speed above the plausible speed limit. Also called a spike, a jump, or by the owner a "reflection point"                     | A watch under water jumps 140 m in one second                                                      |
-| Multipath                   | The usual cause of an outlier point: "a satellite signal reaches a receiver via both a direct path and one or more reflected paths" (Swift Navigation, n.d.), as between tall buildings, among rocks or on water | Reflections off buildings in a city                                                                |
-| Plausible speed limit       | The speed above which a point implied speed is not credible for a person on foot or swimming; 20 km/h by default, adjustable per course (a mountain course) or athlete                                           | A point 30 km/h from the last one is flagged                                                       |
-| Swim and run speed limit    | The speed that separates swimming (below it) from running (above it); 5 km/h by default, adjustable between 3 and 10 km/h                                                                                        | A segment at 4 km/h is a swim                                                                      |
-| Track edit                  | A change to how a track is read that is kept as data next to the original file: a removed point or a moved transition point; the GPX file itself does not change                                                 | Remove point 7,503; move the swim to run transition                                                |
-| Waypoint                    | A named point of interest, separate from the track                                                                                                                                                               | "Début SWIM"                                                                                       |
-| `<sym>`                     | Symbol code on a waypoint; 200 marks a swim start and 201 a swim end                                                                                                                                             | A waypoint with `<sym>200</sym>` starts a swim                                                     |
-| Segment                     | Consecutive trackpoints that are all swim or all run, with a distance                                                                                                                                            | Swim of 400 m                                                                                      |
-| Swim, run, unclassified     | The three labels a segment can have                                                                                                                                                                              | Run of 2.1 km                                                                                      |
-| Transition                  | The point where one segment ends and the next begins                                                                                                                                                             | The beach exit after a swim                                                                        |
-| Hysteresis                  | Memory in a threshold decision: once a transition counts as passed, nearby noisy GPS fixes cannot un-pass it                                                                                                     | The watch advances to leg 5 once, even when swim-degraded GPS jitters around the transition radius |
-| Distance to next transition | Distance along the track from a position to the next transition                                                                                                                                                  | "Next transition in 1.2 km"                                                                        |
-| Question                    | A prompt the athlete sends to the chat, by clicking a label or typing                                                                                                                                            | "But can tigers actually swim?"                                                                    |
-| Static answer               | A fixed answer from the FAQ catalog, consisting of a brief answer and optionally more                                                                                                                            | The tiger answer in `faq.en.json`                                                                  |
-| Brief answer                | The short first reply to a question                                                                                                                                                                              | "Yes. Tigers are among the few big cats that like water."                                          |
-| More                        | The longer second reply, offered through the *Tell me more* follow-up                                                                                                                                            | Why swimrun courses vary in distance                                                               |
-| Dynamic answer              | An answer an LLM generates for a free-text question (planned, issue #10)                                                                                                                                         | A reply about a specific wetsuit                                                                   |
-| Fallback                    | The reply to free text while no LLM is integrated                                                                                                                                                                | "There is no actual LLM integration yet.."                                                         |
-| Language                    | One of English, Dutch, French or German; each has its own FAQ catalog                                                                                                                                            | `faq.nl.json`                                                                                      |
-| Strategy                    | A method to detect segments: waypoint, speed or landscape                                                                                                                                                        | Waypoint strategy                                                                                  |
-| Confidence                  | How sure a strategy is about a trackpoint; the combiner keeps the highest                                                                                                                                        | 0.9 from waypoints beats 0.4 from speed                                                            |
-| Terrain                     | Land or water at a coordinate, from OpenStreetMap                                                                                                                                                                | A lake point returns water                                                                         |
-| Sampling interval           | Wanted distance between sampled trackpoints for terrain queries                                                                                                                                                  | 50 m                                                                                               |
-| Gap                         | Distance between two consecutive samples                                                                                                                                                                         | With a 50 m interval and 200 m steps, the gap can exceed 50 m                                      |
-| Sparse track                | Track whose trackpoints lie far apart                                                                                                                                                                            | A watch that records every 200 m                                                                   |
-| Paired segment table        | Table with one row per run and swim pair ([ADR-0007](./adr/0007-compact-segment-table-format.md))                                                                                                                | Row: run 2.1 km, swim 400 m                                                                        |
-| Run-first, swim-first       | Which segment type opens a paired row; run-first is the default                                                                                                                                                  | A toggle above the table                                                                           |
-| Aid station                 | Food and drink point, usually on land                                                                                                                                                                            | A waypoint on a run                                                                                |
+| Term                        | Meaning                                                                                                                                                                                                                           | Example                                                                                            |
+| --------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| Track                       | Ordered recording of positions of the whole course                                                                                                                                                                                | The Vertical SwimRunMan GPX holds one track                                                        |
+| Trackpoint                  | One position in a track, with latitude, longitude and optional elevation and time                                                                                                                                                 | `lat="54.4" lon="13.4"`                                                                            |
+| Flagged point               | A trackpoint that the program marks because it implies a speed above the plausible speed limit (or a jump); neutral: it can be a glitch or a real deviation until a person decides                                                | A point 30 km/h from the last one                                                                  |
+| Glitch                      | A flagged point that a person judged to be a wrong position, not a place the athlete was; left out of the analysis and exports                                                                                                    | A watch under water jumps 140 m in one second                                                      |
+| Real deviation              | A flagged point that a person judged to be a true position that departs from the idealized course; kept in the recording, not part of the course                                                                                  | A swim to the boat of the organisation                                                             |
+| Outlier                     | The statistical word for "an observation that appears to deviate markedly from other observations in the sample" (NIST/SEMATECH, n.d.); it can be real or wrong, so we use flagged point, glitch and real deviation               | In Gladwell (2008) the outliers are exceptional people                                             |
+| Multipath                   | The usual cause of a glitch: "a satellite signal reaches a receiver via both a direct path and one or more reflected paths" (Swift Navigation, n.d.), as between tall buildings, among rocks or on water                          | Reflections off buildings in a city                                                                |
+| Plausible speed limit       | The speed above which a point is flagged because it is not credible for a person on foot or swimming; 20 km/h by default, adjustable per course (a mountain course) or athlete                                                    | A point 30 km/h from the last one is flagged                                                       |
+| Swim and run speed limit    | The speed that separates swimming (below it) from running (above it); 5 km/h by default, adjustable between 3 and 10 km/h                                                                                                         | A segment at 4 km/h is a swim                                                                      |
+| Track edit                  | The verdicts on flagged points and the moved transition points of a recording, kept as data next to it; the loaded GPX file does not change and an edited copy can be exported                                                    | Mark point 7,503 as a glitch; move the swim to run transition                                      |
+| Idealized course            | The line of a course derived from a recording after the verdicts, with no time, speed, heart rate or other personal data, and with a waypoint at every transition and at every energy station; a course may have several variants | The race day line of Het Rondje Eilanden                                                           |
+| Energy station              | A place on the course where athletes eat and drink, usually on a run; a waypoint of the idealized course, and a target the watch can show next to the next transition                                                             | Energy Station 2 on the Rügen course                                                               |
+| Waypoint                    | A named point of interest, separate from the track                                                                                                                                                                                | "Début SWIM"                                                                                       |
+| `<sym>`                     | Symbol code on a waypoint; 200 marks a swim start and 201 a swim end                                                                                                                                                              | A waypoint with `<sym>200</sym>` starts a swim                                                     |
+| Segment                     | Consecutive trackpoints that are all swim or all run, with a distance                                                                                                                                                             | Swim of 400 m                                                                                      |
+| Swim, run, unclassified     | The three labels a segment can have                                                                                                                                                                                               | Run of 2.1 km                                                                                      |
+| Transition                  | The point where one segment ends and the next begins                                                                                                                                                                              | The beach exit after a swim                                                                        |
+| Hysteresis                  | Memory in a threshold decision: once a transition counts as passed, nearby noisy GPS fixes cannot un-pass it                                                                                                                      | The watch advances to leg 5 once, even when swim-degraded GPS jitters around the transition radius |
+| Distance to next transition | Distance along the track from a position to the next transition                                                                                                                                                                   | "Next transition in 1.2 km"                                                                        |
+| Question                    | A prompt the athlete sends to the chat, by clicking a label or typing                                                                                                                                                             | "But can tigers actually swim?"                                                                    |
+| Static answer               | A fixed answer from the FAQ catalog, consisting of a brief answer and optionally more                                                                                                                                             | The tiger answer in `faq.en.json`                                                                  |
+| Brief answer                | The short first reply to a question                                                                                                                                                                                               | "Yes. Tigers are among the few big cats that like water."                                          |
+| More                        | The longer second reply, offered through the *Tell me more* follow-up                                                                                                                                                             | Why swimrun courses vary in distance                                                               |
+| Dynamic answer              | An answer an LLM generates for a free-text question (planned, issue #10)                                                                                                                                                          | A reply about a specific wetsuit                                                                   |
+| Fallback                    | The reply to free text while no LLM is integrated                                                                                                                                                                                 | "There is no actual LLM integration yet.."                                                         |
+| Language                    | One of English, Dutch, French or German; each has its own FAQ catalog                                                                                                                                                             | `faq.nl.json`                                                                                      |
+| Strategy                    | A method to detect segments: waypoint, speed or landscape                                                                                                                                                                         | Waypoint strategy                                                                                  |
+| Confidence                  | How sure a strategy is about a trackpoint; the combiner keeps the highest                                                                                                                                                         | 0.9 from waypoints beats 0.4 from speed                                                            |
+| Terrain                     | Land or water at a coordinate, from OpenStreetMap                                                                                                                                                                                 | A lake point returns water                                                                         |
+| Sampling interval           | Wanted distance between sampled trackpoints for terrain queries                                                                                                                                                                   | 50 m                                                                                               |
+| Gap                         | Distance between two consecutive samples                                                                                                                                                                                          | With a 50 m interval and 200 m steps, the gap can exceed 50 m                                      |
+| Sparse track                | Track whose trackpoints lie far apart                                                                                                                                                                                             | A watch that records every 200 m                                                                   |
+| Paired segment table        | Table with one row per run and swim pair ([ADR-0007](./adr/0007-compact-segment-table-format.md))                                                                                                                                 | Row: run 2.1 km, swim 400 m                                                                        |
+| Run-first, swim-first       | Which segment type opens a paired row; run-first is the default                                                                                                                                                                   | A toggle above the table                                                                           |
+| Aid station                 | Food and drink point, usually on land                                                                                                                                                                                             | A waypoint on a run                                                                                |
 
-Table 13 defines the terms about map data, the terrain service and the infrastructure around it, in alphabetical order.
+Table 14 defines the terms about map data, the terrain service and the infrastructure around it, in alphabetical order.
 
-*Table 13*: Map data and infrastructure glossary.
+*Table 14*: Map data and infrastructure glossary.
 
 | Term                                  | Meaning                                                                                                                                                                                  | Example                                                                                           |
 | ------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
@@ -1386,9 +1425,9 @@ Its relations include *a track has trackpoints*, *a segment covers trackpoints* 
 An ontology mapping relates the concepts of one domain to equivalent concepts in another.
 A train journey fits, because it has the same structure: a route that someone records as positions, stretches with different surfaces (open track, bridge, tunnel) and a "next ... in x km" display.
 The analogy is my own choice, not a published ontology.
-Table 14 shows the mapping and names where it breaks down.
+Table 15 shows the mapping and names where it breaks down.
 
-*Table 14*: Mapping of swimrun concepts to a train journey.
+*Table 15*: Mapping of swimrun concepts to a train journey.
 
 | SwimRun concept             | Train journey equivalent                             | Where the analogy breaks                                    |
 | --------------------------- | ---------------------------------------------------- | ----------------------------------------------------------- |

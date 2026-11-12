@@ -63,13 +63,25 @@ The athlete stays in charge of their own file: a recording is analysed in the br
 
 #### Cleaning and cutting the track (issue #109)
 
-23. **Given** a recording, **When** it is analysed, **Then** every trackpoint that implies a speed above the plausible limit (20 km/h by default) is flagged on the map and in a list, and playback and the analysis do not use it until the owner or the athlete keeps it.
+A point that implies an implausible speed is *flagged*, not judged: it can be a glitch (a wrong position, usually multipath) or a real deviation (the athlete really went there, for example to a boat of the organisation or to the toilet). The person decides (guidebook, section 6.7).
 
-24. **Given** a flagged or a selected point, **When** the owner removes it, **Then** the removal is stored as a track edit next to the recording, the totals update and the marker no longer jumps or glides at a speed that was never reached.
+23. **Given** a recording, **When** it is analysed, **Then** every trackpoint that implies a speed above the plausible limit (20 km/h by default) is flagged on the map and in a list, with the speed it implies, and it is not used for speed until someone has decided.
 
-25. **Given** a transition point between a swim and a run, **When** the owner drags it along the track, **Then** the two legs change and the edit is stored; the speed limit between swimming and running (5 km/h by default, 3 to 10 km/h) is a separate setting.
+24. **Given** a flagged or a selected point, **When** the owner or the athlete marks it as a *glitch*, **Then** it is left out of the analysis and of every export, the verdict is stored as a track edit next to the recording, the totals update, and the marker no longer jumps or glides at a speed that was never reached.
 
-26. **Given** a mountain course or a fast athlete, **When** the owner changes the plausible speed limit of the course, **Then** the flags are recalculated for every recording on it.
+25. **Given** a flagged point that really happened, **When** the person marks it as a *real deviation*, **Then** it stays in the athlete's recording and analysis, it is marked as a deviation from the course, and it is not part of the idealized course.
+
+26. **Given** a transition point between a swim and a run, **When** the owner drags it along the track, **Then** the two legs change and the edit is stored; the speed limit between swimming and running (5 km/h by default, 3 to 10 km/h) is a separate setting.
+
+27. **Given** a mountain course or a fast athlete, **When** the owner changes the plausible speed limit of the course, **Then** the flags are recalculated for every recording on it.
+
+28. **Given** a recording with verdicts, **When** the athlete exports an edited copy, **Then** a new GPX file is written with the glitches left out, and the file that was loaded is not changed.
+
+#### The idealized course as a file and as a picture
+
+29. **Given** a course, **When** an owner downloads or shows its idealized GPX, **Then** it has a clean line without timestamps, speed, heart rate, cadence, power or any other personal data, and without real deviations, and it has a waypoint at every transition between swimming and running, named after the leg names of the course.
+
+30. **Given** an event with energy stations, **When** the owner adds them, **Then** they are waypoints of the idealized course, shown on the map and the legs bar, and available to the Garmin data field (spec 001), which shows the next energy station (usually during a run) next to the distance to the next transition to swim or run.
 
 #### Saving, versions and who may edit
 
@@ -110,6 +122,8 @@ The athlete stays in charge of their own file: a recording is analysed in the br
 - **FR-011**: Names and legs MUST be exportable and importable as a course pack (a text file that holds the course, its variants, its legs and its line, and no athlete data), without a back end.
 - **FR-012**: The leg names MUST show next to the numbers in the segment table and on the map, in the table that is copied for a paddle or wristband (ADR-0007).
 - **FR-013**: The admin view MUST be limited to owners when accounts exist (issue #90); until then, editing is a local draft that is exported as a course pack.
+- **FR-014**: A trackpoint that implies a speed above the plausible limit MUST be flagged and not judged; a person MUST decide its verdict, glitch or real deviation, and the verdict MUST be stored as data next to the recording, with the loaded GPX file unchanged (guidebook, section 6.7).
+- **FR-015**: The idealized course MUST be exportable and showable as a GPX file with no timestamps, speed, heart rate or other personal data, no real deviations, and a waypoint at every transition and every energy station.
 
 ### Quality Attributes
 
@@ -135,6 +149,9 @@ Qualities are written as quality attribute scenarios, each with a measure that a
 - **LeftOutStretch** (value object): a start and an end along the line that a variant does not cover.
 - **Alignment** (value object, computed, not stored): for a recording and a variant, which trackpoints belong to which leg, with the coverage and the deviations.
 - **PlaybackState** (UI state, not stored): the position (an index or a distance), the speed and whether it plays.
+- **PointFlag** (value object): a trackpoint index, the reason (speed above the limit, a jump), the speed it implies and a verdict: undecided, glitch or real deviation.
+- **TrackEdit** (data next to a recording): the verdicts and the moved transition points; the loaded GPX file does not change.
+- **EnergyStation** (waypoint of a course): a name and a position along the line; shown on the map and available to the watch.
 - **CoursePack** (a file): the export of a course with its line, variants and legs, with a version and a checksum.
 
 ## The shape of the application, in steps
@@ -168,7 +185,7 @@ Each step can be built and used without the next one.
 ## Execution Status
 
 - [x] User scenarios defined
-- [x] Requirements generated (FR-001…FR-013 and eight quality attribute scenarios)
+- [x] Requirements generated (FR-001…FR-015 and eight quality attribute scenarios)
 - [x] Entities identified
 - [ ] Plan (technical design, data model, contracts) not started
 - [ ] Tasks not started
