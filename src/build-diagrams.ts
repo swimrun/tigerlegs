@@ -5,7 +5,7 @@ import { readdir, readFile, writeFile } from "node:fs/promises";
  * PlantUML (and C4-PlantUML) diagrams live as fenced ```plantuml blocks inside the Markdown, so one
  * file holds the text and its diagram and the Markdown preview can draw it. This renders each block
  * to docs/diagrams/<name>.svg, which the site and the repository keep as the pre-rendered picture.
- * Run it with `deno task diagrams` (needs PlantUML and Java on the machine).
+ * Run it with `npm run diagrams` (needs PlantUML and Java on the machine).
  */
 
 export interface PlantUmlBlock {

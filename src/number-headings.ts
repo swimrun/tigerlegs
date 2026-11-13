@@ -3,7 +3,7 @@ import { readFile, writeFile } from "node:fs/promises";
  * Numbers the section headings of a Markdown document: `## 3. Title` for a section and `### 3.2 Title` for a
  * subsection, counted in order, so that a reader can refer to "section 3.2". The title line (`#`) and headings
  * inside code fences are left alone. The back matter is not numbered: the headings in UNNUMBERED, and every
- * subsection below them (such as `### Appendix A: Glossary`). Run `deno task headings <file>`; a second run
+ * subsection below them (such as `### Appendix A: Glossary`). Run `npm run headings <file>`; a second run
  * changes nothing.
  */
 export const UNNUMBERED: ReadonlySet<string> = new Set(["Reading guide", "References", "Appendices"]);

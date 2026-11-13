@@ -2,7 +2,7 @@ import { readFile, writeFile } from "node:fs/promises";
 /**
  * Writes the reference list of a document as a bullet list: one bullet per source, without a blank
  * line between sources. APA puts a blank line between references; bullets keep the Markdown source
- * short and are still read as a list. `deno task refs <file...>` converts the `## References`
+ * short and are still read as a list. `npm run refs <file...>` converts the `## References`
  * section of the files in place; a section that is a list already stays as it is.
  */
 export function bulletReferences(markdown: string): string {

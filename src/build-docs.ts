@@ -9,7 +9,7 @@ export function renderDocument(source: string, base = "", isAdr = false): string
   renderer.code = (token) => {
     if (token.lang === "mermaid") return `<pre class="mermaid">${token.text}</pre>`;
     if (token.lang === "plantuml") {
-      // The picture is rendered from this block by `deno task diagrams`; the source stays readable.
+      // The picture is rendered from this block by `npm run diagrams`; the source stays readable.
       const [block] = extractPlantUml("```plantuml\n" + token.text + "\n```");
       const alt = block.title.replace(/"/g, "&quot;");
       return `<figure><img src="${root0}diagrams/${block.name}.svg" alt="${alt}">` +
