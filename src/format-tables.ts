@@ -1,6 +1,7 @@
+import { readFile, writeFile } from "node:fs/promises";
 /**
  * Pads the columns of Markdown tables with spaces so that a table reads as a table in the source,
- * without a preview. `deno task tables <file...>` rewrites the files in place; it leaves everything
+ * without a preview. `npm run tables <file...>` rewrites the files in place; it leaves everything
  * outside tables (and tables inside code fences) alone, and a second run changes nothing.
  */
 
@@ -72,10 +73,10 @@ export function alignTables(markdown: string): string {
 }
 
 if (import.meta.main) {
-  for (const file of Deno.args) {
-    const before = await Deno.readTextFile(file);
+  for (const file of process.argv.slice(2)) {
+    const before = await readFile(file, "utf8");
     const after = alignTables(before);
-    if (after !== before) await Deno.writeTextFile(file, after);
+    if (after !== before) await writeFile(file, after);
     console.log(`${after === before ? "unchanged" : "aligned"}: ${file}`);
   }
 }

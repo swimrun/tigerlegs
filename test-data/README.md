@@ -20,7 +20,7 @@ GPX files for testing and demonstration purposes.
 
 ## Sample tracks on the website
 
-`deno task build:samples` (part of `deno task build`) copies the typical GPX file of
+`npm run build:samples` (part of `npm run build`) copies the typical GPX file of
 every sample variant from this folder to `public/samples/`, where the extractor page
 offers them. The courses, their variants, descriptions and file mapping live in
 `src/client/sample-courses.ts`. A variant without a file is listed on the page as
