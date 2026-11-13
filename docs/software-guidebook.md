@@ -301,19 +301,17 @@ This chapter lists the rules that guide design choices when no constraint decide
 ### 5.1 Documentation approach
 
 This project writes its documentation next to the code and keeps it current as part of the work.
-Preston-Werner (2010) advises: "Write your Readme first."
-That part is done here: the README describes the tool, so what remains is keeping it true.
+It starts from the README, as Preston-Werner (2010) describes in *Readme Driven Development*: "Write your Readme first." His reason: "Until you've written about your software, you have no idea what you'll be coding." He also separates it from Documentation Driven Development, which is more than a README.
+The README of this project described the tool before it existed, so what remains is keeping it true.
+
 Theunissen et al. (2022a) study documentation in *continuous software development*, which they define as covering "the values, principles, practices, processes, and tools from Agile, Lean, and DevOps" (p. 2). Their paper does not use the term *continuous documentation*; we use it as our own shorthand for documenting in that setting, next to the code and in the same change as the behaviour.
-They start from an observation that fits this project: "developers do not want to write, others do not want to read, but having no documentation at all is not an option" (Theunissen et al., 2022a, p. 2). They describe three approaches to keep knowledge from vaporizing (the abstract calls the second *Executable Knowledge*, the text *Executable Documentation*), and this project follows two of them:
+They start from what their earlier studies observed, which fits this project: "developers do not want to write, others do not want to read, but having no documentation at all is not an option" (Theunissen et al., 2022a, p. 2). They describe three approaches to keep knowledge from vaporizing (the abstract calls the second *Executable Knowledge*, the text *Executable Documentation*):
 
 - **Just Enough Upfront.** Write down what must be known to start and to complete a design, and no more. Here these are this guidebook, the architecture decision records and the specs: "What is missing, however, are descriptions and decisions" in the source code, which is the "single source of truth" (Theunissen et al., 2022a, p. 14), and documentation inside the source code "is not reliable because this can easily be out-of-sync" (pp. 14–15), so the decisions go into ADRs.
-- **Executable Documentation.** "Traditionally written documentation is hard to keep up-to-date with the actual code", but "the human-readable specifications can be executed, so the document itself can be verified, validated, and tested" (Theunissen et al., 2022a, p. 7), with tools such as Cucumber. This is why the acceptance criteria of an issue are Given, When, Then lines that run as Gherkin features ([ADR-0018](./adr/0018-acceptance-tests-with-gherkin-and-playwright-bdd.md)), and why tests check that the guidebook headings are numbered and that the Definition of Done in the templates matches its document.
-- **Automated Text Analytics** (text mining and deep learning to retrieve decisions from distributed tools such as commit messages) is not used here.
+- **Executable Documentation.** "Traditionally written documentation is hard to keep up-to-date with the actual code", but "the human-readable specifications can be executed, so the document itself can be verified, validated, and tested", with tools such as Cucumber (Theunissen et al., 2022a, p. 7). This is why the acceptance criteria of an issue are Given, When, Then lines that run as Gherkin features, and why tests check that the guidebook headings are numbered and that the Definition of Done in the templates matches its document. The features run with playwright-bdd on the Playwright runner ([ADR-0018](./adr/0018-acceptance-tests-with-gherkin-and-playwright-bdd.md)); Cucumber.js, the JavaScript implementation of Cucumber, runs the same Gherkin and is the alternative, at the price of a second test runner and browser setup, which the ADR gives as the reason not to start with it.
+- **Automated Text Analytics** (text mining and deep learning to retrieve decisions from distributed tools such as commit messages) is less relevant here, because every significant decision is stored in an ADR and does not have to be dug out of the history. The commit message still carries the *why*: its title says what changed and its body says briefly why, so that the history explains itself (AGENTS.md).
 
-The paper's own list of related work includes a pattern paper on specification in continuous software development (Theunissen & Van Heesch, 2017) and a mapping study on documentation in continuous software development (Theunissen et al., 2022b); we know them only from that list and have not read them. Page numbers are those of the preprint of Theunissen et al. (2022a).
-Documentation is part of the definition of done: a change is finished when the README, guidebook or ADR that it affects is up to date.
-The full checklist is in [DEFINITION_OF_DONE.md](./DEFINITION_OF_DONE.md) and is repeated as checkboxes in the GitHub issue and pull request templates.
-Task descriptions live in GitHub issues, not in the repository.
+Page numbers are those of the preprint of Theunissen et al. (2022a).
 
 Table 5 lists the documents and the question each one answers.
 
@@ -1297,8 +1295,6 @@ ADR-0008 implements a shared Astro layout and directly linkable HTML pages, with
 - Preston-Werner, T. (2010, August 23). *Readme Driven Development*. https://tom.preston-werner.com/2010/08/23/readme-driven-development.html
 - RaceDayMap. (n.d.). *ÖTILLÖ Swimrun Cannes: World Series* [Interactive course map and leg table]. Retrieved November 10, 2026, from https://app.racedaymap.com/otillo-swimrun-cannes/world-series
 - Theunissen, T., Hoppenbrouwers, S., & Overbeek, S. (2022a). Approaches for documentation in continuous software development. *Complex Systems Informatics and Modeling Quarterly, 32*, 1–27. https://doi.org/10.7250/csimq.2022-32.01
-- Theunissen, T., & Van Heesch, U. (2017). Specification in continuous software development. In *Proceedings of the 22nd European Conference on Pattern Languages of Programs* (EuroPLoP '17, pp. 1–19). ACM. https://doi.org/10.1145/3147704.3147709
-- Theunissen, T., van Heesch, U., & Avgeriou, P. (2022b). A mapping study on documentation in continuous software development. *Information and Software Technology, 142*, Article 106733. https://doi.org/10.1016/j.infsof.2021.106733
 - TopoGrafix. (2004). *GPX 1.1 schema documentation*. https://www.topografix.com/GPX/1/1/
 
 ## Appendices
