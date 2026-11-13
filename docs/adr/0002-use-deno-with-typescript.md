@@ -4,7 +4,7 @@ Date: 2026-06-15
 
 ## 1. Status
 
-Accepted
+Superseded on 2026-11-12 (issue #100): the project runs on Node.js with TypeScript and npm, after the back end moved to Node ([ADR-0014](./0014-back-end-technology.md), issue #76), the tests moved to Vitest (issue #78) and the build and documentation scripts moved to Node scripts. `deno.json` and `deno.lock` are deleted. The record below stays as it was written.
 
 ## 2. Context
 

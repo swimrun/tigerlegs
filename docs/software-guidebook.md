@@ -278,7 +278,7 @@ This chapter lists the choices that the team did not make freely.
 
 The following constraints apply:
 
-- The front end and its tests run on Deno and TypeScript ([ADR-0002](./adr/0002-use-deno-with-typescript.md)); the back end runs on Node.js with TypeScript ([ADR-0014](./adr/0014-back-end-technology.md)). Browser and server still share code: the modules listed in `tsconfig.shared.json` must load under both.
+- The front end, the back end, the tests and the build tasks run on Node.js with TypeScript and npm ([ADR-0014](./adr/0014-back-end-technology.md); [ADR-0002](./adr/0002-use-deno-with-typescript.md), which chose Deno, is superseded). Browser and server share code: the modules listed in `tsconfig.shared.json` must load under both.
 - The system uses an open-source GIS stack: OpenStreetMap, Leaflet and custom Haversine code ([ADR-0006](./adr/0006-open-source-gis-stack.md)).
 - The backend runs on a VPS in the EU, because location data is personal data under GDPR ([ADR-0004](./adr/0004-host-deno-backend-on-eu-vps.md)).
 - GPX files can be up to 10 MB with up to 50,000 trackpoints ([ADR-0003](./adr/0003-gpx-analysis-execution-location.md)).
@@ -698,7 +698,7 @@ The source lives in three folders: `src/client` for the browser, `src/server` fo
 Texts for the interface are data in external JSON files, one per language, and never inline; the library and the routing per language are decided in [ADR-0017](./adr/0017-localisation.md), and until then per-language TypeScript files are a stopgap (see `AGENTS.md`).
 Tests sit next to the code (`*.test.ts`) or in `test/`. The back end in `src/server` runs on Node.js (`npm run server`, type stripping, no build step) and its tests run with Vitest (`npm run test:server`); `npm run check:server` compiles it with only Node's types. Deno does not run them.
 Most tests are property-based: they state a rule that must hold for generated inputs, such as the maximum gap between samples.
-`deno task build` bundles the browser code into `public/app.js` with `deno bundle`, which is an experimental Deno command.
+`npm run build` bundles the analysis Web Worker into `public/analysis-worker.js` with esbuild, builds the Tailwind styles with its CLI, copies the samples and diagrams, and then builds the Astro site; the scripts of `src/` run on Node with type stripping.
 
 ### 7.1 Front end: the scroll-linked tiger reveal
 
@@ -1203,9 +1203,9 @@ The optional Node.js API exposes `GET /api/v1/health`; it needs no `Origin` head
 
 This chapter lists what you need to work on the code.
 
-You need Deno, npm and Node.js 22.23.4 or newer; `.nvmrc` pins Node 24, which CI also uses (`nvm use` picks it up). Run `npm ci` first; npm manages the dependency tree used by the site build, the unit tests and Deno.
+You need npm and Node.js 22.23.4 or newer (PlantUML with Java only to redraw the diagrams); `.nvmrc` pins Node 24, which CI also uses (`nvm use` picks it up). Run `npm ci` first; npm manages the dependency tree used by the site build and the unit tests.
 
-`deno task dev` prepares the Worker, samples and styling, then starts Astro at `http://localhost:8123/tigerlegs/`. `deno task build` generates the production site in `dist/`; `npm run preview` serves that build locally. No API service is needed for these workflows.
+`npm run dev` prepares the Worker, samples and styling, then starts Astro at `http://localhost:8123/tigerlegs/`. `npm run build` generates the production site in `dist/`; `npm run preview` serves that build locally. No API service is needed for these workflows.
 
 `npm test` (Vitest) runs the analysis, documentation and domain unit and integration tests. `npm run check` checks the Astro/React code. After building and installing Chromium with `npx playwright install chromium`, `npm run test:site` checks static deep links, ADR publication, React imports/selection, Worker thresholds, terrain consent and mobile layout on a plain static server.
 
@@ -1232,7 +1232,7 @@ Rules:
 - React components have stories in Storybook (`npm run storybook`, files `src/components/*.stories.tsx`). Each story is also a component test: `npm run test:a11y` runs every story in Chromium through Vitest and fails on any axe accessibility violation (`a11y.test: "error"` in `.storybook/preview.ts`). The *Accessibility* panel in Storybook shows the same findings while developing.
 - Automated checks find only part of the accessibility problems (roughly a third to a half). Keyboard use, focus order and screen-reader wording still need a manual check.
 - Not yet covered: `Extractor` and `CourseMap` (Leaflet, web worker and map tiles need mocks), and the Astro pages and layout, which Storybook does not render.
-- A change is done only when `npm test`, `deno task build` and (for site changes) `npm run test:site` pass; see [DEFINITION_OF_DONE.md](./DEFINITION_OF_DONE.md).
+- A change is done only when `npm test`, `npm run build` and (for site changes) `npm run test:site` pass; see [DEFINITION_OF_DONE.md](./DEFINITION_OF_DONE.md).
 
 ## 13. Decision log
 
@@ -1245,7 +1245,7 @@ Table 11 lists the ADRs and what each decides.
 | ADR                                                                       | Decision                                                                                                                                                                                                                         |
 | ------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | [0001](./adr/0001-record-architecture-decisions.md)                       | Record architecture decisions                                                                                                                                                                                                    |
-| [0002](./adr/0002-use-deno-with-typescript.md)                            | Use Deno with TypeScript                                                                                                                                                                                                         |
+| [0002](./adr/0002-use-deno-with-typescript.md)                            | Use Deno with TypeScript (superseded by Node.js and npm, issue #100)                                                                                                                                                             |
 | [0003](./adr/0003-gpx-analysis-execution-location.md)                     | Choose where the GPX analysis runs                                                                                                                                                                                               |
 | [0004](./adr/0004-host-deno-backend-on-eu-vps.md)                         | Host the backend on an EU VPS                                                                                                                                                                                                    |
 | [0005](./adr/0005-rest-json-api-for-multi-client-support.md)              | Offer a REST/JSON API                                                                                                                                                                                                            |
