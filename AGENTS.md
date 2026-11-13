@@ -13,6 +13,7 @@ After finishing work, say what changed and what is ready to commit, and wait. Ap
 
 - English, imperative mood.
 - Put the issue number in the title, for example `Add fixed rest days to the training week (#74)`.
+- The title says *what* changed. The body says *why*, in one or two sentences, when the reason is not obvious from the change: a decision goes in an ADR, but the reason for this change belongs in its commit message, so that the history explains itself.
 
 ### Issues and the Definition of Done
 
