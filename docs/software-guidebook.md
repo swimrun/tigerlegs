@@ -313,6 +313,18 @@ They start from what their earlier studies observed, which fits this project: "d
 
 Page numbers are those of the preprint of Theunissen et al. (2022a).
 
+### 5.2 Documentation for people and for AI co-developers
+
+This project is documented for two kinds of readers: the developers and students who work on it, and the AI assistants that work with them as co-developers. Both read the same facts, so the facts live once.
+
+- **One source for the instructions to agents.** `AGENTS.md` holds the working agreements for every agent (Claude Code, GitHub Copilot, Codex); the files of the tools only point to it. A person reads the same file to learn how the project works.
+- **The explanation stays with the code.** The README, this guidebook and the ADRs are Markdown in the repository, so that an assistant reads them as plain text, and a change to the software and to its documents is one change (section 5.1).
+- **Claims have sources.** An assistant must give a quote or a reference for a factual claim and say so when it has none (`AGENTS.md`), which is also what a reader needs to check a statement.
+- **What and why.** A commit says what changed in its title and why in its body, for a person who reads the history and for an assistant that has to continue the work.
+- **A person decides.** An assistant proposes and checks; commits, pushes and merges happen on request (`AGENTS.md`).
+
+The agentic user interface (the assistant in the app) follows the same idea in the other direction: the assistant talks to the page over an open protocol, AG-UI, and a catalog of approved components decides what it may show (see the section on agentic UI in chapter 7).
+
 Table 5 lists the documents and the question each one answers.
 
 *Table 5*: Documents and the questions they answer.
@@ -1103,6 +1115,22 @@ The save of a repository throws a conflict error when the version of the aggrega
 `RecordingRepository.erase` removes all recordings of an athlete, which is part of the erasure use case (section 6.6).
 The importers and exporters are not in this diagram: an `ActivityImporter` returns a `Recording` from a file, and a `WorkoutExporter` (later) turns a planned session into a file.
 
+### 7.8 Front end: agentic UI with AG-UI, and A2UI as a candidate (planned)
+
+The chat agents of the page speak `ChatEvent` (section 7.2). `src/client/ag-ui.ts` turns that stream into AG-UI events, the open, event-based protocol that "standardizes how AI agents connect to user-facing applications" (AG-UI, n.d.), so that an agent here can be consumed by any AG-UI client and an AG-UI agent can later replace one of ours:
+
+*Table 7*: Mapping of the chat events to AG-UI events.
+
+| Chat event                    | AG-UI events                                                     | Note                                               |
+| ----------------------------- | ---------------------------------------------------------------- | -------------------------------------------------- |
+| `run-started`, `run-finished` | `RUN_STARTED`, `RUN_FINISHED`                                    | An agent that throws ends the run with `RUN_ERROR` |
+| `text`                        | `TEXT_MESSAGE_START`, `TEXT_MESSAGE_CONTENT`, `TEXT_MESSAGE_END` |                                                    |
+| `status`, suggestion chips    | `CUSTOM` named `status` and `followUps`                          | No AG-UI event of their own                        |
+
+The adapter is tested (`test/client/ag-ui.test.ts`) and is not yet the transport between the agent and the chat component. The tool calls of issue #86 (`add_session`, `move_session`, `set_rest_days`, `navigate`) go over AG-UI as `TOOL_CALL_START`, `TOOL_CALL_ARGS`, `TOOL_CALL_END` and `TOOL_CALL_RESULT`, the last carrying the result.
+
+For interactive elements next to the text (a proposal with an Apply button, a day picker, a preview of the week; issue #128) the candidate is A2UI, "an open-source project, complete with a format optimized for representing updateable, agent-generated UIs" (Google A2UI Team, 2025): the agent sends a declarative description and the page renders it from "a 'catalog' of trusted, pre-approved UI components" of its own. The two work together: "AG-UI handles the structured communication between client and agent, while A2UI transports the UI-specific content" (Steyer, 2026), inside an AG-UI event of type `ACTIVITY_SNAPSHOT`. The choice and its criteria are in [ADR-0019](./adr/0019-agentic-ui-with-ag-ui-and-a2ui.md). The front end stays React, as taught at the Software (and Robotics) Engineering department; Redux for the state of such a chat may follow.
+
 ## 8. Data
 
 This chapter describes where the system keeps data.
@@ -1119,9 +1147,9 @@ TopoGrafix created it in 2002, and file-extensions.com (n.d.) calls it "the de f
 Each waypoint (`<wpt>`) can contain a `<sym>` element with a symbol name.
 The GPX 1.1 specification defines `<sym>` as free-form text, so there is no standard list of values (TopoGrafix, 2004).
 Route planners therefore use their own conventions.
-Table 7 lists the numeric `<sym>` values in the test files, which come from the route planner Openrunner.
+Table 8 lists the numeric `<sym>` values in the test files, which come from the route planner Openrunner.
 
-*Table 7*: Waypoint `<sym>` values in Openrunner files.
+*Table 8*: Waypoint `<sym>` values in Openrunner files.
 
 | `<sym>` value | Meaning                       |
 | ------------- | ----------------------------- |
@@ -1138,14 +1166,14 @@ Support for other conventions, such as the files from racedaymap.com that ÖTILL
 ### 8.2 Training session data (planned)
 
 Nothing here is stored outside the browser yet; it is the shape that the prototype and the stored model (section 6.6) share, so that the training page, the chat tool calls (issue #86) and the planner (issues #85 and #87) use the same fields.
-Table 8 lists the fields of one planned session.
+Table 9 lists the fields of one planned session.
 
-*Table 8*: Fields of a planned session.
+*Table 9*: Fields of a planned session.
 
 | Field         | Values                                           | Notes                                                      |
 | ------------- | ------------------------------------------------ | ---------------------------------------------------------- |
-| `discipline`  | `swim`, `run`, `swimrun`, `strength`, `mobility` | Chooses the subtype list (Table 9)                         |
-| `subtype`     | see Table 9                                      | One value, or none for a swimrun                           |
+| `discipline`  | `swim`, `run`, `swimrun`, `strength`, `mobility` | Chooses the subtype list (Table 10)                        |
+| `subtype`     | see Table 10                                     | One value, or none for a swimrun                           |
 | `focus`       | `easy`, `long`, `speed`, `recovery`              | Speed is intervals; it is not a subtype                    |
 | `basis`       | `time` (default), `distance`                     | Chooses which target field is filled                       |
 | `minutes`     | whole number, at least 1                         | Target on the time basis                                   |
@@ -1153,10 +1181,10 @@ Table 8 lists the fields of one planned session.
 | `day`         | `Mon` to `Sun` in a week of a block              | Moving to a sports rest day is allowed and gives a warning |
 | `title`       | text, not empty                                  | Shown on the card; a generated title is localised          |
 | `description` | text, may be empty                               |                                                            |
-| `steps`       | tree of steps, may be empty                      | Intervals, see Table 10                                    |
+| `steps`       | tree of steps, may be empty                      | Intervals, see Table 11                                    |
 | `origin`      | `generated`, `hardcoded`, `imported`             | An edit by hand marks a generated session as hardcoded     |
 
-*Table 9*: Subtypes by discipline.
+*Table 10*: Subtypes by discipline.
 
 | Discipline | Subtype                  | Colour rule                                                   |
 | ---------- | ------------------------ | ------------------------------------------------------------- |
@@ -1166,7 +1194,7 @@ Table 8 lists the fields of one planned session.
 | `mobility` | `static`, `dynamic`      | Flexibility colour                                            |
 | `swimrun`  | none                     | Swimrun colour                                                |
 
-*Table 10*: Fields of a step of a structured session.
+*Table 11*: Fields of a step of a structured session.
 
 | Field       | Values                                           | Notes                                                          |
 | ----------- | ------------------------------------------------ | -------------------------------------------------------------- |
@@ -1243,9 +1271,9 @@ Rules:
 
 This chapter lists the ADRs, which hold the reasoning behind the architecture.
 
-Table 11 lists the ADRs and what each decides.
+Table 12 lists the ADRs and what each decides.
 
-*Table 11*: Architecture decision records.
+*Table 12*: Architecture decision records.
 
 | ADR                                                                       | Decision                                                                                                                                                                                                                         |
 | ------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -1266,11 +1294,13 @@ Table 11 lists the ADRs and what each decides.
 | [0016](./adr/0016-data-access-layer.md)                                   | Draft: the data layer of the back end (ORM or repositories, PostgreSQL driver, optimistic concurrency, transactions); no decision yet                                                                                            |
 | [0017](./adr/0017-localisation.md)                                        | Accepted: localisation with i18next and react-i18next, translations as external data files (YAML preferred, JSON accepted), ICU message syntax preferred, and one URL per language (Astro i18n routing); decided without a spike |
 | [0018](./adr/0018-acceptance-tests-with-gherkin-and-playwright-bdd.md)    | Accepted as a pilot: acceptance criteria as Gherkin features in `test/features/`, run with playwright-bdd on the Playwright runner                                                                                               |
+| [0019](./adr/0019-agentic-ui-with-ag-ui-and-a2ui.md)                      | Draft: AG-UI as the transport for the chat and tool calls, A2UI as the candidate for declarative interfaces, with a catalog of our own components                                                                                |
 
 ADR-0008 implements a shared Astro layout and directly linkable HTML pages, with the interactive extractor implemented in React and no runtime backend. Astro itself is not React-based; it supplies static page composition around the React application. Existing TypeScript analysis modules remain reusable. All ADRs are built into HTML pages and linked from this chapter. The ADR includes a provisional weighted comparison of the previous Deno-only site build, Astro, Next.js static export, Vite + React SPA and Eleventy, following the [ICT Research Methods multi-criteria decision making method](https://ictresearchmethods.nl/workshop/multi-criteria-decision-making/).
 
 ## References
 
+- AG-UI. (n.d.). *AG-UI overview*. Retrieved November 13, 2026, from https://docs.ag-ui.com/introduction
 - Brown, S. (n.d.-a). *The software guidebook*. Leanpub. https://leanpub.com/documenting-software-architecture
 - Brown, S. (n.d.-b). *The C4 model for visualising software architecture*. https://c4model.com/
 - Cavoukian, A. (2011). *Privacy by design: The 7 foundational principles*. Information and Privacy Commissioner of Ontario. https://www.ipc.on.ca/wp-content/uploads/resources/7foundationalprinciples.pdf
@@ -1282,6 +1312,7 @@ ADR-0008 implements a shared Astro layout and directly linkable HTML pages, with
 - Garmin. (n.d.-a). *Connect IQ basics*. Retrieved November 1, 2026, from https://developer.garmin.com/connect-iq/connect-iq-basics/
 - Garmin. (n.d.-b). *Workout files* [FIT SDK documentation]. Retrieved November 11, 2026, from https://developer.garmin.com/fit/articles/file-types/workout.html
 - Geofabrik. (n.d.). *OpenStreetMap data extracts*. Retrieved November 10, 2026, from https://download.geofabrik.de/
+- Google A2UI Team. (2025, December 15). *Introducing A2UI: An open project for agent-driven interfaces*. Google Developers Blog. https://developers.googleblog.com/introducing-a2ui-an-open-project-for-agent-driven-interfaces/
 - Gruber, T. (2008). Ontology. In L. Liu & M. T. Özsu (Eds.), *Encyclopedia of Database Systems*. Springer. https://tomgruber.org/writing/definition-of-ontology
 - Het Rondje Eilanden. (n.d.). *Parcours* [Course map with the length of every swim and run]. Retrieved November 10, 2026, from https://www.hetrondjeeilanden.nl/wedstrijd/parcours/
 - ICT Research Methods. (n.d.). *Multi-criteria decision making*. Retrieved November 10, 2026, from https://ictresearchmethods.nl/workshop/multi-criteria-decision-making/
@@ -1294,6 +1325,7 @@ ADR-0008 implements a shared Astro layout and directly linkable HTML pages, with
 - ÖTILLÖ. (n.d.). *ÖTILLÖ Cannes World Series*. Retrieved November 10, 2026, from https://otilloswimrun.com/races/cannes-france/cannes-world-series/
 - Preston-Werner, T. (2010, August 23). *Readme Driven Development*. https://tom.preston-werner.com/2010/08/23/readme-driven-development.html
 - RaceDayMap. (n.d.). *ÖTILLÖ Swimrun Cannes: World Series* [Interactive course map and leg table]. Retrieved November 10, 2026, from https://app.racedaymap.com/otillo-swimrun-cannes/world-series
+- Steyer, M. (2026, May 1). *Integrating A2UI with AG-UI and CopilotKit in Angular*. Angular Architects. https://www.angulararchitects.io/en/blog/integrating-a2ui-with-ag-ui-in-angular/
 - Theunissen, T., Hoppenbrouwers, S., & Overbeek, S. (2022a). Approaches for documentation in continuous software development. *Complex Systems Informatics and Modeling Quarterly, 32*, 1–27. https://doi.org/10.7250/csimq.2022-32.01
 - TopoGrafix. (2004). *GPX 1.1 schema documentation*. https://www.topografix.com/GPX/1/1/
 
@@ -1303,9 +1335,9 @@ ADR-0008 implements a shared Astro layout and directly linkable HTML pages, with
 
 This appendix defines the domain terms, so that you can look up a term when you meet it.
 
-Table 12 lists the terms in the order in which you meet them when you follow a GPX file through the system.
+Table 13 lists the terms in the order in which you meet them when you follow a GPX file through the system.
 
-*Table 12*: Domain glossary.
+*Table 13*: Domain glossary.
 
 | Term                        | Meaning                                                                                                      | Example                                                                                            |
 | --------------------------- | ------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------- |
@@ -1335,9 +1367,9 @@ Table 12 lists the terms in the order in which you meet them when you follow a G
 | Run-first, swim-first       | Which segment type opens a paired row; run-first is the default                                              | A toggle above the table                                                                           |
 | Aid station                 | Food and drink point, usually on land                                                                        | A waypoint on a run                                                                                |
 
-Table 13 defines the terms about map data, the terrain service and the infrastructure around it, in alphabetical order.
+Table 14 defines the terms about map data, the terrain service and the infrastructure around it, in alphabetical order.
 
-*Table 13*: Map data and infrastructure glossary.
+*Table 14*: Map data and infrastructure glossary.
 
 | Term                                  | Meaning                                                                                                                                                                                  | Example                                                                                           |
 | ------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
@@ -1379,9 +1411,9 @@ Its relations include *a track has trackpoints*, *a segment covers trackpoints* 
 An ontology mapping relates the concepts of one domain to equivalent concepts in another.
 A train journey fits, because it has the same structure: a route that someone records as positions, stretches with different surfaces (open track, bridge, tunnel) and a "next ... in x km" display.
 The analogy is my own choice, not a published ontology.
-Table 14 shows the mapping and names where it breaks down.
+Table 15 shows the mapping and names where it breaks down.
 
-*Table 14*: Mapping of swimrun concepts to a train journey.
+*Table 15*: Mapping of swimrun concepts to a train journey.
 
 | SwimRun concept             | Train journey equivalent                             | Where the analogy breaks                                    |
 | --------------------------- | ---------------------------------------------------- | ----------------------------------------------------------- |
