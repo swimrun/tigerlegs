@@ -311,7 +311,9 @@ They start from what their earlier studies observed, which fits this project: "d
 - **Executable Documentation.** "Traditionally written documentation is hard to keep up-to-date with the actual code", but "the human-readable specifications can be executed, so the document itself can be verified, validated, and tested", with tools such as Cucumber (Theunissen et al., 2022a, p. 7). This is why the acceptance criteria of an issue are Given, When, Then lines that run as Gherkin features, and why tests check that the guidebook headings are numbered and that the Definition of Done in the templates matches its document. The features run with playwright-bdd on the Playwright runner ([ADR-0018](./adr/0018-acceptance-tests-with-gherkin-and-playwright-bdd.md)); Cucumber.js, the JavaScript implementation of Cucumber, runs the same Gherkin and is the alternative, at the price of a second test runner and browser setup, which the ADR gives as the reason not to start with it.
 - **Automated Text Analytics** (text mining and deep learning to retrieve decisions from distributed tools such as commit messages) is less relevant here, because every significant decision is stored in an ADR and does not have to be dug out of the history. The commit message still carries the *why*: its title says what changed and its body says briefly why, so that the history explains itself (AGENTS.md).
 
-Page numbers are those of the preprint of Theunissen et al. (2022a).
+The earlier mapping study of the same authors gives the reason to write knowledge down: "knowledge transfer is hindered when knowledge about the software product, ... remains implicit in the minds of developers" (Theunissen et al., 2022b). So we make it explicit, in a software guidebook with C4 diagrams (Brown, 2026) in the repository, kept in line with the software in the same change, and we use AI assistants to write, check and update it, with the rules for them in AGENTS.md.
+
+Page numbers of Theunissen et al. (2022a) are those of the preprint.
 
 Table 5 lists the documents and the question each one answers.
 
@@ -1271,6 +1273,7 @@ ADR-0008 implements a shared Astro layout and directly linkable HTML pages, with
 
 ## References
 
+- Brown, S. (2026). *The C4 model: Visualizing software architecture*. O'Reilly Media. https://www.oreilly.com/library/view/the-c4-model/9798341660113/
 - Brown, S. (n.d.-a). *The software guidebook*. Leanpub. https://leanpub.com/documenting-software-architecture
 - Brown, S. (n.d.-b). *The C4 model for visualising software architecture*. https://c4model.com/
 - Cavoukian, A. (2011). *Privacy by design: The 7 foundational principles*. Information and Privacy Commissioner of Ontario. https://www.ipc.on.ca/wp-content/uploads/resources/7foundationalprinciples.pdf
@@ -1295,6 +1298,7 @@ ADR-0008 implements a shared Astro layout and directly linkable HTML pages, with
 - Preston-Werner, T. (2010, August 23). *Readme Driven Development*. https://tom.preston-werner.com/2010/08/23/readme-driven-development.html
 - RaceDayMap. (n.d.). *ÖTILLÖ Swimrun Cannes: World Series* [Interactive course map and leg table]. Retrieved November 10, 2026, from https://app.racedaymap.com/otillo-swimrun-cannes/world-series
 - Theunissen, T., Hoppenbrouwers, S., & Overbeek, S. (2022a). Approaches for documentation in continuous software development. *Complex Systems Informatics and Modeling Quarterly, 32*, 1–27. https://doi.org/10.7250/csimq.2022-32.01
+- Theunissen, T., van Heesch, U., & Avgeriou, P. (2022b). A mapping study on documentation in continuous software development. *Information and Software Technology, 142*, Article 106733. https://doi.org/10.1016/j.infsof.2021.106733
 - TopoGrafix. (2004). *GPX 1.1 schema documentation*. https://www.topografix.com/GPX/1/1/
 
 ## Appendices
