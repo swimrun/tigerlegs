@@ -34,7 +34,7 @@ implementation. The architecture is documented in the
 - Preserve original GPX data; never mutate the input.
 - Prefer local, in-browser processing and offline capability; avoid
   unnecessary backend infrastructure (privacy: tracks reveal homes).
-- Run `npm test` and `deno task build` before pushing.
+- Run `npm test` and `npm run build` before pushing.
 
 ## Requirements style
 
