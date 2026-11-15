@@ -1,0 +1,145 @@
+;; Allow-list sandbox profile for pi-kit: everything is denied unless listed here.
+;; Untested against pi-kit itself. Tighten or extend with the log, see below.
+;;
+;; Run from the repository root (see CONTRIBUTING.md, section 4, and ADR-0020):
+;;   sandbox-exec -D HOME="$HOME" -D PROJECT="$PWD" \
+;;     -D TMP="/private$(getconf DARWIN_USER_TEMP_DIR)" -D CACHE="/private$(getconf DARWIN_USER_CACHE_DIR)" \
+;;     -f scripts/sandbox/pi-kit-allow.sb /Applications/pi-kit.app/Contents/MacOS/pi-kit \
+;;     --no-sandbox --user-data-dir="$HOME/Library/Application Support/pi-kit"
+;;
+;; See what is denied, live:
+;;   log stream --predicate 'eventMessage CONTAINS "deny"'
+
+(version 1)
+(deny default)
+
+;; 1. Baseline that every macOS program needs to start (shared libraries, fonts, locale).
+;;    Read-only system files, the same on every Mac, no personal data.
+(import "system.sb")
+
+;; 2. The app itself and the tools an agent runs (git, node, npm).
+(allow process-exec process-fork)
+;; Electron looks the helper apps up by walking up from the app; it only needs to see that /Applications exists.
+(allow file-read-metadata (literal "/Applications"))
+(allow file-read*
+  (subpath "/Applications/pi-kit.app")
+  (subpath "/usr/bin")
+  (subpath "/bin")
+  (subpath "/opt/homebrew")
+  (subpath "/Library/Developer")
+  (subpath "/Applications/Xcode.app")
+  (literal "/private/var/db/xcode_select_link")
+  (subpath "/private/etc/ssl")
+  (literal (string-append (param "HOME") "/.gitconfig"))
+  (literal (string-append (param "HOME") "/.gitignore_global"))
+  (subpath (string-append (param "HOME") "/.config/git")))
+
+;; Per-user temp and cache folders (git and xcrun write small cache files there).
+;; Pass them with the /private prefix, because the sandbox matches the real path:
+;;   -D TMP="/private$(getconf DARWIN_USER_TEMP_DIR)" -D CACHE="/private$(getconf DARWIN_USER_CACHE_DIR)"
+(allow file-read* file-write*
+  (subpath (param "TMP"))
+  (subpath (param "CACHE")))
+
+;; 3. The project: read and write. Nothing else in the home folder is open.
+(allow file-read* file-write*
+  (subpath (param "PROJECT")))
+
+;; 4. The app's own data folders: read and write.
+(allow file-read* file-write*
+  (subpath (string-append (param "HOME") "/Library/Application Support/pi-kit"))
+  (subpath (string-append (param "HOME") "/Library/Caches/pi-kit"))
+  (subpath (string-append (param "HOME") "/Library/Logs/pi-kit"))
+  (subpath (string-append (param "HOME") "/Library/Preferences/pi-kit")))
+
+;; 5. GUI services an Electron app needs, taken from the deny log (window server, launch services).
+;;    The clipboard (com.apple.pasteboard.1) is left closed on purpose: it may hold passwords.
+(allow mach-lookup
+  (global-name "com.apple.windowserver.active")
+  (global-name "com.apple.tccd.system")
+  (global-name "com.apple.DiskArbitration.diskarbitrationd")
+  (global-name "com.apple.distributed_notifications@Uv3")
+  (global-name "com.apple.coreservices.launchservicesd")
+  (global-name "com.apple.CoreServices.coreservicesd"))
+(allow user-preference-read
+  (preference-domain "kCFPreferencesAnyApplication"))
+;; Path walking: lets the app see that these folders exist, not what is in them.
+(allow file-read-metadata
+  (literal "/private")
+  (literal (param "HOME")))
+
+;; More GUI services from the deny log (rendering, Dock, launch services database, network config).
+;; Left closed on purpose: the clipboard (com.apple.pasteboard.1) and hid-control (keyboard and mouse devices).
+(allow mach-lookup
+  (global-name "com.apple.lsd.modifydb")
+  (global-name "com.apple.lsd.mapdb")
+  (global-name "com.apple.SystemConfiguration.configd")
+  (global-name "com.apple.dock.server")
+  (global-name "com.apple.CARenderServer"))
+(allow user-preference-read
+  (preference-domain "com.apple.universalaccess")
+  (preference-domain "com.apple.coregraphics"))
+(allow iokit-open-user-client
+  (iokit-user-client-class "RootDomainUserClient"))
+(allow file-read-metadata
+  (literal "/private/etc")
+  (literal "/private/var/db/.AppleSetupDone")
+  (literal (string-append (param "HOME") "/Library"))
+  (literal (string-append (param "HOME") "/Library/Application Support"))
+  (subpath (string-append (param "HOME") "/Library/Preferences/com.apple.LaunchServices")))
+(allow file-read-data
+  (literal "/dev")
+  (literal (string-append (param "HOME") "/Library/Preferences/com.apple.LaunchServices/com.apple.launchservices.secure.plist"))
+  (literal (string-append (param "HOME") "/Library/Preferences/com.apple.LaunchServices/com.apple.LaunchServices.plist")))
+
+;; The GPU and the window manager, from the deny log of the first real run (without them the GPU process exits).
+;; Left closed on purpose: com.apple.pbs.fetch_services (the pasteboard services).
+(allow iokit-open-user-client
+  (iokit-user-client-class "AGXDeviceUserClient")
+  (iokit-user-client-class "IOSurfaceRootUserClient"))
+(allow mach-lookup
+  (global-name "com.apple.windowmanager.server")
+  (global-name "com.apple.dock.fullscreen")
+  (global-name "com.apple.SystemConfiguration.DNSConfiguration")
+  (global-name "com.apple.coreservices.quarantine-resolver"))
+(allow user-preference-read
+  (preference-domain "com.apple.accessibility")
+  (preference-domain "com.apple.hitoolbox")
+  (preference-domain "com.apple.servicesmenu.services"))
+(allow user-preference-read user-preference-write
+  (preference-domain "dev.pi-kit.app"))
+(allow file-read-metadata
+  (literal "/Users")
+  (literal "/private/var")
+  (literal "/Library"))
+(allow file-read-data
+  (literal "/Library/Preferences/com.apple.networkd.plist"))
+
+;; The pi agent's own state (~/.pi: settings, sessions, and the credentials of the model providers that you
+;; configure there). The backend fails with EPERM without it. Real API keys do not belong here while testing.
+(allow file-read* file-write*
+  (subpath (string-append (param "HOME") "/.pi")))
+(allow file-read-data
+  (literal "/private/etc/hosts"))
+
+;; Chromium's link between the main process and its helper processes (bundle id dev.pi-kit.app).
+;; Only names with this prefix: a local Mach service, not internet.
+(allow mach-register mach-lookup
+  (global-name-regex #"^dev\.pi-kit\.app\.MachPortRendezvousServer\."))
+
+;; Chromium's single-instance lock (SingletonSocket): a local Unix socket, not internet.
+;; Only in the temp folder and the app's own data folder.
+(allow network-bind network-inbound network-outbound
+  (local unix-socket (subpath (param "TMP")))
+  (remote unix-socket (subpath (param "TMP")))
+  (local unix-socket (subpath (string-append (param "HOME") "/Library/Application Support/pi-kit")))
+  (remote unix-socket (subpath (string-append (param "HOME") "/Library/Application Support/pi-kit"))))
+
+;; The app stops its own child processes (the backend, the terminals of the agent) with a signal.
+(allow signal (target self) (target children))
+
+;; 6. Network: only localhost, for example Ollama on 11434 and the app's own backend.
+;;    No internet. Tighten the port once the log shows which ports are used.
+(allow network-bind network-inbound network-outbound
+  (local ip "localhost:*")
+  (remote ip "localhost:*"))

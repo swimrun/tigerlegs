@@ -1307,6 +1307,7 @@ ADR-0008 implements a shared Astro layout and directly linkable HTML pages, with
 - Cockburn, A. (2001). *Writing effective use cases*. Addison-Wesley.
 - file-extensions.com. (n.d.). *GPX file format*. Retrieved June 15, 2026, from https://file-extensions.com/docs/gpx
 - Fowler, M. (n.d.-a). *DDD aggregate* [Bliki]. Retrieved November 11, 2026, from https://martinfowler.com/bliki/DDD_Aggregate.html
+| [0020](./adr/0020-sandbox-for-local-ai-coding-agents.md)                  | Draft: isolated local development with an AI coding agent: a `sandbox-exec` allow-list for now, nono as the candidate to replace it, microsandbox and a separate macOS user considered                                           |
 - Fowler, M. (n.d.-b). *Repository* [Patterns of enterprise application architecture]. Retrieved November 11, 2026, from https://martinfowler.com/eaaCatalog/repository.html
 - Fowler, M. (n.d.-c). *Unit of work* [Patterns of enterprise application architecture]. Retrieved November 11, 2026, from https://martinfowler.com/eaaCatalog/unitOfWork.html
 - Garmin. (n.d.-a). *Connect IQ basics*. Retrieved November 1, 2026, from https://developer.garmin.com/connect-iq/connect-iq-basics/
