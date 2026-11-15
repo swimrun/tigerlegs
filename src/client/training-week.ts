@@ -329,10 +329,11 @@ export const LEVER_LIMITS: Readonly<PlanLevers> = { runs: 4, swims: 3, swimruns:
 /** The levers of the example week: two runs, a swim, a swimrun brick, and two short strength and two short mobility sessions. */
 export const DEFAULT_LEVERS: Readonly<PlanLevers> = { runs: 2, swims: 1, swimruns: 1, strength: 2, mobility: 2 };
 
-type CatalogEntry = Omit<TrainingSession, "day">;
+/** What to do in a session, without a day: a session is a session template placed on a day. */
+type SessionTemplate = Omit<TrainingSession, "day">;
 
-/** The sessions a week is built from, in the order the levers take them. */
-const CATALOG: Record<keyof PlanLevers, readonly CatalogEntry[]> = {
+/** The session templates a week is built from (prototype data), in the order the levers take them. */
+const SESSION_TEMPLATES: Record<keyof PlanLevers, readonly SessionTemplate[]> = {
   swimruns: [
     { id: "swimrun-1", title: "Swimrun brick, 2 h", discipline: "swimrun", minutes: 120 },
     { id: "swimrun-2", title: "Swimrun, 90 min", discipline: "swimrun", minutes: 90 },
@@ -360,8 +361,8 @@ const CATALOG: Record<keyof PlanLevers, readonly CatalogEntry[]> = {
   ],
 };
 
-/** The ids of every session the levers can produce, for translating their titles. */
-export const CATALOG_IDS: readonly string[] = Object.values(CATALOG).flatMap((entries) => entries.map((entry) => entry.id));
+/** The ids of every session template, for translating their titles. */
+export const SESSION_TEMPLATE_IDS: readonly string[] = Object.values(SESSION_TEMPLATES).flatMap((templates) => templates.map((template) => template.id));
 
 /** Levers kept within their limits and whole numbers. */
 export function clampLevers(levers: PlanLevers): PlanLevers {
@@ -390,17 +391,17 @@ export function generateWeek(
   const days = DAYS.filter((day) => !restDays.includes(day));
   const placed: TrainingSession[] = [];
   const unplaced: string[] = [];
-  const take = (kind: keyof PlanLevers) => CATALOG[kind].slice(0, wanted[kind]);
+  const take = (kind: keyof PlanLevers) => SESSION_TEMPLATES[kind].slice(0, wanted[kind]);
   const before = (a: number[], b: number[]) => {
     for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) return a[i] < b[i];
     return false;
   };
 
-  const place = (entry: CatalogEntry, kind: keyof PlanLevers) => {
+  const place = (template: SessionTemplate, kind: keyof PlanLevers) => {
     let best: Day | null = null;
     let bestScore: number[] = [];
     for (const day of days) {
-      const candidate: TrainingSession = { ...entry, day };
+      const candidate: TrainingSession = { ...template, day };
       const problems = weekIssues([...placed, candidate], restDays).length;
       const here = placed.filter((session) => session.day === day);
       const mains = placed.filter((session) => !isShort(session));
@@ -416,12 +417,12 @@ export function generateWeek(
         bestScore = score;
       }
     }
-    if (best === null) unplaced.push(entry.id);
-    else placed.push({ ...entry, day: best });
+    if (best === null) unplaced.push(template.id);
+    else placed.push({ ...template, day: best });
   };
 
   for (const kind of ["swimruns", "runs", "swims", "strength", "mobility"] as const) {
-    for (const entry of take(kind)) place(entry, kind);
+    for (const template of take(kind)) place(template, kind);
   }
   return { week: placed, unplaced };
 }

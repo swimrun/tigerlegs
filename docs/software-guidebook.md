@@ -54,40 +54,50 @@ title Domain concepts of structured training (planned)
 skinparam classAttributeIconSize 0
 hide empty members
 
-class GoalRace {
+class TrainingPlan {
+  leads to goal events
+}
+class GoalEvent {
   name, date, type, distance
+  priority: A | B | C
 }
 class TrainingBlock {
   3, 4 or 5 weeks
 }
-class Week {
+class WeekPlan {
   phase: base | build | recovery | peak | taper
   focus: mileage | speed | strength | swimrun
 }
-class Session {
+class PlannedSession {
+  date
+  status: planned | done | skipped
+}
+class SessionTemplate {
   discipline
   subtype
   focus: easy | long | speed | recovery
   basis: time (default) | distance
   target: minutes or metres
 }
-class Step {
+class WorkoutStep {
   role: warm-up | work | rest | cool-down | repeat
   repeat count
   duration: time | distance | open
 }
 class SportsRestDay
 
-GoalRace "1" <-- "1..*" TrainingBlock : leads to
-TrainingBlock *-- "3..5" Week
-Week *-- "0..*" Session : sessions of the current block
-Session *-- "0..*" Step : structure
-Step o-- "0..*" Step : repeats
+TrainingPlan *-- "1..*" GoalEvent
+TrainingPlan *-- "1..*" TrainingBlock
+TrainingBlock *-- "3..5" WeekPlan
+WeekPlan *-- "0..*" PlannedSession : sessions of the current block
+PlannedSession "*" --> "1" SessionTemplate : what to do
+SessionTemplate *-- "0..*" WorkoutStep : structure
+WorkoutStep o-- "0..*" WorkoutStep : repeats
 SportsRestDay "0..6" -- "1" TrainingBlock : applies to every week
 @enduml
 ```
 
-A session has a **discipline** (swim, run, swimrun, strength or mobility) and a **subtype** below it: trail, road or mixed for a run; open water or pool for a swim; with weight or body mass for strength; static or dynamic for mobility.
+A **session template** is what to do in a session, without a date or a status, and a **planned session** is a session template placed on a date. A session template has a **discipline** (swim, run, swimrun, strength or mobility) and a **subtype** below it: trail, road or mixed for a run; open water or pool for a swim; with weight or body mass for strength; static or dynamic for mobility.
 Its **focus** says what it is for, so *speed* is a focus and not a subtype.
 Most sessions are time-based (the default); a distance-based session is edited in metres.
 An interval session is a repeat step with a count, holding the work (a distance or a time) and the rest between the repetitions.
@@ -661,7 +671,7 @@ The words, as the extractor and training pages need them:
 - A course has **variants**: one way of doing it, with a description and its own typical GPX line. Race day and training, high and low water, and the water bird breeding season (from April to June some islands are avoided for the sake of nature) are variants. A variant can be valid only for some editions or months: the breeding season is a period of months, and courses change from year to year. Exactly one variant is the **canonical** one, the main way of doing the course: for Het Rondje Eilanden that is the race day recording of 2025, and its first other variant is the *lintjes opruimen* recording of 2026 (clearing the ribbons after the event, missing the part from island 3 to 5). The extractor marks the canonical variant "Main variant" and a canonical variant always has a GPX file. The extractor lists them per course: Het Rondje Eilanden has *race day* (the race starts with swim A of about 400 m along the island, because the island is full of people on race day) and *training* (swim A is run instead), and Rhederlaag has the recording as swum, high water, low water and the breeding season. Only the variants whose typical GPX file exists can be loaded; the others are announced as "GPX to be added".
 - A **swimrun group** is a set of athletes: a duo, a team or a larger training group.
 - A **training plan** leads to goal events: one A event and B or C events before it (roadmap M10). Its **planned sessions** are what the training page shows, and a session can have a structure of steps for intervals, intensity and rest. We do not build a training log: Strava, Garmin and Polar are dedicated platforms for executed training, so a session points at the activity there, or at a recording the athlete saved, and keeps a small adherence snapshot.
-- A **planned session** has a discipline and, below it, a subtype: for a run trail, road or mixed; for a swim open water or pool; for strength with weight or body mass; for mobility static or dynamic; a swimrun has none. Next to that it has a focus (easy, long, speed or recovery), a **basis** and a target. Time is the default basis: the target is minutes. On the distance basis the target is metres. The athlete edits the target on the detail screen, never both at once.
+- A **session template** is what to do in a session, without a date or a status; a **planned session** is a session template placed on a date. The word is *session* in the interface and in the model, and not *training* (the owner chose *session template* on 15 November 2026). A session template has a discipline and, below it, a subtype: for a run trail, road or mixed; for a swim open water or pool; for strength with weight or body mass; for mobility static or dynamic; a swimrun has none. Next to that it has a focus (easy, long, speed or recovery), a **basis** and a target. Time is the default basis: the target is minutes. On the distance basis the target is metres. The athlete edits the target on the detail screen, never both at once.
 - A session with **intervals** has a structure of steps. A *repeat* step has a repeat count and holds the steps that are repeated: a work step (a distance or a time, with an intensity) and a rest step (a time, or a distance at an easy pace) between the repetitions. Six times 400 m with 90 seconds rest is one repeat step with count 6, holding a work step of 400 m and a rest step of 90 seconds.
 - A **training block** is 3, 4 or 5 weeks, each a **week plan** with a phase (base, build, recovery, peak or taper) and a focus (mileage, speed, strength or swimrun); its last week is a recovery week (issue #85). Only the current block holds sessions; the weeks up to a goal race carry only their phase and focus (issue #87).
 - **Recovery** is not stored. It is derived from discipline, focus and duration or distance, per discipline group (swim, run, strength), and shown as bars along the week. A session on a sports rest day and a hard session within the recovery of the same group are warnings that are computed, not data.
@@ -705,7 +715,7 @@ Open questions:
 4. Is a coach a role in a group, or a relation between two athletes?
 5. Is the login account the same aggregate as the athlete profile?
 6. Which adherence figures do we keep (compliance in percent, planned against actual duration and distance), who may see them (the athlete only, or the coach too), and where do they come from when no service may give them to us?
-7. Is the term in the interface and the model *session* (as in `TrainingSession`, specs 002 and 003 and the training page) or *training*?
+7. Does a planned session hold its session template as a copy of its fields, so that a later change to a template does not rewrite a plan, or as a reference by id? In the prototype code `TrainingSession` is the session with a weekday and `SESSION_TEMPLATES` holds the templates; a planned session with a date, a status and an origin does not exist there yet.
 
 ## 7. Code
 
@@ -1131,6 +1141,8 @@ The adapter is tested (`test/client/ag-ui.test.ts`) and is not yet the transport
 
 For interactive elements next to the text (a proposal with an Apply button, a day picker, a preview of the week; issue #128) the candidate is A2UI, "an open-source project, complete with a format optimized for representing updateable, agent-generated UIs" (Google A2UI Team, 2025): the agent sends a declarative description and the page renders it from "a 'catalog' of trusted, pre-approved UI components" of its own. The two work together: "AG-UI handles the structured communication between client and agent, while A2UI transports the UI-specific content" (Steyer, 2026), inside an AG-UI event of type `ACTIVITY_SNAPSHOT`. The choice and its criteria are in [ADR-0019](./adr/0019-agentic-ui-with-ag-ui-and-a2ui.md). The front end stays React, as taught at the Software (and Robotics) Engineering department; Redux for the state of such a chat may follow.
 
+The first component of that catalog is `ChangeProposal`: a title, a list of changes (`label`, `before`, `after`) and the actions Apply and Dismiss, with their text labels taken from the string files of the page and not sent by the agent. Its name is neutral on purpose, so that it can live in a base catalog. There is one renderer, and each page has its own UI catalog, composed of the shared base and the components of that page, such as a week preview on the training page or a highlight of a segment on the extractor page; a component outside the catalog of the page is ignored. The training agent turns a changed planned session into a change, and the renderer knows nothing about training. This is not a micro front end: the page stays one Astro site with React islands, built and deployed once ([ADR-0008](./adr/0008-astro-static-site-with-react-islands.md)). The agent never sends code: "The agent generates a declarative JSON description of a component. The frontend maps this JSON to a pre-built, native widget", and "No code is executed" (Huang & Habler, 2025). A component name that is not in the catalog is ignored and the text is shown; a description that is not valid gets a sentence in the chat, and the conversation continues. The first version uses our own simple property format, with A2UI's names where they fit; whether it follows A2UI is decided with [ADR-0019](./adr/0019-agentic-ui-with-ag-ui-and-a2ui.md).
+
 ## 8. Data
 
 This chapter describes where the system keeps data.
@@ -1140,8 +1152,6 @@ The browser keeps the GPX file in memory only.
 The backend caches terrain answers on disk in `.cache/`, which Git ignores.
 
 ### 8.1 GPX input conventions
-
-The first component of that catalog is `ChangeProposal`: a title, a list of changes (`label`, `before`, `after`) and the actions Apply and Dismiss, with their text labels taken from the string files of the page and not sent by the agent. Its name is neutral on purpose, so that it can live in a base catalog. There is one renderer, and each page has its own UI catalog, composed of the shared base and the components of that page, such as a week preview on the training page or a highlight of a segment on the extractor page; a component outside the catalog of the page is ignored. The training agent turns a changed planned session into a change, and the renderer knows nothing about training. This is not a micro front end: the page stays one Astro site with React islands, built and deployed once ([ADR-0008](./adr/0008-astro-static-site-with-react-islands.md)). The agent never sends code: "The agent generates a declarative JSON description of a component. The frontend maps this JSON to a pre-built, native widget", and "No code is executed" (Huang & Habler, 2025). A component name that is not in the catalog is ignored and the text is shown; a description that is not valid gets a sentence in the chat, and the conversation continues. The first version uses our own simple property format, with A2UI's names where they fit; whether it follows A2UI is decided with [ADR-0019](./adr/0019-agentic-ui-with-ag-ui-and-a2ui.md).
 
 The GPX format (GPS Exchange Format) is an open XML schema for exchanging GPS data between applications and devices.
 TopoGrafix created it in 2002, and file-extensions.com (n.d.) calls it "the de facto standard for interchange of GPS data".
@@ -1297,6 +1307,7 @@ Table 12 lists the ADRs and what each decides.
 | [0017](./adr/0017-localisation.md)                                        | Accepted: localisation with i18next and react-i18next, translations as external data files (YAML preferred, JSON accepted), ICU message syntax preferred, and one URL per language (Astro i18n routing); decided without a spike |
 | [0018](./adr/0018-acceptance-tests-with-gherkin-and-playwright-bdd.md)    | Accepted as a pilot: acceptance criteria as Gherkin features in `test/features/`, run with playwright-bdd on the Playwright runner                                                                                               |
 | [0019](./adr/0019-agentic-ui-with-ag-ui-and-a2ui.md)                      | Draft: AG-UI as the transport for the chat and tool calls, A2UI as the candidate for declarative interfaces, with a catalog of our own components                                                                                |
+| [0020](./adr/0020-sandbox-for-local-ai-coding-agents.md)                  | Draft: isolated local development with an AI coding agent: a `sandbox-exec` allow-list for now, nono as the candidate to replace it, microsandbox and a separate macOS user considered                                           |
 
 ADR-0008 implements a shared Astro layout and directly linkable HTML pages, with the interactive extractor implemented in React and no runtime backend. Astro itself is not React-based; it supplies static page composition around the React application. Existing TypeScript analysis modules remain reusable. All ADRs are built into HTML pages and linked from this chapter. The ADR includes a provisional weighted comparison of the previous Deno-only site build, Astro, Next.js static export, Vite + React SPA and Eleventy, following the [ICT Research Methods multi-criteria decision making method](https://ictresearchmethods.nl/workshop/multi-criteria-decision-making/).
 
@@ -1309,7 +1320,6 @@ ADR-0008 implements a shared Astro layout and directly linkable HTML pages, with
 - Cockburn, A. (2001). *Writing effective use cases*. Addison-Wesley.
 - file-extensions.com. (n.d.). *GPX file format*. Retrieved June 15, 2026, from https://file-extensions.com/docs/gpx
 - Fowler, M. (n.d.-a). *DDD aggregate* [Bliki]. Retrieved November 11, 2026, from https://martinfowler.com/bliki/DDD_Aggregate.html
-| [0020](./adr/0020-sandbox-for-local-ai-coding-agents.md)                  | Draft: isolated local development with an AI coding agent: a `sandbox-exec` allow-list for now, nono as the candidate to replace it, microsandbox and a separate macOS user considered                                           |
 - Fowler, M. (n.d.-b). *Repository* [Patterns of enterprise application architecture]. Retrieved November 11, 2026, from https://martinfowler.com/eaaCatalog/repository.html
 - Fowler, M. (n.d.-c). *Unit of work* [Patterns of enterprise application architecture]. Retrieved November 11, 2026, from https://martinfowler.com/eaaCatalog/unitOfWork.html
 - Garmin. (n.d.-a). *Connect IQ basics*. Retrieved November 1, 2026, from https://developer.garmin.com/connect-iq/connect-iq-basics/
@@ -1328,6 +1338,7 @@ ADR-0008 implements a shared Astro layout and directly linkable HTML pages, with
 - ÖTILLÖ. (n.d.). *ÖTILLÖ Cannes World Series*. Retrieved November 10, 2026, from https://otilloswimrun.com/races/cannes-france/cannes-world-series/
 - Preston-Werner, T. (2010, August 23). *Readme Driven Development*. https://tom.preston-werner.com/2010/08/23/readme-driven-development.html
 - RaceDayMap. (n.d.). *ÖTILLÖ Swimrun Cannes: World Series* [Interactive course map and leg table]. Retrieved November 10, 2026, from https://app.racedaymap.com/otillo-swimrun-cannes/world-series
+- Huang, K., & Habler, I. (2025, December 29). *AG-UI and A2UI protocols explained: Building production-ready agentic systems with MAESTRO security*. Agentic AI. https://kenhuangus.substack.com/p/ag-ui-and-a2ui-protocols-explained
 - Steyer, M. (2026, May 1). *Integrating A2UI with AG-UI and CopilotKit in Angular*. Angular Architects. https://www.angulararchitects.io/en/blog/integrating-a2ui-with-ag-ui-in-angular/
 - Theunissen, T., Hoppenbrouwers, S., & Overbeek, S. (2022a). Approaches for documentation in continuous software development. *Complex Systems Informatics and Modeling Quarterly, 32*, 1–27. https://doi.org/10.7250/csimq.2022-32.01
 - TopoGrafix. (2004). *GPX 1.1 schema documentation*. https://www.topografix.com/GPX/1/1/
@@ -1338,8 +1349,7 @@ ADR-0008 implements a shared Astro layout and directly linkable HTML pages, with
 
 This appendix defines the domain terms, so that you can look up a term when you meet it.
 
-- Huang, K., & Habler, I. (2025, December 29). *AG-UI and A2UI protocols explained: Building production-ready agentic systems with MAESTRO security*. Agentic AI. https://kenhuangus.substack.com/p/ag-ui-and-a2ui-protocols-explained
-Table 13 lists the terms in the order in which you meet them when you follow a GPX file through the system.
+Table 13 lists the terms in the order in which you meet them when you follow a GPX file through the system, followed by the terms of the training part (section 1.1).
 
 *Table 13*: Domain glossary.
 
@@ -1370,6 +1380,14 @@ Table 13 lists the terms in the order in which you meet them when you follow a G
 | Paired segment table        | Table with one row per run and swim pair ([ADR-0007](./adr/0007-compact-segment-table-format.md))            | Row: run 2.1 km, swim 400 m                                                                        |
 | Run-first, swim-first       | Which segment type opens a paired row; run-first is the default                                              | A toggle above the table                                                                           |
 | Aid station                 | Food and drink point, usually on land                                                                        | A waypoint on a run                                                                                |
+| Training plan               | The plan that leads to goal events: one A event and B or C events before it, with blocks and plan levers     | The plan of a swimrun season                                                                       |
+| Goal event                  | An event that a training plan works towards, with the priority A, B or C                                     | The A event of a plan                                                                              |
+| Training block              | 3, 4 or 5 weeks, each a week plan; the last week is a recovery week                                          | A block of 4 weeks                                                                                 |
+| Week plan                   | One week of a block, with a phase (base, build, recovery, peak or taper) and a focus                         | A build week with a mileage focus                                                                  |
+| Session template            | What to do in a session, without a date or a status: discipline, subtype, focus, basis, target and steps     | "Trail run, 60 min Z2"; `SESSION_TEMPLATES` in the code                                            |
+| Planned session             | A session template placed on a date, with a status: planned, done or skipped                                 | Tuesday: open-water swim, 2 km                                                                     |
+
+The word *catalog* is never used without a qualifier: the *FAQ catalog* holds questions with static answers, and the *UI catalog* holds the components that an assistant may ask the chat to show (section 7.8).
 
 Table 14 defines the terms about map data, the terrain service and the infrastructure around it, in alphabetical order.
 
