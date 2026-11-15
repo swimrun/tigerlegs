@@ -1141,6 +1141,8 @@ The backend caches terrain answers on disk in `.cache/`, which Git ignores.
 
 ### 8.1 GPX input conventions
 
+The first component of that catalog is `ChangeProposal`: a title, a list of changes (`label`, `before`, `after`) and the actions Apply and Dismiss, with their text labels taken from the string files of the page and not sent by the agent. Its name is neutral on purpose, so that it can live in a base catalog. There is one renderer, and each page has its own UI catalog, composed of the shared base and the components of that page, such as a week preview on the training page or a highlight of a segment on the extractor page; a component outside the catalog of the page is ignored. The training agent turns a changed planned session into a change, and the renderer knows nothing about training. This is not a micro front end: the page stays one Astro site with React islands, built and deployed once ([ADR-0008](./adr/0008-astro-static-site-with-react-islands.md)). The agent never sends code: "The agent generates a declarative JSON description of a component. The frontend maps this JSON to a pre-built, native widget", and "No code is executed" (Huang & Habler, 2025). A component name that is not in the catalog is ignored and the text is shown; a description that is not valid gets a sentence in the chat, and the conversation continues. The first version uses our own simple property format, with A2UI's names where they fit; whether it follows A2UI is decided with [ADR-0019](./adr/0019-agentic-ui-with-ag-ui-and-a2ui.md).
+
 The GPX format (GPS Exchange Format) is an open XML schema for exchanging GPS data between applications and devices.
 TopoGrafix created it in 2002, and file-extensions.com (n.d.) calls it "the de facto standard for interchange of GPS data".
 
@@ -1336,6 +1338,7 @@ ADR-0008 implements a shared Astro layout and directly linkable HTML pages, with
 
 This appendix defines the domain terms, so that you can look up a term when you meet it.
 
+- Huang, K., & Habler, I. (2025, December 29). *AG-UI and A2UI protocols explained: Building production-ready agentic systems with MAESTRO security*. Agentic AI. https://kenhuangus.substack.com/p/ag-ui-and-a2ui-protocols-explained
 Table 13 lists the terms in the order in which you meet them when you follow a GPX file through the system.
 
 *Table 13*: Domain glossary.

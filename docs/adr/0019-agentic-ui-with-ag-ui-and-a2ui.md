@@ -32,6 +32,16 @@ Option B now, option C when its criteria are met. The adapter exists and has tes
 2. a renderer for React exists or is small enough to write, with a catalog of our own components (Button, Chip list, Day picker, Week preview);
 3. a screen reader and the keyboard can operate what it renders (the accessibility principle of the guidebook).
 
+**The first component of the catalog is `ChangeProposal`** (chosen on 15 November 2026): a proposal that the assistant makes, as a small interface with a title, a list of changes (`label`, `before`, `after`) and the actions Apply and Dismiss.
+
+- **There is one renderer, and each page has its own UI catalog**, composed of a shared base and the components of that page (decided on 15 November 2026, in the spirit of interface segregation: a page should not depend on components that it does not use). The training page can add a week preview, and the extractor page a highlight of a segment on the map (`src/client/highlight-controller.ts`). A component outside the catalog of the page is ignored, so the assistant of the FAQ cannot ask for an upload. The word *catalog* is always qualified: the UI catalog is not the FAQ catalog.
+- **`ChangeProposal` lives in the base, so its name and properties are neutral on purpose.** It stays useful where there is no canvas to preview a change on, for example for a track edit on the extractor page (issue #109). A `TrainingWeekProposalCard` would pull sessions, week types and blocks into the base; the training agent turns a changed planned session into a change instead, and the renderer knows nothing about training.
+- **Open: a proposal in place.** The training page may show a proposal as ghost cards in the week, with a dashed border and the text "proposed" (a border alone is not a signal), operable by keyboard as well. That is a component of the training catalog and is not decided. Undo and redo of what was applied, with a command for each change (the Command pattern), is a separate decision about the state of the week.
+- **It is not a micro front end.** The page stays one Astro site with React islands, built and deployed once ([ADR-0008](./0008-astro-static-site-with-react-islands.md)). The catalog is a module in it, not an app of its own.
+- **The agent sends data, not code.** "The agent generates a declarative JSON description of a component. The frontend maps this JSON to a pre-built, native widget", and "No code is executed" (Huang & Habler, 2025).
+- **The behaviour follows the criteria of issue #128.** A component name that is not in the catalog is ignored and the text is shown. A description that is not valid gets a sentence in the chat, and the conversation continues. The labels of Apply and Dismiss come from the string files of the page and not from the agent, and the buttons work with the keyboard and a screen reader.
+- **The first version uses our own simple property format**, with A2UI's names where they fit. Whether the format follows A2UI is decided when the criteria above are met.
+
 ## 5. Consequences
 
 - The agents of the page stay replaceable: an AG-UI agent on a back end can take the place of the rule-based agent, without a change of the components.
@@ -43,4 +53,5 @@ Option B now, option C when its criteria are met. The adapter exists and has tes
 
 - AG-UI. (n.d.). *AG-UI overview*. Retrieved November 13, 2026, from https://docs.ag-ui.com/introduction
 - Google A2UI Team. (2025, December 15). *Introducing A2UI: An open project for agent-driven interfaces*. Google Developers Blog. https://developers.googleblog.com/introducing-a2ui-an-open-project-for-agent-driven-interfaces/
+- Huang, K., & Habler, I. (2025, December 29). *AG-UI and A2UI protocols explained: Building production-ready agentic systems with MAESTRO security*. Agentic AI. https://kenhuangus.substack.com/p/ag-ui-and-a2ui-protocols-explained
 - Steyer, M. (2026, May 1). *Integrating A2UI with AG-UI and CopilotKit in Angular*. Angular Architects. https://www.angulararchitects.io/en/blog/integrating-a2ui-with-ag-ui-in-angular/
