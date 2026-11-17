@@ -1,7 +1,7 @@
 {
   "language": "nl",
   "tellMore": "Vertel me meer",
-  "fallback": "Er is nog geen echte LLM-koppeling.. Gebruik voorlopig de vaste opties via de labels..",
+  "fallback": "Er is nog geen echte LLM-koppeling.. Gebruik voorlopig de vaste opties via de labels.. Voor vrije verzoeken over je trainingsweek kun je de chat op de Training-pagina gebruiken (Chrome met Gemini Nano, in het Engels, Frans of Duits).",
   "entries": [
     {
       "id": "what-is-swimrun",

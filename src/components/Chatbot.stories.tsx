@@ -30,7 +30,7 @@ export const Collapsed: Story = {};
 export const OpenWithSuggestions: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await userEvent.click(canvas.getByRole("button", { name: /ROARRS: Robotic Operating Agent Responding to Requests about Swimrun/ }));
+    await userEvent.click(canvas.getByRole("button", { name: /ROARRS: Robotic Operating Agent that Responds to Requests about Swimrun/ }));
     await expect(await canvas.findByRole("button", { name: "But can tigers actually swim?" })).toBeVisible();
   },
 };
@@ -38,7 +38,7 @@ export const OpenWithSuggestions: Story = {
 export const Answered: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await userEvent.click(canvas.getByRole("button", { name: /ROARRS: Robotic Operating Agent Responding to Requests about Swimrun/ }));
+    await userEvent.click(canvas.getByRole("button", { name: /ROARRS: Robotic Operating Agent that Responds to Requests about Swimrun/ }));
     await userEvent.click(await canvas.findByRole("button", { name: "But can tigers actually swim?" }));
     await expect(await canvas.findByRole("button", { name: "Tell me more" })).toBeVisible();
   },
@@ -52,7 +52,7 @@ export const Dutch: Story = {
     },
   ],
   play: async ({ canvasElement }) => {
-    await userEvent.click(within(canvasElement).getByRole("button", { name: /ROARRS: Robotic Operating Agent Responding to Requests about Swimrun/ }));
+    await userEvent.click(within(canvasElement).getByRole("button", { name: /ROARRS: Robotic Operating Agent that Responds to Requests about Swimrun/ }));
   },
 };
 
@@ -91,7 +91,7 @@ export const ProposalCard: Story = {
   decorators: [english],
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await userEvent.click(canvas.getByRole("button", { name: /ROARRS: Robotic Operating Agent Responding to Requests about Swimrun/ }));
+    await userEvent.click(canvas.getByRole("button", { name: /ROARRS: Robotic Operating Agent that Responds to Requests about Swimrun/ }));
     await userEvent.click(await canvas.findByRole("button", { name: "Move my Tuesday run" }));
     await expect(await canvas.findByRole("heading", { name: "Proposed moves" })).toBeVisible();
     await expect(canvas.getByText("Was: Run, 45 min")).toBeVisible();
@@ -117,7 +117,7 @@ export const UnknownComponent: Story = {
   },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await userEvent.click(canvas.getByRole("button", { name: /ROARRS: Robotic Operating Agent Responding to Requests about Swimrun/ }));
+    await userEvent.click(canvas.getByRole("button", { name: /ROARRS: Robotic Operating Agent that Responds to Requests about Swimrun/ }));
     await userEvent.click(await canvas.findByRole("button", { name: "Show me something" }));
     await expect(await canvas.findByText("Here it is in words.")).toBeVisible();
     await expect(canvas.queryByRole("button", { name: "Apply" })).toBeNull();

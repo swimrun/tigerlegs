@@ -1,7 +1,7 @@
 {
   "language": "en",
   "tellMore": "Tell me more",
-  "fallback": "There is no actual LLM integration yet.. Please use the static options through the labels for now..",
+  "fallback": "There is no actual LLM integration yet.. Please use the static options through the labels for now.. For free-text requests about your training week, use the chat on the Training page (Chrome with Gemini Nano).",
   "entries": [
     {
       "id": "what-is-swimrun",
