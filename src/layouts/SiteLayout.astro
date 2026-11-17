@@ -5,6 +5,7 @@ import logo from "../assets/tigerlegs-logo-web.png";
 import roarrAvatar from "../assets/roarr-avatar.png";
 import config from "../../package.json";
 import Chatbot from "../components/Chatbot.tsx";
+import InstallApp from "../components/InstallApp.tsx";
 interface Props {
   title: string;
   description: string;
@@ -34,6 +35,10 @@ const links = [
     <title>{title}</title>
     <meta name="description" content={description} />
     <link rel="icon" type="image/png" sizes="32x32" href={`${base}favicon-32.png`} />
+    <link rel="manifest" href={`${base}manifest.webmanifest`} />
+    <link rel="apple-touch-icon" href={`${base}img/icons/apple-touch-icon.png`} />
+    <meta name="theme-color" content="#fbbf24" />
+    <meta name="apple-mobile-web-app-title" content="TigerLegs" />
     <link rel="stylesheet" href={`${base}styles.css`} />
     <meta property="og:type" content="website" />
     <meta property="og:title" content={title} />
@@ -68,11 +73,17 @@ const links = [
     <slot />
     <Chatbot client:load transition:persist faqBase={`${base}chat/faq`} avatarSrc={avatar.src} />
     <script>import "../client/language-switch.ts";</script>
+    <script>
+      // Made when the page loads: the browser offers the install prompt once, and the button in the footer may come later.
+      import { installStore } from "../client/install.ts";
+      installStore();
+    </script>
     <footer class="mx-auto max-w-7xl px-4 pb-8 text-xs text-stone-600">
       &copy; 2026 IT Off the Wall BV · <a class="underline" href={`${base}about.html`}>About</a>
       · Map data &copy; <a class="underline" href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors</a>
       · Map by <a class="underline" href="https://leafletjs.com">Leaflet</a>
       · <a class="underline" href={`${base}guidebook.html`}>Guidebook</a>
+      <InstallApp client:load />
     </footer>
   </body>
 </html>

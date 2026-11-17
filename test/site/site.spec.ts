@@ -262,3 +262,84 @@ test("the extractor offers the variants of a course in a dropdown with a descrip
   await expect(page.locator("#analysis-status")).toContainText("Analysed");
 });
 
+
+test("the site is installable: a manifest with icons, an apple touch icon and a theme colour on every page", async ({ page }) => {
+  for (const path of ["./", "training.html", "about.html"]) {
+    await page.goto(path);
+    await expect(page.locator('link[rel="manifest"]'), path).toHaveAttribute("href", /manifest\.webmanifest$/);
+    await expect(page.locator('link[rel="apple-touch-icon"]'), path).toHaveAttribute("href", /apple-touch-icon\.png$/);
+    await expect(page.locator('meta[name="theme-color"]'), path).toHaveAttribute("content", /^#[0-9a-f]{6}$/i);
+  }
+  await page.goto("./");
+  const manifestUrl = new URL((await page.locator('link[rel="manifest"]').getAttribute("href")) ?? "", page.url()).href;
+  const response = await page.request.get(manifestUrl);
+  expect(response.ok()).toBeTruthy();
+  expect(response.headers()["content-type"]).toContain("manifest+json");
+  const manifest = await response.json();
+  expect(new URL(manifest.start_url, manifestUrl).href, "the app starts at the home page of the site").toBe(new URL("./", manifestUrl).href);
+  expect(manifest.display).toBe("standalone");
+  for (const icon of manifest.icons) {
+    const file = await page.request.get(new URL(icon.src, manifestUrl).href);
+    expect(file.ok(), icon.src).toBeTruthy();
+    expect(file.headers()["content-type"], icon.src).toBe("image/png");
+  }
+  const apple = await page.request.get(new URL((await page.locator('link[rel="apple-touch-icon"]').getAttribute("href")) ?? "", page.url()).href);
+  expect(apple.ok()).toBeTruthy();
+});
+
+type InstallTestWindow = { prompted?: boolean; offered?: boolean };
+
+/** Fires the event that a Chromium browser fires when the site can be installed. */
+async function offerInstall(page: Page) {
+  await page.evaluate(() => {
+    const event = new Event("beforeinstallprompt", { cancelable: true });
+    Object.assign(event, {
+      prompt: async () => {
+        (window as unknown as InstallTestWindow).prompted = true;
+      },
+      userChoice: Promise.resolve({ outcome: "dismissed" }),
+    });
+    // dispatchEvent answers false when a listener called preventDefault, which holds the browser's own prompt back.
+    (window as unknown as InstallTestWindow).offered = window.dispatchEvent(event);
+  });
+}
+
+test("the install button appears when the browser offers the prompt, holds back the browser's own, and is used up", async ({ page }) => {
+  await page.goto("./");
+  const footer = page.locator("footer");
+  await expect(footer.getByRole("button", { name: "Install app" }), "nothing is shown until the browser offers it").toHaveCount(0);
+  await offerInstall(page);
+  const button = footer.getByRole("button", { name: "Install app" });
+  await expect(button).toBeVisible();
+  expect(await page.evaluate(() => (window as unknown as InstallTestWindow).offered)).toBe(false);
+  await button.click();
+  await expect.poll(() => page.evaluate(() => (window as unknown as InstallTestWindow).prompted)).toBe(true);
+  await expect(footer.getByRole("button", { name: "Install app" })).toHaveCount(0);
+});
+
+test("the install button stays when the person goes to another page, and speaks the page language", async ({ page }) => {
+  await page.goto("./");
+  await offerInstall(page);
+  await expect(page.locator("footer").getByRole("button", { name: "Install app" })).toBeVisible();
+  await page.getByRole("navigation", { name: "Main menu" }).getByRole("link", { name: "Training" }).click();
+  await expect(page).toHaveURL(/training\.html$/);
+  await expect(page.locator("footer").getByRole("button", { name: "Install app" }), "the event was kept for the next page").toBeVisible();
+  await page.locator("#language-switch").selectOption("nl");
+  await expect(page.locator("footer").getByRole("button", { name: "Installeer de app" })).toBeVisible();
+});
+
+test.describe("on an iPhone", () => {
+  test.use({
+    userAgent: "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1",
+  });
+
+  test("the footer explains how to add the site to the home screen, because iOS has no install prompt", async ({ page }) => {
+    await page.goto("./");
+    const button = page.locator("footer").getByRole("button", { name: "Add to home screen" });
+    await expect(button).toHaveAttribute("aria-expanded", "false");
+    await expect(page.getByText("Tap the Share button")).toBeHidden();
+    await button.click();
+    await expect(button).toHaveAttribute("aria-expanded", "true");
+    await expect(page.getByText("Tap the Share button, then “Add to Home Screen”.")).toBeVisible();
+  });
+});

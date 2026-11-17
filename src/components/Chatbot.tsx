@@ -2,11 +2,12 @@ import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "reac
 import { type ChatAgent, type ChatSuggestion, createFaqAgent, type UiActions } from "../client/chat-agent.ts";
 import { getPageChat, subscribePageChat } from "../client/chat-store.ts";
 import { freeformHint, isChromeBrowser, isNanoLanguage } from "../client/chat-hints.ts";
-import { isLang, type Lang } from "../client/language.ts";
+import type { Lang } from "../client/language.ts";
 import { type ChatStrings, STRINGS } from "../client/chat.strings.ts";
 import type { ProposalAction } from "../client/ui-catalog.ts";
 import GenUi from "./GenUi.tsx";
 import { STRINGS as GEN_UI_STRINGS } from "./GenUi.strings.ts";
+import { usePageLang } from "./usePageLang.ts";
 
 interface Message {
   role: "user" | "assistant";
@@ -51,22 +52,6 @@ export function ChatText({ text, className }: { text: string; className: string 
 
 const pill =
   "rounded-full border border-stone-900 bg-amber-200 px-3 py-1 text-sm font-medium hover:bg-amber-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-stone-950";
-
-/** The page language, which the language switch keeps on the `lang` attribute of `<html>`. */
-function usePageLang(): Lang {
-  const [lang, setLang] = useState<Lang>("en");
-  useEffect(() => {
-    const read = () => {
-      const value = document.documentElement.lang;
-      setLang(isLang(value) ? value : "en");
-    };
-    read();
-    const observer = new MutationObserver(read);
-    observer.observe(document.documentElement, { attributes: true, attributeFilter: ["lang"] });
-    return () => observer.disconnect();
-  }, []);
-  return lang;
-}
 
 /** The "somebody is typing" dots. The label is for screen readers, unless a visible status text replaces it. */
 function TypingIndicator({ label, status }: { label: string; status?: string | null }) {
