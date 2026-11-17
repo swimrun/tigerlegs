@@ -71,6 +71,27 @@ it("a description that is not valid says so in words, keeps the text, and the co
   expect(html).not.toContain("<button");
 });
 
+const renderWith = (extra: { actions?: readonly ("apply" | "dismiss")[]; disabled?: boolean }) =>
+  renderToStaticMarkup(createElement(GenUi, { description: proposal, lang: "en", onAction: () => {}, ...extra }));
+
+it("only the actions that the agent listed get a button", () => {
+  const labels = (html: string) => [...html.matchAll(/<button[^>]*>([^<]+)<\/button>/g)].map((match) => match[1]);
+  expect(labels(renderWith({ actions: ["apply"] }))).toEqual(["Apply"]);
+  expect(labels(renderWith({ actions: ["dismiss"] }))).toEqual(["Dismiss"]);
+});
+
+it("a proposal that nothing can answer is a read-only card, without buttons", () => {
+  const html = renderWith({ actions: [] });
+  expect(html).not.toContain("<button");
+  expect(html).toContain("Proposed moves");
+  expect(html).toContain("Was: Run 8 km");
+});
+
+it("the buttons are disabled while the agent is busy", () => {
+  const html = renderWith({ disabled: true });
+  expect([...html.matchAll(/<button[^>]*disabled/g)].length).toBe(2);
+});
+
 it("something that is no description at all is not rendered as an interface", () => {
   for (const value of [null, undefined, "hello", 42, []]) {
     expect(render(value, "en", "text")).not.toContain("<button");

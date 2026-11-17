@@ -10,6 +10,10 @@ import type { ChatAgent, ChatEvent } from "./chat-agent.ts";
  * - `text` becomes TEXT_MESSAGE_START, TEXT_MESSAGE_CONTENT and TEXT_MESSAGE_END;
  * - `status` (a model download, say) and the suggestion chips of a `text` have no AG-UI event of their own and
  *   travel as CUSTOM events named "status" and "followUps";
+ * - the `ui` description of a `text` travels as an ACTIVITY_SNAPSHOT of the type "ui-description", next to the text
+ *   message (ADR-0019), and its `uiActions` as a CUSTOM event named "uiActions". An ACTIVITY_SNAPSHOT carries an
+ *   object, so a `ui` that is not an object has no AG-UI event; the chat of the page still receives it and says that
+ *   it cannot show it;
  * - an agent that throws ends the run with RUN_ERROR.
  */
 export async function* toAgUiEvents(
@@ -34,6 +38,15 @@ export async function* toAgUiEvents(
           if (event.followUps?.length) {
             yield { type: EventType.CUSTOM, name: "followUps", value: event.followUps } as BaseEvent;
           }
+          if (typeof event.ui === "object" && event.ui !== null && !Array.isArray(event.ui)) {
+            yield {
+              type: EventType.ACTIVITY_SNAPSHOT,
+              messageId: `${messageId}-ui`,
+              activityType: "ui-description",
+              content: event.ui,
+            } as BaseEvent;
+          }
+          if (event.uiActions) yield { type: EventType.CUSTOM, name: "uiActions", value: event.uiActions } as BaseEvent;
           break;
         }
         case "run-finished":

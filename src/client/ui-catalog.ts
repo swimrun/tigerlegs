@@ -12,6 +12,9 @@
 export const UI_CATALOG = ["ChangeProposal"] as const;
 export type UiComponentName = typeof UI_CATALOG[number];
 
+/** What the person can do with a proposal. What each action sends to the agent is up to the agent (`uiActions`). */
+export type ProposalAction = "apply" | "dismiss";
+
 /** Limits that keep a description small and a page readable, whatever an agent sends. */
 export const MAX_TEXT = 200;
 export const MAX_CHANGES = 20;

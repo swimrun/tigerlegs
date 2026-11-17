@@ -15,7 +15,7 @@ export const de: Strings = {
     "Dein Chrome kann Gemini Nano ausführen, aber das Modell ist noch nicht installiert. Die Installation lädt es einmalig herunter (einige GB); Chrome verlangt rund 22 GB freien Speicherplatz als Reserve. Dein Plan verlässt dieses Gerät nie.",
   assistEnable: "Gemini Nano installieren",
   assistInstalled: "Gemini Nano ist installiert. Frag noch einmal.",
-  chatTitle: "RoARR (Robotic Assistant Request Responder)",
+  chatTitle: "ROARRS: Robotic Operating Agent Responding to Requests about Swimrun",
   applied: (summary) => `Angewendet: ${summary}. Bestätige oder verwirf die Änderungen unter „Deine Änderungen“ unten.`,
   dismissed: "Verworfen. Nichts wurde verschoben.",
   assistDownloading: "Modell wird heruntergeladen…",

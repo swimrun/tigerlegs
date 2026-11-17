@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import type { Lang } from "../client/language.ts";
-import { parseUiDescription } from "../client/ui-catalog.ts";
-import ChangeProposal, { type ProposalAction } from "./ChangeProposal.tsx";
+import { parseUiDescription, type ProposalAction } from "../client/ui-catalog.ts";
+import ChangeProposal from "./ChangeProposal.tsx";
 import { STRINGS } from "./GenUi.strings.ts";
 
 /**
@@ -16,11 +16,16 @@ export default function GenUi({
   lang,
   fallback,
   onAction,
+  actions,
+  disabled,
 }: {
   description: unknown;
   lang: Lang;
   fallback?: ReactNode;
   onAction: (action: ProposalAction) => void;
+  /** The actions that have a button; all of them when left out. */
+  actions?: readonly ProposalAction[];
+  disabled?: boolean;
 }) {
   const parsed = parseUiDescription(description);
   if (!parsed.ok) {
@@ -34,6 +39,6 @@ export default function GenUi({
   }
   switch (parsed.component) {
     case "ChangeProposal":
-      return <ChangeProposal {...parsed.props} strings={STRINGS[lang]} onAction={onAction} />;
+      return <ChangeProposal {...parsed.props} strings={STRINGS[lang]} onAction={onAction} actions={actions} disabled={disabled} />;
   }
 }

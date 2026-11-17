@@ -9,6 +9,13 @@ Standards and norms for AI agents working on this project. This is the single so
 Agents change files and run checks, but do not commit, push, open or merge a pull request, or create a branch for it, unless the owner asks for it in that message or has said so for that task.
 After finishing work, say what changed and what is ready to commit, and wait. Approval for one commit does not extend to the next.
 
+### Feature branches: at most five at a time
+
+At most five feature branches that are not merged exist at the same time; count them with `git branch --list 'feature/*'` and the open pull requests.
+At the limit, merging comes before starting: do not create a sixth branch, but name the branch that has to be merged or closed first.
+A small follow-up of an issue goes on the branch of that issue as long as it is not merged, and does not get a branch of its own.
+Merging an open pull request goes before new work: a branch that waits grows stale and collects changes that belong elsewhere.
+
 ### Commit messages
 
 - English, imperative mood.
@@ -20,6 +27,7 @@ After finishing work, say what changed and what is ready to commit, and wait. Ap
 - Definition of Done: [docs/DEFINITION_OF_DONE.md](./docs/DEFINITION_OF_DONE.md).
   Create issues with `gh issue create --template user-story.md` and keep
   the Definition of Done checkboxes; do not store task descriptions as files
+- GitHub numbers issues and pull requests in one sequence, and it has no separate syntax for a pull request (GitLab writes `!129`). When you name a number, say what it is and give the title once: "issue #130 *Installable app (PWA)…*", "PR #129 *Document agentic UI…*". A bare `(#130)` at the end of a commit title is the issue.
 
 ### Files and data stay inside this repository
 

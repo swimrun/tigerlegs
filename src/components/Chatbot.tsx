@@ -1,14 +1,20 @@
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
-import { type ChatAgent, type ChatSuggestion, createFaqAgent } from "../client/chat-agent.ts";
+import { type ChatAgent, type ChatSuggestion, createFaqAgent, type UiActions } from "../client/chat-agent.ts";
 import { getPageChat, subscribePageChat } from "../client/chat-store.ts";
 import { freeformHint, isChromeBrowser, isNanoLanguage } from "../client/chat-hints.ts";
 import { isLang, type Lang } from "../client/language.ts";
 import { type ChatStrings, STRINGS } from "../client/chat.strings.ts";
+import type { ProposalAction } from "../client/ui-catalog.ts";
+import GenUi from "./GenUi.tsx";
+import { STRINGS as GEN_UI_STRINGS } from "./GenUi.strings.ts";
 
 interface Message {
   role: "user" | "assistant";
   text: string;
   followUps?: ChatSuggestion[];
+  /** A description of an interface to show under the text (ui-catalog.ts), and what its buttons send to the agent. */
+  ui?: unknown;
+  uiActions?: UiActions;
 }
 
 const bubble = "w-fit max-w-[85%] rounded px-3 py-2 text-sm";
@@ -75,7 +81,7 @@ function TypingIndicator({ label, status }: { label: string; status?: string | n
   );
 }
 
-function ChatPanel({ chat, t, id, placeholder }: { chat: ChatAgent; t: ChatStrings; id: string; placeholder: string }) {
+function ChatPanel({ chat, t, lang, id, placeholder }: { chat: ChatAgent; t: ChatStrings; lang: Lang; id: string; placeholder: string }) {
   const [suggestions, setSuggestions] = useState<ChatSuggestion[] | null>(null);
   const [loadFailed, setLoadFailed] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -121,7 +127,7 @@ function ChatPanel({ chat, t, id, placeholder }: { chat: ChatAgent; t: ChatStrin
         if (event.type === "text") {
           setTyping(false);
           setStatus(null);
-          setMessages((m) => [...m, { role: "assistant", text: event.text, followUps: event.followUps }]);
+          setMessages((m) => [...m, { role: "assistant", text: event.text, followUps: event.followUps, ui: event.ui, uiActions: event.uiActions }]);
         }
       }
     } catch {
@@ -156,6 +162,24 @@ function ChatPanel({ chat, t, id, placeholder }: { chat: ChatAgent; t: ChatStrin
         {messages.map((m, i) => (
           <div key={i} className="space-y-1">
             <ChatText text={m.text} className={m.role === "user" ? `${bubble} ml-auto bg-stone-900 text-white` : `${bubble} bg-white`} />
+            {m.ui !== undefined && (
+              // The text above always stays, so a description that the page cannot render still leaves the answer in words.
+              // Like a chip, a button is only there on the last message, and it is used up once it is chosen.
+              <GenUi
+                description={m.ui}
+                lang={lang}
+                disabled={busy}
+                actions={i === messages.length - 1
+                  ? (Object.keys(m.uiActions ?? {}) as ProposalAction[]).filter((action) => !asked.includes(m.uiActions?.[action]?.id ?? ""))
+                  : []}
+                onAction={(action) => {
+                  const suggestion = m.uiActions?.[action];
+                  if (suggestion) {
+                    ask(GEN_UI_STRINGS[lang][action], { id: suggestion.id, prompt: suggestion.prompt, shown: true, completes: suggestion.completes });
+                  }
+                }}
+              />
+            )}
             {i === messages.length - 1 && m.followUps?.filter((f) => !asked.includes(f.id)).map((f) => (
               <button key={f.id} type="button" disabled={busy} className={pill}
                 onClick={() => ask(f.label, { id: f.id, prompt: f.prompt, shown: true, completes: f.completes })}>
@@ -219,7 +243,7 @@ export default function Chatbot(
       </h2>
       {everOpened && (
         <div hidden={!open}>
-          <ChatPanel key={lang} chat={chat} t={t} id="chat-panel" placeholder={placeholder ?? pageChat?.placeholder ?? t.placeholder} />
+          <ChatPanel key={lang} chat={chat} t={t} lang={lang} id="chat-panel" placeholder={placeholder ?? pageChat?.placeholder ?? t.placeholder} />
         </div>
       )}
     </section>
