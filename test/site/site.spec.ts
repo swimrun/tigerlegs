@@ -436,3 +436,24 @@ test("every session in the week has an icon beside its title, and the open-water
   await expect(page.locator('[data-session="run-1"] [data-icon]')).toHaveAttribute("data-icon", "run");
   await expect(page.locator("[data-icon]").first(), "decoration, skipped by a screen reader").toHaveAttribute("aria-hidden", "true");
 });
+
+/** How many lines of text an element holds: its height divided by its line height. */
+async function lines(locator: ReturnType<Page["locator"]>) {
+  return await locator.evaluate((element) => element.getBoundingClientRect().height / parseFloat(getComputedStyle(element).lineHeight));
+}
+
+test("the title of the chat window is the name above a smaller expansion: two lines on a desktop, at most three on a phone", async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 720 });
+  await page.goto("./");
+  const name = page.locator("[data-chat-name]");
+  const expansion = page.locator("[data-chat-expansion]");
+  const size = (locator: ReturnType<Page["locator"]>) => locator.evaluate((element) => parseFloat(getComputedStyle(element).fontSize));
+
+  expect(await size(expansion), "the expansion has smaller letters than the name").toBeLessThan(await size(name));
+  expect(await lines(name), "the name is one line").toBeLessThan(1.5);
+  expect(await lines(expansion), "the expansion is one line on a desktop").toBeLessThan(1.5);
+  await expect(page.getByRole("button", { name: ROARRS }), "a screen reader still gets the whole title").toBeVisible();
+
+  await page.setViewportSize({ width: 390, height: 700 });
+  expect(await lines(expansion), "the expansion is at most two lines on a phone").toBeLessThan(2.5);
+});

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "reac
 import { type ChatAgent, type ChatSuggestion, createFaqAgent, type UiActions } from "../client/chat-agent.ts";
 import { getPageChat, subscribePageChat } from "../client/chat-store.ts";
 import { faqFreeformHint } from "../client/chat-hints.ts";
+import { splitChatTitle } from "../client/chat-title.ts";
 import type { Lang } from "../client/language.ts";
 import { type ChatStrings, STRINGS } from "../client/chat.strings.ts";
 import type { ProposalAction } from "../client/ui-catalog.ts";
@@ -213,14 +214,26 @@ export default function Chatbot(
     return createFaqAgent(`${faqBase}.${lang}.json`, { fallback: faqFreeformHint(lang) });
   }, [agent, pageChat, faqBase, lang]);
 
+  const fullTitle = title ?? pageChat?.title ?? t.title;
+  const { name, expansion } = splitChatTitle(fullTitle);
+
   return (
-    <section aria-labelledby="chat-title" className="fixed bottom-4 right-4 z-40 w-[calc(100vw-2rem)] max-w-sm rounded border-2 border-stone-900 bg-amber-50 p-3 shadow-lg">
+    <section aria-labelledby="chat-title" className="fixed bottom-4 right-4 z-40 w-[calc(100vw-2rem)] max-w-md rounded border-2 border-stone-900 bg-amber-50 p-3 shadow-lg">
       <h2 id="chat-title" className="text-base font-bold">
         <button type="button" aria-expanded={open} aria-controls="chat-panel" className="flex w-full items-center justify-between gap-2 text-left"
           onClick={() => { setOpen(!open); setEverOpened(true); }}>
           <span className="flex items-center gap-2">
-            {avatarSrc && <img src={avatarSrc} alt="" width="48" height="48" className="h-12 w-12 shrink-0 rounded-full border-2 border-stone-900 object-cover" />}
-            <span>{title ?? pageChat?.title ?? t.title} <span className="text-xs font-normal uppercase tracking-wide text-stone-600">({t.prototype})</span></span>
+            {avatarSrc && <img src={avatarSrc} alt="" width="40" height="40" className="h-10 w-10 shrink-0 rounded-full border-2 border-stone-900 object-cover" />}
+            <span className="min-w-0">
+              {/* The whole title is one text for a screen reader; the two sizes below are only for the eye. */}
+              <span className="sr-only">{fullTitle} ({t.prototype})</span>
+              <span aria-hidden="true" className="block">
+                <span data-chat-name className="block text-base font-bold leading-tight">
+                  {name} <span className="text-xs font-normal uppercase tracking-wide text-stone-600">({t.prototype})</span>
+                </span>
+                {expansion && <span data-chat-expansion className="block text-[11px] font-normal leading-snug tracking-tight text-stone-700">{expansion}</span>}
+              </span>
+            </span>
           </span>
           <span aria-hidden="true">{open ? "▾" : "▸"}</span>
         </button>
