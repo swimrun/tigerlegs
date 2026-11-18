@@ -1,6 +1,9 @@
 import { test, expect, type Page } from "@playwright/test";
 import { readFile, readdir } from "node:fs/promises";
 import { resolve } from "node:path";
+import { STRINGS as CHAT_STRINGS } from "../../src/client/chat.strings.ts";
+import { STRINGS as TRAINING_STRINGS } from "../../src/components/TrainingWeek.strings.ts";
+import { SITE_BROWSERS } from "../user-agents.ts";
 
 test.beforeEach(async ({ page }) => {
   await page.route("**/*", route => {
@@ -342,4 +345,83 @@ test.describe("on an iPhone", () => {
     await expect(button).toHaveAttribute("aria-expanded", "true");
     await expect(page.getByText("Tap the Share button, then “Add to Home Screen”.")).toBeVisible();
   });
+});
+
+const ROARRS = /ROARRS: Robotic Operating Agent that Responds to Requests about Swimrun/;
+
+/** A free question in the chat, typed as a person does: the labels of the field and the button are those of the language. */
+async function askFreely(page: Page, lang: "en" | "nl", question: string) {
+  const t = CHAT_STRINGS[lang];
+  await page.getByRole("button", { name: ROARRS }).click();
+  await page.getByLabel(t.yourQuestion).fill(question);
+  await page.getByRole("button", { name: t.ask, exact: true }).click();
+}
+
+// The FAQ chat has no model yet. In a language that Gemini Nano accepts it gives the fallback of the FAQ, whatever the
+// browser; in Dutch it says why a free question does not work, and that depends on the browser (chat-hints.ts).
+for (const { name, userAgent, chrome } of SITE_BROWSERS) {
+  test.describe(`the FAQ chat in ${name}`, () => {
+    test.use({ userAgent });
+
+    test("English: a free question gets the fallback of the FAQ, which points to the Training page", async ({ page }) => {
+      await page.goto("./");
+      await askFreely(page, "en", "Which wetsuit?");
+      await expect(page.getByRole("log")).toContainText("There is no actual LLM integration yet");
+      await expect(page.getByRole("log")).toContainText("Training page");
+    });
+
+    test("Dutch: a free question gets the reason that it does not work here", async ({ page }) => {
+      await page.goto("./");
+      await page.locator("#language-switch").selectOption("nl");
+      await askFreely(page, "nl", "Welk wetsuit?");
+      await expect(page.getByRole("log")).toContainText(chrome ? CHAT_STRINGS.nl.useSupportedLanguage ?? "" : CHAT_STRINGS.nl.switchToChrome);
+    });
+  });
+}
+
+// The training chat does use the model, so there the browser matters in every language. The test browser has no
+// Prompt API, which is made explicit so that a Chromium that gets one cannot change the result.
+for (const { name, userAgent, chrome } of SITE_BROWSERS.filter((browser) => ["Chrome on macOS", "Safari on macOS", "Firefox"].includes(browser.name))) {
+  for (const lang of ["en", "nl"] as const) {
+    test.describe(`the training chat in ${name}, in ${lang}`, () => {
+      test.use({ userAgent });
+
+      test("a free instruction is answered with the reason that fits this browser and language", async ({ page }) => {
+        await page.addInitScript(() => Object.defineProperty(globalThis, "LanguageModel", { value: undefined, configurable: true }));
+        await page.goto("training.html");
+        if (lang !== "en") await page.locator("#language-switch").selectOption(lang);
+        await askFreely(page, lang, "Move my run to Friday");
+        const expected = !chrome
+          ? CHAT_STRINGS[lang].switchToChrome
+          : lang === "nl"
+          ? CHAT_STRINGS.nl.useSupportedLanguage ?? ""
+          : TRAINING_STRINGS.en.assistAbsent;
+        await expect(page.getByRole("log")).toContainText(expected);
+      });
+    });
+  }
+}
+
+type Box = { x: number; y: number; width: number; height: number };
+const overlap = (a: Box, b: Box) => a.x < b.x + b.width && b.x < a.x + a.width && a.y < b.y + b.height && b.y < a.y + a.height;
+
+test("the sports rest day picker follows the plan levers in the flow, and its menu opens from itself and stays clear of the chat", async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.goto("training.html");
+  const levers = (await page.getByRole("region", { name: "Plan levers" }).boundingBox())!;
+  const generate = (await page.getByRole("button", { name: "Generate week" }).boundingBox())!;
+  const picker = page.locator("[data-rest-days]");
+  const pickerBox = (await picker.boundingBox())!;
+
+  expect(pickerBox.x, "to the right of the Generate button").toBeGreaterThan(generate.x + generate.width);
+  expect(pickerBox.x - (generate.x + generate.width), "in the flow, next to the button").toBeLessThan(40);
+  expect(levers.x + levers.width - (pickerBox.x + pickerBox.width), "not pushed against the right edge").toBeGreaterThan(100);
+
+  await picker.locator("summary").click();
+  const menu = (await picker.getByRole("group", { name: "Sports rest days" }).boundingBox())!;
+  expect(Math.abs(menu.x - pickerBox.x), "the menu starts where the picker starts").toBeLessThan(2);
+
+  const chat = (await page.getByRole("region", { name: ROARRS }).boundingBox())!;
+  expect(overlap(menu, chat), "the open menu does not run under the chat").toBe(false);
+  expect(overlap(pickerBox, chat), "the picker does not run under the chat").toBe(false);
 });

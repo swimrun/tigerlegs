@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { type ChatAgent, type ChatSuggestion, createFaqAgent, type UiActions } from "../client/chat-agent.ts";
 import { getPageChat, subscribePageChat } from "../client/chat-store.ts";
-import { freeformHint, isChromeBrowser, isNanoLanguage } from "../client/chat-hints.ts";
+import { faqFreeformHint } from "../client/chat-hints.ts";
 import type { Lang } from "../client/language.ts";
 import { type ChatStrings, STRINGS } from "../client/chat.strings.ts";
 import type { ProposalAction } from "../client/ui-catalog.ts";
@@ -210,8 +210,7 @@ export default function Chatbot(
     if (agent) return agent;
     if (pageChat) return pageChat.agent;
     // The FAQ is static, but free questions are meant for Gemini Nano: where it cannot work, say why.
-    const hint = isNanoLanguage(lang) ? undefined : freeformHint(lang, isChromeBrowser());
-    return createFaqAgent(`${faqBase}.${lang}.json`, { fallback: hint });
+    return createFaqAgent(`${faqBase}.${lang}.json`, { fallback: faqFreeformHint(lang) });
   }, [agent, pageChat, faqBase, lang]);
 
   return (
