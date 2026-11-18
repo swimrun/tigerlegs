@@ -425,3 +425,14 @@ test("the sports rest day picker follows the plan levers in the flow, and its me
   expect(overlap(menu, chat), "the open menu does not run under the chat").toBe(false);
   expect(overlap(pickerBox, chat), "the picker does not run under the chat").toBe(false);
 });
+
+test("every session in the week has an icon beside its title, and the open-water swim has the waves", async ({ page }) => {
+  await page.goto("training.html");
+  const sessions = page.locator("[data-session]");
+  const count = await sessions.count();
+  expect(count).toBeGreaterThan(0);
+  await expect(page.locator("[data-session] [data-icon]"), "one icon for every session").toHaveCount(count);
+  await expect(page.locator('[data-session="swim-1"] [data-icon]')).toHaveAttribute("data-icon", "swim-open");
+  await expect(page.locator('[data-session="run-1"] [data-icon]')).toHaveAttribute("data-icon", "run");
+  await expect(page.locator("[data-icon]").first(), "decoration, skipped by a screen reader").toHaveAttribute("aria-hidden", "true");
+});

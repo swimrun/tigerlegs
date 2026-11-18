@@ -17,6 +17,7 @@ import { getLanguageModel, type LanguageModelStatic } from "../client/prompt-api
 import { createTrainingAgent } from "../client/training-agent.ts";
 import { setPageChat } from "../client/chat-store.ts";
 import { STRINGS } from "./TrainingWeek.strings.ts";
+import SessionIcon from "./SessionIcon.tsx";
 
 /** The colour classes of styles.css, shared with the extractor: a trail run is green, a road run grey. */
 const toneOf = (session: TrainingSession): string =>
@@ -275,9 +276,12 @@ export default function TrainingWeek({ languageModel }: Props) {
                     draggingId === session.id ? "opacity-50" : ""
                   }`}
                 >
-                  <span className="font-semibold">
-                    {t.disciplines[session.discipline]}
-                    {session.discipline === "run" && ` · ${t.surfaces[session.surface ?? "road"]}`}
+                  <span className="flex items-center gap-1 font-semibold">
+                    <SessionIcon session={session} />
+                    <span>
+                      {t.disciplines[session.discipline]}
+                      {session.discipline === "run" && ` · ${t.surfaces[session.surface ?? "road"]}`}
+                    </span>
                   </span>
                   <p>{titleOf(session)}</p>
                   <label className="mt-1 block">
@@ -316,12 +320,15 @@ export default function TrainingWeek({ languageModel }: Props) {
               <ul className="space-y-1 text-sm">
                 {changes.map(({ session, fromDay }) => (
                   <li key={session.id} className="flex flex-wrap items-center gap-2">
-                    <span>
-                      {t.movedFromTo(
-                        titleOf(session),
-                        t.days[fromDay],
-                        t.days[session.day],
-                      )}
+                    <span className="flex items-center gap-1">
+                      <SessionIcon session={session} size={16} />
+                      <span>
+                        {t.movedFromTo(
+                          titleOf(session),
+                          t.days[fromDay],
+                          t.days[session.day],
+                        )}
+                      </span>
                     </span>
                     <button
                       type="button"

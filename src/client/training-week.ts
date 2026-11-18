@@ -23,6 +23,9 @@ export type Discipline =
 /** What a run is run on: a trail (shown in the extractor's run green) or a road (grey). */
 export type Surface = "trail" | "road";
 
+/** Where a swim is swum: in open water or in a pool. It gives the icon of the session its waves. */
+export type Water = "open" | "pool";
+
 export interface TrainingSession {
   readonly id: string;
   readonly day: Day;
@@ -30,6 +33,8 @@ export interface TrainingSession {
   readonly discipline: Discipline;
   /** Only for runs. */
   readonly surface?: Surface;
+  /** Only for swims. */
+  readonly water?: Water;
   readonly minutes?: number;
 }
 
@@ -345,9 +350,9 @@ const SESSION_TEMPLATES: Record<keyof PlanLevers, readonly SessionTemplate[]> = 
     { id: "run-4", title: "Trail run, 60 min Z2", discipline: "run", surface: "trail", minutes: 60 },
   ],
   swims: [
-    { id: "swim-1", title: "Open-water swim, 2 km", discipline: "swim", minutes: 50 },
-    { id: "swim-2", title: "Pool swim, 1.5 km", discipline: "swim", minutes: 40 },
-    { id: "swim-3", title: "Open-water swim, 3 km", discipline: "swim", minutes: 75 },
+    { id: "swim-1", title: "Open-water swim, 2 km", discipline: "swim", water: "open", minutes: 50 },
+    { id: "swim-2", title: "Pool swim, 1.5 km", discipline: "swim", water: "pool", minutes: 40 },
+    { id: "swim-3", title: "Open-water swim, 3 km", discipline: "swim", water: "open", minutes: 75 },
   ],
   strength: [
     { id: "strength-1", title: "Strength: legs, 15 min", discipline: "strength", minutes: 15 },
