@@ -80,3 +80,12 @@ it("a change may add or remove something: before or after can be empty, the labe
   expect(parseUiDescription(props({ label: "Thursday", before: "Run", after: "" })).ok).toBe(true);
   expect(parseUiDescription(props({ label: "", before: "Run", after: "Swim" })).ok).toBe(false);
 });
+
+it("an invalid change is named by its number, so that the first and the second can be told apart", () => {
+  const props = (changes: unknown[]) => ({ component: "ChangeProposal", props: { title: "T", changes } });
+  const good = { label: "L", before: "a", after: "b" };
+  const first = parseUiDescription(props([{ label: "" }, good]));
+  const second = parseUiDescription(props([good, { label: "" }]));
+  expect(first).toMatchObject({ ok: false, reason: "invalid", detail: expect.stringMatching(/^change 1 needs/) });
+  expect(second).toMatchObject({ ok: false, reason: "invalid", detail: expect.stringMatching(/^change 2 needs/) });
+});

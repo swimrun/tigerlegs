@@ -1,5 +1,5 @@
-import { expect, it } from "vitest";
-import { createInstallStore, type InstallWindow, installOffer, isIos, isStandalone } from "../../src/client/install.ts";
+import { afterEach, expect, it, vi } from "vitest";
+import { createInstallStore, type InstallWindow, installOffer, installStore, isIos, isStandalone } from "../../src/client/install.ts";
 
 const IPHONE = "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1";
 const IPAD = "Mozilla/5.0 (iPad; CPU OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1";
@@ -114,4 +114,39 @@ it("a listener that is removed is no longer told", () => {
   unsubscribe();
   fire(promptEvent("accepted").event);
   expect(notified).toBe(0);
+});
+
+afterEach(() => vi.unstubAllGlobals());
+
+const WINDOWS_CHROME = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36";
+
+it("a Windows laptop with a touch screen is not an iPad, and a Mac needs more than one touch point to be one", () => {
+  expect(isIos({ userAgent: WINDOWS_CHROME, platform: "Win32", maxTouchPoints: 10 })).toBe(false);
+  expect(isIos({ userAgent: MAC, platform: "MacIntel", maxTouchPoints: 1 })).toBe(false);
+  expect(isIos({ userAgent: MAC, platform: "MacIntel", maxTouchPoints: 2 })).toBe(true);
+});
+
+it("whoever is subscribed hears when the app is installed and when the prompt is used, so that the button can go", async () => {
+  const { win, fire } = fakeWindow();
+  const store = createInstallStore(win);
+  let heard = 0;
+  store.subscribe(() => heard++);
+
+  fire(promptEvent("accepted").event);
+  expect(heard, "the event arrives").toBe(1);
+  await store.prompt();
+  expect(heard, "the prompt is used").toBe(2);
+
+  fire(promptEvent("accepted").event);
+  expect(heard).toBe(3);
+  fire(new Event("appinstalled"));
+  expect(heard, "the app is installed").toBe(4);
+});
+
+it("the store of the page: none without a window, and one and the same store with one", () => {
+  expect(installStore(), "the server render of Astro has no window").toBeNull();
+  vi.stubGlobal("window", fakeWindow().win);
+  const first = installStore();
+  expect(first).not.toBeNull();
+  expect(installStore(), "made once").toBe(first);
 });
