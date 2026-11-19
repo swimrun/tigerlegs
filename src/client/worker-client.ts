@@ -27,7 +27,7 @@ export function runWorkerJob(
       cleanup();
       reject(new Error(event.message
           ? `Analysis worker failed: ${event.message}`
-          : "Analysis worker could not start (script missing or stale). Run `deno task build:js` or start with `deno task dev`."));
+          : "Analysis worker could not start (script missing or stale). Run `npm run build:js` or start with `npm run dev`."));
     };
     worker.onmessageerror = () => {
       cleanup();

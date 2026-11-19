@@ -102,16 +102,16 @@ The near-term roadmap is in the README; milestones and the watch-platform strate
 An athlete interacts with the system in four ways.
 Each way below is a user story with one acceptance criterion in Given/When/Then form.
 
-1. **Upload a GPX file.** As an athlete, I upload a GPX file so that I see the swim and run segments on a map.
+1. **Upload a GPX file.** As an athlete, I want to upload a GPX file so that I see the swim and run segments on a map.
    - Given I opened the page, when I choose a GPX file, then the map shows the track with swim and run segments in different colours.
-2. **See distances.** As an athlete, I see the distance per segment and the totals so that I can prepare my race.
+2. **See distances.** As an athlete, I want to see the distance per segment and the totals so that I can prepare my race.
    - Given a GPX file with two swims and two runs, when the analysis finishes, then the table shows four distances and a swim and run total.
-3. **Link map and table.** As an athlete, I select a map line or a distance in the table so that both views highlight the same segment.
+3. **Link map and table.** As an athlete, I want to select a map line or a distance in the table so that both views highlight the same segment.
    - Given a segment is shown on the map and in the table, when I click its distance or select its button with Enter or Space, then its map line and table row are highlighted; selecting it again deselects it.
-4. **Read a compact table.** As an athlete, I see one row per run and swim pair so that I can write the numbers on a paddle ([ADR-0007](./adr/0007-compact-segment-table-format.md)).
+4. **Read a compact table.** As an athlete, I want to see one row per run and swim pair so that I can write the numbers on a paddle ([ADR-0007](./adr/0007-compact-segment-table-format.md)).
    - Given a course that starts with a run, when the table is shown run-first, then each row shows a run distance and the swim that follows it.
 
-The table defaults to run-first; **Show swim first** (against the default **Show run first**) changes both the pairing and column order.
+The table defaults to run-first; **Swim first** (against the default **Run first**) changes both the pairing and column order.
 Each distance is an independently selectable segment, even when two segments share a row.
 Map selections scroll the corresponding row into view; Escape clears selection.
 Hover still previews a segment when no selection is pinned.
@@ -280,7 +280,7 @@ This chapter lists the choices that the team did not make freely.
 
 The following constraints apply:
 
-- The front end and its tests run on Deno and TypeScript ([ADR-0002](./adr/0002-use-deno-with-typescript.md)); the back end runs on Node.js with TypeScript ([ADR-0014](./adr/0014-back-end-technology.md)). Browser and server still share code: the modules listed in `tsconfig.shared.json` must load under both.
+- The front end, the back end, the tests and the build tasks run on Node.js with TypeScript and npm ([ADR-0014](./adr/0014-back-end-technology.md); [ADR-0002](./adr/0002-use-deno-with-typescript.md), which chose Deno, is superseded). Browser and server share code: the modules listed in `tsconfig.shared.json` must load under both.
 - The system uses an open-source GIS stack: OpenStreetMap, Leaflet and custom Haversine code ([ADR-0006](./adr/0006-open-source-gis-stack.md)).
 - The backend runs on a VPS in the EU, because location data is personal data under GDPR ([ADR-0004](./adr/0004-host-deno-backend-on-eu-vps.md)).
 - GPX files can be up to 10 MB with up to 50,000 trackpoints ([ADR-0003](./adr/0003-gpx-analysis-execution-location.md)).
@@ -303,12 +303,19 @@ This chapter lists the rules that guide design choices when no constraint decide
 ### 5.1 Documentation approach
 
 This project writes its documentation next to the code and keeps it current as part of the work.
-Preston-Werner (2010) advises: "Write your Readme first."
-That part is done here: the README describes the tool, so what remains is keeping it true.
-Keeping the documents up to date together with the code is a way of documenting in continuous software development, which Theunissen et al. (2022) study; we call it *continuous documentation*. Whether these authors use that exact term, and what they say about maintaining documents together with the code, is not yet checked against the full text; the owner points to further articles by Theunissen, to work of Van Heesch and to work of Zimmermann, which are still to be added.
-Documentation is part of the definition of done: a change is finished when the README, guidebook or ADR that it affects is up to date.
-The full checklist is in [DEFINITION_OF_DONE.md](./DEFINITION_OF_DONE.md) and is repeated as checkboxes in the GitHub issue and pull request templates.
-Task descriptions live in GitHub issues, not in the repository.
+It starts from the README, as Preston-Werner (2010) describes in *Readme Driven Development*: "Write your Readme first." His reason: "Until you've written about your software, you have no idea what you'll be coding." He also separates it from Documentation Driven Development, which is more than a README.
+The README of this project described the tool before it existed, so what remains is keeping it true.
+
+Theunissen et al. (2022a) study documentation in *continuous software development*, which they define as covering "the values, principles, practices, processes, and tools from Agile, Lean, and DevOps" (p. 2). Their paper does not use the term *continuous documentation*; we use it as our own shorthand for documenting in that setting, next to the code and in the same change as the behaviour.
+They start from what their earlier studies observed, which fits this project: "developers do not want to write, others do not want to read, but having no documentation at all is not an option" (Theunissen et al., 2022a, p. 2). They describe three approaches to keep knowledge from vaporizing (the abstract calls the second *Executable Knowledge*, the text *Executable Documentation*):
+
+- **Just Enough Upfront.** Write down what must be known to start and to complete a design, and no more. Here these are this guidebook, the architecture decision records and the specs: "What is missing, however, are descriptions and decisions" in the source code, which is the "single source of truth" (Theunissen et al., 2022a, p. 14), and documentation inside the source code "is not reliable because this can easily be out-of-sync" (pp. 14–15), so the decisions go into ADRs.
+- **Executable Documentation.** "Traditionally written documentation is hard to keep up-to-date with the actual code", but "the human-readable specifications can be executed, so the document itself can be verified, validated, and tested", with tools such as Cucumber (Theunissen et al., 2022a, p. 7). This is why the acceptance criteria of an issue are Given, When, Then lines that run as Gherkin features, and why tests check that the guidebook headings are numbered and that the Definition of Done in the templates matches its document. The features run with playwright-bdd on the Playwright runner ([ADR-0018](./adr/0018-acceptance-tests-with-gherkin-and-playwright-bdd.md)); Cucumber.js, the JavaScript implementation of Cucumber, runs the same Gherkin and is the alternative, at the price of a second test runner and browser setup, which the ADR gives as the reason not to start with it.
+- **Automated Text Analytics** (text mining and deep learning to retrieve decisions from distributed tools such as commit messages) is less relevant here, because every significant decision is stored in an ADR and does not have to be dug out of the history. The commit message still carries the *why*: its title says what changed and its body says briefly why, so that the history explains itself (AGENTS.md).
+
+The earlier mapping study of the same authors gives the reason to write knowledge down: "knowledge transfer is hindered when knowledge about the software product, ... remains implicit in the minds of developers" (Theunissen et al., 2022b). So we make it explicit, in a software guidebook with C4 diagrams (Brown, 2026) in the repository, kept in line with the software in the same change, and we use AI assistants to write, check and update it, with the rules for them in AGENTS.md.
+
+Page numbers of Theunissen et al. (2022a) are those of the preprint.
 
 Table 5 lists the documents and the question each one answers.
 
@@ -700,7 +707,7 @@ The source lives in three folders: `src/client` for the browser, `src/server` fo
 Texts for the interface are data in external JSON files, one per language, and never inline; the library and the routing per language are decided in [ADR-0017](./adr/0017-localisation.md), and until then per-language TypeScript files are a stopgap (see `AGENTS.md`).
 Tests sit next to the code (`*.test.ts`) or in `test/`. The back end in `src/server` runs on Node.js (`npm run server`, type stripping, no build step) and its tests run with Vitest (`npm run test:server`); `npm run check:server` compiles it with only Node's types. Deno does not run them.
 Most tests are property-based: they state a rule that must hold for generated inputs, such as the maximum gap between samples.
-`deno task build` bundles the browser code into `public/app.js` with `deno bundle`, which is an experimental Deno command.
+`npm run build` bundles the analysis Web Worker into `public/analysis-worker.js` with esbuild, builds the Tailwind styles with its CLI, copies the samples and diagrams, and then builds the Astro site; the scripts of `src/` run on Node with type stripping.
 
 ### 7.1 Front end: the scroll-linked tiger reveal
 
@@ -1205,9 +1212,9 @@ The optional Node.js API exposes `GET /api/v1/health`; it needs no `Origin` head
 
 This chapter lists what you need to work on the code.
 
-You need Deno, npm and Node.js 22.23.4 or newer; `.nvmrc` pins Node 24, which CI also uses (`nvm use` picks it up). Run `npm ci` first; npm manages the dependency tree used by the site build, the unit tests and Deno.
+You need npm and Node.js 22.23.4 or newer (PlantUML with Java only to redraw the diagrams); `.nvmrc` pins Node 24, which CI also uses (`nvm use` picks it up). Run `npm ci` first; npm manages the dependency tree used by the site build and the unit tests.
 
-`deno task dev` prepares the Worker, samples and styling, then starts Astro at `http://localhost:8123/tigerlegs/`. `deno task build` generates the production site in `dist/`; `npm run preview` serves that build locally. No API service is needed for these workflows.
+`npm run dev` prepares the Worker, samples and styling, then starts Astro at `http://localhost:8123/tigerlegs/`. `npm run build` generates the production site in `dist/`; `npm run preview` serves that build locally. No API service is needed for these workflows.
 
 `npm test` (Vitest) runs the analysis, documentation and domain unit and integration tests. `npm run check` checks the Astro/React code. After building and installing Chromium with `npx playwright install chromium`, `npm run test:site` checks static deep links, ADR publication, React imports/selection, Worker thresholds, terrain consent and mobile layout on a plain static server.
 
@@ -1234,7 +1241,7 @@ Rules:
 - React components have stories in Storybook (`npm run storybook`, files `src/components/*.stories.tsx`). Each story is also a component test: `npm run test:a11y` runs every story in Chromium through Vitest and fails on any axe accessibility violation (`a11y.test: "error"` in `.storybook/preview.ts`). The *Accessibility* panel in Storybook shows the same findings while developing.
 - Automated checks find only part of the accessibility problems (roughly a third to a half). Keyboard use, focus order and screen-reader wording still need a manual check.
 - Not yet covered: `Extractor` and `CourseMap` (Leaflet, web worker and map tiles need mocks), and the Astro pages and layout, which Storybook does not render.
-- A change is done only when `npm test`, `deno task build` and (for site changes) `npm run test:site` pass; see [DEFINITION_OF_DONE.md](./DEFINITION_OF_DONE.md).
+- A change is done only when `npm test`, `npm run build` and (for site changes) `npm run test:site` pass; see [DEFINITION_OF_DONE.md](./DEFINITION_OF_DONE.md).
 
 ## 13. Decision log
 
@@ -1247,7 +1254,7 @@ Table 11 lists the ADRs and what each decides.
 | ADR                                                                       | Decision                                                                                                                                                                                                                         |
 | ------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | [0001](./adr/0001-record-architecture-decisions.md)                       | Record architecture decisions                                                                                                                                                                                                    |
-| [0002](./adr/0002-use-deno-with-typescript.md)                            | Use Deno with TypeScript                                                                                                                                                                                                         |
+| [0002](./adr/0002-use-deno-with-typescript.md)                            | Use Deno with TypeScript (superseded by Node.js and npm, issue #100)                                                                                                                                                             |
 | [0003](./adr/0003-gpx-analysis-execution-location.md)                     | Choose where the GPX analysis runs                                                                                                                                                                                               |
 | [0004](./adr/0004-host-deno-backend-on-eu-vps.md)                         | Host the backend on an EU VPS                                                                                                                                                                                                    |
 | [0005](./adr/0005-rest-json-api-for-multi-client-support.md)              | Offer a REST/JSON API                                                                                                                                                                                                            |
@@ -1268,6 +1275,7 @@ ADR-0008 implements a shared Astro layout and directly linkable HTML pages, with
 
 ## References
 
+- Brown, S. (2026). *The C4 model: Visualizing software architecture*. O'Reilly Media. https://www.oreilly.com/library/view/the-c4-model/9798341660113/
 - Brown, S. (n.d.-a). *The software guidebook*. Leanpub. https://leanpub.com/documenting-software-architecture
 - Brown, S. (n.d.-b). *The C4 model for visualising software architecture*. https://c4model.com/
 - Cavoukian, A. (2011). *Privacy by design: The 7 foundational principles*. Information and Privacy Commissioner of Ontario. https://www.ipc.on.ca/wp-content/uploads/resources/7foundationalprinciples.pdf
@@ -1291,7 +1299,8 @@ ADR-0008 implements a shared Astro layout and directly linkable HTML pages, with
 - ÖTILLÖ. (n.d.). *ÖTILLÖ Cannes World Series*. Retrieved November 10, 2026, from https://otilloswimrun.com/races/cannes-france/cannes-world-series/
 - Preston-Werner, T. (2010, August 23). *Readme Driven Development*. https://tom.preston-werner.com/2010/08/23/readme-driven-development.html
 - RaceDayMap. (n.d.). *ÖTILLÖ Swimrun Cannes: World Series* [Interactive course map and leg table]. Retrieved November 10, 2026, from https://app.racedaymap.com/otillo-swimrun-cannes/world-series
-- Theunissen, T., Hoppenbrouwers, S., & Overbeek, S. (2022). Approaches for documentation in continuous software development. *Complex Systems Informatics and Modeling Quarterly, 32*, 1–27. https://doi.org/10.7250/csimq.2022-32.01
+- Theunissen, T., Hoppenbrouwers, S., & Overbeek, S. (2022a). Approaches for documentation in continuous software development. *Complex Systems Informatics and Modeling Quarterly, 32*, 1–27. https://doi.org/10.7250/csimq.2022-32.01
+- Theunissen, T., van Heesch, U., & Avgeriou, P. (2022b). A mapping study on documentation in continuous software development. *Information and Software Technology, 142*, Article 106733. https://doi.org/10.1016/j.infsof.2021.106733
 - TopoGrafix. (2004). *GPX 1.1 schema documentation*. https://www.topografix.com/GPX/1/1/
 
 ## Appendices

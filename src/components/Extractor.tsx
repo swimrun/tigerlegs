@@ -306,8 +306,8 @@ export default function Extractor({ base }: { base: string }) {
         <div className="flex flex-wrap gap-x-6 gap-y-2 border-b border-stone-100 px-3 py-2">
           <Toggle id="include-breaks" label="Show breaks" checked={includeBreaks} onChange={checked => { setIncludeBreaks(checked); presentationChange(); }} />
           <fieldset className="flex items-center gap-4 text-sm text-stone-700"><legend className="sr-only">Order of the table</legend>
-            <label className="flex cursor-pointer items-center gap-1"><input id="run-first" type="radio" name="table-order" checked={!swimFirst} onChange={() => { setSwimFirst(false); presentationChange(); }} /> Show run first</label>
-            <label className="flex cursor-pointer items-center gap-1"><input id="swim-first" type="radio" name="table-order" checked={swimFirst} onChange={() => { setSwimFirst(true); presentationChange(); }} /> Show swim first</label>
+            <label className="flex cursor-pointer items-center gap-1"><input id="run-first" type="radio" name="table-order" checked={!swimFirst} onChange={() => { setSwimFirst(false); presentationChange(); }} /> Run first</label>
+            <label className="flex cursor-pointer items-center gap-1"><input id="swim-first" type="radio" name="table-order" checked={swimFirst} onChange={() => { setSwimFirst(true); presentationChange(); }} /> Swim first</label>
           </fieldset>
           <Toggle id="show-cumulative" label="Show total so far" checked={showCumulative} onChange={checked => { setShowCumulative(checked); presentationChange(); }} />
         </div>
