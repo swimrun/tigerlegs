@@ -111,7 +111,7 @@ Each way below is a user story with one acceptance criterion in Given/When/Then 
 4. **Read a compact table.** As an athlete, I want to see one row per run and swim pair so that I can write the numbers on a paddle ([ADR-0007](./adr/0007-compact-segment-table-format.md)).
    - Given a course that starts with a run, when the table is shown run-first, then each row shows a run distance and the swim that follows it.
 
-The table defaults to run-first; **Show swim first** (against the default **Show run first**) changes both the pairing and column order.
+The table defaults to run-first; **Swim first** (against the default **Run first**) changes both the pairing and column order.
 Each distance is an independently selectable segment, even when two segments share a row.
 Map selections scroll the corresponding row into view; Escape clears selection.
 Hover still previews a segment when no selection is pinned.
