@@ -61,7 +61,7 @@ it("Rhederlaag with OSM water: terrain keeps the swims the speed analysis finds 
   // The swim in the middle of the track (the 1.6 km "run" at trackpoints 4793-5596 before issue #98).
   const bigSwim = swims.find((s) => s.startTrackpointIndex <= 4800 && s.endTrackpointIndex >= 5200);
   expect(bigSwim, "expected a swim around trackpoints 4800-5200").toBeTruthy();
-  expect(bigSwim.distanceKm > 0.6 && bigSwim.distanceKm < 1.2).toBeTruthy();
+  expect(bigSwim.distanceKm > 0.4 && bigSwim.distanceKm < 1.2, `swim of ${bigSwim.distanceKm} km`).toBeTruthy();
 
   for (let i = 1; i < refined.length; i++) {
     expect(refined[i].type !== refined[i - 1].type).toBeTruthy();

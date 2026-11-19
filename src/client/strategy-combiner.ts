@@ -101,6 +101,8 @@ export function combineStrategies(
 
   // Classify each trackpoint
   const classifications: TrackpointClassification[] = new Array(trackpointCount);
+  // What the strategies said where they were not sure enough (null where they were, or said nothing).
+  const weak: (SegmentType | null)[] = new Array(trackpointCount).fill(null);
 
   for (let i = 0; i < trackpointCount; i++) {
     let bestType: SegmentType = "unclassified";
@@ -122,7 +124,8 @@ export function combineStrategies(
       }
     }
 
-    // If all confidence is below 0.3, mark as unclassified
+    // If all confidence is below 0.3, mark as unclassified, but remember what the strategies said.
+    const weakType = bestType;
     if (bestConfidence < 0.3) {
       bestType = "unclassified";
     }
@@ -132,7 +135,10 @@ export function combineStrategies(
       confidence: bestConfidence,
       strategies: contributingStrategies,
     };
+    weak[i] = bestConfidence < 0.3 && weakType !== "unclassified" ? weakType : null;
   }
+
+  adoptWeakStretches(classifications, weak);
 
   // Merge consecutive same-type trackpoints into segments
   const segments: Segment[] = [];
@@ -173,6 +179,39 @@ export function combineStrategies(
   }
 
   return segments;
+}
+
+/**
+ * A stretch where no strategy is sure enough stays unclassified, unless the strategies still agree on one type for it
+ * and a sure neighbour of the same type touches it: then it belongs to that neighbour. A long swim in jittery water
+ * has a slow net speed but no clear step from the run before it, so its weak part used to be left unclassified
+ * next to the sure part of the same swim (the Rügen recording, issue #98).
+ */
+function adoptWeakStretches(
+  classifications: TrackpointClassification[],
+  weak: (SegmentType | null)[],
+): void {
+  let i = 0;
+  while (i < classifications.length) {
+    if (classifications[i].type !== "unclassified") {
+      i++;
+      continue;
+    }
+    let end = i;
+    while (end + 1 < classifications.length && classifications[end + 1].type === "unclassified") end++;
+    const counts = new Map<SegmentType, number>();
+    for (let j = i; j <= end; j++) {
+      const type = weak[j];
+      if (type) counts.set(type, (counts.get(type) ?? 0) + 1);
+    }
+    const [majority] = [...counts.entries()].sort((a, b) => b[1] - a[1])[0] ?? [];
+    const before = i > 0 ? classifications[i - 1].type : null;
+    const after = end + 1 < classifications.length ? classifications[end + 1].type : null;
+    if (majority && (majority === before || majority === after)) {
+      for (let j = i; j <= end; j++) classifications[j] = { ...classifications[j], type: majority };
+    }
+    i = end + 1;
+  }
 }
 
 /**
