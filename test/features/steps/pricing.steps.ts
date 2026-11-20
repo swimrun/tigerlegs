@@ -29,8 +29,10 @@ Then("the page says that tigers are endangered, with the citation right after th
   const tigers = page.locator('main > div[lang="en"] [data-tigers]');
   await expect(tigers).toContainText("Endangered under the IUCN Red List (Panthera, 2025).");
   await expect(tigers).toContainText("quick extinction");
-  await expect(page.locator('main > div[lang="en"] [data-references] a')).toHaveAttribute("href", /panthera\.org/);
+  await expect(page.locator('main > div[lang="en"] [data-references] a[href*="panthera.org"]')).toHaveCount(1);
   await expect(page.locator('main > div[lang="en"] [data-references]')).toContainText("Panthera. (2025, October 10).");
+  await expect(page.locator('main > div[lang="en"] [data-references]')).toContainText("Culp, B. (2019).");
+  await expect(page.locator('main > div[lang="en"] [data-pledge]')).toContainText("(Culp, 2019)");
 });
 
 Then("the feature table has the columns {string}, {string}, {string}, {string} and {string}", async ({ page }, a: string, b: string, c: string, d: string, e: string) => {
