@@ -1,0 +1,12 @@
+{
+  "$schema": "./node_modules/@stryker-mutator/core/schema/stryker-schema.json",
+  "testRunner": "vitest",
+  "vitest": { "configFile": "vitest.server.config.ts" },
+  "mutate": ["src/server/*.ts", "!src/server/*.test.ts"],
+  "reporters": ["clear-text", "progress", "html"],
+  "htmlReporter": { "fileName": "reports/mutation-server/index.html" },
+  "tempDirName": ".stryker-tmp",
+  "concurrency": 4,
+  "ignorePatterns": [".cache", "dist", "docs", "public", "data", "overpass-data", "storybook-static", "test-results", "reports", ".astro", ".vitest", ".stryker-tmp", "test/features/.generated"],
+  "thresholds": { "high": 85, "low": 70, "break": null }
+}

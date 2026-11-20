@@ -15,7 +15,7 @@ export const nl: Strings = {
     "Jouw Chrome kan Gemini Nano draaien, maar het model is nog niet geïnstalleerd. Installeren downloadt het eenmalig (enkele GB); Chrome eist zo'n 22 GB vrije schijfruimte als marge. Je schema verlaat dit apparaat nooit.",
   assistEnable: "Installeer Gemini Nano",
   assistInstalled: "Gemini Nano is geïnstalleerd. Vraag het opnieuw.",
-  chatTitle: "RoARR (Robotic Assistant Request Responder)",
+  chatTitle: "ROARRS: Robotic Operating Agent that Responds to Requests about Swimrun",
   applied: (summary) => `Toegepast: ${summary}. Bevestig of draai de wijzigingen terug onder "Jouw wijzigingen" hieronder.`,
   dismissed: "Genegeerd. Er is niets verplaatst.",
   assistDownloading: "Model wordt gedownload…",

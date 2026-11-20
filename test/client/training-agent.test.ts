@@ -3,6 +3,9 @@ import type { ChatEvent } from "../../src/client/chat-agent.ts";
 import type { LanguageModelStatic } from "../../src/client/prompt-api.ts";
 import { createTrainingAgent, type TrainingAgentStrings } from "../../src/client/training-agent.ts";
 import { applyMoves, type Day, type Move, PROTOTYPE_WEEK, type TrainingSession } from "../../src/client/training-week.ts";
+import { STRINGS as CHAT_STRINGS } from "../../src/client/chat.strings.ts";
+import { LANGS } from "../../src/client/language.ts";
+import { BROWSERS } from "../user-agents.ts";
 
 const strings: TrainingAgentStrings = {
   assistAbsent: "absent",
@@ -108,6 +111,30 @@ it("training agent: Dutch and other browsers get a hint instead of a prompt", as
   const firefox = createTrainingAgent({ ...base, lang: "en", chrome: false });
   expect(texts(await collect(firefox, "I travel"))[0].text.includes("Chrome")).toBeTruthy();
   expect(prompts.length).toEqual(0);
+});
+
+it("training agent: what every browser and language is told, and the model is never prompted before an install", async () => {
+  for (const { name, chrome } of BROWSERS) {
+    for (const lang of LANGS) {
+      const prompts: string[] = [];
+      const agent = createTrainingAgent({ model: fakeModel(prompts), lang, strings, chrome, getWeek: () => PROTOTYPE_WEEK, onApply: () => {} });
+      const [reply] = texts(await collect(agent, "I travel"));
+      // Another browser than Chrome: go to Chrome. Chrome in Dutch: Gemini Nano has no Dutch. Otherwise the model is
+      // asked for, and that starts with the offer to install it (the fake model has not been downloaded).
+      const expected = !chrome ? CHAT_STRINGS[lang].switchToChrome : lang === "nl" ? CHAT_STRINGS.nl.useSupportedLanguage : "downloadable";
+      expect(reply.text, `${lang} in ${name}`).toBe(expected);
+      expect(prompts.length, `${lang} in ${name}`).toBe(0);
+    }
+  }
+});
+
+it("training agent: Chrome without the Prompt API, or on a device that cannot run the model, says so", async () => {
+  const noDevice: LanguageModelStatic = { availability: () => Promise.resolve("unavailable"), create: () => Promise.reject(new Error("no device")) };
+  for (const lang of ["en", "fr", "de"] as const) {
+    const base = { strings, lang, chrome: true, getWeek: () => PROTOTYPE_WEEK, onApply: () => {} };
+    expect(texts(await collect(createTrainingAgent({ ...base, model: null }), "I travel"))[0].text, `${lang}, no Prompt API`).toBe("absent");
+    expect(texts(await collect(createTrainingAgent({ ...base, model: noDevice }), "I travel"))[0].text, `${lang}, no device`).toBe("unavailable");
+  }
 });
 
 /** A model that would put the brick on Wednesday, the very day the athlete wants to keep free. */

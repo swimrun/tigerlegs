@@ -1,7 +1,7 @@
 {
   "language": "fr",
   "tellMore": "Dis-m'en plus",
-  "fallback": "Il n'y a pas encore de véritable intégration LLM.. Utilise pour l'instant les options prédéfinies via les étiquettes..",
+  "fallback": "Il n'y a pas encore de véritable intégration LLM.. Utilise pour l'instant les options prédéfinies via les étiquettes.. Pour des demandes libres sur ta semaine d'entraînement, utilise le chat de la page Training (Chrome avec Gemini Nano).",
   "entries": [
     {
       "id": "what-is-swimrun",

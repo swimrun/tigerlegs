@@ -1,3 +1,5 @@
+import type { ProposalAction } from "./ui-catalog.ts";
+
 /**
  * Chat boundary between the UI and whatever answers. The UI only knows `ChatAgent`, so the
  * FAQ agent below can later be replaced by an LLM behind AG-UI without touching the component.
@@ -10,9 +12,17 @@ export type ChatEvent =
   | { type: "run-started" }
   /** Progress while the agent works, e.g. a model download; shown next to the typing dots. */
   | { type: "status"; text: string }
-  /** `text` may use "# Heading" lines and consecutive "- item" lines, which the chat shows as a heading and a bulleted list. */
-  | { type: "text"; text: string; followUps?: ChatSuggestion[] }
+  /**
+   * `text` may use "# Heading" lines and consecutive "- item" lines, which the chat shows as a heading and a bulleted list.
+   * `ui` is a declarative description of an interface to show under the text (ui-catalog.ts, ADR-0019): data, never
+   * code. The text is always shown, so it also stands in for a description that the page cannot render.
+   * `uiActions` says what the buttons of that interface send to the agent, as a chip does; an action that is not
+   * listed has no button.
+   */
+  | { type: "text"; text: string; followUps?: ChatSuggestion[]; ui?: unknown; uiActions?: UiActions }
   | { type: "run-finished" };
+
+export type UiActions = Partial<Record<ProposalAction, ChatSuggestion>>;
 
 export interface ChatSuggestion {
   id: string;

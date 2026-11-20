@@ -3,7 +3,7 @@ import { readFile } from "node:fs/promises";
 import { resolve, extname } from "node:path";
 
 const root = resolve("dist");
-const types = { ".html": "text/html", ".js": "application/javascript", ".css": "text/css", ".json": "application/json", ".svg": "image/svg+xml", ".png": "image/png", ".jpg": "image/jpeg", ".woff2": "font/woff2", ".gpx": "application/gpx+xml" };
+const types = { ".html": "text/html", ".js": "application/javascript", ".css": "text/css", ".json": "application/json", ".webmanifest": "application/manifest+json", ".svg": "image/svg+xml", ".png": "image/png", ".jpg": "image/jpeg", ".woff2": "font/woff2", ".gpx": "application/gpx+xml" };
 createServer(async (request, response) => {
   const path = decodeURIComponent(new URL(request.url, "http://localhost").pathname);
   if (!path.startsWith("/tigerlegs/")) { response.writeHead(404).end(); return; }

@@ -1,7 +1,7 @@
 {
   "language": "de",
   "tellMore": "Erzähl mir mehr",
-  "fallback": "Es gibt noch keine echte LLM-Anbindung.. Bitte nutze vorerst die festen Optionen über die Labels..",
+  "fallback": "Es gibt noch keine echte LLM-Anbindung.. Bitte nutze vorerst die festen Optionen über die Labels.. Für freie Anfragen zu deiner Trainingswoche nutze den Chat auf der Training-Seite (Chrome mit Gemini Nano).",
   "entries": [
     {
       "id": "what-is-swimrun",

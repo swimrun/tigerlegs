@@ -54,40 +54,50 @@ title Domain concepts of structured training (planned)
 skinparam classAttributeIconSize 0
 hide empty members
 
-class GoalRace {
+class TrainingPlan {
+  leads to goal events
+}
+class GoalEvent {
   name, date, type, distance
+  priority: A | B | C
 }
 class TrainingBlock {
   3, 4 or 5 weeks
 }
-class Week {
+class WeekPlan {
   phase: base | build | recovery | peak | taper
   focus: mileage | speed | strength | swimrun
 }
-class Session {
+class PlannedSession {
+  date
+  status: planned | done | skipped
+}
+class SessionTemplate {
   discipline
   subtype
   focus: easy | long | speed | recovery
   basis: time (default) | distance
   target: minutes or metres
 }
-class Step {
+class WorkoutStep {
   role: warm-up | work | rest | cool-down | repeat
   repeat count
   duration: time | distance | open
 }
 class SportsRestDay
 
-GoalRace "1" <-- "1..*" TrainingBlock : leads to
-TrainingBlock *-- "3..5" Week
-Week *-- "0..*" Session : sessions of the current block
-Session *-- "0..*" Step : structure
-Step o-- "0..*" Step : repeats
+TrainingPlan *-- "1..*" GoalEvent
+TrainingPlan *-- "1..*" TrainingBlock
+TrainingBlock *-- "3..5" WeekPlan
+WeekPlan *-- "0..*" PlannedSession : sessions of the current block
+PlannedSession "*" --> "1" SessionTemplate : what to do
+SessionTemplate *-- "0..*" WorkoutStep : structure
+WorkoutStep o-- "0..*" WorkoutStep : repeats
 SportsRestDay "0..6" -- "1" TrainingBlock : applies to every week
 @enduml
 ```
 
-A session has a **discipline** (swim, run, swimrun, strength or mobility) and a **subtype** below it: trail, road or mixed for a run; open water or pool for a swim; with weight or body mass for strength; static or dynamic for mobility.
+A **session template** is what to do in a session, without a date or a status, and a **planned session** is a session template placed on a date. A session template has a **discipline** (swim, run, swimrun, strength or mobility) and a **subtype** below it: trail, road or mixed for a run; open water or pool for a swim; with weight or body mass for strength; static or dynamic for mobility.
 Its **focus** says what it is for, so *speed* is a focus and not a subtype.
 Most sessions are time-based (the default); a distance-based session is edited in metres.
 An interval session is a repeat step with a count, holding the work (a distance or a time) and the rest between the repetitions.
@@ -318,6 +328,18 @@ They start from what their earlier studies observed, which fits this project: "d
 The earlier mapping study of the same authors gives the reason to write knowledge down: "knowledge transfer is hindered when knowledge about the software product, ... remains implicit in the minds of developers" (Theunissen et al., 2022b). So we make it explicit, in a software guidebook with C4 diagrams (Brown, 2026) in the repository, kept in line with the software in the same change, and we use AI assistants to write, check and update it, with the rules for them in AGENTS.md.
 
 Page numbers of Theunissen et al. (2022a) are those of the preprint.
+
+### 5.2 Documentation for people and for AI co-developers
+
+This project is documented for two kinds of readers: the developers and students who work on it, and the AI assistants that work with them as co-developers. Both read the same facts, so the facts live once.
+
+- **One source for the instructions to agents.** `AGENTS.md` holds the working agreements for every agent (Claude Code, GitHub Copilot, Codex); the files of the tools only point to it. A person reads the same file to learn how the project works.
+- **The explanation stays with the code.** The README, this guidebook and the ADRs are Markdown in the repository, so that an assistant reads them as plain text, and a change to the software and to its documents is one change (section 5.1).
+- **Claims have sources.** An assistant must give a quote or a reference for a factual claim and say so when it has none (`AGENTS.md`), which is also what a reader needs to check a statement.
+- **What and why.** A commit says what changed in its title and why in its body, for a person who reads the history and for an assistant that has to continue the work.
+- **A person decides.** An assistant proposes and checks; commits, pushes and merges happen on request (`AGENTS.md`).
+
+The agentic user interface (the assistant in the app) follows the same idea in the other direction: the assistant talks to the page over an open protocol, AG-UI, and a catalog of approved components decides what it may show (see the section on agentic UI in chapter 7).
 
 Table 5 lists the documents and the question each one answers.
 
@@ -656,7 +678,7 @@ The words, as the extractor and training pages need them:
 - A **track edit** is the set of verdicts and moved transition points that the athlete or the owner chose for a recording: data next to the recording, and the GPX file that was loaded does not change; an edited copy can be exported. What the points and verdicts mean is in section 6.7.
 - A **swimrun group** is a set of athletes: a duo, a team or a larger training group.
 - A **training plan** leads to goal events: one A event and B or C events before it (roadmap M10). Its **planned sessions** are what the training page shows, and a session can have a structure of steps for intervals, intensity and rest. We do not build a training log: Strava, Garmin and Polar are dedicated platforms for executed training, so a session points at the activity there, or at a recording the athlete saved, and keeps a small adherence snapshot.
-- A **planned session** has a discipline and, below it, a subtype: for a run trail, road or mixed; for a swim open water or pool; for strength with weight or body mass; for mobility static or dynamic; a swimrun has none. Next to that it has a focus (easy, long, speed or recovery), a **basis** and a target. Time is the default basis: the target is minutes. On the distance basis the target is metres. The athlete edits the target on the detail screen, never both at once.
+- A **session template** is what to do in a session, without a date or a status; a **planned session** is a session template placed on a date. The word is *session* in the interface and in the model, and not *training* (the owner chose *session template*). A session template has a discipline and, below it, a subtype: for a run trail, road or mixed; for a swim open water or pool; for strength with weight or body mass; for mobility static or dynamic; a swimrun has none. Next to that it has a focus (easy, long, speed or recovery), a **basis** and a target. Time is the default basis: the target is minutes. On the distance basis the target is metres. The athlete edits the target on the detail screen, never both at once.
 - A session with **intervals** has a structure of steps. A *repeat* step has a repeat count and holds the steps that are repeated: a work step (a distance or a time, with an intensity) and a rest step (a time, or a distance at an easy pace) between the repetitions. Six times 400 m with 90 seconds rest is one repeat step with count 6, holding a work step of 400 m and a rest step of 90 seconds.
 - A **training block** is 3, 4 or 5 weeks, each a **week plan** with a phase (base, build, recovery, peak or taper) and a focus (mileage, speed, strength or swimrun); its last week is a recovery week (issue #85). Only the current block holds sessions; the weeks up to a goal race carry only their phase and focus (issue #87).
 - **Recovery** is not stored. It is derived from discipline, focus and duration or distance, per discipline group (swim, run, strength), and shown as bars along the week. A session on a sports rest day and a hard session within the recovery of the same group are warnings that are computed, not data.
@@ -700,7 +722,7 @@ Open questions:
 4. Is a coach a role in a group, or a relation between two athletes?
 5. Is the login account the same aggregate as the athlete profile?
 6. Which adherence figures do we keep (compliance in percent, planned against actual duration and distance), who may see them (the athlete only, or the coach too), and where do they come from when no service may give them to us?
-7. Is the term in the interface and the model *session* (as in `TrainingSession`, specs 002 and 003 and the training page) or *training*?
+7. Does a planned session hold its session template as a copy of its fields, so that a later change to a template does not rewrite a plan, or as a reference by id? In the prototype code `TrainingSession` is the session with a weekday and `SESSION_TEMPLATES` holds the templates; a planned session with a date, a status and an origin does not exist there yet.
 
 ### 6.7 Deep model of a recording: flagged points, glitches and real deviations (planned)
 
@@ -1141,7 +1163,40 @@ The save of a repository throws a conflict error when the version of the aggrega
 `RecordingRepository.erase` removes all recordings of an athlete, which is part of the erasure use case (section 6.6).
 The importers and exporters are not in this diagram: an `ActivityImporter` returns a `Recording` from a file, and a `WorkoutExporter` (later) turns a planned session into a file.
 
-### 7.8 Front end: the pricing page (prototype)
+### 7.8 Front end: agentic UI with AG-UI, and A2UI as a candidate (planned)
+
+The chat agents of the page speak `ChatEvent` (section 7.2). `src/client/ag-ui.ts` turns that stream into AG-UI events, the open, event-based protocol that "standardizes how AI agents connect to user-facing applications" (AG-UI, n.d.), so that an agent here can be consumed by any AG-UI client and an AG-UI agent can later replace one of ours:
+
+*Table 7*: Mapping of the chat events to AG-UI events.
+
+| Chat event                    | AG-UI events                                                     | Note                                               |
+| ----------------------------- | ---------------------------------------------------------------- | -------------------------------------------------- |
+| `run-started`, `run-finished` | `RUN_STARTED`, `RUN_FINISHED`                                    | An agent that throws ends the run with `RUN_ERROR` |
+| `text`                        | `TEXT_MESSAGE_START`, `TEXT_MESSAGE_CONTENT`, `TEXT_MESSAGE_END` |                                                    |
+| `status`, suggestion chips    | `CUSTOM` named `status` and `followUps`                          | No AG-UI event of their own                        |
+| `ui` of a `text`              | `ACTIVITY_SNAPSHOT` of the type `ui-description`                 | Only when `ui` is an object                        |
+| `uiActions` of a `text`       | `CUSTOM` named `uiActions`                                       | What the buttons of the interface send             |
+
+The adapter is tested (`test/client/ag-ui.test.ts`) and is not yet the transport between the agent and the chat component. The tool calls of issue #86 (`add_session`, `move_session`, `set_rest_days`, `navigate`) go over AG-UI as `TOOL_CALL_START`, `TOOL_CALL_ARGS`, `TOOL_CALL_END` and `TOOL_CALL_RESULT`, the last carrying the result.
+
+For interactive elements next to the text (a proposal with an Apply button, a day picker, a preview of the week; issue #128) the candidate is A2UI, "an open-source project, complete with a format optimized for representing updateable, agent-generated UIs" (Google A2UI Team, 2025): the agent sends a declarative description and the page renders it from "a 'catalog' of trusted, pre-approved UI components" of its own. The two work together: "AG-UI handles the structured communication between client and agent, while A2UI transports the UI-specific content" (Steyer, 2026), inside an AG-UI event of type `ACTIVITY_SNAPSHOT`. The choice and its criteria are in [ADR-0019](./adr/0019-agentic-ui-with-ag-ui-and-a2ui.md). The front end stays React, as taught at the Software (and Robotics) Engineering department; Redux for the state of such a chat may follow.
+
+The first component of that catalog is `ChangeProposal`: a title, a list of changes (`label`, `before`, `after`) and the actions Apply and Dismiss, with their text labels taken from the string files of the page and not sent by the agent. Its name is neutral on purpose, so that it can live in a base catalog. There is one renderer, and each page has its own UI catalog, composed of the shared base and the components of that page, such as a week preview on the training page or a highlight of a segment on the extractor page; a component outside the catalog of the page is ignored. Today only the base catalog exists in the code (`UI_CATALOG` in `src/client/ui-catalog.ts`) and the renderer `GenUi` reads it directly; a page gets a catalog of its own when it adds its first component, for example the week preview of issue #131, and the renderer then takes the catalog as a parameter. The training agent turns a changed planned session into a change, and the renderer knows nothing about training. This is NOT a micro-front-end: the page stays one Astro site with React islands, built and deployed once ([ADR-0008](./adr/0008-astro-static-site-with-react-islands.md)). The agent never sends code: "The agent generates a declarative JSON description of a component. The frontend maps this JSON to a pre-built, native widget", and "No code is executed" (Huang & Habler, 2025). A component name that is not in the catalog is ignored and the text is shown; a description that is not valid gets a sentence in the chat, and the conversation continues. The first version uses our own simple property format, with A2UI's names where they fit; whether it follows A2UI is decided with [ADR-0019](./adr/0019-agentic-ui-with-ag-ui-and-a2ui.md). The chat component renders the description that a text message carries (`ui`) under the text, with the renderer `GenUi`, and the text always stays. The buttons of the interface send what the agent listed in `uiActions`, in the way a suggestion chip does, are only on the last message, and are used up once one is chosen; an action that is not listed has no button. No agent sends a description yet; the Storybook story `ProposalCard` shows the flow.
+
+### 7.9 Front end: the installable app (PWA)
+
+A swimrunner can put TigerLegs on the home screen of a phone and open it in a window of its own (issue #130, [ADR-0021](./adr/0021-installable-app-pwa.md)).
+Chromium browsers need a `name` or `short_name`, icons of 192 and 512 pixels, a `start_url`, a `display` mode and a `prefer_related_applications` that is absent or false; "While not a requirement for a PWA to be installable, many PWAs use service workers to provide an offline experience" (MDN Contributors, n.d.-a).
+TigerLegs therefore has no service worker yet, and the installed app needs a network, like the site.
+
+- `public/manifest.webmanifest` holds the manifest. Its `start_url` and `scope` are relative, so that a change of the base path does not break them, and its display mode is `standalone`.
+- `npm run icons` (`src/build-icons.ts`) makes the icons from `src/assets/tigerlegs-icon.png` into `public/img/icons/`: 192 and 512 pixels, a maskable icon, and an `apple-touch-icon` of 180 pixels without transparency. For the maskable icon "The safe zone is the area that's guaranteed to always be visible when the mask is applied and is defined as a circle which diameter is 80% of the icon's minimum dimension" (MDN Contributors, n.d.-b), so the tiger is scaled to 70% on a white ground.
+- The layout (`SiteLayout.astro`) links the manifest and the apple touch icon, and sets a theme colour and the name for the iOS home screen.
+- `InstallApp` is a small button in the footer, with texts in four languages. It is only there when something can be done, and it never shows itself. Where a Chromium browser fires `beforeinstallprompt`, the button shows the prompt of the browser; "This is not supported on iOS" (MDN Contributors, n.d.-a), so on iOS the button explains the Share menu.
+- `src/client/install.ts` keeps the event from the moment the page loads, because the browser fires it once and the button may come later, and across page changes. An event can be used once: "You can only call `prompt()` on the deferred event once. If the user dismisses it, you need to wait until the `beforeinstallprompt` event is fired again" (web.dev, n.d.-a), which is "typically immediately after the `userChoice` property has resolved" (web.dev, n.d.-b). So a button that has been used is gone until the browser fires a new event; the store listens for it, and the button comes back. A page that already runs as an app, read from the `(display-mode: standalone)` media query (MDN Contributors, n.d.-c) or on iOS from `navigator.standalone`, has no button.
+
+The tests cover the manifest, the icons, the links in the head, the button with a synthetic event, its language, and the explanation with an iPhone user agent; the install itself has to be tried on a real Android phone and a real iPhone.
+### 7.10 Front end: the pricing page (prototype)
 
 `/pricing.html` says that TigerLegs is under development, that testers are wanted and that everything is free for now, that segment extraction (loading a GPX file and getting its swim and run segments, distances, map and table) is always free, and why membership exists: tigers are considered globally Endangered under the IUCN Red List (Panthera, 2025), and a project that is completely free and unsubsidised is also at risk of quick extinction. A table shows the tiers Free, Silver, Gold and Platinum with segment extraction, the map and table and terrain data for everyone, and as paid-only features, marked planned, the Garmin watch integration, the course of the World Champs in Stockholm and energy station planning.
 The page is labelled as a prototype: nothing can be bought, no prices are set and the split over the tiers is a draft (issue #111). The texts are data, one JSON file per language in `src/data/`, and the page renders each language in its own block, as the About page does; every table cell says in words whether a feature is included. The page follows the APA rule of the guidebook: the citation stands right after the sentence it supports, and the reference is at the end of the page.
@@ -1187,8 +1242,8 @@ Table 9 lists the fields of one planned session.
 
 | Field         | Values                                           | Notes                                                      |
 | ------------- | ------------------------------------------------ | ---------------------------------------------------------- |
-| `discipline`  | `swim`, `run`, `swimrun`, `strength`, `mobility` | Chooses the subtype list (Table 10)                         |
-| `subtype`     | see Table 10                                      | One value, or none for a swimrun                           |
+| `discipline`  | `swim`, `run`, `swimrun`, `strength`, `mobility` | Chooses the subtype list (Table 10)                        |
+| `subtype`     | see Table 10                                     | One value, or none for a swimrun                           |
 | `focus`       | `easy`, `long`, `speed`, `recovery`              | Speed is intervals; it is not a subtype                    |
 | `basis`       | `time` (default), `distance`                     | Chooses which target field is filled                       |
 | `minutes`     | whole number, at least 1                         | Target on the time basis                                   |
@@ -1263,13 +1318,14 @@ For development you can run your own Overpass server, with a one-time import of 
 
 Tests follow the test pyramid: many fast tests at the bottom, few slow ones at the top.
 
-| Level                   | Tool                                 | Location                                 | What it covers                                                                                                                                                     |
-| ----------------------- | ------------------------------------ | ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Unit and property-based | Vitest, fast-check                   | `test/client/`, `test/shared/`, `src/**` | Pure domain functions: GPX parsing, classification, confidence, chat agents, session store, language resolution                                                    |
-| Integration (back end)  | Vitest on Node                       | `src/server/`                            | The Overpass proxy and its cache                                                                                                                                   |
-| Component               | Storybook play functions, with axe   | `src/components/*.stories.tsx`           | One component and its interactions and accessibility; label steps `Given`, `When`, `Then` with `step()`                                                            |
-| Acceptance criteria     | Gherkin features with playwright-bdd | `test/features/`                         | The Given, When, Then criteria of an issue, run in a browser on the built static site ([ADR-0018](./adr/0018-acceptance-tests-with-gherkin-and-playwright-bdd.md)) |
-| End-to-end              | Playwright on the built static site  | `test/site/`                             | Deep links, menu, language switch, fake login, terrain consent, mobile layout                                                                                      |
+| Level                   | Tool                                 | Location                                            | What it covers                                                                                                                                                                                  |
+| ----------------------- | ------------------------------------ | --------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Unit and property-based | Vitest, fast-check                   | `test/client/`, `test/shared/`, `src/**`            | Pure domain functions: GPX parsing, classification, confidence, chat agents, session store, language resolution                                                                                 |
+| Integration (back end)  | Vitest on Node                       | `src/server/`                                       | The HTTP routes of the API (`router.test.ts`); the Overpass proxy and the file cache are barely tested yet (see mutation testing below)                                                         |
+| Component               | Storybook play functions, with axe   | `src/components/*.stories.tsx`                      | One component and its interactions and accessibility; label steps `Given`, `When`, `Then` with `step()`                                                                                         |
+| Acceptance criteria     | Gherkin features with playwright-bdd | `test/features/`                                    | The Given, When, Then criteria of an issue, run in a browser on the built static site ([ADR-0018](./adr/0018-acceptance-tests-with-gherkin-and-playwright-bdd.md))                              |
+| End-to-end              | Playwright on the built static site  | `test/site/`                                        | Deep links, menu, language switch, fake login, terrain consent, mobile layout                                                                                                                   |
+| Mutation                | StrykerJS, Vitest runner             | `stryker.config.json`, `stryker.server.config.json` | Whether the unit tests fail when the code is broken: the pure front-end modules `chat-hints.ts`, `install.ts` and `ui-catalog.ts` (`npm run mutate`) and the back end (`npm run mutate:server`) |
 
 Rules:
 
@@ -1280,6 +1336,8 @@ Rules:
 - React components have stories in Storybook (`npm run storybook`, files `src/components/*.stories.tsx`). Each story is also a component test: `npm run test:a11y` runs every story in Chromium through Vitest and fails on any axe accessibility violation (`a11y.test: "error"` in `.storybook/preview.ts`). The *Accessibility* panel in Storybook shows the same findings while developing.
 - Automated checks find only part of the accessibility problems (roughly a third to a half). Keyboard use, focus order and screen-reader wording still need a manual check.
 - Not yet covered: `Extractor` and `CourseMap` (Leaflet, web worker and map tiles need mocks), and the Astro pages and layout, which Storybook does not render.
+- Mutation testing checks the tests themselves. "Mutation testing introduces changes to your code, then runs your unit tests against the changed code"; "If your tests _fail_ then the mutant is _killed_", "If your tests passed, the mutant _survived_", and "The higher the percentage of mutants killed, the more _effective_ your tests are" (Stryker Mutator, n.d.-a). A surviving mutant is a test that is missing or too weak. The first run on the front-end modules found, for example, that nothing checked that a Windows laptop with a touch screen is not taken for an iPad, and that nothing noticed when the install button was not told that the app is installed. Both got a test. A mutant that no test can kill, because it changes nothing, is marked with `// Stryker disable next-line` and the reason. The Vitest runner does not support the browser mode of Vitest (Stryker Mutator, n.d.-b), so the React components and their stories cannot be mutated, and neither can the site tests; this is why only pure modules are in `stryker.config.json`. The reports go to the git-ignored `reports/`. It is not part of the pipeline yet (the front-end modules take about 6 seconds, the back end about 13).
+- The first run on the back end (`npm run mutate:server`) scored 23%: `cache.ts` and `server.ts` have no test, `terrain-proxy-service.ts` almost none, and only `router.ts` is reasonably covered. That is the list of what to test next.
 - A change is done only when `npm test`, `npm run build` and (for site changes) `npm run test:site` pass; see [DEFINITION_OF_DONE.md](./DEFINITION_OF_DONE.md).
 
 ## 13. Decision log
@@ -1309,11 +1367,15 @@ Table 12 lists the ADRs and what each decides.
 | [0016](./adr/0016-data-access-layer.md)                                   | Draft: the data layer of the back end (ORM or repositories, PostgreSQL driver, optimistic concurrency, transactions); no decision yet                                                                                            |
 | [0017](./adr/0017-localisation.md)                                        | Accepted: localisation with i18next and react-i18next, translations as external data files (YAML preferred, JSON accepted), ICU message syntax preferred, and one URL per language (Astro i18n routing); decided without a spike |
 | [0018](./adr/0018-acceptance-tests-with-gherkin-and-playwright-bdd.md)    | Accepted as a pilot: acceptance criteria as Gherkin features in `test/features/`, run with playwright-bdd on the Playwright runner                                                                                               |
+| [0019](./adr/0019-agentic-ui-with-ag-ui-and-a2ui.md)                      | Draft: AG-UI as the transport for the chat and tool calls, A2UI as the candidate for declarative interfaces, with a catalog of our own components                                                                                |
+| [0020](./adr/0020-sandbox-for-local-ai-coding-agents.md)                  | Draft: isolated local development with an AI coding agent: a `sandbox-exec` allow-list for now, nono as the candidate to replace it, microsandbox and a separate macOS user considered                                           |
+| [0021](./adr/0021-installable-app-pwa.md)                                 | Proposed: the site is installable as an app with a manifest, icons and an install button in the footer; no service worker, so no offline use yet                                                                                 |
 
 ADR-0008 implements a shared Astro layout and directly linkable HTML pages, with the interactive extractor implemented in React and no runtime backend. Astro itself is not React-based; it supplies static page composition around the React application. Existing TypeScript analysis modules remain reusable. All ADRs are built into HTML pages and linked from this chapter. The ADR includes a provisional weighted comparison of the previous Deno-only site build, Astro, Next.js static export, Vite + React SPA and Eleventy, following the [ICT Research Methods multi-criteria decision making method](https://ictresearchmethods.nl/workshop/multi-criteria-decision-making/).
 
 ## References
 
+- AG-UI. (n.d.). *AG-UI overview*. Retrieved November 13, 2026, from https://docs.ag-ui.com/introduction
 - Bass, L., Clements, P., & Kazman, R. (2003). *Software architecture in practice* (2nd ed.). Addison-Wesley. Chapter 4, section 4.3. https://people.ece.ubc.ca/matei/EECE417/BASS/ch04lev1sec3.html
 - Brown, S. (2026). *The C4 model: Visualizing software architecture*. O'Reilly Media. https://www.oreilly.com/library/view/the-c4-model/9798341660113/
 - Brown, S. (n.d.-a). *The software guidebook*. Leanpub. https://leanpub.com/documenting-software-architecture
@@ -1329,12 +1391,16 @@ ADR-0008 implements a shared Astro layout and directly linkable HTML pages, with
 - Garmin. (n.d.-b). *Workout files* [FIT SDK documentation]. Retrieved November 11, 2026, from https://developer.garmin.com/fit/articles/file-types/workout.html
 - Gilb, T. (2005). How to quantify quality: Finding scales of measure. *Overload, 13*(70). ACCU. https://accu.org/journals/overload/13/70/gilb_299
 - Geofabrik. (n.d.). *OpenStreetMap data extracts*. Retrieved November 10, 2026, from https://download.geofabrik.de/
+- Google A2UI Team. (2025, December 15). *Introducing A2UI: An open project for agent-driven interfaces*. Google Developers Blog. https://developers.googleblog.com/introducing-a2ui-an-open-project-for-agent-driven-interfaces/
 - Gladwell, M. (2008). *Outliers: The story of success*. Little, Brown and Company.
 - Gruber, T. (2008). Ontology. In L. Liu & M. T. Özsu (Eds.), *Encyclopedia of Database Systems*. Springer. https://tomgruber.org/writing/definition-of-ontology
 - Het Rondje Eilanden. (n.d.). *Parcours* [Course map with the length of every swim and run]. Retrieved November 10, 2026, from https://www.hetrondjeeilanden.nl/wedstrijd/parcours/
 - ICT Research Methods. (n.d.). *Multi-criteria decision making*. Retrieved November 10, 2026, from https://ictresearchmethods.nl/workshop/multi-criteria-decision-making/
 - Knuth, D. E. (1984). Literate programming. *The Computer Journal, 27*(2), 97–111. https://doi.org/10.1093/comjnl/27.2.97
 - Larman, C. (2005). *Applying UML and patterns: An introduction to object-oriented analysis and design and iterative development* (3rd ed.). Prentice Hall.
+- MDN Contributors. (n.d.-a). *Making PWAs installable*. MDN Web Docs. Retrieved November 16, 2026, from https://developer.mozilla.org/en-US/docs/Web/Progressive_web_apps/Guides/Making_PWAs_installable
+- MDN Contributors. (n.d.-b). *How to define app icons*. MDN Web Docs. Retrieved November 16, 2026, from https://developer.mozilla.org/en-US/docs/Web/Progressive_web_apps/How_to/Define_app_icons
+- MDN Contributors. (n.d.-c). *display-mode*. MDN Web Docs. Retrieved November 16, 2026, from https://developer.mozilla.org/en-US/docs/Web/CSS/@media/display-mode
 - Nielsen, J. (1994). *10 usability heuristics for user interface design*. Nielsen Norman Group. https://www.nngroup.com/articles/ten-usability-heuristics/
 - NIST/SEMATECH. (n.d.). *e-Handbook of statistical methods*, section 1.3.5.17, Detection of outliers. Retrieved November 12, 2026, from https://itl.nist.gov/div898/handbook/eda/section3/eda35h.htm
 - OpenStreetMap Wiki. (n.d.-a). *PBF format*. Retrieved November 10, 2026, from https://wiki.openstreetmap.org/wiki/PBF_Format
@@ -1344,10 +1410,16 @@ ADR-0008 implements a shared Astro layout and directly linkable HTML pages, with
 - ÖTILLÖ. (n.d.). *ÖTILLÖ Cannes World Series*. Retrieved November 10, 2026, from https://otilloswimrun.com/races/cannes-france/cannes-world-series/
 - Preston-Werner, T. (2010, August 23). *Readme Driven Development*. https://tom.preston-werner.com/2010/08/23/readme-driven-development.html
 - RaceDayMap. (n.d.). *ÖTILLÖ Swimrun Cannes: World Series* [Interactive course map and leg table]. Retrieved November 10, 2026, from https://app.racedaymap.com/otillo-swimrun-cannes/world-series
+- Huang, K., & Habler, I. (2025, December 29). *AG-UI and A2UI protocols explained: Building production-ready agentic systems with MAESTRO security*. Agentic AI. https://kenhuangus.substack.com/p/ag-ui-and-a2ui-protocols-explained
+- Steyer, M. (2026, May 1). *Integrating A2UI with AG-UI and CopilotKit in Angular*. Angular Architects. https://www.angulararchitects.io/en/blog/integrating-a2ui-with-ag-ui-in-angular/
+- Stryker Mutator. (n.d.-a). *Introduction*. Retrieved November 18, 2026, from https://stryker-mutator.io/docs/
+- Stryker Mutator. (n.d.-b). *Vitest runner*. Retrieved November 18, 2026, from https://stryker-mutator.io/docs/stryker-js/vitest-runner/
 - Swift Navigation. (n.d.). *What is multipath error in GNSS?* https://www.swiftnav.com/glossary/what-is-multipath-error-in-gnss
 - Theunissen, T., Hoppenbrouwers, S., & Overbeek, S. (2022a). Approaches for documentation in continuous software development. *Complex Systems Informatics and Modeling Quarterly, 32*, 1–27. https://doi.org/10.7250/csimq.2022-32.01
 - Theunissen, T., van Heesch, U., & Avgeriou, P. (2022b). A mapping study on documentation in continuous software development. *Information and Software Technology, 142*, Article 106733. https://doi.org/10.1016/j.infsof.2021.106733
 - TopoGrafix. (2004). *GPX 1.1 schema documentation*. https://www.topografix.com/GPX/1/1/
+- web.dev. (n.d.-a). *Installation prompt*. Google. Retrieved November 16, 2026, from https://web.dev/learn/pwa/installation-prompt
+- web.dev. (n.d.-b). *How to provide your own in-app install experience*. Google. Retrieved November 16, 2026, from https://web.dev/articles/customize-install
 - Wake, B. (2012, November 27). *"As a developer..." is not a user story*. Industrial Logic. https://www.industriallogic.com/blog/as-a-developer-is-not-a-user-story/
 
 ## Appendices
@@ -1356,7 +1428,7 @@ ADR-0008 implements a shared Astro layout and directly linkable HTML pages, with
 
 This appendix defines the domain terms, so that you can look up a term when you meet it.
 
-Table 13 lists the terms in the order in which you meet them when you follow a GPX file through the system.
+Table 13 lists the terms in the order in which you meet them when you follow a GPX file through the system, followed by the terms of the training part (section 1.1).
 
 *Table 13*: Domain glossary.
 
@@ -1364,6 +1436,7 @@ Table 13 lists the terms in the order in which you meet them when you follow a G
 | --------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
 | Track                       | Ordered recording of positions of the whole course                                                                                                                                                                                | The Vertical SwimRunMan GPX holds one track                                                        |
 | Trackpoint                  | One position in a track, with latitude, longitude and optional elevation and time                                                                                                                                                 | `lat="54.4" lon="13.4"`                                                                            |
+| Waypoint                    | A named point of interest, separate from the track                                                                                                                                                                                | "Début SWIM"                                                                                       |
 | Flagged point               | A trackpoint that the program marks because it implies a speed above the plausible speed limit (or a jump); neutral: it can be a glitch or a real deviation until a person decides                                                | A point 30 km/h from the last one                                                                  |
 | Glitch                      | A flagged point that a person judged to be a wrong position, not a place the athlete was; left out of the analysis and exports                                                                                                    | A watch under water jumps 140 m in one second                                                      |
 | Real deviation              | A flagged point that a person judged to be a true position that departs from the idealized course; kept in the recording, not part of the course                                                                                  | A swim to the boat of the organisation                                                             |
@@ -1374,7 +1447,6 @@ Table 13 lists the terms in the order in which you meet them when you follow a G
 | Track edit                  | The verdicts on flagged points and the moved transition points of a recording, kept as data next to it; the loaded GPX file does not change and an edited copy can be exported                                                    | Mark point 7,503 as a glitch; move the swim to run transition                                      |
 | Idealized course            | The line of a course derived from a recording after the verdicts, with no time, speed, heart rate or other personal data, and with a waypoint at every transition and at every energy station; a course may have several variants | The race day line of Het Rondje Eilanden                                                           |
 | Energy station              | A place on the course where athletes eat and drink, usually on a run; a waypoint of the idealized course, and a target the watch can show next to the next transition                                                             | Energy Station 2 on the Rügen course                                                               |
-| Waypoint                    | A named point of interest, separate from the track                                                                                                                                                                                | "Début SWIM"                                                                                       |
 | `<sym>`                     | Symbol code on a waypoint; 200 marks a swim start and 201 a swim end                                                                                                                                                              | A waypoint with `<sym>200</sym>` starts a swim                                                     |
 | Segment                     | Consecutive trackpoints that are all swim or all run, with a distance                                                                                                                                                             | Swim of 400 m                                                                                      |
 | Swim, run, unclassified     | The three labels a segment can have                                                                                                                                                                                               | Run of 2.1 km                                                                                      |
@@ -1397,6 +1469,14 @@ Table 13 lists the terms in the order in which you meet them when you follow a G
 | Paired segment table        | Table with one row per run and swim pair ([ADR-0007](./adr/0007-compact-segment-table-format.md))                                                                                                                                 | Row: run 2.1 km, swim 400 m                                                                        |
 | Run-first, swim-first       | Which segment type opens a paired row; run-first is the default                                                                                                                                                                   | A toggle above the table                                                                           |
 | Aid station                 | Food and drink point, usually on land                                                                                                                                                                                             | A waypoint on a run                                                                                |
+| Training plan               | The plan that leads to goal events: one A event and B or C events before it, with blocks and plan levers                                                                                                                          | The plan of a swimrun season                                                                       |
+| Goal event                  | An event that a training plan works towards, with the priority A, B or C                                                                                                                                                          | The A event of a plan                                                                              |
+| Training block              | 3, 4 or 5 weeks, each a week plan; the last week is a recovery week                                                                                                                                                               | A block of 4 weeks                                                                                 |
+| Week plan                   | One week of a block, with a phase (base, build, recovery, peak or taper) and a focus                                                                                                                                              | A build week with a mileage focus                                                                  |
+| Session template            | What to do in a session, without a date or a status: discipline, subtype, focus, basis, target and steps                                                                                                                          | "Trail run, 60 min Z2"; `SESSION_TEMPLATES` in the code                                            |
+| Planned session             | A session template placed on a date, with a status: planned, done or skipped                                                                                                                                                      | Tuesday: open-water swim, 2 km                                                                     |
+
+The word *catalog* is never used without a qualifier: the *FAQ catalog* holds questions with static answers, and the *UI catalog* holds the components that an assistant may ask the chat to show (section 7.8).
 
 Table 14 defines the terms about map data, the terrain service and the infrastructure around it, in alphabetical order.
 

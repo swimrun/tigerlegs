@@ -1,7 +1,7 @@
 import { expect, it } from "vitest";
 import {
   applyMoves,
-  CATALOG_IDS,
+  SESSION_TEMPLATE_IDS,
   changedSessions,
   checkMoves,
   clampLevers,
@@ -245,8 +245,8 @@ it("generateWeek keeps levers within their limits", () => {
   expect(clampLevers({ runs: 9, swims: 9, swimruns: 9, strength: 9, mobility: 9 })).toEqual(LEVER_LIMITS);
 });
 
-it("every session a lever can produce has a unique id", () => {
-  expect(new Set(CATALOG_IDS).size).toEqual(CATALOG_IDS.length);
+it("every session template has a unique id", () => {
+  expect(new Set(SESSION_TEMPLATE_IDS).size).toEqual(SESSION_TEMPLATE_IDS.length);
 });
 
 it("restDaysRequested knows the sports rest day in Dutch and German", () => {

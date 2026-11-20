@@ -56,6 +56,39 @@ it("two text messages in one run get different message ids", async () => {
   expect(ids.size).toEqual(2);
 });
 
+it("a ui description travels as an ACTIVITY_SNAPSHOT and its actions as a CUSTOM event", async () => {
+  const ui = { component: "ChangeProposal", props: { title: "Moves", changes: [{ label: "Tue", before: "Run", after: "Swim" }] } };
+  const uiActions = { apply: { id: "apply", label: "Apply", prompt: "apply-proposal" } };
+  const events = await collect(toAgUiEvents(
+    chat([{ type: "run-started" }, { type: "text", text: "I propose this.", ui, uiActions }, { type: "run-finished" }]),
+    RUN,
+  ));
+  expect(events.map((event) => event.type)).toEqual([
+    "RUN_STARTED",
+    "TEXT_MESSAGE_START",
+    "TEXT_MESSAGE_CONTENT",
+    "TEXT_MESSAGE_END",
+    "ACTIVITY_SNAPSHOT",
+    "CUSTOM",
+    "RUN_FINISHED",
+  ]);
+  const snapshot = events.find((event) => event.type === "ACTIVITY_SNAPSHOT") as unknown as { messageId: string; activityType: string; content: unknown };
+  expect(snapshot.activityType).toEqual("ui-description");
+  expect(snapshot.content).toEqual(ui);
+  const message = events.find((event) => event.type === "TEXT_MESSAGE_START") as unknown as { messageId: string };
+  expect(snapshot.messageId).not.toEqual(message.messageId);
+  const custom = events.find((event) => event.type === "CUSTOM") as unknown as { name: string; value: unknown };
+  expect(custom).toMatchObject({ name: "uiActions", value: uiActions });
+  for (const event of events) expect(EventSchemas.safeParse(event).success, JSON.stringify(event)).toBeTruthy();
+});
+
+it("a ui that is not an object has no ACTIVITY_SNAPSHOT, because that event carries an object", async () => {
+  for (const ui of ["ChangeProposal", 42, null, [1, 2]]) {
+    const events = await collect(toAgUiEvents(chat([{ type: "text", text: "Text", ui }]), RUN));
+    expect(events.map((event) => event.type), JSON.stringify(ui)).toEqual(["TEXT_MESSAGE_START", "TEXT_MESSAGE_CONTENT", "TEXT_MESSAGE_END"]);
+  }
+});
+
 it("an agent that throws ends the run with RUN_ERROR", async () => {
   async function* failing(): AsyncGenerator<ChatEvent> {
     yield { type: "run-started" };

@@ -16,6 +16,8 @@ Two kinds of GPX file go in, and what the tool can use differs:
 - **A course from an organiser** often holds only positions and waypoints, without times. Then the speed cannot be derived, and TigerLegs relies on the waypoints (swim start and end) and on the terrain (water from OpenStreetMap).
 - **A recording of your own training** has times, so the speed shows where you swam and ran, and the terrain adds evidence. Analysing your own training is as much a use case as analysing a race.
 
+**Install it as an app.** The site can be put on the home screen of a phone and opens in a window of its own: on Android with the *Install app* button in the footer when the browser offers it, on an iPhone or iPad with Share and then *Add to Home Screen*. It adds no tracking and no notifications, and it needs a network for now ([ADR-0021](./docs/adr/0021-installable-app-pwa.md)).
+
 TIGERLegs stands for *Terrain-Informed Gpx Extractor: LEts Go Swimrun!* (TIGE-R + LEGS). The tiger is also a nod to Team Groot Rondje Eilanden (TGRE), since a tiger is an amphibious animal and a good swimmer.
 
 **Requirements:** [Node.js](https://nodejs.org/en/download) 22.23 or newer with npm (version 24 is pinned in `.nvmrc`), for the site, the back end, the tests and the build tasks; PlantUML with Java, only to redraw the diagrams in the guidebook (`npm run diagrams`); and a modern web browser. The maintainers develop on macOS and have not tested other platforms.
