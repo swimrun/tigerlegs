@@ -7,6 +7,7 @@ import {
   clampLevers,
   DAYS,
   DEFAULT_LEVERS,
+  DEFAULT_REST_DAYS,
   generateWeek,
   isShort,
   LEVER_LIMITS,
@@ -155,9 +156,9 @@ it("checkMoves keeps moves off rest days", () => {
 });
 
 it("planRestDay moves only the sessions of that day, to a day that still has room, and nothing else", () => {
-  const plan = planRestDay(PROTOTYPE_WEEK, [], "Wed");
-  expect(plan.restDays).toEqual(["Wed"]);
-  expect(plan.moves.map(({ id, toDay }) => [id, toDay])).toEqual([["strength-1", "Thu"]]);
+  const plan = planRestDay(PROTOTYPE_WEEK, DEFAULT_REST_DAYS, "Wed");
+  expect(plan.restDays).toEqual(["Tue", "Wed", "Sun"]);
+  expect(plan.moves.map(({ id, toDay }) => [id, toDay])).toEqual([["run-2", "Fri"], ["mobility-1", "Sat"]]);
   const after = applyMoves(PROTOTYPE_WEEK, plan.moves);
   expect(weekIssues(after, plan.restDays)).toEqual([]);
 });
@@ -169,10 +170,9 @@ it("planRestDay never puts a session on another rest day", () => {
 });
 
 it("planRestDay on an empty day changes nothing but the rest days", () => {
-  const week = applyMoves(PROTOTYPE_WEEK, [{ id: "strength-1", toDay: "Mon", reason: "" }]);
-  const plan = planRestDay(week, [], "Wed");
+  const plan = planRestDay(PROTOTYPE_WEEK, [], "Tue");
   expect(plan.moves).toEqual([]);
-  expect(plan.restDays).toEqual(["Wed"]);
+  expect(plan.restDays).toEqual(["Tue"]);
 });
 
 it("suggestFixes looks one step ahead and moves the later session of a problem", () => {
@@ -203,12 +203,18 @@ it("restDaysRequested does not take other words for a day", () => {
 });
 
 it("the default levers give the example week: two short strength and two short mobility sessions", () => {
-  expect(generateWeek(DEFAULT_LEVERS).week).toEqual([...PROTOTYPE_WEEK]);
+  expect(generateWeek(DEFAULT_LEVERS, DEFAULT_REST_DAYS).week).toEqual([...PROTOTYPE_WEEK]);
   const short = PROTOTYPE_WEEK.filter(isShort);
   expect(short.filter((session) => session.discipline === "strength").length).toEqual(2);
   expect(short.filter((session) => session.discipline === "flexibility").length).toEqual(2);
   expect(short.every((session) => session.minutes === 15)).toBeTruthy();
   expect(weekIssues(PROTOTYPE_WEEK, [])).toEqual([]);
+  expect(weekIssues(PROTOTYPE_WEEK, DEFAULT_REST_DAYS), "nothing lands on Tuesday or Sunday").toEqual([]);
+});
+
+it("Tuesday and Sunday are the default rest days", () => {
+  expect(DEFAULT_REST_DAYS).toEqual(["Tue", "Sun"]);
+  expect(PROTOTYPE_WEEK.some((session) => session.day === "Tue" || session.day === "Sun")).toEqual(false);
 });
 
 it("the example week has a trail run and a road run", () => {

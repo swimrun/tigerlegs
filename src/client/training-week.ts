@@ -432,5 +432,8 @@ export function generateWeek(
   return { week: placed, unplaced };
 }
 
-/** The example week of the prototype: what the default levers give. */
-export const PROTOTYPE_WEEK: readonly TrainingSession[] = generateWeek(DEFAULT_LEVERS).week;
+/** The rest days a new week starts with: Tuesday and Sunday. */
+export const DEFAULT_REST_DAYS: readonly Day[] = ["Tue", "Sun"];
+
+/** The example week of the prototype: what the default levers give, with nothing on the default rest days. */
+export const PROTOTYPE_WEEK: readonly TrainingSession[] = generateWeek(DEFAULT_LEVERS, DEFAULT_REST_DAYS).week;
