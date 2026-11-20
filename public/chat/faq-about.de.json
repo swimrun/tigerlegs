@@ -3,11 +3,40 @@
   "tellMore": "Erzähl mir mehr",
   "fallback": "Es gibt noch keine echte LLM-Anbindung. Bitte nutze vorerst die Fragen zu TigerLegs.",
   "entries": [
-    { "id": "what-is-tigerlegs", "question": "Was ist TigerLegs?", "answer": "TigerLegs teilt einen Swimrun, eine Rennstrecke oder ein eigenes Training in Schwimm- und Laufsegmente. Du lädst eine GPX-Datei und bekommst eine Karte und eine Tabelle mit der Distanz jedes Schwimmens und Laufens." },
-    { "id": "name", "question": "Warum der Name „TigerLegs“?", "answer": "Die „Legs“ sind die Schwimm- und Laufabschnitte eines Swimrun-Kurses, und genau die holt das Tool heraus. Der Tiger ist amphibisch und ein guter Schwimmer, wie ein Swimrunner, und ein Augenzwinkern in Richtung Team Groot Rondje Eilanden. Es ist auch ein rückwärts gebildetes Akronym: Terrain Informed Gpx ExtractoR: LEts Go Swimrun!" },
-    { "id": "gpx-privacy", "question": "Verlässt meine GPX-Datei meinen Browser?", "answer": "Nein. Deine GPX-Datei wird in deinem Browser analysiert und nicht hochgeladen. Geländedaten sind standardmäßig aus; im Abschnitt \"Deine Daten\" auf dieser Seite steht, was gesendet wird, wenn du sie einschaltest." },
-    { "id": "detection", "question": "Wie findet TigerLegs Schwimm- und Laufabschnitte?", "answer": "Es kombiniert mehrere Strategien, etwa Wegpunkte, Geschwindigkeit und Gelände, und zeigt in der Spalte Detected by, welche jedes Segment gefunden hat." },
-    { "id": "install", "question": "Kann ich TigerLegs als App installieren?", "answer": "Ja. Nutze die Installationsschaltfläche am Seitenende, wenn dein Browser sie anbietet. Auf einem iPhone oder iPad tippst du auf Teilen und wählst Zum Home-Bildschirm." },
-    { "id": "prototype", "question": "Ist es fertig?", "answer": "Nein. TigerLegs ist eine Beta und einige Funktionen sind Prototypen, was die Seiten sagen. Tester sind willkommen." }
+    {
+      "id": "what-is-tigerlegs",
+      "question": "Was ist TigerLegs?",
+      "answer": "TigerLegs teilt einen Swimrun, eine Rennstrecke oder ein eigenes Training in Schwimm- und Laufsegmente. Du lädst eine GPX-Datei und bekommst eine Karte und eine Tabelle mit der Distanz jedes Schwimmens und Laufens."
+    },
+    {
+      "id": "name",
+      "question": "Warum der Name „TigerLegs“?",
+      "answer": "Die „Legs“ sind die Schwimm- und Laufabschnitte eines Swimrun-Kurses, und genau die holt das Tool heraus. Der Tiger ist amphibisch und ein guter Schwimmer, wie ein Swimrunner, und ein Augenzwinkern in Richtung Team Groot Rondje Eilanden. Es ist auch ein rückwärts gebildetes Akronym: Terrain Informed Gpx ExtractoR: LEts Go Swimrun!"
+    },
+    {
+      "id": "gpx-privacy",
+      "question": "Verlässt meine GPX-Datei meinen Browser?",
+      "answer": "Nein. Deine GPX-Datei wird in deinem Browser analysiert und nicht hochgeladen. Geländedaten sind standardmäßig aus; im Abschnitt \"Deine Daten\" auf dieser Seite steht, was gesendet wird, wenn du sie einschaltest."
+    },
+    {
+      "id": "detection",
+      "question": "Wie findet TigerLegs Schwimm- und Laufabschnitte?",
+      "answer": "Es kombiniert mehrere Strategien, etwa Wegpunkte, Geschwindigkeit und Gelände, und zeigt in der Spalte Detected by, welche jedes Segment gefunden hat."
+    },
+    {
+      "id": "install",
+      "question": "Kann ich TigerLegs als App installieren?",
+      "answer": "Ja. Nutze die Installationsschaltfläche am Seitenende, wenn dein Browser sie anbietet. Auf einem iPhone oder iPad tippst du auf Teilen und wählst Zum Home-Bildschirm."
+    },
+    {
+      "id": "find-races",
+      "question": "Wo finde ich Swimrun-Rennen?",
+      "answer": "[Dave's List](https://lowtideboyz.com/swimrun-races) der Low Tide Boyz ist ein weltweites Verzeichnis von Swimrun-Rennen, mit Karte und durchsuchbarer Liste."
+    },
+    {
+      "id": "prototype",
+      "question": "Ist es fertig?",
+      "answer": "Nein. TigerLegs ist eine Beta und einige Funktionen sind Prototypen, was die Seiten sagen. Tester sind willkommen."
+    }
   ]
 }

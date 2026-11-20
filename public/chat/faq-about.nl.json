@@ -3,11 +3,40 @@
   "tellMore": "Vertel me meer",
   "fallback": "Er is nog geen echte LLM-koppeling. Gebruik voorlopig de vragen over TigerLegs.",
   "entries": [
-    { "id": "what-is-tigerlegs", "question": "Wat is TigerLegs?", "answer": "TigerLegs knipt een swimrun, een wedstrijdparcours of een eigen training, op in zwem- en loopsegmenten. Je laadt een GPX-bestand en krijgt een kaart en een tabel met de afstand van elke zwem- en loopsectie." },
-    { "id": "name", "question": "Waarom de naam 'TigerLegs'?", "answer": "De \"legs\" zijn de zwem- en loopsecties van een swimrun-parcours, en die haalt de tool eruit. De tijger is amfibisch en een goede zwemmer, net als een swimrunner, en een knipoog naar Team Groot Rondje Eilanden. Het is ook een omgekeerd acroniem: Terrain Informed Gpx ExtractoR: LEts Go Swimrun!" },
-    { "id": "gpx-privacy", "question": "Verlaat mijn GPX-bestand mijn browser?", "answer": "Nee. Je GPX-bestand wordt in je browser geanalyseerd en niet geüpload. Terreindata staat standaard uit; in het kopje \"Jouw gegevens\" op deze pagina staat wat er wordt verstuurd als je het aanzet." },
-    { "id": "detection", "question": "Hoe vindt TigerLegs het zwemmen en lopen?", "answer": "Het combineert meerdere strategieën, zoals waypoints, snelheid en terrein, en toont in de kolom Detected by welke elk segment vond." },
-    { "id": "install", "question": "Kan ik TigerLegs als app installeren?", "answer": "Ja. Gebruik de knop Installeer de app onderaan de pagina als je browser die aanbiedt. Op een iPhone of iPad tik je op Deel en kies je Zet op beginscherm." },
-    { "id": "prototype", "question": "Is het af?", "answer": "Nee. TigerLegs is een bèta en sommige functies zijn prototypes, wat de pagina's zeggen. Testers zijn welkom." }
+    {
+      "id": "what-is-tigerlegs",
+      "question": "Wat is TigerLegs?",
+      "answer": "TigerLegs knipt een swimrun, een wedstrijdparcours of een eigen training, op in zwem- en loopsegmenten. Je laadt een GPX-bestand en krijgt een kaart en een tabel met de afstand van elke zwem- en loopsectie."
+    },
+    {
+      "id": "name",
+      "question": "Waarom de naam 'TigerLegs'?",
+      "answer": "De \"legs\" zijn de zwem- en loopsecties van een swimrun-parcours, en die haalt de tool eruit. De tijger is amfibisch en een goede zwemmer, net als een swimrunner, en een knipoog naar Team Groot Rondje Eilanden. Het is ook een omgekeerd acroniem: Terrain Informed Gpx ExtractoR: LEts Go Swimrun!"
+    },
+    {
+      "id": "gpx-privacy",
+      "question": "Verlaat mijn GPX-bestand mijn browser?",
+      "answer": "Nee. Je GPX-bestand wordt in je browser geanalyseerd en niet geüpload. Terreindata staat standaard uit; in het kopje \"Jouw gegevens\" op deze pagina staat wat er wordt verstuurd als je het aanzet."
+    },
+    {
+      "id": "detection",
+      "question": "Hoe vindt TigerLegs het zwemmen en lopen?",
+      "answer": "Het combineert meerdere strategieën, zoals waypoints, snelheid en terrein, en toont in de kolom Detected by welke elk segment vond."
+    },
+    {
+      "id": "install",
+      "question": "Kan ik TigerLegs als app installeren?",
+      "answer": "Ja. Gebruik de knop Installeer de app onderaan de pagina als je browser die aanbiedt. Op een iPhone of iPad tik je op Deel en kies je Zet op beginscherm."
+    },
+    {
+      "id": "find-races",
+      "question": "Waar vind ik swimrun-wedstrijden?",
+      "answer": "[Dave's List](https://lowtideboyz.com/swimrun-races) van de Low Tide Boyz is een wereldwijd overzicht van swimrun-wedstrijden, met een kaart en een doorzoekbare lijst."
+    },
+    {
+      "id": "prototype",
+      "question": "Is het af?",
+      "answer": "Nee. TigerLegs is een bèta en sommige functies zijn prototypes, wat de pagina's zeggen. Testers zijn welkom."
+    }
   ]
 }

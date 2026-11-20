@@ -529,3 +529,15 @@ test("no page logs an error to the console, in any language", async ({ page }) =
   }
   expect(problems).toEqual([]);
 });
+
+test("the About page links to Dave's List of swimrun races", async ({ page }) => {
+  await page.goto("about.html");
+  await expect(page.locator('main > div[lang="en"]').getByRole("link", { name: "Dave's List" })).toHaveAttribute("href", "https://lowtideboyz.com/swimrun-races");
+});
+
+test("the About chat answers where to find races, with a link to Dave's List", async ({ page }) => {
+  await page.goto("about.html");
+  await page.getByRole("button", { name: ROARRS }).first().click();
+  await page.getByRole("button", { name: "Where can I find swimrun races?" }).click();
+  await expect(page.getByRole("log").getByRole("link", { name: "Dave's List" })).toHaveAttribute("href", "https://lowtideboyz.com/swimrun-races");
+});

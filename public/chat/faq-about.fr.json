@@ -3,11 +3,40 @@
   "tellMore": "Dis-m'en plus",
   "fallback": "Il n'y a pas encore de véritable intégration LLM. Utilisez pour l'instant les questions sur TigerLegs.",
   "entries": [
-    { "id": "what-is-tigerlegs", "question": "Qu'est-ce que TigerLegs ?", "answer": "TigerLegs découpe un swimrun, un parcours de course ou l'un de vos entraînements, en segments de nage et de course. Vous chargez un fichier GPX et obtenez une carte et un tableau avec la distance de chaque nage et de chaque course." },
-    { "id": "name", "question": "Pourquoi le nom « TigerLegs » ?", "answer": "Les « legs » sont les sections de nage et de course d'un parcours de swimrun, et c'est ce que l'outil extrait. Le tigre est amphibie et bon nageur, comme un swimrunner, et un clin d'œil à Team Groot Rondje Eilanden. C'est aussi un acronyme inversé : Terrain Informed Gpx ExtractoR: LEts Go Swimrun!" },
-    { "id": "gpx-privacy", "question": "Mon fichier GPX quitte-t-il mon navigateur ?", "answer": "Non. Votre fichier GPX est analysé dans votre navigateur et n'est pas téléversé. Les données de terrain sont désactivées par défaut ; la section « Vos données » de cette page dit ce qui est envoyé si vous les activez." },
-    { "id": "detection", "question": "Comment TigerLegs trouve-t-il les nages et les courses ?", "answer": "Il combine plusieurs stratégies, comme les points de passage, la vitesse et le terrain, et indique dans la colonne Detected by laquelle a trouvé chaque segment." },
-    { "id": "install", "question": "Puis-je installer TigerLegs comme une application ?", "answer": "Oui. Utilisez le bouton d'installation en bas de la page quand votre navigateur le propose. Sur un iPhone ou un iPad, touchez Partager et choisissez Sur l'écran d'accueil." },
-    { "id": "prototype", "question": "Est-ce terminé ?", "answer": "Non. TigerLegs est en bêta et certaines fonctions sont des prototypes, ce que les pages indiquent. Les testeurs sont les bienvenus." }
+    {
+      "id": "what-is-tigerlegs",
+      "question": "Qu'est-ce que TigerLegs ?",
+      "answer": "TigerLegs découpe un swimrun, un parcours de course ou l'un de vos entraînements, en segments de nage et de course. Vous chargez un fichier GPX et obtenez une carte et un tableau avec la distance de chaque nage et de chaque course."
+    },
+    {
+      "id": "name",
+      "question": "Pourquoi le nom « TigerLegs » ?",
+      "answer": "Les « legs » sont les sections de nage et de course d'un parcours de swimrun, et c'est ce que l'outil extrait. Le tigre est amphibie et bon nageur, comme un swimrunner, et un clin d'œil à Team Groot Rondje Eilanden. C'est aussi un acronyme inversé : Terrain Informed Gpx ExtractoR: LEts Go Swimrun!"
+    },
+    {
+      "id": "gpx-privacy",
+      "question": "Mon fichier GPX quitte-t-il mon navigateur ?",
+      "answer": "Non. Votre fichier GPX est analysé dans votre navigateur et n'est pas téléversé. Les données de terrain sont désactivées par défaut ; la section « Vos données » de cette page dit ce qui est envoyé si vous les activez."
+    },
+    {
+      "id": "detection",
+      "question": "Comment TigerLegs trouve-t-il les nages et les courses ?",
+      "answer": "Il combine plusieurs stratégies, comme les points de passage, la vitesse et le terrain, et indique dans la colonne Detected by laquelle a trouvé chaque segment."
+    },
+    {
+      "id": "install",
+      "question": "Puis-je installer TigerLegs comme une application ?",
+      "answer": "Oui. Utilisez le bouton d'installation en bas de la page quand votre navigateur le propose. Sur un iPhone ou un iPad, touchez Partager et choisissez Sur l'écran d'accueil."
+    },
+    {
+      "id": "find-races",
+      "question": "Où trouver des courses de swimrun ?",
+      "answer": "[Dave's List](https://lowtideboyz.com/swimrun-races) des Low Tide Boyz est un répertoire mondial des courses de swimrun, avec une carte et une liste consultable."
+    },
+    {
+      "id": "prototype",
+      "question": "Est-ce terminé ?",
+      "answer": "Non. TigerLegs est en bêta et certaines fonctions sont des prototypes, ce que les pages indiquent. Les testeurs sont les bienvenus."
+    }
   ]
 }
