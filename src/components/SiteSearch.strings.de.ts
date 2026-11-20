@@ -5,5 +5,5 @@ export const de: Strings = {
   placeholder: "Suchen…",
   results: "Suchergebnisse",
   noResults: "Keine Ergebnisse.",
-  unavailable: "Die Suche gibt es nur in der gebauten Seite (npm run build).",
+  unavailable: "Die Suche braucht den Index eines Builds. Führe einmal npm run build aus.",
 };

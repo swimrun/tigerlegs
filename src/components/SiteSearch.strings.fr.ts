@@ -5,5 +5,5 @@ export const fr: Strings = {
   placeholder: "Rechercher…",
   results: "Résultats de la recherche",
   noResults: "Aucun résultat.",
-  unavailable: "La recherche n'est disponible que dans le site construit (npm run build).",
+  unavailable: "La recherche a besoin de l'index d'un build. Lancez une fois npm run build.",
 };

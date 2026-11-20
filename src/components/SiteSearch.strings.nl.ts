@@ -5,5 +5,5 @@ export const nl: Strings = {
   placeholder: "Zoeken…",
   results: "Zoekresultaten",
   noResults: "Geen resultaten.",
-  unavailable: "Zoeken werkt alleen in de gebouwde site (npm run build).",
+  unavailable: "Zoeken heeft de index van een build nodig. Draai eenmalig npm run build.",
 };

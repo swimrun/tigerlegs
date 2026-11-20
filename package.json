@@ -19,7 +19,7 @@
     "test:features": "bddgen && playwright test --project=features",
     "dev:site": "ASTRO_TELEMETRY_DISABLED=1 astro dev",
     "build:site": "ASTRO_TELEMETRY_DISABLED=1 astro build",
-    "build:search": "pagefind --site dist",
+    "build:search": "pagefind --site dist && rm -rf public/pagefind && cp -R dist/pagefind public/pagefind",
     "build:js": "esbuild src/client/analysis-worker.ts --bundle --format=esm --platform=browser --outfile=public/analysis-worker.js",
     "build:css": "tailwindcss -i src/client/styles.css -o public/styles.css --minify",
     "build:samples": "node src/build-samples.ts",

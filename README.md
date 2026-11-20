@@ -107,7 +107,7 @@ As a container: `docker build -t tigerlegs-api .` and `docker run -p 8123:8123 t
 ## 4. Roadmap
 
 The roadmap shows what is done and what is planned. Checked items are done.
-For the longer horizon — terrain milestones, the Garmin Connect IQ data field and Apple Watch/Coros export — see the [milestone roadmap](./docs/ROADMAP.md) and the [product vision](./docs/PRODUCT_VISION.md).
+For the longer horizon — terrain milestones, the Garmin Connect IQ data field and Apple Watch/Coros export — see the [milestone roadmap](./docs/ROADMAP.md) and the [product vision](./docs/software-guidebook.md#12-product-vision).
 
 ![Mock-up of the planned Garmin Connect IQ data field: current leg "RUN 4/12", 620 m to the next swim, and the next swim is 1.4 km](./img/garmin-datafield-mock.png)
 

@@ -10,7 +10,7 @@ export interface Strings {
   placeholder: string;
   results: string;
   noResults: string;
-  /** In development there is no index, because Pagefind runs after the build. */
+  /** Before the first build there is no index, because Pagefind runs after the build. */
   unavailable: string;
 }
 

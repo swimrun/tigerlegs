@@ -41,3 +41,6 @@ test/features/.generated/
 # Mutation testing (npm run mutate): the sandbox and the report of StrykerJS
 .stryker-tmp/
 reports/
+
+# The search index of the last build, copied here so that the development server can search too
+public/pagefind/

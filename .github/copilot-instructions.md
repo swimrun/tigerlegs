@@ -7,7 +7,7 @@ TigerLegs stands for: **T**errain **I**nformed **G**px **E**xtracto**R**: **LE**
 TigerLegs helps swimrun athletes prepare, navigate and analyze courses
 consisting of alternating running and open-water swimming segments.
 The project is personal-first and open to future commercial distribution.
-See [docs/PRODUCT_VISION.md](../docs/PRODUCT_VISION.md).
+See the product vision in section 1.2 of [docs/software-guidebook.md](../docs/software-guidebook.md).
 
 ## Existing implementation
 

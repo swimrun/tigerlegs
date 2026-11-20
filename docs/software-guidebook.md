@@ -102,12 +102,46 @@ Its **focus** says what it is for, so *speed* is a focus and not a subtype.
 Most sessions are time-based (the default); a distance-based session is edited in metres.
 An interval session is a repeat step with a count, holding the work (a distance or a time) and the rest between the repetitions.
 
+### 1.2 Product vision
+
+TigerLegs is the **T**errain **I**nformed **G**px **E**xtracto**R**: **LE**ts **G**o **S**wimrun!
+
+**Why.** Swimrun courses alternate trail running and open-water swimming, often a dozen or more times. Race organisers publish a single GPX track; athletes are left to work out where the swims start, how long each leg is, and what to show on their watch during the race. TigerLegs turns that single track into an explicit, editable course of swim and run segments, and eventually puts that course on the athlete's wrist.
+
+**Who it is for.**
+
+1. **Athletes preparing a race** upload the official GPX and see the legs, distances and transitions on a map and in a compact table.
+2. **Athletes during a race** see the current leg, its remaining distance and what comes next, on a sports watch.
+3. **Athletes and teams after a race** compare the plan with what actually happened and refine the course for next time.
+
+TigerLegs is personal-first: built by and for swimrunners (Team Groot Rondje Eilanden), with future commercial distribution kept open.
+
+**Product principles.**
+
+- **Terrain-informed, not terrain-dependent.** Speed-based detection always works; terrain data (OpenStreetMap water polygons) improves it when available. Classification evidence and confidence stay separate from final labels, and manual correction is always possible.
+- **Local-first and private.** Analysis runs in the browser; only a bounding box goes to the Overpass service of OpenStreetMap. Stored routes reveal home locations, so any account or storage feature needs its own privacy review first.
+- **The GPX is sacred.** Original files are never mutated; TigerLegs derives, annotates and exports.
+- **One course, many screens.** The same course model must serve the web map, a compact table, and small watch displays (Garmin first, then Apple Watch and Coros).
+
+**Platform strategy.**
+
+- **Web (GitHub Pages):** prepare and analyse courses. Live, in beta.
+- **Garmin Connect IQ:** a race-day data field with leg n of total, swim or run, and the remaining distance. Planned first; the feasibility is in [ADR-0005](./adr/0005-rest-json-api-for-multi-client-support.md).
+- **Apple Watch:** course export or companion. To investigate; friends with devices can test.
+- **Coros:** course export (GPX or FIT route import). To investigate; friends with devices can test.
+
+The watch strategy drives a key architectural requirement: a compact, versioned course export format that a Monkey C data field, an Apple WorkoutKit route and a Coros route import can all consume.
+
+**Where this vision came from.** The project started on 15 June 2026 as `gpx-to-swimrun-segments`. The Garmin ambition dates from a ChatGPT ideation session on 12 July 2026; the TigerLegs name, branding and this vision were consolidated on 31 October 2026.
+
+As planned features are built, this guidebook is updated to describe them; what is planned is marked as such.
+
 ## 2. Functional overview
 
 This chapter describes what the system does for its users.
 The Kiro specs in `.kiro/specs/gpx-swimrun-analyzer/` hold the detailed requirements; this chapter gives the overview.
 Section 2.2 maps the user stories to use cases, and section 2.3 shows a real course that the system analyses.
-The near-term roadmap is in the README; milestones and the watch-platform strategy are in [ROADMAP.md](./ROADMAP.md) and [PRODUCT_VISION.md](./PRODUCT_VISION.md).
+Section 1.2 describes the product vision and the platform strategy.
 
 An athlete interacts with the system in four ways.
 Each way below is a user story with one acceptance criterion in Given/When/Then form.
@@ -1217,7 +1251,7 @@ The chat is contextual: the layout puts the key of the page and the name of its 
 The header has a search box that searches the text of the pages ([ADR-0022](./adr/0022-guidebook-search-and-optional-embeddings.md)).
 `npm run build` ends with `npm run build:search`, which runs Pagefind over `dist/` and writes the index to `dist/pagefind/`; only the content of the page (`data-pagefind-body` in the layout) is indexed, not the menu or the chat.
 The box (`src/components/SiteSearch.tsx`, `src/client/site-search.ts`) loads the index on the first keystroke and shows at most six hits.
-In development there is no index, and the box says so.
+`build:search` also copies the index to `public/pagefind/` (git-ignored), so the development server searches the index of the last build; before the first build the box says that it needs one.
 Our pages hold all four languages in one file, so a search also finds text in the other languages; separating them is open.
 The chat that answers from these sections, and the optional embeddings, are not built yet.
 

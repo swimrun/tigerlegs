@@ -8,7 +8,7 @@ Draft. No decision has been taken; this record collects the context, options and
 
 ## 2. Context
 
-The roadmap adds two goals beyond course analysis (see [ROADMAP.md](../ROADMAP.md) M10 and M11, which hold the user stories and the ideation use case diagram):
+Two goals are planned beyond course analysis:
 
 - **Training plans towards goal events.** A swimrunner plans towards an A race with intermediate B/C races; a coach drafts plans with LLM support but keeps explicit approval. Plans cover trail running, open-water swimming, strength, and static and dynamic flexibility.
 - **Talk to your training data.** A swimrunner connects an MCP client (Claude, ChatGPT, Codex, Cursor, …) to a TigerLegs MCP server and asks about training in plain language, from a swimrun perspective rather than a running-only one.
