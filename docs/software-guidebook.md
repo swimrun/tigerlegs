@@ -299,13 +299,28 @@ Figure 6 shows the paddles that the organisers published for this course.
 
 This chapter lists the qualities that matter most, so that you can judge a design choice against them.
 
-The system prioritises the following qualities:
+The qualities are named after ISO/IEC 25010:2023, the product quality model of the SQuaRE series of standards, which gives nine characteristics, each with sub-characteristics (ISO/IEC, 2023; Starke, 2023).
+We chose it over FURPS+ because its sub-characteristics make each quality more concrete, so that "privacy" becomes a property that can be named and checked (confidentiality), and because it is an ISO standard.
+Table 5 lists the qualities that matter for TigerLegs, with the characteristic and the sub-characteristic that each falls under.
+Characteristics that the table does not list, such as safety, have no requirement of their own for now.
 
-- **Privacy.** The browser analyses the GPX file and does not upload it, because location data is personal data ([ADR-0004](./adr/0004-host-deno-backend-on-eu-vps.md)).
-- **Responsiveness.** A typical file should be analysed in under five seconds ([ADR-0003](./adr/0003-gpx-analysis-execution-location.md)).
-- **Accuracy.** Segment distances should match the published distances.
-- **Accessibility.** Requirement 10 of the specifications sets the accessibility requirements.
-- **Testability.** Property-based tests cover the analysis and the API validation.
+*Table 5*: Quality attributes of TigerLegs by ISO/IEC 25010:2023.
+
+| Quality attribute            | Characteristic         | Sub-characteristic     | What it means for TigerLegs                                                                                                                                                 |
+| ---------------------------- | ---------------------- | ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Privacy                      | Security               | Confidentiality        | The browser analyses the GPX file and does not upload it, because location data is personal data ([ADR-0004](./adr/0004-host-deno-backend-on-eu-vps.md)).                   |
+| Responsiveness               | Performance efficiency | Time behaviour         | A typical file is analysed in under five seconds ([ADR-0003](./adr/0003-gpx-analysis-execution-location.md)).                                                               |
+| Accuracy                     | Functional suitability | Functional correctness | Segment distances match the published distances (see the note below).                                                                                                       |
+| Accessibility                | Interaction capability | Inclusivity            | The specifications set accessibility requirements (Requirement 10). In the 2023 edition accessibility is split into inclusivity and user assistance (Starke, 2023).         |
+| Internationalization         | Flexibility            | Adaptability           | The pages, the chat and the training week follow the language of the visitor in English, Dutch, French and German; texts are data ([ADR-0017](./adr/0017-localisation.md)). |
+| Installability               | Flexibility            | Installability         | The site can be installed as an app, without a service worker ([ADR-0021](./adr/0021-installable-app-pwa.md)).                                                              |
+| Interoperability             | Compatibility          | Interoperability       | GPX, FIT and TCX files go in; the chat events follow AG-UI ([ADR-0019](./adr/0019-agentic-ui-with-ag-ui-and-a2ui.md)).                                                      |
+| Availability                 | Reliability            | Availability           | The site is static and works without the optional back end ([ADR-0013](./adr/0013-back-end-is-optional.md)).                                                                |
+| Testability                  | Maintainability        | Testability            | Property-based tests cover the analysis and the API validation; browser tests cover the pages.                                                                              |
+| Resistance to prompt attacks | Security               | Resistance             | Planned: the chat stays on topic and resists prompt injection (issue #136).                                                                                                 |
+
+ISO/IEC 25010 has no sub-characteristic called internationalization or localization.
+We file it under adaptability, which the standard describes as adjusting to different operating or usage environments (Starke, n.d.); that placement is our reading, not the standard's.
 
 Accuracy deserves a note: on the Vertical SwimRunMan test file the system finds 14 segments, 24.7 km of running and 6250 m of swimming, against 24.8 km and 6100 m published.
 The swims come out 50 to 150 m longer than published.
@@ -382,9 +397,9 @@ This project is documented for two kinds of readers: the developers and students
 
 The agentic user interface (the assistant in the app) follows the same idea in the other direction: the assistant talks to the page over an open protocol, AG-UI, and a catalog of approved components decides what it may show (see the section on agentic UI in chapter 7).
 
-Table 5 lists the documents and the question each one answers.
+Table 6 lists the documents and the question each one answers.
 
-*Table 5*: Documents and the questions they answer.
+*Table 6*: Documents and the questions they answer.
 
 | Document                      | Where                    | What it shows                                                       |
 | ----------------------------- | ------------------------ | ------------------------------------------------------------------- |
@@ -425,13 +440,13 @@ A separate guidebook or a system landscape diagram becomes worthwhile only if a 
 ### 6.2 Components
 
 Figure 8 shows the components of the browser app and how they depend on each other.
-Table 6 lists each component and the file that holds it.
+Table 7 lists each component and the file that holds it.
 
 ![Component diagram of the browser app: the UI uses the parser, the analysis and the segment builder; the analysis runs three strategies and the combiner.](diagrams/component.svg)
 
 *Figure 8*: C4 component diagram of the browser app.
 
-*Table 6*: Components of the browser app.
+*Table 7*: Components of the browser app.
 
 | Component          | File                                                                | Responsibility                                |
 | ------------------ | ------------------------------------------------------------------- | --------------------------------------------- |
@@ -776,7 +791,7 @@ Cleaning up a recording looks like a technical filter, but it is a question abou
 
 The algorithm cannot tell the two apart, and it does not have to: it **flags** a point (a flagged point is neutral, with the reason and the speed it implies), and the **person decides** the verdict. For a recording of their own that is the athlete; for the recording behind a course it is the owner of the course.
 
-*Table 7*: From a flag to a verdict.
+*Table 8*: From a flag to a verdict.
 
 | Step               | Who         | Meaning                                                                                                              | Effect on the analysis and the course                                                                 |
 | ------------------ | ----------- | -------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
@@ -1208,7 +1223,7 @@ The importers and exporters are not in this diagram: an `ActivityImporter` retur
 
 The chat agents of the page speak `ChatEvent` (section 7.2). `src/client/ag-ui.ts` turns that stream into AG-UI events, the open, event-based protocol that "standardizes how AI agents connect to user-facing applications" (AG-UI, n.d.), so that an agent here can be consumed by any AG-UI client and an AG-UI agent can later replace one of ours:
 
-*Table 7*: Mapping of the chat events to AG-UI events.
+*Table 9*: Mapping of the chat events to AG-UI events.
 
 | Chat event                    | AG-UI events                                                     | Note                                               |
 | ----------------------------- | ---------------------------------------------------------------- | -------------------------------------------------- |
@@ -1271,9 +1286,9 @@ TopoGrafix created it in 2002, and file-extensions.com (n.d.) calls it "the de f
 Each waypoint (`<wpt>`) can contain a `<sym>` element with a symbol name.
 The GPX 1.1 specification defines `<sym>` as free-form text, so there is no standard list of values (TopoGrafix, 2004).
 Route planners therefore use their own conventions.
-Table 8 lists the numeric `<sym>` values in the test files, which come from the route planner Openrunner.
+Table 10 lists the numeric `<sym>` values in the test files, which come from the route planner Openrunner.
 
-*Table 8*: Waypoint `<sym>` values in Openrunner files.
+*Table 10*: Waypoint `<sym>` values in Openrunner files.
 
 | `<sym>` value | Meaning                       |
 | ------------- | ----------------------------- |
@@ -1290,14 +1305,14 @@ Support for other conventions, such as the files from racedaymap.com that ÖTILL
 ### 8.2 Training session data (planned)
 
 Nothing here is stored outside the browser yet; it is the shape that the prototype and the stored model (section 6.6) share, so that the training page, the chat tool calls (issue #86) and the planner (issues #85 and #87) use the same fields.
-Table 9 lists the fields of one planned session.
+Table 11 lists the fields of one planned session.
 
-*Table 9*: Fields of a planned session.
+*Table 11*: Fields of a planned session.
 
 | Field         | Values                                           | Notes                                                      |
 | ------------- | ------------------------------------------------ | ---------------------------------------------------------- |
-| `discipline`  | `swim`, `run`, `swimrun`, `strength`, `mobility` | Chooses the subtype list (Table 10)                        |
-| `subtype`     | see Table 10                                     | One value, or none for a swimrun                           |
+| `discipline`  | `swim`, `run`, `swimrun`, `strength`, `mobility` | Chooses the subtype list (Table 12)                        |
+| `subtype`     | see Table 12                                     | One value, or none for a swimrun                           |
 | `focus`       | `easy`, `long`, `speed`, `recovery`              | Speed is intervals; it is not a subtype                    |
 | `basis`       | `time` (default), `distance`                     | Chooses which target field is filled                       |
 | `minutes`     | whole number, at least 1                         | Target on the time basis                                   |
@@ -1305,10 +1320,10 @@ Table 9 lists the fields of one planned session.
 | `day`         | `Mon` to `Sun` in a week of a block              | Moving to a sports rest day is allowed and gives a warning |
 | `title`       | text, not empty                                  | Shown on the card; a generated title is localised          |
 | `description` | text, may be empty                               |                                                            |
-| `steps`       | tree of steps, may be empty                      | Intervals, see Table 11                                    |
+| `steps`       | tree of steps, may be empty                      | Intervals, see Table 13                                    |
 | `origin`      | `generated`, `hardcoded`, `imported`             | An edit by hand marks a generated session as hardcoded     |
 
-*Table 10*: Subtypes by discipline.
+*Table 12*: Subtypes by discipline.
 
 | Discipline | Subtype                  | Colour rule                                                   |
 | ---------- | ------------------------ | ------------------------------------------------------------- |
@@ -1318,7 +1333,7 @@ Table 9 lists the fields of one planned session.
 | `mobility` | `static`, `dynamic`      | Flexibility colour                                            |
 | `swimrun`  | none                     | Swimrun colour                                                |
 
-*Table 11*: Fields of a step of a structured session.
+*Table 13*: Fields of a step of a structured session.
 
 | Field       | Values                                           | Notes                                                          |
 | ----------- | ------------------------------------------------ | -------------------------------------------------------------- |
@@ -1398,9 +1413,9 @@ Rules:
 
 This chapter lists the ADRs, which hold the reasoning behind the architecture.
 
-Table 12 lists the ADRs and what each decides.
+Table 14 lists the ADRs and what each decides.
 
-*Table 12*: Architecture decision records.
+*Table 14*: Architecture decision records.
 
 | ADR                                                                       | Decision                                                                                                                                                                                                                         |
 | ------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -1451,6 +1466,7 @@ ADR-0008 implements a shared Astro layout and directly linkable HTML pages, with
 - Gruber, T. (2008). Ontology. In L. Liu & M. T. Özsu (Eds.), *Encyclopedia of Database Systems*. Springer. https://tomgruber.org/writing/definition-of-ontology
 - Het Rondje Eilanden. (n.d.). *Parcours* [Course map with the length of every swim and run]. Retrieved November 10, 2026, from https://www.hetrondjeeilanden.nl/wedstrijd/parcours/
 - ICT Research Methods. (n.d.). *Multi-criteria decision making*. Retrieved November 10, 2026, from https://ictresearchmethods.nl/workshop/multi-criteria-decision-making/
+- ISO/IEC. (2023). *ISO/IEC 25010:2023 Systems and software engineering: Systems and software Quality Requirements and Evaluation (SQuaRE): Product quality model*. https://www.iso.org/standard/78176.html
 - Knuth, D. E. (1984). Literate programming. *The Computer Journal, 27*(2), 97–111. https://doi.org/10.1093/comjnl/27.2.97
 - Larman, C. (2005). *Applying UML and patterns: An introduction to object-oriented analysis and design and iterative development* (3rd ed.). Prentice Hall.
 - Low Tide Boyz. (n.d.). *Swimrun 201: Swim Paddle Hieroglyphics* [Audio podcast episode 106]. In *Low Tide Boyz, a swimrun podcast*. https://lowtideboyz.com/podcast/swimrun-201-swim-paddle-hieroglyphics
@@ -1463,6 +1479,8 @@ ADR-0008 implements a shared Astro layout and directly linkable HTML pages, with
 - OpenStreetMap Wiki. (n.d.-b). *Overpass API*. Retrieved November 10, 2026, from https://wiki.openstreetmap.org/wiki/Overpass_API
 - OpenStreetMap Wiki. (n.d.-c). *Overpass API/Overpass QL*. Retrieved November 10, 2026, from https://wiki.openstreetmap.org/wiki/Overpass_API/Overpass_QL
 - Panthera. (2025, October 10). *New IUCN assessment finds hope for tiger recovery despite critical depletion*. https://panthera.org/newsroom/new-iucn-assessment-finds-hope-tiger-recovery-despite-critical-depletion
+- Starke, G. (2023, November). *Update on ISO 25010, version 2023*. arc42 Quality Model. https://quality.arc42.org/articles/iso-25010-update-2023
+- Starke, G. (n.d.). *ISO/IEC 25010*. arc42 Quality Model. https://quality.arc42.org/standards/iso-25010
 - ÖTILLÖ. (n.d.). *ÖTILLÖ Cannes World Series*. Retrieved November 10, 2026, from https://otilloswimrun.com/races/cannes-france/cannes-world-series/
 - Preston-Werner, T. (2010, August 23). *Readme Driven Development*. https://tom.preston-werner.com/2010/08/23/readme-driven-development.html
 - RaceDayMap. (n.d.). *ÖTILLÖ Swimrun Cannes: World Series* [Interactive course map and leg table]. Retrieved November 10, 2026, from https://app.racedaymap.com/otillo-swimrun-cannes/world-series
@@ -1484,9 +1502,9 @@ ADR-0008 implements a shared Astro layout and directly linkable HTML pages, with
 
 This appendix defines the domain terms, so that you can look up a term when you meet it.
 
-Table 13 lists the terms in the order in which you meet them when you follow a GPX file through the system, followed by the terms of the training part (section 1.1).
+Table 15 lists the terms in the order in which you meet them when you follow a GPX file through the system, followed by the terms of the training part (section 1.1).
 
-*Table 13*: Domain glossary.
+*Table 15*: Domain glossary.
 
 | Term                        | Meaning                                                                                                                                                                                                                           | Example                                                                                            |
 | --------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
@@ -1534,9 +1552,9 @@ Table 13 lists the terms in the order in which you meet them when you follow a G
 
 The word *catalog* is never used without a qualifier: the *FAQ catalog* holds questions with static answers, and the *UI catalog* holds the components that an assistant may ask the chat to show (section 7.8).
 
-Table 14 defines the terms about map data, the terrain service and the infrastructure around it, in alphabetical order.
+Table 16 defines the terms about map data, the terrain service and the infrastructure around it, in alphabetical order.
 
-*Table 14*: Map data and infrastructure glossary.
+*Table 16*: Map data and infrastructure glossary.
 
 | Term                                  | Meaning                                                                                                                                                                                  | Example                                                                                           |
 | ------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
@@ -1578,9 +1596,9 @@ Its relations include *a track has trackpoints*, *a segment covers trackpoints* 
 An ontology mapping relates the concepts of one domain to equivalent concepts in another.
 A train journey fits, because it has the same structure: a route that someone records as positions, stretches with different surfaces (open track, bridge, tunnel) and a "next ... in x km" display.
 The analogy is my own choice, not a published ontology.
-Table 15 shows the mapping and names where it breaks down.
+Table 17 shows the mapping and names where it breaks down.
 
-*Table 15*: Mapping of swimrun concepts to a train journey.
+*Table 17*: Mapping of swimrun concepts to a train journey.
 
 | SwimRun concept             | Train journey equivalent                             | Where the analogy breaks                                    |
 | --------------------------- | ---------------------------------------------------- | ----------------------------------------------------------- |
