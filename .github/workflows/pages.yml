@@ -21,9 +21,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: denoland/setup-deno@v2
-        with:
-          deno-version: v2.x
       - uses: actions/setup-node@v4
         with:
           node-version-file: .nvmrc
@@ -40,7 +37,7 @@ jobs:
       - name: Check that shared modules stay portable
         run: npm run check:shared
       - name: Build site
-        run: deno task build
+        run: npm run build
       - name: Check site types
         run: npm run check
       - name: Install browser for site tests

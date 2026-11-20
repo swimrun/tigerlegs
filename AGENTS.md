@@ -13,6 +13,7 @@ After finishing work, say what changed and what is ready to commit, and wait. Ap
 
 - English, imperative mood.
 - Put the issue number in the title, for example `Add fixed rest days to the training week (#74)`.
+- The title says *what* changed. The body says *why*, in one or two sentences, when the reason is not obvious from the change: a decision goes in an ADR, but the reason for this change belongs in its commit message, so that the history explains itself.
 
 ### Issues and the Definition of Done
 
@@ -50,7 +51,7 @@ The architecture choices behind this (library, message syntax, routing per langu
 ### Numbered headings in ADRs, the guidebook and the README
 
 Section headings in the architecture decision records, the software guidebook and the README are numbered, so that a reader can refer to "section 3.2": `## 3. Title` and `### 3.2 Title`, counted in order. The back matter (References, Appendices) is not numbered.
-After adding or moving a heading, run `deno task headings <file>`; a second run changes nothing, and `test/number-headings.test.ts` fails when a document is out of step. A link to a heading by its anchor uses the numbered form (`#11-decision`).
+After adding or moving a heading, run `npm run headings <file>`; a second run changes nothing, and `test/number-headings.test.ts` fails when a document is out of step. A link to a heading by its anchor uses the numbered form (`#11-decision`).
 
 ### Markdown formatting: soft wraps, no hard line breaks
 
@@ -68,7 +69,7 @@ The one acceptable alternative to "one long line per paragraph" is **semantic li
 ### Markdown tables: aligned columns
 
 Write every Markdown table with its columns padded with spaces, so that the table reads as a table in the source without a preview: each cell as wide as the widest cell of its column, and the separator row as wide as the column.
-After writing or editing a table, run `deno task tables <file>` on the file; it aligns all tables in it (and leaves tables inside code fences alone), and a second run changes nothing.
+After writing or editing a table, run `npm run tables <file>` on the file; it aligns all tables in it (and leaves tables inside code fences alone), and a second run changes nothing.
 Keep table cells short enough to scan: short option names in the first column, and the explanation in a later column.
 QuickMark has no rule that checks this (its table rules cover the pipe style, the column count and the blank lines around a table), so the check is this rule and the task.
 
@@ -158,7 +159,7 @@ Two further rules for every reference:
 
 - **Link to the source itself**, not to a front or landing page: the specific article, post, documentation page or section that supports the claim, or its DOI. `https://apastyle.apa.org/` says nothing about a claim; a link to the page about references does.
 - **One reference describes one work**, the edition you read, so it has one italic title. For a republication, cite the edition you quoted and add `(Original work published 1986)`; the in-text citation then carries both years: `(Frankfurt, 1986/2005, p. 61)`.
-After writing or editing a `## References` section, run `deno task refs <file>`; it turns a section of blank-line separated paragraphs into bullets, leaves a list as it is, and a second run changes nothing.
+After writing or editing a `## References` section, run `npm run refs <file>`; it turns a section of blank-line separated paragraphs into bullets, leaves a list as it is, and a second run changes nothing.
 
 ```markdown
 - Author, A. A. (Year). *Title of work.* Publisher. https://doi.org/xxx

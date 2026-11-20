@@ -98,3 +98,30 @@ export function straightLineDistance(
 ): number {
   return haversineDistance(start, end);
 }
+
+/**
+ * Distance over a smoothed track: every position is replaced by the mean of the positions within `halfWindow`
+ * points on both sides (inside the given points), and the distance is summed over the smoothed positions. Jitter
+ * of the fixes largely averages out, while the shape of a swim at about a metre a second stays.
+ */
+export function calculateSmoothedDistance(trackpoints: Trackpoint[], maxHalfWindow: number): number {
+  if (trackpoints.length < 2) return 0;
+  // A short leg keeps a short window, or its positions would collapse into one: at most an eighth of its points.
+  const halfWindow = Math.min(maxHalfWindow, Math.floor(trackpoints.length / 8));
+  const smoothed = trackpoints.map((_, i) => {
+    const from = Math.max(0, i - halfWindow);
+    const to = Math.min(trackpoints.length - 1, i + halfWindow);
+    let lat = 0;
+    let lon = 0;
+    for (let j = from; j <= to; j++) {
+      lat += trackpoints[j].coordinate.lat;
+      lon += trackpoints[j].coordinate.lon;
+    }
+    const n = to - from + 1;
+    return { ...trackpoints[i], coordinate: { ...trackpoints[i].coordinate, lat: lat / n, lon: lon / n } };
+  });
+  // The ends keep their own position, so that the distance still starts and ends where the leg does.
+  smoothed[0] = trackpoints[0];
+  smoothed[smoothed.length - 1] = trackpoints[trackpoints.length - 1];
+  return calculateTrackDistance(smoothed);
+}

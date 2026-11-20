@@ -13,7 +13,7 @@ export interface SampleVariant {
   canonical: boolean;
   /** File name on the site under samples/; null while the typical GPX for this variant is missing. */
   file: string | null;
-  /** File name in test-data/ that is copied to `file` by `deno task build:samples`. */
+  /** File name in test-data/ that is copied to `file` by `npm run build:samples`. */
   source: string | null;
 }
 

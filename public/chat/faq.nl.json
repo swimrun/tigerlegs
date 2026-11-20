@@ -40,7 +40,7 @@
     },
     {
       "id": "privacy",
-      "question": "Wordt mijn GPX-bestand naar een server geüpload?",
+      "question": "Gaat mijn privé-GPX naar big tech?",
       "answer": "Nee. Je kiest het bestand in je browser en de analyse draait daar; het bestand blijft op je apparaat en er gaat niets naar een TigerLegs-server. Terreingegevens van OpenStreetMap zijn opt-in, en dan gaan alleen een grof kader en je IP-adres naar de Overpass-dienst van OpenStreetMap, nooit je trackpunten. Zie de Over-pagina voor details."
     }
   ]
