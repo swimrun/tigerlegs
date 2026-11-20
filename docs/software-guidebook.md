@@ -1107,6 +1107,11 @@ The save of a repository throws a conflict error when the version of the aggrega
 `RecordingRepository.erase` removes all recordings of an athlete, which is part of the erasure use case (section 6.6).
 The importers and exporters are not in this diagram: an `ActivityImporter` returns a `Recording` from a file, and a `WorkoutExporter` (later) turns a planned session into a file.
 
+### 7.8 Front end: the pricing page (prototype)
+
+`/pricing.html` says that TigerLegs is under development, that testers are wanted and that everything is free for now, that segment extraction (loading a GPX file and getting its swim and run segments, distances, map and table) is always free, and why membership exists: tigers are considered globally Endangered under the IUCN Red List (Panthera, 2025), and a project that is completely free and unsubsidised is also at risk of quick extinction. A table shows the tiers Free, Silver, Gold and Platinum with segment extraction, the map and table and terrain data for everyone, and as paid-only features, marked planned, the Garmin watch integration, the course of the World Champs in Stockholm and energy station planning.
+The page is labelled as a prototype: nothing can be bought, no prices are set and the split over the tiers is a draft (issue #111). The texts are data, one JSON file per language in `src/data/`, and the page renders each language in its own block, as the About page does; every table cell says in words whether a feature is included. The page follows the APA rule of the guidebook: the citation stands right after the sentence it supports, and the reference is at the end of the page.
+
 ## 8. Data
 
 This chapter describes where the system keeps data.
@@ -1296,6 +1301,7 @@ ADR-0008 implements a shared Astro layout and directly linkable HTML pages, with
 - OpenStreetMap Wiki. (n.d.-a). *PBF format*. Retrieved November 10, 2026, from https://wiki.openstreetmap.org/wiki/PBF_Format
 - OpenStreetMap Wiki. (n.d.-b). *Overpass API*. Retrieved November 10, 2026, from https://wiki.openstreetmap.org/wiki/Overpass_API
 - OpenStreetMap Wiki. (n.d.-c). *Overpass API/Overpass QL*. Retrieved November 10, 2026, from https://wiki.openstreetmap.org/wiki/Overpass_API/Overpass_QL
+- Panthera. (2025, October 10). *New IUCN assessment finds hope for tiger recovery despite critical depletion*. https://panthera.org/newsroom/new-iucn-assessment-finds-hope-tiger-recovery-despite-critical-depletion
 - ÖTILLÖ. (n.d.). *ÖTILLÖ Cannes World Series*. Retrieved November 10, 2026, from https://otilloswimrun.com/races/cannes-france/cannes-world-series/
 - Preston-Werner, T. (2010, August 23). *Readme Driven Development*. https://tom.preston-werner.com/2010/08/23/readme-driven-development.html
 - RaceDayMap. (n.d.). *ÖTILLÖ Swimrun Cannes: World Series* [Interactive course map and leg table]. Retrieved November 10, 2026, from https://app.racedaymap.com/otillo-swimrun-cannes/world-series
