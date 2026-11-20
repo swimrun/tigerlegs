@@ -139,7 +139,7 @@ As planned features are built, this guidebook is updated to describe them; what 
 ## 2. Functional overview
 
 This chapter describes what the system does for its users.
-The Kiro specs in `.kiro/specs/gpx-swimrun-analyzer/` hold the detailed requirements; this chapter gives the overview.
+The detailed requirements are kept as specifications (Kiro and Spec Kit specs) in the private repository of the project, which this published guidebook does not link to; this chapter gives the overview.
 Section 2.2 maps the user stories to use cases, and section 2.3 shows a real course that the system analyses.
 Section 1.2 describes the product vision and the platform strategy.
 
@@ -198,7 +198,7 @@ The speed strategy works for any recorded activity, but speed is only indirect e
 The landscape strategy needs no extra data in the file, but it depends on OpenStreetMap and on how dense the trackpoints are.
 The strategy combiner keeps, per trackpoint, the result with the highest confidence.
 
-The system also shows aid stations, handles files with several tracks and filters GPS noise during swims; the Kiro specs describe these features.
+The system also shows aid stations, handles files with several tracks and filters GPS noise during swims; the specifications describe these features.
 
 ### 2.2 Use cases
 
@@ -211,7 +211,7 @@ Figure 3 shows the use cases of TigerLegs and who uses them, and Table 2 lists t
 
 The diagram uses the goal levels of Cockburn (2001).
 Four use cases are at sea level: one sitting, after which the user goes away satisfied.
-These are **analyse a swimrun course** (upload, map and distances together), **create paddle hieroglyphics**, **verify a designed course** (the organiser's goal) and, planned, **follow the course mid-race** on a watch ([spec 001](../specs/001-garmin-datafield/spec.md)).
+These are **analyse a swimrun course** (upload, map and distances together), **create paddle hieroglyphics**, **verify a designed course** (the organiser's goal) and, planned, **follow the course mid-race** on a watch (its specification is in the private repository).
 One use case is at fish level, a subfunction that a sea-level use case includes: **extract swim and run segments from a GPX file**.
 Analysing a course includes it, and so do the paddle notes and the verification, because both include the analysis.
 Overpass and Garmin Connect appear as supporting actors, which replaces the single "Uses" arrow of the context diagram with one arrow per goal.
@@ -224,10 +224,10 @@ Use cases that are not yet built are drawn in another colour with a dashed outli
 | UC-1: Analyse a swimrun course                      | Sea   | Athlete, organiser | US-1, US-3, US-4, US-5, US-6, US-8, US-9 | Req 1, 3, 4, 5, 6, 8, 9 |
 | UC-2: Create paddle hieroglyphics                   | Sea   | Athlete            | ADR-0007                                 | none yet                |
 | UC-3: Verify a designed course                      | Sea   | Organiser          | none yet                                 | none yet                |
-| UC-4: Follow the course mid-race (planned)          | Sea   | Athlete            | none yet                                 | Spec 001                |
+| UC-4: Follow the course mid-race (planned)          | Sea   | Athlete            | none yet                                 | Watch data field spec   |
 | UC-5: Extract swim and run segments from a GPX file | Fish  | (included by UC-1) | US-2                                     | Req 2                   |
 
-UC-1 holds the features that the Kiro specs number as separate stories: uploading a file (US-1), the segment distances (US-3, US-5), the map (US-4), highlighting a segment (US-6), aid stations (US-8) and the choice of a track in a file with several tracks (US-9).
+UC-1 holds the features that the specifications number as separate stories: uploading a file (US-1), the segment distances (US-3, US-5), the map (US-4), highlighting a segment (US-6), aid stations (US-8) and the choice of a track in a file with several tracks (US-9).
 Highlighting and aid stations extend the map, and track selection extends the upload.
 UC-2 and UC-3 include UC-1.
 
@@ -244,7 +244,7 @@ Design-level interaction diagrams, which open the black box, belong in chapter 7
 ![System sequence diagram: the athlete exports the course, loads it through Garmin Connect onto the watch, and reads leg progress every GPS fix.](diagrams/ssd-follow-course.svg)
 
 *Figure 5*: System sequence diagram of *Follow the course mid-race* (planned).
-The Kiro specs number these stories and requirements.
+The specifications number these stories and requirements.
 US-2 (waypoint classification) and US-7 (GPX round-trip integrity) are internal processing steps that no user starts: US-2 is part of UC-5, and US-7 is a quality of the file handling rather than a use case.
 Accessibility (Req 10) and performance (Req 11) are quality attributes and apply to all use cases; chapter 3 covers them.
 
@@ -304,7 +304,7 @@ The system prioritises the following qualities:
 - **Privacy.** The browser analyses the GPX file and does not upload it, because location data is personal data ([ADR-0004](./adr/0004-host-deno-backend-on-eu-vps.md)).
 - **Responsiveness.** A typical file should be analysed in under five seconds ([ADR-0003](./adr/0003-gpx-analysis-execution-location.md)).
 - **Accuracy.** Segment distances should match the published distances.
-- **Accessibility.** Requirement 10 in the Kiro specs sets the accessibility requirements.
+- **Accessibility.** Requirement 10 of the specifications sets the accessibility requirements.
 - **Testability.** Property-based tests cover the analysis and the API validation.
 
 Accuracy deserves a note: on the Vertical SwimRunMan test file the system finds 14 segments, 24.7 km of running and 6250 m of swimming, against 24.8 km and 6100 m published.
@@ -386,13 +386,13 @@ Table 5 lists the documents and the question each one answers.
 
 *Table 5*: Documents and the questions they answer.
 
-| Document                      | Where                              | What it shows                                 |
-| ----------------------------- | ---------------------------------- | --------------------------------------------- |
-| README                        | [README.md](../README.md)          | What the tool is and how to run it            |
-| Software guidebook            | this file                          | Context, structure, domain model and glossary |
-| Architecture decision records | [docs/adr/](./adr/)                | Why we chose a design, and what we rejected   |
-| Specifications                | [.kiro/specs/](../.kiro/specs/)    | Requirements, design and tasks per feature    |
-| Source code and tests         | [src/](../src/), [test/](../test/) | What the system does, in executable form      |
+| Document                      | Where                    | What it shows                                                       |
+| ----------------------------- | ------------------------ | ------------------------------------------------------------------- |
+| README                        | The repository (private) | What the tool is and how to run it                                  |
+| Software guidebook            | this file                | Context, structure, domain model and glossary                       |
+| Architecture decision records | [docs/adr/](./adr/)      | Why we chose a design, and what we rejected                         |
+| Specifications                | The repository (private) | Kiro and Spec Kit specs: requirements, design and tasks per feature |
+| Source code and tests         | The repository (private) | What the system does, in executable form                            |
 
 The first four documents explain what, how and why, while the code and tests are the only part that is guaranteed to be current.
 
@@ -416,7 +416,7 @@ The browser app does the analysis and draws the map. Astro generates static HTML
 
 The diagram also shows the optional Node.js terrain API, not a requirement of the Pages deployment. That API checks the `Origin` header on every API route except the health check and caches terrain answers on disk. The Astro development server uses port 8123; run the optional API separately if testing it, rather than starting both on the same port.
 
-The dashed watch data field is planned, not built ([spec](../specs/001-garmin-datafield/spec.md), roadmap M4).
+The dashed watch data field is planned, not built.
 It would build on the Connect IQ SDK and its Monkey C language; Garmin's developer documentation explains the app types and the simulator (Garmin, n.d.-a).
 It stays a container inside the TigerLegs system rather than a system of its own: in C4 terms a container is a separately deployable unit of one system, and the data field is deployed separately (through the Connect IQ store) but belongs to the same product, team and course model.
 Garmin Connect appears as an external system, like Overpass, because it only transports the exported course to the watch.
@@ -469,7 +469,7 @@ classDiagram
 A GPX file holds tracks and waypoints, and a track holds trackpoints.
 A strategy reads the file and produces segments, each covering consecutive trackpoints and labelled swim, run or unclassified.
 A `DisplaySegmentPair` groups a run and a swim for the compact table.
-The planned watch data field adds two runtime types to this model: a `LegProgress` that tracks the current leg and its remaining distance, and a transition detector with hysteresis, so that one noisy GPS fix near a transition cannot advance and regress the leg repeatedly ([spec](../specs/001-garmin-datafield/spec.md), FR-004).
+The planned watch data field adds two runtime types to this model: a `LegProgress` that tracks the current leg and its remaining distance, and a transition detector with hysteresis, so that one noisy GPS fix near a transition cannot advance and regress the leg repeatedly (requirement FR-004 of the watch data field specification).
 Appendix A defines each term.
 
 ### 6.4 Chat domain model
@@ -747,7 +747,7 @@ What the structure maps to. Garmin's FIT workout file "must contain a File Id me
 Our roles (warm-up, work, rest, cool-down) map onto those intensities, and the tree becomes the flat list with a repeat step on export.
 
 Import and export are not part of the model: they are importers and exporters at the edge (section 7.7).
-An activity importer turns a GPX, FIT or TCX file into a recording, and a workout exporter turns a planned session into a FIT workout file or, as in spec 003, an iCalendar event.
+An activity importer turns a GPX, FIT or TCX file into a recording, and a workout exporter turns a planned session into a FIT workout file or, as in the specification of the training month planner, an iCalendar event.
 What the three services offer is not yet verified; the following comes from search summaries and the Garmin FIT page, and is to be checked in the services' own documentation before it is relied on:
 
 - **Garmin.** The FIT file formats are documented (Garmin, n.d.-b). Pushing a structured workout straight to a watch goes through the Garmin Connect Training API, which a third-party report describes as open to approved business partners only (personal access is read-only) and the developer program as currently on hold. So the realistic first path is a file that the athlete loads herself, if Garmin's apps accept it (to check).
@@ -790,7 +790,7 @@ The algorithm cannot tell the two apart, and it does not have to: it **flags** a
 - the names say what they do (a *verdict* is not a *deletion*), which is what Evans calls intention-revealing interfaces;
 - the limits are data of a course or an athlete and not constants in the code (the plausible speed limit, and the limit between swimming and running).
 
-**The original file stays whole, and a copy may be edited.** The GPX file that an athlete loads is never changed: the round trip of a file must not alter it (user story US-7 in the Kiro specs), and the analysis needs its exact timestamps. Editing is still a feature, on a *copy*: the verdicts and the moved transition points are data next to the recording, and the athlete can export an edited copy as a new GPX file, with the glitches left out.
+**The original file stays whole, and a copy may be edited.** The GPX file that an athlete loads is never changed: the round trip of a file must not alter it (user story US-7 of the specifications), and the analysis needs its exact timestamps. Editing is still a feature, on a *copy*: the verdicts and the moved transition points are data next to the recording, and the athlete can export an edited copy as a new GPX file, with the glitches left out.
 
 **The idealized course is a different file.** What a course shows, and what an owner may download, is derived from a recording after the verdicts, and it is stripped of everything personal: no timestamps, no speed, no heart rate, cadence or power, and no real deviations (a swim to a boat is not the course). It has a clean line and, as waypoints, every transition between swimming and running, named by the leg names of the course (issue #107), and the **energy stations** of the event, so that a navigation app or a watch can show them too (spec 001 asks the data field to show the next energy station, which is on a run, next to the distance to the next transition to swim or run).
 
@@ -830,7 +830,7 @@ We use a small script because browser support for that property is not yet unive
 ### 7.2 Front end: the prototype chatbot
 
 The main page has a prototype chatbot, *Ask the tiger*, with clickable FAQ labels (what is swimrun, can tigers swim, segment counts, distances).
-It is not an LLM: it answers the fixed questions and replies "There is no actual LLM integration yet" to anything else.
+It is not an LLM: it answers the fixed questions and tells the visitor, for anything else, that free questions only work on the Training page (in Chrome on a desktop computer) and that here only the suggested questions can be asked.
 
 The component `src/components/Chatbot.tsx` depends only on the `ChatAgent` interface in `src/client/chat-agent.ts`.
 An agent returns a stream of events (`run-started`, `text`, `run-finished`), a small subset of the AG-UI event types. `src/client/ag-ui.ts` converts that stream into real AG-UI events with the `@ag-ui/core` package (`RUN_STARTED`, `TEXT_MESSAGE_START`, `TEXT_MESSAGE_CONTENT`, `TEXT_MESSAGE_END`, `RUN_FINISHED`, and `CUSTOM` events for status text and suggestion chips), and the tests check every event against the package's own schemas. The chat interface still reads our `ChatEvent`; reading AG-UI events directly is the step after that, and the package for connecting to AG-UI servers, `@ag-ui/client`, is not used.
@@ -862,12 +862,12 @@ Flag emoji do not render on Windows, where the two-letter code shows instead.
 ### 7.5 Front end: the prototype training week
 
 `/training.html` shows a prototype training week: six hardcoded sessions covering the four swimrun capacities (trail running, open-water swimming, strength, and static and dynamic flexibility).
-It explores the training-plan ideation (issue #20, [ADR-0010](./adr/0010-tigerlegs-mcp-server-and-strava-integration.md)); the feature specification lives in [specs/002-training-week-assistant/spec.md](../specs/002-training-week-assistant/spec.md).
+It explores the training-plan ideation (issue #20, [ADR-0010](./adr/0010-tigerlegs-mcp-server-and-strava-integration.md)); the feature specification is kept in the private repository.
 The page is labelled as a prototype, nothing is sent anywhere, and confirming a week only keeps it in component state.
 
 The domain lives in `src/client/training-week.ts` as pure, tested functions: `applyMoves` returns a new week and never mutates its input (the GPX rule applied to plans), `changedSessions` diffs a draft against the confirmed baseline, and `parseProposal` validates a model response, dropping moves that name unknown sessions or invalid days.
 
-Rest days are part of the model: `restDays` is the set of days on which no session may be planned (a plan lever, spec 003). The rules live in `training-week.ts` as plain functions and not in a prompt: `restDaysRequested` reads "I need a rest day on Wednesday" in English, Dutch, French and German, `planRestDay` moves the sessions of that day, one by one, to the best other day, `checkMoves` leaves out any model move onto a rest day, and `weekIssues` and `suggestFixes` find what a week still needs (two sessions on a day, runs on consecutive days) and propose single moves for it.
+Rest days are part of the model: `restDays` is the set of days on which no session may be planned (a plan lever of the training month planner specification). The rules live in `training-week.ts` as plain functions and not in a prompt: `restDaysRequested` reads "I need a rest day on Wednesday" in English, Dutch, French and German, `planRestDay` moves the sessions of that day, one by one, to the best other day, `checkMoves` leaves out any model move onto a rest day, and `weekIssues` and `suggestFixes` find what a week still needs (two sessions on a day, runs on consecutive days) and propose single moves for it.
 A request for a rest day is planned by these rules and needs no model. For other instructions the model's job is limited to turning words into moves or into `restDays`, and its answer is checked by the same rules; when it names rest days, the rules plan the moves and its own moves are ignored.
 The chat shows a proposal as a headed bulleted list: the step to apply now, anything left out, and, looking one step ahead, the possible next steps. Only the first step has buttons; the next steps come as chips once it is applied, each as its own proposal.
 
@@ -1514,7 +1514,7 @@ Table 13 lists the terms in the order in which you meet them when you follow a G
 | Brief answer                | The short first reply to a question                                                                                                                                                                                               | "Yes. Tigers are among the few big cats that like water."                                          |
 | More                        | The longer second reply, offered through the *Tell me more* follow-up                                                                                                                                                             | Why swimrun courses vary in distance                                                               |
 | Dynamic answer              | An answer an LLM generates for a free-text question (planned, issue #10)                                                                                                                                                          | A reply about a specific wetsuit                                                                   |
-| Fallback                    | The reply to free text while no LLM is integrated                                                                                                                                                                                 | "There is no actual LLM integration yet.."                                                         |
+| Fallback                    | The reply to free text in a chat without a model                                                                                                                                                                                  | "There is no actual LLM integration yet.."                                                         |
 | Language                    | One of English, Dutch, French or German; each has its own FAQ catalog                                                                                                                                                             | `faq.nl.json`                                                                                      |
 | Strategy                    | A method to detect segments: waypoint, speed or landscape                                                                                                                                                                         | Waypoint strategy                                                                                  |
 | Confidence                  | How sure a strategy is about a trackpoint; the combiner keeps the highest                                                                                                                                                         | 0.9 from waypoints beats 0.4 from speed                                                            |
@@ -1562,7 +1562,7 @@ Table 14 defines the terms about map data, the terrain service and the infrastru
 Sources: PBF (OpenStreetMap Wiki, n.d.-a), Geofabrik (Geofabrik, n.d.), Overpass API and Overpass QL (OpenStreetMap Wiki, n.d.-b, n.d.-c), multi-criteria decision making (ICT Research Methods, n.d.).
 
 The terms form a chain: a track has trackpoints, a strategy turns them into segments, segments of different terrain meet at transitions, and paired rows group segments for display.
-The Kiro specs contain a longer glossary with the formal definitions.
+The specifications contain a longer glossary with the formal definitions.
 Two terms are easy to confuse: a waypoint is a named point outside the track, while a trackpoint is part of the recorded line.
 
 ### Appendix B: Ontology mapping to a train journey
