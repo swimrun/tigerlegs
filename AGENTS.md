@@ -20,6 +20,8 @@ After finishing work, say what changed and what is ready to commit, and wait. Ap
 - Definition of Done: [docs/DEFINITION_OF_DONE.md](./docs/DEFINITION_OF_DONE.md).
   Create issues with `gh issue create --template user-story.md` and keep
   the Definition of Done checkboxes; do not store task descriptions as files
+- The "user" in a user story is a person who uses the app, such as the swimrunner or the owner of a course. Never write a story for a developer, a maintainer or another stakeholder of the project, and never a story about a specification or a document (a "meta story"); that is a task, not a story. The reasoning, with sources, is in the principles chapter of the software guidebook.
+- Write a quality (performance, privacy, accessibility, portability) as a scenario with a measure, not as a vague wish; see the same chapter.
 
 ### Files and data stay inside this repository
 

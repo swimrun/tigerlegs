@@ -53,6 +53,13 @@ and what comes next, so that I can pace each leg and prepare transitions
    route from the nearest route point, not straight-line to the
    transition.
 
+7. **Given** a course with energy stations (waypoints of the idealized
+   course, spec [004](../004-course-playback-and-admin/spec.md)), **When**
+   the athlete is on a run and an energy station lies ahead before the
+   next transition, **Then** the data field shows the distance to the next
+   energy station next to the distance to the next transition to swim or
+   run; energy stations are not shown during a swim.
+
 ### Edge Cases
 
 - Watch loses GPS entirely mid-leg: keep the last known leg, mark the
