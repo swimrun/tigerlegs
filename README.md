@@ -134,3 +134,4 @@ The [software guidebook](./docs/software-guidebook.md) describes what the system
 Read [CONTRIBUTING.md](./CONTRIBUTING.md) to get involved and [AGENTS.md](./AGENTS.md) for the working agreements. Documentation lives in the repository and changes in the same commit as the behaviour it describes, so update the README, the guidebook or an ADR when your change affects them.
 
 <img src="./public/img/tigerlegs-logo.png" alt="TIGERLegs logo: a tiger head with a blue and green GPS route in its stripes, next to the name" width="720">
+

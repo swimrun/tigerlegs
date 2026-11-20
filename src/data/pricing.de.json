@@ -1,13 +1,22 @@
 {
   "title": "Preise",
-  "prototype": "Prototyp: Es kann noch nichts gekauft werden, es sind keine Preise festgelegt, und die Verteilung der Funktionen auf Silver, Gold und Platinum ist ein Entwurf.",
+  "prototype": "Dies ist ein Prototyp: Es kann noch nichts gekauft werden, es sind keine endgültigen Preise festgelegt, und die Verteilung der Funktionen auf Silver, Gold und Platinum ist ein Entwurf.",
   "statusTitle": "In Entwicklung und vorerst kostenlos",
-  "status": "TigerLegs ist in Entwicklung. Wir suchen Tester, und vorerst ist alles völlig kostenlos.",
+  "status": "TigerLegs ist in Entwicklung und in der Beta. Wir suchen Tester: Jeder darf es kostenlos ausprobieren, solange Probleme bei Bart gemeldet werden. Vorerst ist alles völlig kostenlos.",
   "freeTitle": "Die Segment-Extraktion ist immer kostenlos",
   "free": "Eine GPX-Datei laden und ihre Schwimm- und Laufsegmente mit Distanzen auf einer Karte und in einer Tabelle erhalten, bleibt immer kostenlos.",
   "tigerTitle": "Warum es eine Mitgliedschaft gibt",
   "tiger": "Tiger gelten weltweit als gefährdet auf der Roten Liste der IUCN (Panthera, 2025). Projekte, die völlig kostenlos und ohne Förderung sind, sind ebenfalls vom schnellen Aussterben bedroht. Eine Mitgliedschaft hält TigerLegs am Leben und unabhängig.",
-  "tableTitle": "Was Mitglieder bekommen (Entwurf)",
+  "pledgeTitle": "Unser Versprechen an den Tiger",
+  "pledge": "Wenn TigerLegs Geld verdient, geht ein Teil der Beiträge für bezahlte Funktionen über die IUCN in den Schutz des Tigers. Die IUCN-Green-Status-Bewertung des Tigers besagt: \"If tigers were restored to all suitable, historic habitat, either by natural recolonization or reintroduction, there could be over 25,000 tigers living in the wild—over five times the current global population\" (Panthera, 2025). Swimrun ist ein kleiner Sport: 2019 gab es \"something close to 10,000 swimrun athletes worldwide\" (Triathlete, 2019), während in freier Wildbahn weniger als 5.000 Tiger übrig sind (Panthera, 2025). Es gibt also schon mehr als doppelt so viele Swimrunner wie Tiger. Wir wollen zu diesem Ziel von 25.000 Tigern beitragen. Die Höhe des Anteils ist noch nicht entschieden.",
+  "photoAlt": "Ein Königstiger steht auf trockenem Waldboden und schaut in die Kamera",
+  "photoCaption": "Bheem, ein Königstiger im Kanha-Nationalpark in Indien.",
+  "photoBy": "Foto",
+  "photoResized": "verkleinert",
+  "hostingTitle": "Hosting-Kosten",
+  "hosting": "Heute kostet der Betrieb von TigerLegs fast nichts: Die Seite ist statisch, und Ihre GPX-Datei bleibt in Ihrem Browser. Sobald wir ein Back-End bauen, das auch Profile hostet, bezahlen wir Server, Speicher und Backups, und die Mitgliedschaft deckt diese Kosten. Das Hosting Ihres Profils ist eine geplante Funktion und bleibt in der kostenlosen Stufe.",
+  "tableTitle": "Was jede Stufe bekommt (Entwurf)",
+  "priceNote": "Die Preise sind in Euro. Ob sie pro Monat oder pro Jahr gelten, ist noch nicht entschieden.",
   "columns": {
     "feature": "Funktion",
     "free": "Kostenlos",
@@ -15,34 +24,75 @@
     "gold": "Gold",
     "platinum": "Platinum"
   },
+  "prices": {
+    "free": "0 €",
+    "silver": "5 €",
+    "gold": "10 €",
+    "platinum": "25 €"
+  },
   "yes": "Enthalten",
-  "yesPlanned": "Enthalten, geplant",
   "no": "Nicht enthalten",
+  "planned": "Geplant",
   "rows": [
     {
       "feature": "Segment-Extraktion: Schwimmen und Laufen, Distanzen, Karte und Tabelle",
-      "paid": false,
-      "planned": false
+      "planned": false,
+      "values": {
+        "free": true,
+        "silver": true,
+        "gold": true,
+        "platinum": true
+      }
     },
     {
       "feature": "Geländedaten von OpenStreetMap, nach eigener Wahl",
-      "paid": false,
-      "planned": false
+      "planned": false,
+      "values": {
+        "free": true,
+        "silver": true,
+        "gold": true,
+        "platinum": true
+      }
+    },
+    {
+      "feature": "Gehostetes Profil",
+      "planned": true,
+      "values": {
+        "free": true,
+        "silver": true,
+        "gold": true,
+        "platinum": true
+      }
+    },
+    {
+      "feature": "Planung der Verpflegungsstationen, für eine Anzahl von Strecken oder Rennen",
+      "planned": true,
+      "values": {
+        "free": "Max. 2",
+        "silver": "Max. 5",
+        "gold": "Max. 10",
+        "platinum": "Unbegrenzt"
+      }
     },
     {
       "feature": "Integration in die Garmin-Uhr",
-      "paid": true,
-      "planned": true
+      "planned": true,
+      "values": {
+        "free": false,
+        "silver": true,
+        "gold": true,
+        "platinum": true
+      }
     },
     {
-      "feature": "Die Strecke der WM in Stockholm",
-      "paid": true,
-      "planned": true
-    },
-    {
-      "feature": "Planung der Verpflegungsstationen",
-      "paid": true,
-      "planned": true
+      "feature": "Erweiterter Zugang zu Swimrun-Strecken, wie der der ÖTILLÖ-Weltmeisterschaft",
+      "planned": true,
+      "values": {
+        "free": false,
+        "silver": false,
+        "gold": true,
+        "platinum": true
+      }
     }
   ],
   "referencesTitle": "Referenzen",
@@ -50,6 +100,10 @@
     {
       "text": "Panthera. (2025, 10. Oktober). *New IUCN assessment finds hope for tiger recovery despite critical depletion*.",
       "url": "https://panthera.org/newsroom/new-iucn-assessment-finds-hope-tiger-recovery-despite-critical-depletion"
+    },
+    {
+      "text": "Triathlete. (2019). *Hold my bike: A look at the rapid growth of swimrun*.",
+      "url": "https://www.triathlete.com/culture/news/hold-my-bike-a-look-at-the-rapid-growth-of-swimrun/"
     }
   ]
 }

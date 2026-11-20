@@ -1,13 +1,22 @@
 {
   "title": "Tarifs",
-  "prototype": "Prototype : rien ne peut encore être acheté, aucun prix n'est fixé, et la répartition des fonctions entre Silver, Gold et Platinum est un brouillon.",
+  "prototype": "Ceci est un prototype : rien ne peut encore être acheté, aucun prix définitif n'est fixé, et la répartition des fonctions entre Silver, Gold et Platinum est un brouillon.",
   "statusTitle": "En développement, et gratuit pour l'instant",
-  "status": "TigerLegs est en développement. Nous cherchons des testeurs, et pour l'instant tout est entièrement gratuit.",
+  "status": "TigerLegs est en développement et en bêta. Nous cherchons des testeurs : tout le monde peut l'essayer gratuitement, à condition de signaler les problèmes à Bart. Pour l'instant tout est entièrement gratuit.",
   "freeTitle": "L'extraction des segments est toujours gratuite",
   "free": "Charger un fichier GPX et obtenir ses segments de nage et de course, avec les distances, sur une carte et dans un tableau, restera toujours gratuit.",
-  "tigerTitle": "Pourquoi une adhésion existe",
-  "tiger": "Les tigres sont considérés comme en danger à l'échelle mondiale sur la Liste rouge de l'UICN (Panthera, 2025). Les projets entièrement gratuits et sans subvention risquent eux aussi une disparition rapide. L'adhésion garde TigerLegs en vie et indépendant.",
-  "tableTitle": "Ce que reçoivent les membres (brouillon)",
+  "tigerTitle": "Pourquoi l'adhésion existe",
+  "tiger": "Les tigres sont considérés comme en danger à l'échelle mondiale sur la Liste rouge de l'UICN (Panthera, 2025). Les projets entièrement gratuits et sans subvention risquent eux aussi une disparition rapide. L'adhésion garde TigerLegs vivant et indépendant.",
+  "pledgeTitle": "Notre promesse au tigre",
+  "pledge": "Si TigerLegs commence à gagner de l'argent, une partie des contributions pour les fonctions payantes ira à la protection du tigre via l'UICN. L'évaluation Green Status de l'UICN pour le tigre indique : \"If tigers were restored to all suitable, historic habitat, either by natural recolonization or reintroduction, there could be over 25,000 tigers living in the wild—over five times the current global population\" (Panthera, 2025). Le swimrun est un petit sport : en 2019 il y avait \"something close to 10,000 swimrun athletes worldwide\" (Triathlete, 2019), alors qu'il reste moins de 5 000 tigres à l'état sauvage (Panthera, 2025). Il y a donc déjà plus de deux fois plus de swimrunners que de tigres. Nous voulons contribuer à cet objectif de 25 000 tigres. La part n'est pas encore décidée.",
+  "photoAlt": "Un tigre du Bengale debout sur un sol de forêt sec, qui regarde l'objectif",
+  "photoCaption": "Bheem, un tigre du Bengale dans le parc national de Kanha, en Inde.",
+  "photoBy": "Photo",
+  "photoResized": "redimensionnée",
+  "hostingTitle": "Coûts d'hébergement",
+  "hosting": "Aujourd'hui, TigerLegs ne coûte presque rien : le site est statique et votre fichier GPX reste dans votre navigateur. Dès que nous construirons un back-end qui héberge aussi des profils, nous paierons des serveurs, du stockage et des sauvegardes, et l'adhésion couvre ces coûts. L'hébergement de votre profil est une fonction prévue, et il reste dans le niveau gratuit.",
+  "tableTitle": "Ce que reçoit chaque niveau (brouillon)",
+  "priceNote": "Les prix sont en euros. Il n'est pas encore décidé s'ils sont mensuels ou annuels.",
   "columns": {
     "feature": "Fonction",
     "free": "Gratuit",
@@ -15,34 +24,75 @@
     "gold": "Gold",
     "platinum": "Platinum"
   },
+  "prices": {
+    "free": "0 €",
+    "silver": "5 €",
+    "gold": "10 €",
+    "platinum": "25 €"
+  },
   "yes": "Inclus",
-  "yesPlanned": "Inclus, prévu",
   "no": "Non inclus",
+  "planned": "Prévu",
   "rows": [
     {
       "feature": "Extraction des segments : nage et course, distances, carte et tableau",
-      "paid": false,
-      "planned": false
+      "planned": false,
+      "values": {
+        "free": true,
+        "silver": true,
+        "gold": true,
+        "platinum": true
+      }
     },
     {
       "feature": "Données de terrain d'OpenStreetMap, à votre choix",
-      "paid": false,
-      "planned": false
+      "planned": false,
+      "values": {
+        "free": true,
+        "silver": true,
+        "gold": true,
+        "platinum": true
+      }
+    },
+    {
+      "feature": "Profil hébergé",
+      "planned": true,
+      "values": {
+        "free": true,
+        "silver": true,
+        "gold": true,
+        "platinum": true
+      }
+    },
+    {
+      "feature": "Planification des ravitaillements, pour un nombre de parcours ou de courses",
+      "planned": true,
+      "values": {
+        "free": "Max. 2",
+        "silver": "Max. 5",
+        "gold": "Max. 10",
+        "platinum": "Illimité"
+      }
     },
     {
       "feature": "Intégration à la montre Garmin",
-      "paid": true,
-      "planned": true
+      "planned": true,
+      "values": {
+        "free": false,
+        "silver": true,
+        "gold": true,
+        "platinum": true
+      }
     },
     {
-      "feature": "Le parcours des Championnats du monde à Stockholm",
-      "paid": true,
-      "planned": true
-    },
-    {
-      "feature": "Planification des ravitaillements",
-      "paid": true,
-      "planned": true
+      "feature": "Accès étendu à des parcours de swimrun, comme celui des Championnats du monde ÖTILLÖ",
+      "planned": true,
+      "values": {
+        "free": false,
+        "silver": false,
+        "gold": true,
+        "platinum": true
+      }
     }
   ],
   "referencesTitle": "Références",
@@ -50,6 +100,10 @@
     {
       "text": "Panthera. (2025, 10 octobre). *New IUCN assessment finds hope for tiger recovery despite critical depletion*.",
       "url": "https://panthera.org/newsroom/new-iucn-assessment-finds-hope-tiger-recovery-despite-critical-depletion"
+    },
+    {
+      "text": "Triathlete. (2019). *Hold my bike: A look at the rapid growth of swimrun*.",
+      "url": "https://www.triathlete.com/culture/news/hold-my-bike-a-look-at-the-rapid-growth-of-swimrun/"
     }
   ]
 }

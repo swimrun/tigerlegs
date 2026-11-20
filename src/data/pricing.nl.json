@@ -1,13 +1,22 @@
 {
   "title": "Prijzen",
-  "prototype": "Prototype: er is nog niets te koop, er zijn nog geen prijzen vastgesteld, en de verdeling van de functies over Silver, Gold en Platinum is een concept.",
+  "prototype": "Dit is een prototype: er is nog niets te koop, er zijn nog geen definitieve prijzen vastgesteld, en de verdeling van de functies over Silver, Gold en Platinum is een concept.",
   "statusTitle": "In ontwikkeling, en voorlopig gratis",
-  "status": "TigerLegs is in ontwikkeling. We zoeken testers, en voorlopig is alles volledig gratis.",
+  "status": "TigerLegs is in ontwikkeling en in bèta. We zoeken testers: iedereen mag het gratis uitproberen, zolang je problemen maar bij Bart meldt. Voorlopig is alles volledig gratis.",
   "freeTitle": "Segmenten ophalen is altijd gratis",
   "free": "Een GPX-bestand laden en de zwem- en loopsegmenten ervan krijgen, met afstanden, op een kaart en in een tabel, blijft altijd gratis.",
   "tigerTitle": "Waarom er een lidmaatschap is",
   "tiger": "Tijgers worden wereldwijd als bedreigd beschouwd op de rode lijst van de IUCN (Panthera, 2025). Projecten die helemaal gratis zijn en geen subsidie krijgen, lopen ook gevaar snel uit te sterven. Een lidmaatschap houdt TigerLegs in leven en onafhankelijk.",
-  "tableTitle": "Wat leden krijgen (concept)",
+  "pledgeTitle": "Onze belofte aan de tijger",
+  "pledge": "Als TigerLegs geld gaat verdienen, gaat een deel van de bijdragen voor betaalde functies naar tijgerbescherming via de IUCN. De IUCN Green Status-beoordeling van de tijger zegt: \"If tigers were restored to all suitable, historic habitat, either by natural recolonization or reintroduction, there could be over 25,000 tigers living in the wild—over five times the current global population\" (Panthera, 2025). Swimrun is een kleine sport: in 2019 waren er \"something close to 10,000 swimrun athletes worldwide\" (Triathlete, 2019), terwijl er in het wild minder dan 5.000 tijgers over zijn (Panthera, 2025). Er zijn dus al meer dan twee keer zoveel swimrunners als tijgers. We willen bijdragen aan dat doel van 25.000 tijgers. De hoogte van het deel is nog niet besloten.",
+  "photoAlt": "Een Koningstijger staat op een droge bosbodem en kijkt in de camera",
+  "photoCaption": "Bheem, een Bengaalse tijger in het Kanha National Park in India.",
+  "photoBy": "Foto",
+  "photoResized": "verkleind",
+  "hostingTitle": "Hostingkosten",
+  "hosting": "Nu kost TigerLegs bijna niets om te draaien: de site is statisch en je GPX-bestand blijft in je browser. Zodra we een back-end bouwen die ook profielen host, betalen we voor servers, opslag en back-ups, en het lidmaatschap dekt die kosten. Je profiel laten hosten is een geplande functie en blijft in het gratis niveau.",
+  "tableTitle": "Wat elk niveau krijgt (concept)",
+  "priceNote": "Prijzen zijn in euro's. Of ze per maand of per jaar gelden, is nog niet besloten.",
   "columns": {
     "feature": "Functie",
     "free": "Gratis",
@@ -15,34 +24,75 @@
     "gold": "Gold",
     "platinum": "Platinum"
   },
+  "prices": {
+    "free": "€0",
+    "silver": "€5",
+    "gold": "€10",
+    "platinum": "€25"
+  },
   "yes": "Inbegrepen",
-  "yesPlanned": "Inbegrepen, gepland",
   "no": "Niet inbegrepen",
+  "planned": "Gepland",
   "rows": [
     {
       "feature": "Segmenten ophalen: zwemmen en lopen, afstanden, kaart en tabel",
-      "paid": false,
-      "planned": false
+      "planned": false,
+      "values": {
+        "free": true,
+        "silver": true,
+        "gold": true,
+        "platinum": true
+      }
     },
     {
       "feature": "Terreingegevens van OpenStreetMap, op eigen keuze",
-      "paid": false,
-      "planned": false
+      "planned": false,
+      "values": {
+        "free": true,
+        "silver": true,
+        "gold": true,
+        "platinum": true
+      }
+    },
+    {
+      "feature": "Gehost profiel",
+      "planned": true,
+      "values": {
+        "free": true,
+        "silver": true,
+        "gold": true,
+        "platinum": true
+      }
+    },
+    {
+      "feature": "Planning van verzorgingsposten, voor een aantal parcoursen of wedstrijden",
+      "planned": true,
+      "values": {
+        "free": "Max. 2",
+        "silver": "Max. 5",
+        "gold": "Max. 10",
+        "platinum": "Onbeperkt"
+      }
     },
     {
       "feature": "Koppeling met het Garmin-horloge",
-      "paid": true,
-      "planned": true
+      "planned": true,
+      "values": {
+        "free": false,
+        "silver": true,
+        "gold": true,
+        "platinum": true
+      }
     },
     {
-      "feature": "Het parcours van de WK in Stockholm",
-      "paid": true,
-      "planned": true
-    },
-    {
-      "feature": "Planning van verzorgingsposten",
-      "paid": true,
-      "planned": true
+      "feature": "Uitgebreide toegang tot swimrun-parcoursen, zoals dat van het WK van ÖTILLÖ",
+      "planned": true,
+      "values": {
+        "free": false,
+        "silver": false,
+        "gold": true,
+        "platinum": true
+      }
     }
   ],
   "referencesTitle": "Referenties",
@@ -50,6 +100,10 @@
     {
       "text": "Panthera. (2025, 10 oktober). *New IUCN assessment finds hope for tiger recovery despite critical depletion*.",
       "url": "https://panthera.org/newsroom/new-iucn-assessment-finds-hope-tiger-recovery-despite-critical-depletion"
+    },
+    {
+      "text": "Triathlete. (2019). *Hold my bike: A look at the rapid growth of swimrun*.",
+      "url": "https://www.triathlete.com/culture/news/hold-my-bike-a-look-at-the-rapid-growth-of-swimrun/"
     }
   ]
 }
