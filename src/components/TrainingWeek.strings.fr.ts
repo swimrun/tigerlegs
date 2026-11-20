@@ -15,7 +15,7 @@ export const fr: Strings = {
     "Ton Chrome peut exécuter Gemini Nano, mais le modèle n'est pas encore installé. L'installation le télécharge une seule fois (quelques Go) ; Chrome exige environ 22 Go d'espace disque libre en marge. Ton planning ne quitte jamais cet appareil.",
   assistEnable: "Installer Gemini Nano",
   assistInstalled: "Gemini Nano est installé. Redemande.",
-  chatTitle: "Réorganise avec RoARR",
+  chatTitle: "RoARR (Robotic Assistant Request Responder)",
   applied: (summary) => `Appliqué : ${summary}. Confirme ou annule les changements sous « Tes changements » ci-dessous.`,
   dismissed: "Ignoré. Rien n'a été déplacé.",
   assistDownloading: "Téléchargement du modèle…",

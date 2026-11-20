@@ -81,10 +81,13 @@ for (const [name, strategies, issue] of APPROACHES) {
 
 // Ratchets: today's error per approach, in metres off the official total. A change may make a number
 // smaller (better) but not larger. When an approach improves, lower its numbers here.
+// Since issue #98 swim distance is measured over smoothed positions, so jitter no longer pads the swims: the swim
+// error grew from 100 to 480 m for the combined approach, because the padding had hidden swim that is still not
+// found (swim A is split by the GPS jump at the start). The same change brought Rügen from 3,104 m off to 192 m.
 const RATCHET: Record<string, { swimErrorM: number; runErrorM: number }> = {
-  "speed only": { swimErrorM: 390, runErrorM: 690 },
+  "speed only": { swimErrorM: 600, runErrorM: 690 },
   "terrain only": { swimErrorM: 4710, runErrorM: 5000 },
-  "speed and terrain combined": { swimErrorM: 100, runErrorM: 560 },
+  "speed and terrain combined": { swimErrorM: 480, runErrorM: 560 },
 };
 for (const [name, strategies] of APPROACHES) {
   it(`Rondje Eilanden, ${name}: no worse than the pinned error`, () => {
@@ -115,6 +118,6 @@ it("Rondje Eilanden, lintjes opruimen: snapshot of speed and terrain combined (n
   expect(parsed.ok).toBeTruthy();
   const result = summarize(analyzeGpx(parsed.value, water, { enabledStrategies: ["speed", "landscape"] }).segments);
   expect([result.swims, result.runs], result.shown).toEqual([9, 10]);
-  expect(Math.round(result.swimM / 50) * 50, result.shown).toEqual(2000);
+  expect(Math.round(result.swimM / 50) * 50, result.shown).toEqual(1900);
   expect(Math.round(result.runM / 50) * 50, result.shown).toEqual(4050);
 });

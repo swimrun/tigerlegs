@@ -8,7 +8,7 @@ See [docs/DEFINITION_OF_DONE.md](../blob/main/docs/DEFINITION_OF_DONE.md) for th
 
 - [ ] **Acceptance criteria met.** Each Given/When/Then of the issue is demonstrably true.
 - [ ] **Tests.** New behaviour has a test; `npm test` passes, and so do `npm run test:site` and `npm run test:features` for site changes.
-- [ ] **Build.** `deno task build` passes.
+- [ ] **Build.** `npm run build` passes.
 - [ ] **Software guidebook updated** in the same commit.
 - [ ] **README and About page updated** when user-visible behaviour or the privacy statement changes.
 - [ ] **ADR written** when a significant design choice was made or reversed.

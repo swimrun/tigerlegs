@@ -40,7 +40,7 @@
     },
     {
       "id": "privacy",
-      "question": "Wird meine GPX-Datei auf einen Server hochgeladen?",
+      "question": "Geht meine private GPX-Datei an Big Tech?",
       "answer": "Nein. Du wählst die Datei in deinem Browser aus und die Analyse läuft dort; die Datei bleibt auf deinem Gerät und nichts geht an einen TigerLegs-Server. Geländedaten von OpenStreetMap sind optional, und dann gehen nur ein grober Kartenausschnitt und deine IP-Adresse an den Overpass-Dienst von OpenStreetMap, nie deine Trackpunkte. Details findest du auf der Über-Seite."
     }
   ]

@@ -1,0 +1,55 @@
+{
+  "title": "Pricing",
+  "prototype": "Prototype: nothing can be bought yet, no prices are set, and the split of the features over Silver, Gold and Platinum is a draft.",
+  "statusTitle": "Under development, and free for now",
+  "status": "TigerLegs is under development. We are looking for testers, and for now everything is completely free.",
+  "freeTitle": "Segment extraction is always free",
+  "free": "Loading a GPX file and getting its swim and run segments, with distances, on a map and in a table, will always be free.",
+  "tigerTitle": "Why membership exists",
+  "tiger": "Tigers are considered globally Endangered under the IUCN Red List (Panthera, 2025). Projects that are completely free and unsubsidised are also at risk of quick extinction. Membership keeps TigerLegs alive and independent.",
+  "tableTitle": "What members get (draft)",
+  "columns": {
+    "feature": "Feature",
+    "free": "Free",
+    "silver": "Silver",
+    "gold": "Gold",
+    "platinum": "Platinum"
+  },
+  "yes": "Included",
+  "yesPlanned": "Included, planned",
+  "no": "Not included",
+  "rows": [
+    {
+      "feature": "Segment extraction: swims and runs, distances, map and table",
+      "paid": false,
+      "planned": false
+    },
+    {
+      "feature": "Terrain data from OpenStreetMap, on your own choice",
+      "paid": false,
+      "planned": false
+    },
+    {
+      "feature": "Garmin watch integration",
+      "paid": true,
+      "planned": true
+    },
+    {
+      "feature": "The course of the World Champs in Stockholm",
+      "paid": true,
+      "planned": true
+    },
+    {
+      "feature": "Energy station planning",
+      "paid": true,
+      "planned": true
+    }
+  ],
+  "referencesTitle": "References",
+  "references": [
+    {
+      "text": "Panthera. (2025, October 10). *New IUCN assessment finds hope for tiger recovery despite critical depletion*.",
+      "url": "https://panthera.org/newsroom/new-iucn-assessment-finds-hope-tiger-recovery-despite-critical-depletion"
+    }
+  ]
+}

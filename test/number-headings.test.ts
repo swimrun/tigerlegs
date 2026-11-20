@@ -32,6 +32,6 @@ it("the architecture decision records, the software guidebook and the README hav
   expect(files.length > 10).toBeTruthy();
   for (const file of files) {
     const text = readFileSync(file, "utf8");
-    expect(numberHeadings(text), `${file}: run deno task headings ${file}`).toEqual(text);
+    expect(numberHeadings(text), `${file}: run npm run headings ${file}`).toEqual(text);
   }
 });

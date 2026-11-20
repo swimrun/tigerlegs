@@ -18,11 +18,11 @@ Two kinds of GPX file go in, and what the tool can use differs:
 
 TIGERLegs stands for *Terrain-Informed Gpx Extractor: LEts Go Swimrun!* (TIGE-R + LEGS). The tiger is also a nod to Team Groot Rondje Eilanden (TGRE), since a tiger is an amphibious animal and a good swimmer.
 
-**Requirements:** [Node.js](https://nodejs.org/en/download) 22.23 or newer with npm (version 24 is pinned in `.nvmrc`), for the site and the back end; [Deno](https://deno.com/) 2.x, which still runs the tests and the build tasks until they move to npm (see [docs/vite-plus.md](./docs/vite-plus.md)); and a modern web browser. The maintainers develop on macOS and have not tested other platforms.
+**Requirements:** [Node.js](https://nodejs.org/en/download) 22.23 or newer with npm (version 24 is pinned in `.nvmrc`), for the site, the back end, the tests and the build tasks; PlantUML with Java, only to redraw the diagrams in the guidebook (`npm run diagrams`); and a modern web browser. The maintainers develop on macOS and have not tested other platforms.
 
 ## 1. Getting started
 
-1. Install Node.js and Deno. Deno has an [installation guide](https://docs.deno.com/runtime/getting_started/installation/); Node.js can come from your package manager or a version manager that reads `.nvmrc`.
+1. Install [Node.js](https://nodejs.org/en/download). Node.js can come from your package manager or a version manager that reads `.nvmrc`.
 2. Clone the repository and open its folder:
 
    ```sh
@@ -30,37 +30,47 @@ TIGERLegs stands for *Terrain-Informed Gpx Extractor: LEts Go Swimrun!* (TIGE-R 
    cd gpx-to-swimrun-segments
    ```
 
-3. Install the site dependencies with npm, then start the Astro development server (the task is still a Deno task):
+3. Install the dependencies with npm, then start the development server, which first prepares the Web Worker, the samples, the documentation and the styles:
 
    ```sh
    npm ci
-   deno task dev
+   npm run dev
    ```
 
 4. Open <http://localhost:8123/tigerlegs/> in your browser.
 5. Upload a GPX file, for example one from the `test-data/` folder.
 
+### 1.1 Optional: Vite+
+
+[Vite+](https://main.viteplus.dev/guide/) is the toolchain of the Vite team, which bundles the Oxlint linter and the Oxfmt formatter that this project uses (`npm run lint`, `npm run fmt`). You do not need it to build or test TigerLegs. To try its `vp` command:
+
+- Global command, on macOS or Linux: `curl -fsSL https://main.viteplus.dev/install.sh | bash` (on Windows: `irm https://main.viteplus.dev/install.ps1 | iex`). Read the script before you pipe it into a shell. Check it with `vp toolchain --global`.
+- In this project, on a branch, to read the diff before you keep anything: `npx --package=vite-plus vp migrate --no-interactive` (the guide gives a pinned version, for example `vite-plus@1.6.0`). Then `vp install`, `vp check` and `vp test`.
+- Why it is not a dependency of this project: `vite-plus` 1.6.0 pins Vitest 5.1.0, and this project has Vitest 5.0.5 with the Storybook test addon, so installing it as a dependency fails with a peer dependency conflict (`ERESOLVE`) today; see `docs/vite-plus.md`.
+
 This serves the frontend only; GPX analysis stays in the browser. The optional Node.js API (`npm run server`, tested with `npm run test:server`) is separate and is not required by the site.
 
 ## 2. Build and test
 
-| Command                           | What it does                          |
-| --------------------------------- | ------------------------------------- |
-| `deno task build`                 | Build the site into `dist/`           |
-| `npm run preview`                 | Preview the production build          |
-| `npm test`                        | Run the unit tests                    |
-| `npm run check`                   | Type-check Astro and React            |
-| `npm run check:shared`            | Check the shared modules are portable |
-| `npx playwright install chromium` | Install the test browser (once)       |
-| `npm run test:site`               | Test the built site in the browser    |
-| `npm run test:features`           | Run the Gherkin acceptance criteria   |
-| `npm run test:a11y`               | Test the components for accessibility |
-| `deno task lint`                  | Lint the code                         |
-| `deno task fmt`                   | Format the code                       |
+| Command                              | What it does                                                  |
+| ------------------------------------ | ------------------------------------------------------------- |
+| `npm run build`                      | Build the site into `dist/`                                   |
+| `npm run preview`                    | Preview the production build                                  |
+| `npm test`                           | Run the unit tests                                            |
+| `npm run check`                      | Type-check Astro and React                                    |
+| `npm run check:shared`               | Check the shared modules are portable                         |
+| `npx playwright install chromium`    | Install the test browser (once)                               |
+| `npm run test:site`                  | Test the built site in the browser                            |
+| `npm run test:features`              | Run the Gherkin acceptance criteria                           |
+| `npm run test:a11y`                  | Test the components for accessibility                         |
+| `npm run lint`                       | Lint the code (Oxlint)                                        |
+| `npm run fmt`                        | Format the code (Oxfmt)                                       |
+| `npm run tables`, `refs`, `headings` | Format the Markdown tables, references and headings of a file |
+| `npm run diagrams`                   | Redraw the PlantUML diagrams (needs PlantUML)                 |
 
-The Worker in the build is a browser Web Worker, not an Astro feature: it runs the heavy GPX analysis on a background thread so that the page does not freeze on a large file. Its source is `src/client/analysis-worker.ts`; `deno task build:js` bundles it into `public/analysis-worker.js`, which Astro copies into `dist/`. Files of up to 10,000 trackpoints are analysed on the page itself.
+The Worker in the build is a browser Web Worker, not an Astro feature: it runs the heavy GPX analysis on a background thread so that the page does not freeze on a large file. Its source is `src/client/analysis-worker.ts`; `npm run build:js` bundles it into `public/analysis-worker.js`, which Astro copies into `dist/`. Files of up to 10,000 trackpoints are analysed on the page itself.
 
-Astro builds the shared layout and the static pages, and React runs the extractor. npm owns `node_modules/`; Deno uses that tree (`nodeModulesDir: manual`), so run `npm ci` before Deno commands on a fresh checkout.
+Astro builds the shared layout and the static pages, and React runs the extractor.
 
 GitHub Actions tests and builds the site, then publishes `dist/` to GitHub Pages; nothing runs on a server in production. See [ADR-0008](./docs/adr/0008-astro-static-site-with-react-islands.md) and [ADR-0009](./docs/adr/0009-react-for-interactive-frontend.md).
 
