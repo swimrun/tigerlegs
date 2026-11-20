@@ -25,9 +25,9 @@ async function openSamples(page: Page) {
 
 test("static pages and every ADR have shared navigation, direct links and reloads", async ({ page, request }) => {
   const names = (await readdir("docs/adr")).filter(name => name.endsWith(".md"));
-  for (const path of ["", "training.html", "about.html", "guidebook.html", ...names.map(name => `adr/${name.slice(0, -3)}.html`)]) {
+  for (const path of ["", "training.html", "pricing.html", "about.html", "guidebook.html", ...names.map(name => `adr/${name.slice(0, -3)}.html`)]) {
     await page.goto(path || "./");
-    await expect(page.locator("#main-menu a")).toHaveText(["Extractorrr", "Training", "About", "Guidebook"]);
+    await expect(page.locator("#main-menu a")).toHaveText(["Extractorrr", "Training", "Pricing", "About", "Guidebook"]);
     await expect(page.locator("#main-menu [aria-current=page]")).toHaveCount(1);
     await page.reload();
     await expect(page.locator("main")).toBeVisible();
@@ -88,13 +88,13 @@ test("React import, paired table, keyboard selection and presentation controls p
   const buttons = page.locator(".segment-select");
   await buttons.first().focus();
   await page.keyboard.press("Enter");
-  await expect(page.locator('[aria-pressed="true"]')).toHaveCount(1);
+  await expect(page.locator('.segment-select[aria-pressed="true"]')).toHaveCount(1);
   await expect(page.locator('.leaflet-overlay-pane path[stroke-width="8"]')).toHaveCount(1);
   await page.keyboard.press("Escape");
-  await expect(page.locator('[aria-pressed="true"]')).toHaveCount(0);
+  await expect(page.locator('.segment-select[aria-pressed="true"]')).toHaveCount(0);
   await buttons.first().click();
   await buttons.first().click();
-  await expect(page.locator('[aria-pressed="true"]')).toHaveCount(0);
+  await expect(page.locator('.segment-select[aria-pressed="true"]')).toHaveCount(0);
   await page.locator("#show-cumulative").check({ force: true });
   await expect(page.locator(".leaflet-control-layers")).toHaveCount(1);
   await expect(page.locator("thead")).toContainText("Total so far (km)");

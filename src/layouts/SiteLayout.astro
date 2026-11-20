@@ -9,7 +9,7 @@ import InstallApp from "../components/InstallApp.tsx";
 interface Props {
   title: string;
   description: string;
-  active: "extractor" | "training" | "about" | "guidebook" | "profile";
+  active: "extractor" | "training" | "pricing" | "about" | "guidebook" | "profile";
 }
 const { title, description, active } = Astro.props;
 const avatar = await getImage({ src: roarrAvatar, width: 96, height: 96 });
@@ -23,6 +23,7 @@ const languages = [
 const links = [
   { key: "extractor", href: base, text: "Extractorrr" },
   { key: "training", href: `${base}training.html`, text: "Training" },
+  { key: "pricing", href: `${base}pricing.html`, text: "Pricing" },
   { key: "about", href: `${base}about.html`, text: "About" },
   { key: "guidebook", href: `${base}guidebook.html`, text: "Guidebook" },
 ];

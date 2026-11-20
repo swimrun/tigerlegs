@@ -1,0 +1,55 @@
+{
+  "title": "Preise",
+  "prototype": "Prototyp: Es kann noch nichts gekauft werden, es sind keine Preise festgelegt, und die Verteilung der Funktionen auf Silver, Gold und Platinum ist ein Entwurf.",
+  "statusTitle": "In Entwicklung und vorerst kostenlos",
+  "status": "TigerLegs ist in Entwicklung. Wir suchen Tester, und vorerst ist alles völlig kostenlos.",
+  "freeTitle": "Die Segment-Extraktion ist immer kostenlos",
+  "free": "Eine GPX-Datei laden und ihre Schwimm- und Laufsegmente mit Distanzen auf einer Karte und in einer Tabelle erhalten, bleibt immer kostenlos.",
+  "tigerTitle": "Warum es eine Mitgliedschaft gibt",
+  "tiger": "Tiger gelten weltweit als gefährdet auf der Roten Liste der IUCN (Panthera, 2025). Projekte, die völlig kostenlos und ohne Förderung sind, sind ebenfalls vom schnellen Aussterben bedroht. Eine Mitgliedschaft hält TigerLegs am Leben und unabhängig.",
+  "tableTitle": "Was Mitglieder bekommen (Entwurf)",
+  "columns": {
+    "feature": "Funktion",
+    "free": "Kostenlos",
+    "silver": "Silver",
+    "gold": "Gold",
+    "platinum": "Platinum"
+  },
+  "yes": "Enthalten",
+  "yesPlanned": "Enthalten, geplant",
+  "no": "Nicht enthalten",
+  "rows": [
+    {
+      "feature": "Segment-Extraktion: Schwimmen und Laufen, Distanzen, Karte und Tabelle",
+      "paid": false,
+      "planned": false
+    },
+    {
+      "feature": "Geländedaten von OpenStreetMap, nach eigener Wahl",
+      "paid": false,
+      "planned": false
+    },
+    {
+      "feature": "Integration in die Garmin-Uhr",
+      "paid": true,
+      "planned": true
+    },
+    {
+      "feature": "Die Strecke der WM in Stockholm",
+      "paid": true,
+      "planned": true
+    },
+    {
+      "feature": "Planung der Verpflegungsstationen",
+      "paid": true,
+      "planned": true
+    }
+  ],
+  "referencesTitle": "Referenzen",
+  "references": [
+    {
+      "text": "Panthera. (2025, 10. Oktober). *New IUCN assessment finds hope for tiger recovery despite critical depletion*.",
+      "url": "https://panthera.org/newsroom/new-iucn-assessment-finds-hope-tiger-recovery-despite-critical-depletion"
+    }
+  ]
+}

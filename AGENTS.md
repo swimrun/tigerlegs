@@ -28,6 +28,8 @@ Merging an open pull request goes before new work: a branch that waits grows sta
   Create issues with `gh issue create --template user-story.md` and keep
   the Definition of Done checkboxes; do not store task descriptions as files
 - GitHub numbers issues and pull requests in one sequence, and it has no separate syntax for a pull request (GitLab writes `!129`). When you name a number, say what it is and give the title once: "issue #130 *Installable app (PWA)…*", "PR #129 *Document agentic UI…*". A bare `(#130)` at the end of a commit title is the issue.
+- The "user" in a user story is a person who uses the app, such as the swimrunner or the owner of a course. Never write a story for a developer, a maintainer or another stakeholder of the project, and never a story about a specification or a document (a "meta story"); that is a task, not a story. The reasoning, with sources, is in the principles chapter of the software guidebook.
+- Write a quality (performance, privacy, accessibility, portability) as a scenario with a measure, not as a vague wish; see the same chapter.
 
 ### Files and data stay inside this repository
 

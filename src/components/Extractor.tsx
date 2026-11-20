@@ -8,6 +8,7 @@ import { fetchWater, type WaterBody } from "../client/water.ts";
 import { haversineDistance } from "../shared/distance-calculator.ts";
 import type { GPXData, StrategyName, Trackpoint } from "../shared/types.ts";
 import CourseMap from "./CourseMap.tsx";
+import LegsBar from "./LegsBar.tsx";
 import SampleMenu from "./SampleMenu.tsx";
 import Toggle from "./Toggle.tsx";
 import SegmentTable from "./SegmentTable.tsx";
@@ -291,19 +292,22 @@ export default function Extractor({ base }: { base: string }) {
       <p id="message" role="alert" className="mt-2 text-sm font-medium text-red-700">{message}</p>
     </section>
     <div className="grid grid-cols-1 gap-4 lg:grid-cols-5">
-      <CourseMap points={points} segments={visible} water={course?.water ?? EMPTY_WATER} active={active}
-        preview={setHovered} select={number => {
-          select(number);
-          results.current?.querySelectorAll<HTMLTableRowElement>("[data-segment-numbers]").forEach(row => {
-            if (row.dataset.segmentNumbers?.split(",").includes(String(number))) row.scrollIntoView({ block: "nearest", inline: "nearest" });
-          });
-        }} />
+      <div className="min-w-0 lg:col-span-3">
+        <CourseMap points={points} segments={visible} water={course?.water ?? EMPTY_WATER} active={active}
+          preview={setHovered} select={number => {
+            select(number);
+            results.current?.querySelectorAll<HTMLTableRowElement>("[data-segment-numbers]").forEach(row => {
+              if (row.dataset.segmentNumbers?.split(",").includes(String(number))) row.scrollIntoView({ block: "nearest", inline: "nearest" });
+            });
+          }} />
+        <LegsBar segments={visible} points={points} active={active} selected={selected} select={select} preview={setHovered} />
+      </div>
       <div id="results" ref={results} className="overflow-y-auto rounded-lg border border-stone-200 border-t-4 border-t-stone-950 bg-white shadow-sm lg:col-span-2 lg:max-h-[75vh]">
         <div className="flex flex-wrap gap-x-6 gap-y-2 border-b border-stone-100 px-3 py-2">
           <Toggle id="include-breaks" label="Show breaks" checked={includeBreaks} onChange={checked => { setIncludeBreaks(checked); presentationChange(); }} />
           <fieldset className="flex items-center gap-4 text-sm text-stone-700"><legend className="sr-only">Order of the table</legend>
-            <label className="flex cursor-pointer items-center gap-1"><input id="run-first" type="radio" name="table-order" checked={!swimFirst} onChange={() => { setSwimFirst(false); presentationChange(); }} /> Show run first</label>
-            <label className="flex cursor-pointer items-center gap-1"><input id="swim-first" type="radio" name="table-order" checked={swimFirst} onChange={() => { setSwimFirst(true); presentationChange(); }} /> Show swim first</label>
+            <label className="flex cursor-pointer items-center gap-1"><input id="run-first" type="radio" name="table-order" checked={!swimFirst} onChange={() => { setSwimFirst(false); presentationChange(); }} /> Run first</label>
+            <label className="flex cursor-pointer items-center gap-1"><input id="swim-first" type="radio" name="table-order" checked={swimFirst} onChange={() => { setSwimFirst(true); presentationChange(); }} /> Swim first</label>
           </fieldset>
           <Toggle id="show-cumulative" label="Show total so far" checked={showCumulative} onChange={checked => { setShowCumulative(checked); presentationChange(); }} />
         </div>
