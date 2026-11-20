@@ -11,6 +11,7 @@ export const en: ChatStrings = {
   loadFailed: "ROARRS could not load its questions. Reload the page to try again.",
   error: "Sorry, something went wrong. Please try again.",
 switchToChrome: "Free questions need Chrome on a desktop computer (Gemini Nano). Switch to Chrome to use them.",
+  freeQuestionsOnTraining: "Free questions only work on the Training page, in Chrome on a desktop computer. Here you can only choose one of the suggested questions.",
   youAreOn: "You are on",
   guide: {
     question: "What can I do in this TigerLegs web app?",

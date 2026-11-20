@@ -11,7 +11,8 @@ export const nl: ChatStrings = {
   loadFailed: "ROARRS kon zijn vragen niet laden. Herlaad de pagina om het opnieuw te proberen.",
   error: "Sorry, er ging iets mis. Probeer het opnieuw.",
 switchToChrome: "Vrije vragen werken alleen in Chrome op een desktopcomputer (Gemini Nano). Schakel over naar Chrome om ze te gebruiken.",
-useSupportedLanguage: "Gemini Nano begrijpt geen Nederlands. Gebruik Engels, Frans of Duits voor vrije vragen, of kies een van de vaste opties.",
+useSupportedLanguage: "Gemini Nano begrijpt geen Nederlands. Stel je vraag in het Engels, dan krijg je ook een Engels antwoord, of kies een van de vaste opties.",
+  freeQuestionsOnTraining: "Vrije vragen werken alleen op de Training-pagina, in Chrome op een desktopcomputer en in het Engels, Frans of Duits. Hier kun je alleen een van de voorgestelde vragen kiezen.",
   youAreOn: "Je bent op",
   guide: {
     question: "Wat kan ik doen in deze TigerLegs-webapp?",

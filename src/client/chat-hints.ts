@@ -22,11 +22,10 @@ export function freeformHint(lang: Lang, chrome: boolean): string | undefined {
 }
 
 /**
- * What replaces the fallback of the FAQ chat when a free question is asked. The FAQ has no model yet, so for a
- * language that Gemini Nano accepts there is no hint, whatever the browser, and the fallback of the FAQ says that
- * there is no model; for the other languages the hint says why free questions cannot work. The training chat is
- * different: it does use the model, so there the browser matters (`freeformHint`).
+ * What replaces the fallback of the FAQ chat when a free question is asked. Only the training chat has a model,
+ * so on every other page the answer is the same in every browser and language: free questions go to the
+ * Training page, and here only the suggested questions work.
  */
-export function faqFreeformHint(lang: Lang, userAgent?: string): string | undefined {
-  return isNanoLanguage(lang) ? undefined : freeformHint(lang, isChromeBrowser(userAgent));
+export function faqFreeformHint(lang: Lang): string {
+  return STRINGS[lang].freeQuestionsOnTraining;
 }

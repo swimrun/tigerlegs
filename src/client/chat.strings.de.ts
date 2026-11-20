@@ -11,6 +11,7 @@ export const de: ChatStrings = {
   loadFailed: "ROARRS konnte seine Fragen nicht laden. Lade die Seite neu, um es erneut zu versuchen.",
   error: "Entschuldigung, etwas ist schiefgelaufen. Bitte versuche es erneut.",
 switchToChrome: "Freie Fragen funktionieren nur in Chrome auf einem Desktop-Computer (Gemini Nano). Wechsle zu Chrome, um sie zu nutzen.",
+  freeQuestionsOnTraining: "Freie Fragen funktionieren nur auf der Training-Seite, in Chrome auf einem Desktop-Computer. Hier kannst du nur eine der vorgeschlagenen Fragen wählen.",
   youAreOn: "Du bist auf",
   guide: {
     question: "Was kann ich in dieser TigerLegs-Web-App tun?",
