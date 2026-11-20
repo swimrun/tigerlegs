@@ -34,9 +34,9 @@ The system reads a GPX file, detects the segments, computes their distances and 
 The main stakeholders are athletes, race organisers and the maintainers of this project.
 Figure 1 shows the system in its environment.
 
-*Figure 1*: System context of TigerLegs.
-
 ![System context diagram: the athlete uploads a GPX file to TigerLegs, which queries OpenStreetMap through the Overpass API.](diagrams/context.svg)
+
+*Figure 1*: System context of TigerLegs.
 
 Figure 1 shows that the system has one kind of user and two external data sources.
 The athlete never talks to OpenStreetMap directly: the backend queries it and caches the answers.
@@ -45,8 +45,6 @@ Live tracking and race results are out of scope.
 ### 1.1 Domain concepts of structured training
 
 Besides the course analysis, TigerLegs lets an athlete plan training (the training page, a prototype). Figure 2 shows the concepts of that part in the words of the athlete; section 6.6 gives them as aggregates and section 8.2 as fields.
-
-*Figure 2*: Domain concepts of structured training (planned). The diagram is the PlantUML block below.
 
 ```plantuml
 @startuml domain-concepts-training
@@ -96,6 +94,8 @@ WorkoutStep o-- "0..*" WorkoutStep : repeats
 SportsRestDay "0..6" -- "1" TrainingBlock : applies to every week
 @enduml
 ```
+
+*Figure 2*: Domain concepts of structured training (planned). The diagram is the PlantUML block below.
 
 A **session template** is what to do in a session, without a date or a status, and a **planned session** is a session template placed on a date. A session template has a **discipline** (swim, run, swimrun, strength or mobility) and a **subtype** below it: trail, road or mixed for a run; open water or pool for a swim; with weight or body mass for strength; static or dynamic for mobility.
 Its **focus** says what it is for, so *speed* is a focus and not a subtype.
@@ -169,42 +169,49 @@ The system also shows aid stations, handles files with several tracks and filter
 ### 2.2 Use cases
 
 The user stories above describe what an athlete wants; the use cases below describe the features the system offers for it.
-Table 2 lists the six use cases, who uses them and which user story and Kiro requirement each one implements.
+Figure 3 shows the use cases of TigerLegs and who uses them, and Table 2 lists them with the stories and requirements behind them.
+
+![Use case diagram: athlete and organiser with four sea-level use cases, one of which includes a fish-level use case; Overpass and Garmin Connect support two of them.](diagrams/use-cases.svg)
+
+*Figure 3*: TigerLegs use case diagram.
+
+The diagram uses the goal levels of Cockburn (2001).
+Four use cases are at sea level: one sitting, after which the user goes away satisfied.
+These are **analyse a swimrun course** (upload, map and distances together), **create paddle hieroglyphics**, **verify a designed course** (the organiser's goal) and, planned, **follow the course mid-race** on a watch ([spec 001](../specs/001-garmin-datafield/spec.md)).
+One use case is at fish level, a subfunction that a sea-level use case includes: **extract swim and run segments from a GPX file**.
+Analysing a course includes it, and so do the paddle notes and the verification, because both include the analysis.
+Overpass and Garmin Connect appear as supporting actors, which replaces the single "Uses" arrow of the context diagram with one arrow per goal.
+Use cases that are not yet built are drawn in another colour with a dashed outline.
 
 *Table 2*: Use cases and the stories and requirements behind them.
 
-| Use case                     | Actors             | User story | Requirement |
-| ---------------------------- | ------------------ | ---------- | ----------- |
-| UC-1: Upload a GPX file      | Athlete, organiser | US-1       | Req 1       |
-| UC-2: View segment distances | Athlete, organiser | US-3, US-5 | Req 3, 5    |
-| UC-3: View the course map    | Athlete            | US-4       | Req 4       |
-| UC-4: Highlight a segment    | Athlete            | US-6       | Req 6       |
-| UC-5: View aid stations      | Athlete            | US-8       | Req 8       |
-| UC-6: Select a track         | Athlete            | US-9       | Req 9       |
+| Use case                                            | Level | Actors             | User story                               | Requirement             |
+| --------------------------------------------------- | ----- | ------------------ | ---------------------------------------- | ----------------------- |
+| UC-1: Analyse a swimrun course                      | Sea   | Athlete, organiser | US-1, US-3, US-4, US-5, US-6, US-8, US-9 | Req 1, 3, 4, 5, 6, 8, 9 |
+| UC-2: Create paddle hieroglyphics                   | Sea   | Athlete            | ADR-0007                                 | none yet                |
+| UC-3: Verify a designed course                      | Sea   | Organiser          | none yet                                 | none yet                |
+| UC-4: Follow the course mid-race (planned)          | Sea   | Athlete            | none yet                                 | Spec 001                |
+| UC-5: Extract swim and run segments from a GPX file | Fish  | (included by UC-1) | US-2                                     | Req 2                   |
 
-Use cases UC-2 and UC-3 include UC-1, because both need an uploaded file.
-UC-4, UC-5 and UC-6 extend the use case they build on: highlighting and aid stations extend the map, and track selection extends the upload.
+UC-1 holds the features that the Kiro specs number as separate stories: uploading a file (US-1), the segment distances (US-3, US-5), the map (US-4), highlighting a segment (US-6), aid stations (US-8) and the choice of a track in a file with several tracks (US-9).
+Highlighting and aid stations extend the map, and track selection extends the upload.
+UC-2 and UC-3 include UC-1.
 
-In Cockburn's goal levels these six sit below sea level: uploading a file is a subfunction (fish level), and the others are features inside one larger goal (Cockburn, 2001).
-The sea-level goals — one sitting, after which the user goes away satisfied — are: **analyse a swimrun course** (upload, map and distances together), **prepare paddle race notes** ([ADR-0007](./adr/0007-compact-segment-table-format.md)), **verify a designed course** (the organiser's goal) and, planned, **follow the course mid-race** on a watch ([spec 001](../specs/001-garmin-datafield/spec.md)).
-Figure 3 shows these sea-level use cases with their actors; Overpass and Garmin Connect appear as supporting actors, which replaces the single "Uses" arrow of the context diagram with one arrow per goal.
-
-*Figure 3*: Sea-level use case diagram.
-
-![Use case diagram: athlete and organiser with four sea-level goals; Overpass and Garmin Connect support two of them.](diagrams/use-cases.svg)
+**Create paddle hieroglyphics.** Swimrunners write the legs and their distances on their swim paddle, as in Figure 6, and in the podcast episode *Swimrun 201: Swim Paddle Hieroglyphics* the hosts of the Low Tide Boyz explain why you should (Low Tide Boyz, n.d.).
+The compact table of [ADR-0007](./adr/0007-compact-segment-table-format.md) has one row per run and swim pair for this reason.
 
 Figures 3 and 4 give a system sequence diagram for the two central goals, following Larman (2005): the system stays a black box and only the system events of the main success scenario appear, so these diagrams belong here with the requirements.
 Design-level interaction diagrams, which open the black box, belong in chapter 7 once the components they show exist.
 
-*Figure 4*: System sequence diagram of *Analyse a swimrun course*.
-
 ![System sequence diagram: the athlete uploads a course, optionally enables terrain which queries Overpass, and selects a segment.](diagrams/ssd-analyse-course.svg)
 
-*Figure 5*: System sequence diagram of *Follow the course mid-race* (planned).
+*Figure 4*: System sequence diagram of *Analyse a swimrun course*.
 
 ![System sequence diagram: the athlete exports the course, loads it through Garmin Connect onto the watch, and reads leg progress every GPS fix.](diagrams/ssd-follow-course.svg)
+
+*Figure 5*: System sequence diagram of *Follow the course mid-race* (planned).
 The Kiro specs number these stories and requirements.
-Two further stories, US-2 (waypoint classification) and US-7 (GPX round-trip integrity), are internal processing steps that no user starts, so they are not use cases.
+US-2 (waypoint classification) and US-7 (GPX round-trip integrity) are internal processing steps that no user starts: US-2 is part of UC-5, and US-7 is a quality of the file handling rather than a use case.
 Accessibility (Req 10) and performance (Req 11) are quality attributes and apply to all use cases; chapter 3 covers them.
 
 ### 2.3 Example course: Vertical SwimRunMan Laffrey 2026
@@ -250,9 +257,9 @@ Table 4 shows the same course in that form, with the swim first.
 A course that starts with a run would show the run first by default, and a toggle would swap the order.
 Figure 6 shows the paddles that the organisers published for this course.
 
-*Figure 6*: Swimrun paddles with the segment distances of the Laffrey course.
+![Swimrun paddles with segment distances](../assets/swimrun-paddles-laffrey-vertical-2026.png#small)
 
-![Swimrun paddles with segment distances](../assets/swimrun-paddles-laffrey-vertical-2026.png)
+*Figure 6*: Swimrun paddles with the segment distances of the Laffrey course.
 
 ## 3. Quality attributes
 
@@ -367,9 +374,9 @@ This chapter shows the structure of the system in three levels: containers (6.1)
 
 Figure 7 shows the two containers and how they communicate.
 
-*Figure 7*: C4 container diagram.
-
 ![Container diagram: the browser app talks to the Node.js backend, which uses a disk cache and the Overpass API.](diagrams/container.svg)
+
+*Figure 7*: C4 container diagram.
 
 The browser app does the analysis and draws the map. Astro generates static HTML during the build; React owns the interactive extractor. GitHub Pages serves the resulting assets without a runtime application backend. The current Pages app requests terrain directly from Overpass only after opt-in.
 
@@ -386,9 +393,9 @@ A separate guidebook or a system landscape diagram becomes worthwhile only if a 
 Figure 8 shows the components of the browser app and how they depend on each other.
 Table 6 lists each component and the file that holds it.
 
-*Figure 8*: C4 component diagram of the browser app.
-
 ![Component diagram of the browser app: the UI uses the parser, the analysis and the segment builder; the analysis runs three strategies and the combiner.](diagrams/component.svg)
+
+*Figure 8*: C4 component diagram of the browser app.
 
 *Table 6*: Components of the browser app.
 
@@ -411,8 +418,6 @@ The combiner leaves `distanceKm` at 0; the analysis component fills it in.
 
 Figure 9 shows the main domain types, which `src/shared/types.ts` defines.
 
-*Figure 9*: Domain model.
-
 ```mermaid
 classDiagram
     GPXData "1" o-- "*" Waypoint
@@ -425,6 +430,8 @@ classDiagram
     DisplaySegmentPair "1" o-- "0..2" Segment
 ```
 
+*Figure 9*: Domain model.
+
 A GPX file holds tracks and waypoints, and a track holds trackpoints.
 A strategy reads the file and produces segments, each covering consecutive trackpoints and labelled swim, run or unclassified.
 A `DisplaySegmentPair` groups a run and a swim for the compact table.
@@ -434,8 +441,6 @@ Appendix A defines each term.
 ### 6.4 Chat domain model
 
 Figure 10 shows the concepts of the prototype chatbot, separate from the course model above.
-
-*Figure 10*: Chat domain model.
 
 ```mermaid
 classDiagram
@@ -453,14 +458,14 @@ classDiagram
     LlmAgent ..> DynamicAnswer : produces
 ```
 
+*Figure 10*: Chat domain model.
+
 A *question* is a clickable label or free text. The FAQ catalog holds one question per label, each with a static answer: a brief answer, and optionally *more*, which the user asks for with the *Tell me more* follow-up.
 There is one catalog per language. Free text gets the fallback today, and a dynamic answer from an LLM agent later. Both agent kinds sit behind the `ChatAgent` interface.
 
 ### 6.5 Terrain data paths
 
 Figure 11 shows where the water data comes from and how the optional back end and the planned premium service fit in.
-
-*Figure 11*: Terrain data paths: browser, optional back end and Overpass. The diagram is the PlantUML block below (C4-PlantUML); the Markdown preview, the site and `deno task diagrams` all draw it from that text.
 
 ```plantuml
 @startuml overpass-architecture
@@ -502,6 +507,8 @@ SHOW_LEGEND()
 @enduml
 ```
 
+*Figure 11*: Terrain data paths: browser, optional back end and Overpass. The diagram is the PlantUML block below (C4-PlantUML); the Markdown preview, the site and `deno task diagrams` all draw it from that text.
+
 The free path needs no back end: the browser asks a public Overpass server for the water around the track, retries a busy server with exponential backoff, tries the next mirror, and keeps the answer in an area cache for a week.
 The query area is a coarse bounding box, so the request reveals the neighbourhood of the track and not the track itself.
 The back end is optional ([ADR-0013](./adr/0013-back-end-is-optional.md)); the planned premium service adds our own Overpass server behind it, with a quality of service the public servers cannot give (roadmap M12).
@@ -513,8 +520,6 @@ Overpass speaks plain HTTP with a query in Overpass QL, so the front end and bac
 Nothing in this section exists in code yet: the prototype keeps every file and plan in the browser, and the back end is optional ([ADR-0013](./adr/0013-back-end-is-optional.md)).
 It records the concepts the back end will store, so that the extractor page, the training page and the data layer ([ADR-0016](./adr/0016-data-access-layer.md)) are built on the same words.
 Figure 12 shows the concepts grouped into aggregates (section 7.6); a dashed arrow between two aggregates is a reference by id, never a contained object.
-
-*Figure 12*: Stored domain model: aggregates and the references between them (planned). The diagram is the PlantUML block below.
 
 ```plantuml
 @startuml domain-model-stored
@@ -666,6 +671,8 @@ GoalEvent ..> Course : by id (optional)
 PlannedSession ..> TrainingPlan : belongs to, by id
 @enduml
 ```
+
+*Figure 12*: Stored domain model: aggregates and the references between them (planned). The diagram is the PlantUML block below.
 
 The words, as the extractor and training pages need them:
 
@@ -991,8 +998,6 @@ Entities have an id and a version for optimistic concurrency ([ADR-0016](./adr/0
 The model is implemented in `src/shared/domain/`, in plain TypeScript with no framework, so that the browser and the back end share it: `course/` and `recording/` hold the two aggregates, `geometry.ts` the line and trace values, `course-from-recording.ts` the domain service, `repositories.ts` the interfaces and `in-memory-repositories.ts` test doubles with the version check. Two details differ from the diagram: a leg is a swim or a run (`LegKind`; only a recorded segment can be unclassified), and the repositories are asynchronous and `save` returns nothing, so after a save the aggregate in hand is stale and is reloaded before the next change. The existing types of `src/shared/types.ts` carry over: `Coordinate` and `Trackpoint` become `LinePoint` and `TracePoint`, `Segment` becomes `RecordedSegment` and `StrategyName` stays.
 `Leg`, the version and the ids are new.
 
-*Figure 13*: Design class diagram of the Course and Recording aggregates (planned). The diagram is the PlantUML block below.
-
 ```plantuml
 @startuml dcd-course-recording
 title Design class diagram: Course and Recording aggregates (planned)
@@ -1159,6 +1164,8 @@ end note
 @enduml
 ```
 
+*Figure 13*: Design class diagram of the Course and Recording aggregates (planned). The diagram is the PlantUML block below.
+
 The save of a repository throws a conflict error when the version of the aggregate is stale (first commit wins, section 7.6), and one use case changes one aggregate and saves it once.
 `RecordingRepository.erase` removes all recordings of an athlete, which is part of the erasure use case (section 6.6).
 The importers and exporters are not in this diagram: an `ActivityImporter` returns a `Recording` from a file, and a `WorkoutExporter` (later) turns a planned session into a file.
@@ -1200,6 +1207,19 @@ The tests cover the manifest, the icons, the links in the head, the button with 
 
 `/pricing.html` says that TigerLegs is under development, that testers are wanted and that everything is free for now, that segment extraction (loading a GPX file and getting its swim and run segments, distances, map and table) is always free, and why membership exists: tigers are considered globally Endangered under the IUCN Red List (Panthera, 2025), and a project that is completely free and unsubsidised is also at risk of quick extinction. A table shows the tiers Free, Silver, Gold and Platinum with segment extraction, the map and table and terrain data for everyone, and as paid-only features, marked planned, the Garmin watch integration, the course of the World Champs in Stockholm and energy station planning.
 The page is labelled as a prototype: nothing can be bought, no prices are set and the split over the tiers is a draft (issue #111). The texts are data, one JSON file per language in `src/data/`, and the page renders each language in its own block, as the About page does; every table cell says in words whether a feature is included. The page follows the APA rule of the guidebook: the citation stands right after the sentence it supports, and the reference is at the end of the page.
+
+The table shows a green check for what a tier includes and a red cross for what it does not, a limit in words where the number differs (energy station planning: at most 2, 5 and 10 courses, unlimited for Platinum), and the draft price per tier (€0, €5, €10 and €25; month or year is not decided). Hosting a profile (planned) is in the free tier. The page also explains the hosting costs of a future back end, and pledges part of the contributions for paid features to tiger conservation through the IUCN, quoting the Green Status assessment of the tiger: "there could be over 25,000 tigers living in the wild—over five times the current global population" (Panthera, 2025).
+
+The chat is contextual: the layout puts the key of the page and the name of its FAQ on `<body>`, and the chat loads `public/chat/faq-<name>.<language>.json` for the Pricing and About pages (the general FAQ elsewhere). On every page the chat shows the name of the current page and a first chip, "What can I do in this TigerLegs web app?", whose answer links to the other pages (`src/client/chat-guide.ts`).
+
+### 7.11 Front end: the search box
+
+The header has a search box that searches the text of the pages ([ADR-0022](./adr/0022-guidebook-search-and-optional-embeddings.md)).
+`npm run build` ends with `npm run build:search`, which runs Pagefind over `dist/` and writes the index to `dist/pagefind/`; only the content of the page (`data-pagefind-body` in the layout) is indexed, not the menu or the chat.
+The box (`src/components/SiteSearch.tsx`, `src/client/site-search.ts`) loads the index on the first keystroke and shows at most six hits.
+In development there is no index, and the box says so.
+Our pages hold all four languages in one file, so a search also finds text in the other languages; separating them is open.
+The chat that answers from these sections, and the optional embeddings, are not built yet.
 
 ## 8. Data
 
@@ -1370,6 +1390,7 @@ Table 12 lists the ADRs and what each decides.
 | [0019](./adr/0019-agentic-ui-with-ag-ui-and-a2ui.md)                      | Draft: AG-UI as the transport for the chat and tool calls, A2UI as the candidate for declarative interfaces, with a catalog of our own components                                                                                |
 | [0020](./adr/0020-sandbox-for-local-ai-coding-agents.md)                  | Draft: isolated local development with an AI coding agent: a `sandbox-exec` allow-list for now, nono as the candidate to replace it, microsandbox and a separate macOS user considered                                           |
 | [0021](./adr/0021-installable-app-pwa.md)                                 | Proposed: the site is installable as an app with a manifest, icons and an install button in the footer; no service worker, so no offline use yet                                                                                 |
+| [0022](./adr/0022-guidebook-search-and-optional-embeddings.md)            | Proposed: Pagefind keyword search for the site and the guidebook chat first; embeddings (self-hosted MiniLM, 23 MB) only after the visitor opts in                                                                               |
 
 ADR-0008 implements a shared Astro layout and directly linkable HTML pages, with the interactive extractor implemented in React and no runtime backend. Astro itself is not React-based; it supplies static page composition around the React application. Existing TypeScript analysis modules remain reusable. All ADRs are built into HTML pages and linked from this chapter. The ADR includes a provisional weighted comparison of the previous Deno-only site build, Astro, Next.js static export, Vite + React SPA and Eleventy, following the [ICT Research Methods multi-criteria decision making method](https://ictresearchmethods.nl/workshop/multi-criteria-decision-making/).
 
@@ -1398,6 +1419,7 @@ ADR-0008 implements a shared Astro layout and directly linkable HTML pages, with
 - ICT Research Methods. (n.d.). *Multi-criteria decision making*. Retrieved November 10, 2026, from https://ictresearchmethods.nl/workshop/multi-criteria-decision-making/
 - Knuth, D. E. (1984). Literate programming. *The Computer Journal, 27*(2), 97–111. https://doi.org/10.1093/comjnl/27.2.97
 - Larman, C. (2005). *Applying UML and patterns: An introduction to object-oriented analysis and design and iterative development* (3rd ed.). Prentice Hall.
+- Low Tide Boyz. (n.d.). *Swimrun 201: Swim Paddle Hieroglyphics* [Audio podcast episode 106]. In *Low Tide Boyz, a swimrun podcast*. https://lowtideboyz.com/podcast/swimrun-201-swim-paddle-hieroglyphics
 - MDN Contributors. (n.d.-a). *Making PWAs installable*. MDN Web Docs. Retrieved November 16, 2026, from https://developer.mozilla.org/en-US/docs/Web/Progressive_web_apps/Guides/Making_PWAs_installable
 - MDN Contributors. (n.d.-b). *How to define app icons*. MDN Web Docs. Retrieved November 16, 2026, from https://developer.mozilla.org/en-US/docs/Web/Progressive_web_apps/How_to/Define_app_icons
 - MDN Contributors. (n.d.-c). *display-mode*. MDN Web Docs. Retrieved November 16, 2026, from https://developer.mozilla.org/en-US/docs/Web/CSS/@media/display-mode

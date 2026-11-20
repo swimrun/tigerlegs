@@ -1,6 +1,10 @@
 @startuml use-cases
 left to right direction
-title Sea-level use cases of TigerLegs
+title TigerLegs use case diagram
+skinparam usecase {
+  BackgroundColor #FFFFFF
+  BorderColor #1c1917
+}
 
 actor Athlete as athlete
 actor Organiser as organiser
@@ -8,21 +12,28 @@ actor "Overpass API\n(OpenStreetMap)" as overpass << external >>
 actor "Garmin Connect" as garmin << external >>
 
 rectangle TigerLegs {
-  usecase "Analyse a\nswimrun course" as UCA
-  usecase "Prepare paddle\nrace notes" as UCB
-  usecase "Verify a\ndesigned course" as UCC
-  usecase "Follow the course\nmid-race (planned)" as UCD #line.dashed
+  usecase "UC-1\nAnalyse a\nswimrun course" as UC1
+  usecase "UC-2\nCreate paddle\nhieroglyphics" as UC2
+  usecase "UC-3\nVerify a\ndesigned course" as UC3
+  usecase "UC-4\nFollow the course\nmid-race (planned)" as UC4 #FEF3C7;line.dashed
+  usecase "UC-5\nExtract swim & run\nsegments from a GPX file\n(fish level)" as UC5 #E0F2FE
 }
 
-athlete --> UCA
-athlete --> UCB
-athlete --> UCD
-organiser --> UCA
-organiser --> UCC
+athlete --> UC1
+athlete --> UC2
+athlete --> UC4
+organiser --> UC1
+organiser --> UC3
 
-UCB .> UCA : <<include>>
-UCC .> UCA : <<include>>
+UC1 .> UC5 : <<include>>
+UC2 .> UC1 : <<include>>
+UC3 .> UC1 : <<include>>
 
-UCA --> overpass : terrain lookup\n(optional)
-UCD --> garmin : course sync\n(planned)
+UC1 --> overpass : terrain lookup\n(optional)
+UC4 --> garmin : course sync\n(planned)
+
+legend right
+  Sea level: white. Fish level: blue.
+  Planned, not built yet: yellow with a dashed outline.
+endlegend
 @enduml

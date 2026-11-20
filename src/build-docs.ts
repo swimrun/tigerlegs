@@ -29,13 +29,18 @@ export function renderDocument(source: string, base = "", isAdr = false): string
   };
 
   const defaultImage = renderer.image.bind(renderer);
-  renderer.image = (token) =>
-    defaultImage({
+  // A "#small" at the end of an image address marks a picture that is shown smaller; GitHub ignores the fragment.
+  renderer.image = (token) => {
+    const small = token.href.endsWith("#small");
+    const href = small ? token.href.slice(0, -"#small".length) : token.href;
+    const html = defaultImage({
       ...token,
-      href: /^(https?:|data:)/.test(token.href) ? token.href :
-        root + token.href.replace(/^\.\.\/public\//, "")
+      href: /^(https?:|data:)/.test(href) ? href :
+        root + href.replace(/^\.\.\/public\//, "")
           .replace(/^\.\.\/assets\//, "img/"),
     });
+    return small ? html.replace("<img ", '<img class="small" ') : html;
+  };
 
   const headingIds = new Map<string, number>();
   const usedHeadingIds = new Set<string>();

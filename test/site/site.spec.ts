@@ -457,3 +457,53 @@ test("the title of the chat window is the name above a smaller expansion: two li
   await page.setViewportSize({ width: 390, height: 700 });
   expect(await lines(expansion), "the expansion is at most two lines on a phone").toBeLessThan(2.5);
 });
+
+test("the chat offers the questions of the page it is on, also after a soft navigation", async ({ page }) => {
+  await page.goto("about.html");
+  await page.getByRole("button", { name: /ROARRS|RoARR/ }).first().click();
+  await expect(page.getByRole("button", { name: "Can I install TigerLegs as an app?" })).toBeVisible();
+  await page.locator("#main-menu").getByRole("link", { name: "Pricing" }).click();
+  await expect(page.getByRole("button", { name: "Is TigerLegs free?" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Can I install TigerLegs as an app?" })).toHaveCount(0);
+});
+
+test("every page has the chip 'What can I do in this TigerLegs web app?' and its answer links to the other pages", async ({ page }) => {
+  for (const [path, current] of [["", "Extractorrr"], ["training.html", "Training"], ["pricing.html", "Pricing"], ["about.html", "About"], ["guidebook.html", "Guidebook"]]) {
+    await page.goto(path || "./");
+    await page.getByRole("button", { name: ROARRS }).first().click();
+    await expect(page.locator("[data-chat-page-name]")).toContainText(current);
+    await page.getByRole("button", { name: "What can I do in this TigerLegs web app?" }).click();
+    const links = page.locator("[data-chat-link]");
+    await expect(links).toHaveCount(4);
+    await expect(links.filter({ hasText: current })).toHaveCount(0);
+  }
+  await page.goto("pricing.html");
+  await page.getByRole("button", { name: ROARRS }).first().click();
+  await page.getByRole("button", { name: "What can I do in this TigerLegs web app?" }).click();
+  await page.locator("[data-chat-link]", { hasText: "About" }).click();
+  await expect(page).toHaveURL(/about\.html$/);
+});
+
+test("the Guidebook chat offers questions about the software", async ({ page }) => {
+  await page.goto("guidebook.html");
+  await page.getByRole("button", { name: ROARRS }).first().click();
+  await expect(page.getByRole("button", { name: "Can I contribute?" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "How do I run the tests?" })).toBeVisible();
+  await page.getByRole("button", { name: "Can I contribute?" }).click();
+  await expect(page.getByRole("log")).toContainText("SwimRun huiskamer");
+});
+
+test("the search box finds a word in the guidebook and opens the page", async ({ page }) => {
+  await page.goto("./");
+  await page.getByRole("searchbox", { name: "Search the site" }).fill("hieroglyphics");
+  const results = page.locator("[data-search-results]");
+  await expect(results.getByRole("link", { name: /guidebook/i }).first()).toBeVisible();
+  await results.getByRole("link", { name: /guidebook/i }).first().click();
+  await expect(page).toHaveURL(/guidebook\.html/);
+});
+
+test("the search box says so when nothing matches", async ({ page }) => {
+  await page.goto("pricing.html");
+  await page.getByRole("searchbox", { name: "Search the site" }).fill("qqqzzzxxx");
+  await expect(page.locator("[data-search-results]")).toContainText("No results.");
+});

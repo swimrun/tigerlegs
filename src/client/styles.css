@@ -105,6 +105,9 @@
   .guidebook img {
     @apply h-auto max-w-full rounded-lg;
   }
+  .guidebook img.small {
+    @apply max-w-xs;
+  }
   .guidebook blockquote {
     @apply border-l-4 border-amber-500 pl-4 text-stone-600;
   }
