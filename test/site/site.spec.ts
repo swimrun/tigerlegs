@@ -507,3 +507,13 @@ test("the search box says so when nothing matches", async ({ page }) => {
   await page.getByRole("searchbox", { name: "Search the site" }).fill("qqqzzzxxx");
   await expect(page.locator("[data-search-results]")).toContainText("No results.");
 });
+
+test("commands in a chat answer are shown as code", async ({ page }) => {
+  await page.goto("guidebook.html");
+  await page.getByRole("button", { name: ROARRS }).first().click();
+  await page.getByRole("button", { name: "How do I run the tests?" }).click();
+  const log = page.getByRole("log");
+  await expect(log.locator("code", { hasText: /^npm test$/ }).first()).toBeVisible();
+  await expect(log).not.toContainText("`");
+  expect(await log.locator("code").first().evaluate((element) => getComputedStyle(element).fontFamily)).toMatch(/mono/i);
+});

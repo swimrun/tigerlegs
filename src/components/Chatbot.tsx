@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "reac
 import { type ChatAgent, type ChatLink, type ChatSuggestion, createFaqAgent, type UiActions } from "../client/chat-agent.ts";
 import { getPageChat, subscribePageChat } from "../client/chat-store.ts";
 import { faqFreeformHint } from "../client/chat-hints.ts";
+import { type Inline, parseInline } from "../client/chat-markdown.ts";
 import { splitChatTitle } from "../client/chat-title.ts";
 import type { Lang } from "../client/language.ts";
 import { type ChatStrings, STRINGS } from "../client/chat.strings.ts";
@@ -26,8 +27,31 @@ const bubble = "w-fit max-w-[85%] rounded px-3 py-2 text-sm";
 /**
  * A chat message as text, with two line conventions an agent can use: "# Heading" is a bold heading and
  * consecutive "- item" lines are a bulleted list. Every other line is a paragraph; a message without
- * either convention renders as the single paragraph it always was.
+ * either convention renders as the single paragraph it always was. Inside a line, `code`, **bold**, *italic* and
+ * [links](address) are rendered (chat-markdown.ts); nothing else is.
  */
+/** The pieces of one line as elements. Text is escaped by React, so no message can add markup of its own. */
+function InlineText({ text }: { text: string }) {
+  return (
+    <>
+      {parseInline(text).map((piece: Inline, index) => {
+        switch (piece.kind) {
+          case "code":
+            return <code key={index} className="rounded bg-stone-200 px-1 py-0.5 font-mono text-[0.85em]">{piece.text}</code>;
+          case "strong":
+            return <strong key={index}>{piece.text}</strong>;
+          case "em":
+            return <em key={index}>{piece.text}</em>;
+          case "link":
+            return <a key={index} href={piece.href} className="underline">{piece.text}</a>;
+          default:
+            return piece.text;
+        }
+      })}
+    </>
+  );
+}
+
 export function ChatText({ text, className }: { text: string; className: string }) {
   const blocks: ({ kind: "p" | "h"; text: string } | { kind: "ul"; items: string[] })[] = [];
   for (const line of text.split("\n")) {
@@ -41,13 +65,13 @@ export function ChatText({ text, className }: { text: string; className: string 
       blocks.push({ kind: "p", text: line });
     }
   }
-  if (blocks.length === 1 && blocks[0].kind === "p") return <p className={className}>{text}</p>;
+  if (blocks.length === 1 && blocks[0].kind === "p") return <p className={className}><InlineText text={text} /></p>;
   return (
     <div className={`${className} space-y-1`}>
       {blocks.map((block, index) =>
         block.kind === "ul"
-          ? <ul key={index} className="list-disc space-y-1 pl-5">{block.items.map((item, at) => <li key={at}>{item}</li>)}</ul>
-          : <p key={index} className={block.kind === "h" ? "font-semibold" : undefined}>{block.text}</p>
+          ? <ul key={index} className="list-disc space-y-1 pl-5">{block.items.map((item, at) => <li key={at}><InlineText text={item} /></li>)}</ul>
+          : <p key={index} className={block.kind === "h" ? "font-semibold" : undefined}><InlineText text={block.text} /></p>
       )}
     </div>
   );
