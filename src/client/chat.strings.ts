@@ -1,3 +1,4 @@
+import type { GuideTexts } from "./chat-guide.ts";
 import type { Lang } from "./language.ts";
 import { de } from "./chat.strings.de.ts";
 import { en } from "./chat.strings.en.ts";
@@ -17,6 +18,12 @@ export interface ChatStrings {
   error: string;
   /** Shown when the browser is not Chrome on a desktop computer. */
   switchToChrome: string;
+  /** The reply to a free question in the chat of every page except Training, which has the model. */
+  freeQuestionsOnTraining: string;
+  /** Before the name of the page you are on. */
+  youAreOn: string;
+  /** The chip on every page that tells what the web app can do, and where. */
+  guide: GuideTexts;
   /** Only for languages Gemini Nano does not support. */
   useSupportedLanguage?: string;
 }

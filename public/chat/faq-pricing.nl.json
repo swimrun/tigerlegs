@@ -1,0 +1,14 @@
+{
+  "language": "nl",
+  "tellMore": "Vertel me meer",
+  "fallback": "Er is nog geen echte LLM-koppeling. Gebruik voorlopig de vragen over de prijzen.",
+  "entries": [
+    { "id": "is-it-free", "question": "Is TigerLegs gratis?", "answer": "Ja. TigerLegs is in ontwikkeling, we zoeken testers, en voorlopig is alles volledig gratis." },
+    { "id": "extraction-free", "question": "Blijft het ophalen van segmenten gratis?", "answer": "Ja. Een GPX-bestand laden en de zwem- en loopsegmenten ervan krijgen, met afstanden, op een kaart en in een tabel, blijft altijd gratis." },
+    { "id": "prices", "question": "Wat gaan Silver, Gold en Platinum kosten?", "answer": "De conceptprijzen zijn €5 voor Silver, €10 voor Gold en €25 voor Platinum. Of dat per maand of per jaar is, is nog niet besloten, en er is nog niets te koop." },
+    { "id": "why-membership", "question": "Waarom is er eigenlijk een lidmaatschap?", "answer": "Nu kost TigerLegs bijna niets om te draaien. Zodra we een back-end bouwen die ook profielen host, betalen we voor servers, opslag en back-ups, en het lidmaatschap dekt die kosten." },
+    { "id": "profile-free", "question": "Kost het hosten van mijn profiel geld?", "answer": "Nee. Je profiel laten hosten is een geplande functie en blijft in het gratis niveau." },
+    { "id": "energy-limits", "question": "Voor hoeveel parcoursen kan ik verzorgingsposten plannen?", "answer": "In het concept: gratis maximaal 2 parcoursen of wedstrijden, 5 bij Silver, 10 bij Gold en onbeperkt bij Platinum." },
+    { "id": "garmin-tier", "question": "Heb ik een lidmaatschap nodig voor het Garmin-horloge?", "answer": "In het concept hoort de koppeling met het Garmin-horloge bij Silver, Gold en Platinum. Het is een geplande functie, dus er is nog niets besloten." }
+  ]
+}

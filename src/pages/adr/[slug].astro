@@ -14,7 +14,7 @@ const { source } = Astro.props;
 const title = source.split("\n")[0].replace(/^#\s*/, "");
 const base = import.meta.env.BASE_URL.replace(/\/?$/, "/");
 ---
-<SiteLayout title={`${title} — TigerLegs ADR`} description="TigerLegs architecture decision record." active="guidebook">
+<SiteLayout title={`${title} — TigerLegs ADR`} description="TigerLegs architecture decision record." active="guidebook" chatFaq="guidebook">
   <main class="guidebook">
     <a href={`${base}guidebook.html#13-decision-log`}>Back to the software guidebook</a>
     <Fragment set:html={renderDocument(source, base, true)} />

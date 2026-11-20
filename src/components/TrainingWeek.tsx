@@ -6,6 +6,7 @@ import {
   type Day,
   DAYS,
   DEFAULT_LEVERS,
+  DEFAULT_REST_DAYS,
   generateWeek,
   LEVER_LIMITS,
   type PlanLevers,
@@ -68,10 +69,10 @@ export default function TrainingWeek({ languageModel }: Props) {
   const [week, setWeek] = useState<readonly TrainingSession[]>(PROTOTYPE_WEEK);
   const [confirmed, setConfirmed] = useState(false);
   // Fixed rest days: days on which no session may be planned (a plan lever, spec 003).
-  const [restDays, setRestDays] = useState<readonly Day[]>([]);
+  const [restDays, setRestDays] = useState<readonly Day[]>(DEFAULT_REST_DAYS);
   // The picker's labels exist only while it is open: text in a closed <details> is not rendered, which Astro's audit reads as an empty label.
   const [restPickerOpen, setRestPickerOpen] = useState(false);
-  const [baselineRest, setBaselineRest] = useState<readonly Day[]>([]);
+  const [baselineRest, setBaselineRest] = useState<readonly Day[]>(DEFAULT_REST_DAYS);
   // What a reset replaced, so that it can be undone until something else changes.
   const [undo, setUndo] = useState<
     { kind: "reset" | "generate"; week: readonly TrainingSession[]; baseline: readonly TrainingSession[]; restDays: readonly Day[]; baselineRest: readonly Day[] } | null
@@ -109,11 +110,8 @@ export default function TrainingWeek({ languageModel }: Props) {
   const [draggingId, setDraggingId] = useState<string | null>(null);
   const [overDay, setOverDay] = useState<Day | null>(null);
   const moveSession = (id: string, toDay: Day) => {
-    if (restDays.includes(toDay)) {
-      setNotice(t.restDayBlocked(t.days[toDay]));
-      return;
-    }
-    setNotice("");
+    // A move onto a sports rest day is allowed; the athlete is only warned.
+    setNotice(restDays.includes(toDay) ? t.restDayWarning(t.days[toDay]) : "");
     setUndo(null);
     setWeek((current) => applyMoves(current, [{ id, toDay, reason: "" }]));
     setConfirmed(false);
@@ -260,6 +258,11 @@ export default function TrainingWeek({ languageModel }: Props) {
                 {t.restDay}
               </p>
             )}
+            {restDays.includes(day) && week.some((session) => session.day === day) && (
+              <p data-rest-day-warning={day} className="mt-1 text-xs font-medium text-amber-900">
+                <span aria-hidden="true">⚠️ </span>{t.restDayWithSession}
+              </p>
+            )}
             <ul className="mt-2 space-y-2">
               {week.filter((session) => session.day === day).map((session) => (
                 <li
@@ -295,7 +298,7 @@ export default function TrainingWeek({ languageModel }: Props) {
                         moveSession(session.id, event.target.value as Day)}
                     >
                       {DAYS.map((option) => (
-                        <option key={option} value={option} disabled={restDays.includes(option)}>
+                        <option key={option} value={option}>
                           {t.days[option]}
                         </option>
                       ))}

@@ -26,16 +26,12 @@ it("every language has its own hint text, so that none is shown in the wrong lan
   expect(new Set(texts).size).toBe(LANGS.length);
 });
 
-it("the FAQ chat has no model: a language that Gemini Nano accepts gets no hint in any browser", () => {
-  for (const { name, userAgent } of BROWSERS) {
-    for (const lang of NANO_LANGUAGES) expect(faqFreeformHint(lang, userAgent), `${lang} in ${name}`).toBeUndefined();
+it("the FAQ chat has no model: free questions are sent to the Training page, in every browser and language", () => {
+  for (const lang of LANGS) {
+    expect(faqFreeformHint(lang), lang).toBe(STRINGS[lang].freeQuestionsOnTraining);
+    expect(STRINGS[lang].freeQuestionsOnTraining, `${lang} names the Training page`).toContain("Training");
   }
-});
-
-it("the FAQ chat in Dutch says why free questions cannot work, by browser", () => {
-  for (const { name, userAgent, chrome } of BROWSERS) {
-    expect(faqFreeformHint("nl", userAgent), name).toBe(chrome ? STRINGS.nl.useSupportedLanguage : STRINGS.nl.switchToChrome);
-  }
+  expect(new Set(LANGS.map((lang) => STRINGS[lang].freeQuestionsOnTraining)).size, "each language has its own text").toBe(LANGS.length);
 });
 
 afterEach(() => vi.unstubAllGlobals());
@@ -47,7 +43,6 @@ it("without a user agent it reads the one of the browser that it runs in", () =>
   expect(isChromeBrowser()).toBe(true);
   vi.stubGlobal("navigator", { userAgent: safari.userAgent });
   expect(isChromeBrowser()).toBe(false);
-  expect(faqFreeformHint("nl"), "the FAQ chat reads it too").toBe(STRINGS.nl.switchToChrome);
 });
 
 it("where there is no navigator at all, as in a server render, it is not Chrome and does not fail", () => {

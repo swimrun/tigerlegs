@@ -2,7 +2,7 @@ import { expect, it } from "vitest";
 import type { ChatEvent } from "../../src/client/chat-agent.ts";
 import type { LanguageModelStatic } from "../../src/client/prompt-api.ts";
 import { createTrainingAgent, type TrainingAgentStrings } from "../../src/client/training-agent.ts";
-import { applyMoves, type Day, type Move, PROTOTYPE_WEEK, type TrainingSession } from "../../src/client/training-week.ts";
+import { applyMoves, DEFAULT_REST_DAYS, type Day, type Move, PROTOTYPE_WEEK, type TrainingSession } from "../../src/client/training-week.ts";
 import { STRINGS as CHAT_STRINGS } from "../../src/client/chat.strings.ts";
 import { LANGS } from "../../src/client/language.ts";
 import { BROWSERS } from "../user-agents.ts";
@@ -161,6 +161,7 @@ it("training agent: a rest day request is planned by the rules, as a bulleted pr
     strings,
     chrome: true,
     getWeek: () => PROTOTYPE_WEEK,
+    getRestDays: () => DEFAULT_REST_DAYS,
     onApply: (moves, restDays) => applied.push({ moves, restDays }),
   });
 
@@ -169,16 +170,17 @@ it("training agent: a rest day request is planned by the rules, as a bulleted pr
   expect(proposal.text.split("\n")).toEqual([
     "# Proposal",
     "- Wed becomes a rest day",
-    "- Strength: legs, 15 min: Wed → Thu — Wed is a rest day",
+    "- Run intervals, 6×400 m: Wed → Fri — Wed is a rest day",
+    "- Mobility: dynamic, 15 min: Wed → Sat — Wed is a rest day",
   ]);
   expect(proposal.followUps?.map((f) => f.label)).toEqual(["Apply", "Dismiss"]);
 
   const [done] = texts(await collect(agent, proposal.followUps![0].prompt!));
-  expect(done.text).toEqual("applied: Wed becomes a rest day; Strength: legs, 15 min: Wed → Thu");
+  expect(done.text).toEqual("applied: Wed becomes a rest day; Run intervals, 6×400 m: Wed → Fri; Mobility: dynamic, 15 min: Wed → Sat");
   expect(done.followUps, "a week without problems has no next steps").toEqual(undefined);
   expect(applied.length).toEqual(1);
-  expect(applied[0].moves.map((move) => [move.id, move.toDay])).toEqual([["strength-1", "Thu"]]);
-  expect(applied[0].restDays).toEqual(["Wed"]);
+  expect(applied[0].moves.map((move) => [move.id, move.toDay])).toEqual([["run-2", "Fri"], ["mobility-1", "Sat"]]);
+  expect(applied[0].restDays).toEqual(["Tue", "Wed", "Sun"]);
 });
 
 it("training agent: a rest day request works without the model, in Dutch and in other browsers", async () => {
@@ -230,13 +232,13 @@ it("training agent: default chips only offer what applies to the week", async ()
   const labels = async (rest: Day[], week?: readonly TrainingSession[]) => (await make(rest, week).suggestions()).map((chip) => chip.label);
   expect((await labels([])).includes("Make Wed a sports rest day")).toEqual(true);
   expect((await labels(["Wed"])).includes("Make Wed a sports rest day"), "Wednesday already is a rest day").toEqual(false);
-  // The example week has sessions on Wednesday, so a Wednesday rest day leaves something to fix.
-  expect((await labels(["Wed"])).includes("Fix the problems in my week")).toEqual(true);
+  // The example week has one session on Friday, so a Friday rest day leaves something to fix.
+  expect((await labels(["Fri"])).includes("Fix the problems in my week")).toEqual(true);
   expect(await labels([], []), "an empty week has nothing to fix").toEqual(["Make Wed a sports rest day"]);
 });
 
 it("training agent: the rest day chip and the fix chip lead to a proposal", async () => {
-  const agent = createTrainingAgent({ model: null, lang: "en", strings, chrome: true, getWeek: () => PROTOTYPE_WEEK, getRestDays: () => ["Tue"], onApply: () => {} });
+  const agent = createTrainingAgent({ model: null, lang: "en", strings, chrome: true, getWeek: () => PROTOTYPE_WEEK, getRestDays: () => ["Fri"], onApply: () => {} });
   const chips = await agent.suggestions();
   const rest = chips.find((chip) => chip.id === "chip-rest")!;
   const [restProposal] = texts(await collect(agent, rest.prompt ?? rest.label));
@@ -295,4 +297,14 @@ it("training agent: next steps are listed once and offered as chips after applyi
   expect(next.text.split("\n")[0]).toEqual("# Proposal");
   expect(next.text.includes("- Run intervals: Fri → Sat")).toBeTruthy();
   expect(next.followUps?.map((f) => f.label)).toEqual(["Apply", "Dismiss"]);
+});
+
+it("training agent: on a Dutch page in Chrome the model is still offered, with a note once that the question is asked in English", async () => {
+  const prompts: string[] = [];
+  const agent = createTrainingAgent({ model: fakeModel(prompts), lang: "nl", strings, chrome: true, getWeek: () => PROTOTYPE_WEEK, onApply: () => {} });
+  const first = texts(await collect(agent, "I travel"));
+  expect(first.map((reply) => reply.text)).toEqual([CHAT_STRINGS.nl.useSupportedLanguage, "downloadable"]);
+  expect(CHAT_STRINGS.nl.useSupportedLanguage).toContain("Engels");
+  const second = texts(await collect(agent, "I travel on Friday"));
+  expect(second.map((reply) => reply.text), "the note is said once").toEqual(["downloadable"]);
 });

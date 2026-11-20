@@ -1,10 +1,12 @@
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
-import { type ChatAgent, type ChatSuggestion, createFaqAgent, type UiActions } from "../client/chat-agent.ts";
+import { type ChatAgent, type ChatLink, type ChatSuggestion, createFaqAgent, type UiActions } from "../client/chat-agent.ts";
 import { getPageChat, subscribePageChat } from "../client/chat-store.ts";
 import { faqFreeformHint } from "../client/chat-hints.ts";
+import { type Inline, parseInline } from "../client/chat-markdown.ts";
 import { splitChatTitle } from "../client/chat-title.ts";
 import type { Lang } from "../client/language.ts";
 import { type ChatStrings, STRINGS } from "../client/chat.strings.ts";
+import { isPageKey, type PageKey, withPageGuide } from "../client/chat-guide.ts";
 import type { ProposalAction } from "../client/ui-catalog.ts";
 import GenUi from "./GenUi.tsx";
 import { STRINGS as GEN_UI_STRINGS } from "./GenUi.strings.ts";
@@ -17,6 +19,7 @@ interface Message {
   /** A description of an interface to show under the text (ui-catalog.ts), and what its buttons send to the agent. */
   ui?: unknown;
   uiActions?: UiActions;
+  links?: ChatLink[];
 }
 
 const bubble = "w-fit max-w-[85%] rounded px-3 py-2 text-sm";
@@ -24,8 +27,31 @@ const bubble = "w-fit max-w-[85%] rounded px-3 py-2 text-sm";
 /**
  * A chat message as text, with two line conventions an agent can use: "# Heading" is a bold heading and
  * consecutive "- item" lines are a bulleted list. Every other line is a paragraph; a message without
- * either convention renders as the single paragraph it always was.
+ * either convention renders as the single paragraph it always was. Inside a line, `code`, **bold**, *italic* and
+ * [links](address) are rendered (chat-markdown.ts); nothing else is.
  */
+/** The pieces of one line as elements. Text is escaped by React, so no message can add markup of its own. */
+function InlineText({ text }: { text: string }) {
+  return (
+    <>
+      {parseInline(text).map((piece: Inline, index) => {
+        switch (piece.kind) {
+          case "code":
+            return <code key={index} className="rounded bg-stone-200 px-1 py-0.5 font-mono text-[0.85em]">{piece.text}</code>;
+          case "strong":
+            return <strong key={index}>{piece.text}</strong>;
+          case "em":
+            return <em key={index}>{piece.text}</em>;
+          case "link":
+            return <a key={index} href={piece.href} className="underline">{piece.text}</a>;
+          default:
+            return piece.text;
+        }
+      })}
+    </>
+  );
+}
+
 export function ChatText({ text, className }: { text: string; className: string }) {
   const blocks: ({ kind: "p" | "h"; text: string } | { kind: "ul"; items: string[] })[] = [];
   for (const line of text.split("\n")) {
@@ -39,13 +65,13 @@ export function ChatText({ text, className }: { text: string; className: string 
       blocks.push({ kind: "p", text: line });
     }
   }
-  if (blocks.length === 1 && blocks[0].kind === "p") return <p className={className}>{text}</p>;
+  if (blocks.length === 1 && blocks[0].kind === "p") return <p className={className}><InlineText text={text} /></p>;
   return (
     <div className={`${className} space-y-1`}>
       {blocks.map((block, index) =>
         block.kind === "ul"
-          ? <ul key={index} className="list-disc space-y-1 pl-5">{block.items.map((item, at) => <li key={at}>{item}</li>)}</ul>
-          : <p key={index} className={block.kind === "h" ? "font-semibold" : undefined}>{block.text}</p>
+          ? <ul key={index} className="list-disc space-y-1 pl-5">{block.items.map((item, at) => <li key={at}><InlineText text={item} /></li>)}</ul>
+          : <p key={index} className={block.kind === "h" ? "font-semibold" : undefined}><InlineText text={block.text} /></p>
       )}
     </div>
   );
@@ -113,7 +139,7 @@ function ChatPanel({ chat, t, lang, id, placeholder }: { chat: ChatAgent; t: Cha
         if (event.type === "text") {
           setTyping(false);
           setStatus(null);
-          setMessages((m) => [...m, { role: "assistant", text: event.text, followUps: event.followUps, ui: event.ui, uiActions: event.uiActions }]);
+          setMessages((m) => [...m, { role: "assistant", text: event.text, followUps: event.followUps, ui: event.ui, uiActions: event.uiActions, links: event.links }]);
         }
       }
     } catch {
@@ -166,6 +192,11 @@ function ChatPanel({ chat, t, lang, id, placeholder }: { chat: ChatAgent; t: Cha
                 }}
               />
             )}
+            {m.links && m.links.length > 0 && (
+              <nav aria-label={t.guide.question} className="flex flex-wrap gap-2">
+                {m.links.map((link) => <a key={link.href} href={link.href} data-chat-link className={pill}>{link.label}</a>)}
+              </nav>
+            )}
             {i === messages.length - 1 && m.followUps?.filter((f) => !asked.includes(f.id)).map((f) => (
               <button key={f.id} type="button" disabled={busy} className={pill}
                 onClick={() => ask(f.label, { id: f.id, prompt: f.prompt, shown: true, completes: f.completes })}>
@@ -186,15 +217,32 @@ function ChatPanel({ chat, t, lang, id, placeholder }: { chat: ChatAgent; t: Cha
   );
 }
 
+/** The page you are on: the layout puts its key and the name of its FAQ on `<body>`, and a soft navigation swaps the body. */
+function usePageContext(): { faq: string; page: PageKey | undefined } {
+  const [context, setContext] = useState<{ faq: string; page: PageKey | undefined }>({ faq: "", page: undefined });
+  useEffect(() => {
+    const read = () => {
+      const page = document.body.dataset.chatPage;
+      setContext({ faq: document.body.dataset.chatFaq ?? "", page: isPageKey(page) ? page : undefined });
+    };
+    read();
+    document.addEventListener("astro:page-load", read);
+    return () => document.removeEventListener("astro:page-load", read);
+  }, []);
+  return context;
+}
+
 /**
  * Collapsed until clicked. The FAQ is only fetched after the first opening, and the
  * conversation restarts when the page language changes, because the FAQ is per language.
  */
 export default function Chatbot(
-  { agent, faqBase = "chat/faq", title, placeholder, defaultOpen = false, avatarSrc }: {
+  { agent, faqBase = "chat/faq", siteBase = "", title, placeholder, defaultOpen = false, avatarSrc }: {
     /** Answers the questions; defaults to the FAQ agent. The look and feel is the same for every agent. */
     agent?: ChatAgent;
     faqBase?: string;
+    /** Folder of the site with a trailing slash, for the links to its pages; empty for relative links. */
+    siteBase?: string;
     title?: string;
     placeholder?: string;
     defaultOpen?: boolean;
@@ -206,13 +254,15 @@ export default function Chatbot(
   const t = STRINGS[lang];
   const [open, setOpen] = useState(defaultOpen);
   const [everOpened, setEverOpened] = useState(defaultOpen);
+  const { faq: pageFaq, page } = usePageContext();
   const pageChat = useSyncExternalStore(subscribePageChat, getPageChat, () => null);
   const chat = useMemo(() => {
-    if (agent) return agent;
-    if (pageChat) return pageChat.agent;
-    // The FAQ is static, but free questions are meant for Gemini Nano: where it cannot work, say why.
-    return createFaqAgent(`${faqBase}.${lang}.json`, { fallback: faqFreeformHint(lang) });
-  }, [agent, pageChat, faqBase, lang]);
+    // Every agent gets the chip that says what the web app can do and links to its pages.
+    const base = agent ?? pageChat?.agent
+      // The FAQ is static, but free questions are meant for Gemini Nano: where it cannot work, say why.
+      ?? createFaqAgent(`${faqBase}${pageFaq ? `-${pageFaq}` : ""}.${lang}.json`, { fallback: faqFreeformHint(lang) });
+    return withPageGuide(base, t.guide, page, siteBase);
+  }, [agent, pageChat, faqBase, pageFaq, lang, t, page, siteBase]);
 
   const fullTitle = title ?? pageChat?.title ?? t.title;
   const { name, expansion } = splitChatTitle(fullTitle);
@@ -240,6 +290,7 @@ export default function Chatbot(
       </h2>
       {everOpened && (
         <div hidden={!open}>
+          {page && <p data-chat-page-name className="mt-2 text-xs text-stone-700">{t.youAreOn}: <strong>{t.guide.pages[page]}</strong></p>}
           <ChatPanel key={lang} chat={chat} t={t} lang={lang} id="chat-panel" placeholder={placeholder ?? pageChat?.placeholder ?? t.placeholder} />
         </div>
       )}

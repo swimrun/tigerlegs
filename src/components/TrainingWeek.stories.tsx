@@ -30,7 +30,7 @@ export const WithoutAssistant: Story = {
     const day = await canvas.findByLabelText("Day: Run intervals, 6×400 m");
     await userEvent.selectOptions(day, "Fri");
     await expect(
-      await canvas.findByText("Run intervals, 6×400 m: Thursday → Friday"),
+      await canvas.findByText("Run intervals, 6×400 m: Wednesday → Friday"),
     ).toBeVisible();
     const confirm = await canvas.findByRole("button", {
       name: "Confirm new week",
@@ -48,8 +48,8 @@ const fakeNano: LanguageModelStatic = {
         Promise.resolve(JSON.stringify({
           moves: [{
             id: "run-2",
-            toDay: "Wed",
-            reason: "Travelling Thursday.",
+            toDay: "Thu",
+            reason: "Travelling Wednesday.",
           }],
         })),
       destroy: () => {},
@@ -66,14 +66,14 @@ export const ProposeApplyConfirm: Story = {
     );
     await userEvent.type(
       await canvas.findByLabelText("Your question"),
-      "I am travelling Thursday and Friday{enter}",
+      "I am travelling Wednesday{enter}",
     );
-    await expect(await canvas.findByText(/Travelling Thursday\./)).toBeVisible();
+    await expect(await canvas.findByText(/Travelling Wednesday\./)).toBeVisible();
     await userEvent.click(
       await canvas.findByRole("button", { name: "Apply proposal" }),
     );
     await expect(
-      await canvas.findByText("Run intervals, 6×400 m: Thursday → Wednesday"),
+      await canvas.findByText("Run intervals, 6×400 m: Wednesday → Thursday"),
     ).toBeVisible();
     await userEvent.click(
       await canvas.findByRole("button", { name: "Confirm new week" }),
@@ -88,29 +88,30 @@ export const DragAndDrop: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const session = (await canvas.findByText("Run intervals, 6×400 m")).closest("li")!;
-    const wednesday = (await canvas.findByRole("heading", { name: "Wednesday" })).closest("li")!;
+    const thursday = (await canvas.findByRole("heading", { name: "Thursday" })).closest("li")!;
     const dataTransfer = new DataTransfer();
     await fireEvent.dragStart(session, { dataTransfer });
-    await fireEvent.dragOver(wednesday, { dataTransfer });
-    await fireEvent.drop(wednesday, { dataTransfer });
+    await fireEvent.dragOver(thursday, { dataTransfer });
+    await fireEvent.drop(thursday, { dataTransfer });
     await fireEvent.dragEnd(session, { dataTransfer });
-    await expect(await canvas.findByText("Run intervals, 6×400 m: Thursday → Wednesday")).toBeVisible();
+    await expect(await canvas.findByText("Run intervals, 6×400 m: Wednesday → Thursday")).toBeVisible();
     // The selector of the session shows the new day.
-    await expect(await canvas.findByLabelText("Day: Run intervals, 6×400 m")).toHaveValue("Wed");
+    await expect(await canvas.findByLabelText("Day: Run intervals, 6×400 m")).toHaveValue("Thu");
   },
 };
 
-/** Sports rest days are a lever above the week: choosing one moves its sessions out, and nothing can be dropped on it. */
+/** Sports rest days are a lever above the week: choosing one moves its sessions out, and a session dropped on it only gives a warning. */
 export const RestDayByHand: Story = {
   args: { languageModel: null },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await userEvent.click(canvasElement.querySelector("[data-rest-days] summary")!);
     await userEvent.click(await canvas.findByRole("checkbox", { name: "Wednesday" }));
-    // The strength session left Wednesday for a day that still has room.
-    await expect(await canvas.findByLabelText("Day: Strength: legs, 15 min")).toHaveValue("Thu");
+    // The sessions of Wednesday left for days that still have room (Tuesday and Sunday are rest days from the start).
+    await expect(await canvas.findByLabelText("Day: Run intervals, 6×400 m")).toHaveValue("Fri");
+    await expect(await canvas.findByLabelText("Day: Mobility: dynamic, 15 min")).toHaveValue("Sat");
     await expect(canvasElement.querySelector('[data-rest-day="Wed"]')).toHaveTextContent("Sports rest day");
-    // Dropping a session on the rest day is refused, with a message.
+    // Dropping a session on the rest day is allowed, with a warning.
     const session = (await canvas.findByText("Run intervals, 6×400 m")).closest("li")!;
     const wednesday = (await canvas.findByRole("heading", { name: "Wednesday" })).closest("li")!;
     const dataTransfer = new DataTransfer();
@@ -118,8 +119,9 @@ export const RestDayByHand: Story = {
     await fireEvent.dragOver(wednesday, { dataTransfer });
     await fireEvent.drop(wednesday, { dataTransfer });
     await fireEvent.dragEnd(session, { dataTransfer });
-    await expect(await canvas.findByText("Wednesday is a sports rest day: no session can go there.")).toBeVisible();
-    await expect(await canvas.findByLabelText("Day: Run intervals, 6×400 m")).toHaveValue("Thu");
+    await expect(await canvas.findByText("Warning: Wednesday is a sports rest day, and now has a session.")).toBeVisible();
+    await expect(await canvas.findByLabelText("Day: Run intervals, 6×400 m")).toHaveValue("Wed");
+    await expect(canvasElement.querySelector('[data-rest-day-warning="Wed"]')).toHaveTextContent("Rest day with a session");
   },
 };
 
@@ -131,10 +133,10 @@ export const RestDayInChat: Story = {
     await userEvent.click(await canvas.findByRole("button", { name: /ROARRS: Robotic Operating Agent that Responds to Requests about Swimrun/ }));
     await userEvent.type(await canvas.findByLabelText("Your question"), "I need a rest day on Wednesday{enter}");
     await expect(await canvas.findByText("Sports rest day: Wednesday")).toBeVisible();
-    await expect(await canvas.findByText(/Strength: legs, 15 min: Wednesday → Thursday — sports rest day on Wednesday/)).toBeVisible();
+    await expect(await canvas.findByText(/Run intervals, 6×400 m: Wednesday → Friday — sports rest day on Wednesday/)).toBeVisible();
     await userEvent.click(await canvas.findByRole("button", { name: "Apply proposal" }));
     await expect(canvasElement.querySelector("[data-rest-days] summary")).toHaveTextContent("Wednesday");
-    await expect(await canvas.findByLabelText("Day: Strength: legs, 15 min")).toHaveValue("Thu");
+    await expect(await canvas.findByLabelText("Day: Run intervals, 6×400 m")).toHaveValue("Fri");
   },
 };
 
@@ -145,14 +147,14 @@ export const RevertAndReset: Story = {
     const canvas = within(canvasElement);
     const select = async () => userEvent.selectOptions(await canvas.findByLabelText("Day: Open-water swim, 2 km"), "Fri");
     await select();
-    await expect(await canvas.findByText("Open-water swim, 2 km: Tuesday → Friday")).toBeVisible();
+    await expect(await canvas.findByText("Open-water swim, 2 km: Thursday → Friday")).toBeVisible();
     await userEvent.click(await canvas.findByRole("button", { name: /^Revert/ }));
     await expect(await canvas.findByText("No changes yet.")).toBeVisible();
     await select();
     await userEvent.click(await canvas.findByRole("button", { name: "Reset all changes" }));
     await expect(await canvas.findByText("No changes yet.")).toBeVisible();
     await userEvent.click(await canvas.findByRole("button", { name: "Undo reset" }));
-    await expect(await canvas.findByText("Open-water swim, 2 km: Tuesday → Friday")).toBeVisible();
+    await expect(await canvas.findByText("Open-water swim, 2 km: Thursday → Friday")).toBeVisible();
   },
 };
 
@@ -165,10 +167,10 @@ export const GermanRestDay: Story = {
     try {
       await expect(await canvas.findByText("Traillauf, 75 Min. Z2")).toBeVisible();
       await userEvent.click(await canvas.findByRole("button", { name: /ROARRS: Robotic Operating Agent that Responds to Requests about Swimrun/ }));
-      await userEvent.type(await canvas.findByRole("textbox", { name: /Frage/ }), "Ich will der sontagg als Ruhe.{enter}");
-      await expect(await canvas.findByText("Sportruhetag: Sonntag")).toBeVisible();
+      await userEvent.type(await canvas.findByRole("textbox", { name: /Frage/ }), "Ich will der samstagg als Ruhe.{enter}");
+      await expect(await canvas.findByText("Sportruhetag: Samstag")).toBeVisible();
       await userEvent.click(await canvas.findByRole("button", { name: "Vorschlag anwenden" }));
-      await expect(await canvas.findByText(/Angewendet: Sportruhetag: Sonntag/)).toBeVisible();
+      await expect(await canvas.findByText(/Angewendet: Sportruhetag: Samstag/)).toBeVisible();
       await expect(await canvas.findByText(/unter „Deine Änderungen“ unten/)).toBeVisible();
     } finally {
       document.documentElement.lang = "en";

@@ -192,7 +192,7 @@ test("chatbot loads the FAQ, shows a typing indicator and answers", async ({ pag
   await expect(chat.getByRole("button", { name: "Tell me more" })).toHaveCount(0);
   await page.getByLabel("Your question").fill("Which wetsuit?");
   await page.getByRole("button", { name: "Ask", exact: true }).click();
-  await expect(page.getByRole("log")).toContainText("There is no actual LLM integration yet");
+  await expect(page.getByRole("log")).toContainText("Free questions only work on the Training page");
 });
 
 test("chatbot follows the page language", async ({ page }) => {
@@ -357,25 +357,20 @@ async function askFreely(page: Page, lang: "en" | "nl", question: string) {
   await page.getByRole("button", { name: t.ask, exact: true }).click();
 }
 
-// The FAQ chat has no model yet. In a language that Gemini Nano accepts it gives the fallback of the FAQ, whatever the
-// browser; in Dutch it says why a free question does not work, and that depends on the browser (chat-hints.ts).
-for (const { name, userAgent, chrome } of SITE_BROWSERS) {
+// Only the training chat has a model, so a free question in the chat of any other page gets the same answer in every
+// browser: free questions go to the Training page, and here only the suggested questions work (chat-hints.ts).
+for (const { name, userAgent } of SITE_BROWSERS) {
   test.describe(`the FAQ chat in ${name}`, () => {
     test.use({ userAgent });
 
-    test("English: a free question gets the fallback of the FAQ, which points to the Training page", async ({ page }) => {
-      await page.goto("./");
-      await askFreely(page, "en", "Which wetsuit?");
-      await expect(page.getByRole("log")).toContainText("There is no actual LLM integration yet");
-      await expect(page.getByRole("log")).toContainText("Training page");
-    });
-
-    test("Dutch: a free question gets the reason that it does not work here", async ({ page }) => {
-      await page.goto("./");
-      await page.locator("#language-switch").selectOption("nl");
-      await askFreely(page, "nl", "Welk wetsuit?");
-      await expect(page.getByRole("log")).toContainText(chrome ? CHAT_STRINGS.nl.useSupportedLanguage ?? "" : CHAT_STRINGS.nl.switchToChrome);
-    });
+    for (const [lang, question] of [["en", "Which wetsuit?"], ["nl", "Welk wetsuit?"]] as const) {
+      test(`a free question is sent to the Training page, in ${lang}`, async ({ page }) => {
+        await page.goto("./");
+        if (lang !== "en") await page.locator("#language-switch").selectOption(lang);
+        await askFreely(page, lang, question);
+        await expect(page.getByRole("log")).toContainText(CHAT_STRINGS[lang].freeQuestionsOnTraining);
+      });
+    }
   });
 }
 
@@ -456,4 +451,93 @@ test("the title of the chat window is the name above a smaller expansion: two li
 
   await page.setViewportSize({ width: 390, height: 700 });
   expect(await lines(expansion), "the expansion is at most two lines on a phone").toBeLessThan(2.5);
+});
+
+test("the chat offers the questions of the page it is on, also after a soft navigation", async ({ page }) => {
+  await page.goto("about.html");
+  await page.getByRole("button", { name: /ROARRS|RoARR/ }).first().click();
+  await expect(page.getByRole("button", { name: "Can I install TigerLegs as an app?" })).toBeVisible();
+  await page.locator("#main-menu").getByRole("link", { name: "Pricing" }).click();
+  await expect(page.getByRole("button", { name: "Is TigerLegs free?" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Can I install TigerLegs as an app?" })).toHaveCount(0);
+});
+
+test("every page has the chip 'What can I do in this TigerLegs web app?' and its answer links to the other pages", async ({ page }) => {
+  for (const [path, current] of [["", "Extractorrr"], ["training.html", "Training"], ["pricing.html", "Pricing"], ["about.html", "About"], ["guidebook.html", "Guidebook"]]) {
+    await page.goto(path || "./");
+    await page.getByRole("button", { name: ROARRS }).first().click();
+    await expect(page.locator("[data-chat-page-name]")).toContainText(current);
+    await page.getByRole("button", { name: "What can I do in this TigerLegs web app?" }).click();
+    const links = page.locator("[data-chat-link]");
+    await expect(links).toHaveCount(4);
+    await expect(links.filter({ hasText: current })).toHaveCount(0);
+  }
+  await page.goto("pricing.html");
+  await page.getByRole("button", { name: ROARRS }).first().click();
+  await page.getByRole("button", { name: "What can I do in this TigerLegs web app?" }).click();
+  await page.locator("[data-chat-link]", { hasText: "About" }).click();
+  await expect(page).toHaveURL(/about\.html$/);
+});
+
+test("the Guidebook chat offers questions about the software", async ({ page }) => {
+  await page.goto("guidebook.html");
+  await page.getByRole("button", { name: ROARRS }).first().click();
+  await expect(page.getByRole("button", { name: "Can I contribute?" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "How do I run the tests?" })).toBeVisible();
+  await page.getByRole("button", { name: "Can I contribute?" }).click();
+  await expect(page.getByRole("log")).toContainText("SwimRun huiskamer");
+});
+
+test("the search box finds a word in the guidebook and opens the page", async ({ page }) => {
+  await page.goto("./");
+  await page.getByRole("searchbox", { name: "Search the site" }).fill("hieroglyphics");
+  const results = page.locator("[data-search-results]");
+  await expect(results.getByRole("link", { name: /guidebook/i }).first()).toBeVisible();
+  await results.getByRole("link", { name: /guidebook/i }).first().click();
+  await expect(page).toHaveURL(/guidebook\.html/);
+});
+
+test("the search box says so when nothing matches", async ({ page }) => {
+  await page.goto("pricing.html");
+  await page.getByRole("searchbox", { name: "Search the site" }).fill("qqqzzzxxx");
+  await expect(page.locator("[data-search-results]")).toContainText("No results.");
+});
+
+test("commands in a chat answer are shown as code", async ({ page }) => {
+  await page.goto("guidebook.html");
+  await page.getByRole("button", { name: ROARRS }).first().click();
+  await page.getByRole("button", { name: "How do I run the tests?" }).click();
+  const log = page.getByRole("log");
+  await expect(log.locator("code", { hasText: /^npm test$/ }).first()).toBeVisible();
+  await expect(log).not.toContainText("`");
+  expect(await log.locator("code").first().evaluate((element) => getComputedStyle(element).fontFamily)).toMatch(/mono/i);
+});
+
+test("no page logs an error to the console, in any language", async ({ page }) => {
+  const problems: string[] = [];
+  page.on("pageerror", (error) => problems.push(`${page.url()}: ${error.message}`));
+  page.on("console", (message) => {
+    // A resource that cannot be fetched (the map tiles, in a test without internet) is not a fault of the page.
+    if (message.type() === "error" && !message.text().startsWith("Failed to load resource")) problems.push(`${page.url()}: ${message.text()}`);
+  });
+  for (const path of ["", "training.html", "pricing.html", "about.html", "guidebook.html", "profile.html"]) {
+    for (const lang of ["en", "nl", "fr", "de"]) {
+      await page.goto(path || "./");
+      await page.locator("#language-switch").selectOption(lang);
+      await page.waitForTimeout(150);
+    }
+  }
+  expect(problems).toEqual([]);
+});
+
+test("the About page links to Dave's List of swimrun races", async ({ page }) => {
+  await page.goto("about.html");
+  await expect(page.locator('main > div[lang="en"]').getByRole("link", { name: "Dave's List" })).toHaveAttribute("href", "https://lowtideboyz.com/swimrun-races");
+});
+
+test("the About chat answers where to find races, with a link to Dave's List", async ({ page }) => {
+  await page.goto("about.html");
+  await page.getByRole("button", { name: ROARRS }).first().click();
+  await page.getByRole("button", { name: "Where can I find swimrun races?" }).click();
+  await expect(page.getByRole("log").getByRole("link", { name: "Dave's List" })).toHaveAttribute("href", "https://lowtideboyz.com/swimrun-races");
 });

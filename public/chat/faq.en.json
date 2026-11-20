@@ -35,8 +35,8 @@
     },
     {
       "id": "tigerlegs-name",
-      "question": "What does TigerLegs stand for?",
-      "answer": "Terrain Informed Gpx ExtractoR: LEts Go Swimrun!"
+      "question": "Why the name 'TigerLegs'?",
+      "answer": "The \"legs\" are the swim and run legs of a swimrun course, which is what the tool splits out. The tiger is amphibious and a good swimmer, like a swimrunner, and a nod to Team Groot Rondje Eilanden. It is also a backronym: Terrain Informed Gpx ExtractoR: LEts Go Swimrun!"
     },
     {
       "id": "privacy",

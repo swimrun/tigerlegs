@@ -1,0 +1,42 @@
+{
+  "language": "en",
+  "tellMore": "Tell me more",
+  "fallback": "There is no actual LLM integration yet. Please use the questions about TigerLegs for now.",
+  "entries": [
+    {
+      "id": "what-is-tigerlegs",
+      "question": "What is TigerLegs?",
+      "answer": "TigerLegs splits a swimrun, a race course or one of your own training sessions, into its swim and run legs. You load a GPX file and get a map and a table with the distance of every swim and run."
+    },
+    {
+      "id": "name",
+      "question": "Why the name 'TigerLegs'?",
+      "answer": "The \"legs\" are the swim and run legs of a swimrun course, which is what the tool splits out. The tiger is amphibious and a good swimmer, like a swimrunner, and a nod to Team Groot Rondje Eilanden. It is also a backronym: Terrain Informed Gpx ExtractoR: LEts Go Swimrun!"
+    },
+    {
+      "id": "gpx-privacy",
+      "question": "Does my GPX file leave my browser?",
+      "answer": "No. Your GPX file is analysed in your browser and is not uploaded. Terrain data is off by default; the \"Your data\" section on this page says what is sent if you switch it on."
+    },
+    {
+      "id": "detection",
+      "question": "How does TigerLegs find swims and runs?",
+      "answer": "It combines several strategies, such as waypoints, speed and terrain, and shows in the Detected by column which one found each segment."
+    },
+    {
+      "id": "install",
+      "question": "Can I install TigerLegs as an app?",
+      "answer": "Yes. Use the Install app button in the footer when your browser offers it. On an iPhone or iPad, tap Share and choose Add to Home Screen."
+    },
+    {
+      "id": "find-races",
+      "question": "Where can I find swimrun races?",
+      "answer": "[Dave's List](https://lowtideboyz.com/swimrun-races) of the Low Tide Boyz is a worldwide directory of swimrun races, with a map and a searchable list."
+    },
+    {
+      "id": "prototype",
+      "question": "Is it finished?",
+      "answer": "No. TigerLegs is a beta and some features are prototypes, which the pages say. Testers are welcome."
+    }
+  ]
+}

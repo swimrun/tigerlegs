@@ -1,0 +1,14 @@
+{
+  "language": "en",
+  "tellMore": "Tell me more",
+  "fallback": "There is no actual LLM integration yet. Please use the questions about pricing for now.",
+  "entries": [
+    { "id": "is-it-free", "question": "Is TigerLegs free?", "answer": "Yes. TigerLegs is under development, we are looking for testers, and for now everything is completely free." },
+    { "id": "extraction-free", "question": "Will extracting segments stay free?", "answer": "Yes. Loading a GPX file and getting its swim and run segments, with distances, on a map and in a table, will always be free." },
+    { "id": "prices", "question": "What will Silver, Gold and Platinum cost?", "answer": "The draft prices are €5 for Silver, €10 for Gold and €25 for Platinum. Whether that is per month or per year is not decided yet, and nothing can be bought yet." },
+    { "id": "why-membership", "question": "Why is there a membership at all?", "answer": "Today TigerLegs costs almost nothing to run. Once we build a back end that also hosts profiles, we pay for servers, storage and backups, and the membership covers those costs." },
+    { "id": "profile-free", "question": "Will hosting my profile cost money?", "answer": "No. Hosting your profile is a planned feature, and it stays in the free tier." },
+    { "id": "energy-limits", "question": "For how many courses can I plan energy stations?", "answer": "In the draft: at most 2 courses or races for free, 5 for Silver, 10 for Gold and unlimited for Platinum." },
+    { "id": "garmin-tier", "question": "Do I need a membership for the Garmin watch?", "answer": "In the draft, the Garmin watch integration is part of Silver, Gold and Platinum. It is a planned feature, so nothing is decided yet." }
+  ]
+}

@@ -45,7 +45,10 @@ export interface Strings {
   restDay: string;
   restDaysLabel: string;
   restDaysNone: string;
-  restDayBlocked: (day: string) => string;
+  /** Said when a session is moved onto a sports rest day: the move is allowed, and this warns. */
+  restDayWarning: (day: string) => string;
+  /** On a rest day card that holds a session. */
+  restDayWithSession: string;
   nextStepsTitle: string;
   restDayBecomes: (day: string) => string;
   restDayReason: (day: string) => string;

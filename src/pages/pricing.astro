@@ -1,5 +1,7 @@
 ---
+import { Image } from "astro:assets";
 import SiteLayout from "../layouts/SiteLayout.astro";
+import tiger from "../assets/tiger-bengal.png";
 import en from "../data/pricing.en.json";
 import nl from "../data/pricing.nl.json";
 import fr from "../data/pricing.fr.json";
@@ -8,11 +10,8 @@ import de from "../data/pricing.de.json";
 // The texts are data (src/data/pricing.<language>.json), not inline: one file per language.
 const pages = { en, nl, fr, de };
 const tiers = ["free", "silver", "gold", "platinum"] as const;
-// A feature that is not paid is for everyone; a paid one is for the three membership tiers only.
-const cell = (row: { paid: boolean; planned: boolean }, tier: (typeof tiers)[number], t: typeof en) =>
-  row.paid ? (tier === "free" ? t.no : row.planned ? t.yesPlanned : t.yes) : t.yes;
 ---
-<SiteLayout title="Pricing – TigerLegs" description="TigerLegs is under development and free for now; segment extraction is always free." active="pricing">
+<SiteLayout title="Pricing – TigerLegs" description="TigerLegs is under development and free for now; segment extraction is always free." active="pricing" chatFaq="pricing">
   <main class="mx-auto max-w-3xl space-y-6 px-4 py-8 leading-relaxed">
     {Object.entries(pages).map(([code, t]) => (
       <div lang={code} class="space-y-6">
@@ -31,20 +30,45 @@ const cell = (row: { paid: boolean; planned: boolean }, tier: (typeof tiers)[num
           <p data-tigers>{t.tiger}</p>
         </section>
         <section class="space-y-2">
+          <h2 class="text-xl font-bold">{t.pledgeTitle}</h2>
+          <p data-pledge>{t.pledge}</p>
+          <figure class="max-w-md">
+            <Image src={tiger} alt={t.photoAlt} width={640} densities={[1, 2]} class="rounded border-2 border-stone-900" />
+            <figcaption data-photo-credit class="mt-1 text-xs text-stone-700">
+              {t.photoCaption} {t.photoBy}: <a class="underline" href="https://commons.wikimedia.org/wiki/File:Royal_Bengal_Tiger_at_Kanha_National_Park.jpg">Rahulsharma photography</a>,
+              <a class="underline" href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>, {t.photoResized}.
+            </figcaption>
+          </figure>
+        </section>
+        <section class="space-y-2">
+          <h2 class="text-xl font-bold">{t.hostingTitle}</h2>
+          <p data-hosting>{t.hosting}</p>
+        </section>
+        <section class="space-y-2">
           <h2 class="text-xl font-bold">{t.tableTitle}</h2>
+          <p data-price-note class="text-sm">{t.priceNote}</p>
           <div class="overflow-x-auto">
             <table data-feature-table class="w-full border-collapse text-sm">
               <thead>
                 <tr class="bg-amber-100 text-left">
                   <th scope="col" class="border border-stone-300 p-2">{t.columns.feature}</th>
-                  {tiers.map(tier => <th scope="col" class="border border-stone-300 p-2">{t.columns[tier]}</th>)}
+                  {tiers.map(tier => <th scope="col" class="border border-stone-300 p-2">{t.columns[tier]} <span data-price class="font-normal">{t.prices[tier]}</span></th>)}
                 </tr>
               </thead>
               <tbody>
                 {t.rows.map(row => (
                   <tr>
-                    <th scope="row" class="border border-stone-300 p-2 text-left font-medium">{row.feature}</th>
-                    {tiers.map(tier => <td class="border border-stone-300 p-2">{cell(row, tier, t)}</td>)}
+                    <th scope="row" class="border border-stone-300 p-2 text-left font-medium">{row.feature}{row.planned && <span data-planned class="ml-2 rounded bg-stone-200 px-1.5 py-0.5 text-xs font-normal">{t.planned}</span>}</th>
+                    {tiers.map(tier => {
+                      const value = row.values[tier];
+                      return typeof value === "string" ? (
+                        <td data-value="limit" class="border border-stone-300 p-2 font-medium">{value}</td>
+                      ) : value ? (
+                        <td data-value="yes" class="border border-stone-300 p-2 text-center"><span aria-hidden="true" class="font-bold text-green-700">✓</span><span class="sr-only">{t.yes}</span></td>
+                      ) : (
+                        <td data-value="no" class="border border-stone-300 p-2 text-center"><span aria-hidden="true" class="font-bold text-red-700">✗</span><span class="sr-only">{t.no}</span></td>
+                      );
+                    })}
                   </tr>
                 ))}
               </tbody>

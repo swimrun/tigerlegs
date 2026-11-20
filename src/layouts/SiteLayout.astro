@@ -5,13 +5,16 @@ import logo from "../assets/tigerlegs-logo-web.png";
 import roarrAvatar from "../assets/roarr-avatar.png";
 import config from "../../package.json";
 import Chatbot from "../components/Chatbot.tsx";
+import SiteSearch from "../components/SiteSearch.tsx";
 import InstallApp from "../components/InstallApp.tsx";
 interface Props {
   title: string;
   description: string;
   active: "extractor" | "training" | "pricing" | "about" | "guidebook" | "profile";
+  /** Which FAQ the chat offers on this page: public/chat/faq-<name>.<lang>.json; none means the general FAQ. */
+  chatFaq?: "pricing" | "about" | "guidebook";
 }
-const { title, description, active } = Astro.props;
+const { title, description, active, chatFaq } = Astro.props;
 const avatar = await getImage({ src: roarrAvatar, width: 96, height: 96 });
 const base = import.meta.env.BASE_URL.replace(/\/?$/, "/");
 const languages = [
@@ -52,7 +55,7 @@ const links = [
     <ClientRouter />
     <slot name="head" />
   </head>
-  <body class="min-h-screen bg-stone-50 text-stone-800 antialiased">
+  <body data-chat-page={active} data-chat-faq={chatFaq} class="min-h-screen bg-stone-50 text-stone-800 antialiased">
     <header class="site-header">
       <div class="site-header-inner">
         <a href={base} class="site-brand"><Image src={logo} alt="TigerLegs logo" width={144} height={96} densities={[1, 2]} /></a>
@@ -62,6 +65,7 @@ const links = [
           <nav id="main-menu" aria-label="Main menu" class="site-menu">
             {links.map(link => <a href={link.href} aria-current={active === link.key ? "page" : undefined}>{link.text}</a>)}
           </nav>
+          <SiteSearch client:load base={base} />
           <select id="language-switch" aria-label="Language" class="lang-select">
             {languages.map(l => <option value={l.code} lang={l.code}>{l.flag} {l.code.toUpperCase()} · {l.name}</option>)}
           </select>
@@ -71,8 +75,8 @@ const links = [
       <div class="site-tagline"><img src={`${base}img/tigerlegs-acronym-anim-dark.svg`} alt="TIGERLEGS: Terrain Informed Gpx ExtractoR: LEts Go Swimrun!" /></div>
       <div class="tiger-stripes"></div>
     </header>
-    <slot />
-    <Chatbot client:load transition:persist faqBase={`${base}chat/faq`} avatarSrc={avatar.src} />
+    <div data-pagefind-body><slot /></div>
+    <Chatbot client:load transition:persist faqBase={`${base}chat/faq`} siteBase={base} avatarSrc={avatar.src} />
     <script>import "../client/language-switch.ts";</script>
     <script>
       // Made when the page loads: the browser offers the install prompt once, and the button in the footer may come later.

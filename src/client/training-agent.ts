@@ -1,5 +1,5 @@
 import type { ChatAgent, ChatEvent, ChatSuggestion } from "./chat-agent.ts";
-import { freeformHint, isChromeBrowser } from "./chat-hints.ts";
+import { freeformHint, isChromeBrowser, isNanoLanguage } from "./chat-hints.ts";
 import type { Lang } from "./language.ts";
 import {
   type AssistantReply,
@@ -83,6 +83,9 @@ const CHIP_REST_DAY: Day = "Wed";
 export function createTrainingAgent(
   { model, lang, strings: t, getWeek, getRestDays = () => [], onApply, chrome = isChromeBrowser() }: TrainingAgentOptions,
 ): ChatAgent {
+  // The model understands English, French and German; for a page in another language it is asked in English.
+  const modelLang: Lang = isNanoLanguage(lang) ? lang : "en";
+  let languageNoteShown = false;
   let pending: { moves: Move[]; restDays: Day[] } = { moves: [], restDays: [] };
   let nextSteps: Move[] = [];
   let lastInstruction = "";
@@ -248,7 +251,13 @@ export function createTrainingAgent(
       } else if (restDaysRequested(message).length > 0) {
         yield restDayProposal(restDaysRequested(message));
       } else {
-        const hint = freeformHint(lang, chrome);
+        // Outside Chrome there is no model. In Dutch the model still works when the question is in English: the
+        // page stays Dutch, the question and the answer are English, and the first time the chat says so.
+        const hint = chrome ? undefined : freeformHint(lang, false);
+        if (!hint && !isNanoLanguage(lang) && !languageNoteShown) {
+          languageNoteShown = true;
+          yield text(freeformHint(lang, true)!);
+        }
         const availability = hint ? "absent" : await assistAvailability(model);
         if (hint) {
           yield text(hint);
@@ -277,7 +286,7 @@ export function createTrainingAgent(
               waitingInstruction = null;
               if (resume) {
                 lastInstruction = resume;
-                yield reply(await proposeChange(model!, getWeek(), resume, undefined, getRestDays(), lang));
+                yield reply(await proposeChange(model!, getWeek(), resume, undefined, getRestDays(), modelLang));
               } else {
                 yield text(t.assistInstalled);
               }
@@ -288,7 +297,7 @@ export function createTrainingAgent(
         } else {
           if (!message.includes(" — I mean ")) lastInstruction = message;
           try {
-            yield reply(await proposeChange(model!, getWeek(), message, undefined, getRestDays(), lang));
+            yield reply(await proposeChange(model!, getWeek(), message, undefined, getRestDays(), modelLang));
           } catch {
             yield text(t.assistFailed);
           }

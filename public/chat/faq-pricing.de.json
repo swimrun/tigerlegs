@@ -1,0 +1,14 @@
+{
+  "language": "de",
+  "tellMore": "Erzähl mir mehr",
+  "fallback": "Es gibt noch keine echte LLM-Anbindung. Bitte nutze vorerst die Fragen zu den Preisen.",
+  "entries": [
+    { "id": "is-it-free", "question": "Ist TigerLegs kostenlos?", "answer": "Ja. TigerLegs ist in Entwicklung, wir suchen Tester, und vorerst ist alles völlig kostenlos." },
+    { "id": "extraction-free", "question": "Bleibt die Segment-Extraktion kostenlos?", "answer": "Ja. Eine GPX-Datei laden und ihre Schwimm- und Laufsegmente mit Distanzen auf einer Karte und in einer Tabelle erhalten, bleibt immer kostenlos." },
+    { "id": "prices", "question": "Was werden Silver, Gold und Platinum kosten?", "answer": "Die Entwurfspreise sind 5 € für Silver, 10 € für Gold und 25 € für Platinum. Ob pro Monat oder pro Jahr, ist noch nicht entschieden, und es kann noch nichts gekauft werden." },
+    { "id": "why-membership", "question": "Warum gibt es überhaupt eine Mitgliedschaft?", "answer": "Heute kostet der Betrieb von TigerLegs fast nichts. Sobald wir ein Back-End bauen, das auch Profile hostet, bezahlen wir Server, Speicher und Backups, und die Mitgliedschaft deckt diese Kosten." },
+    { "id": "profile-free", "question": "Kostet das Hosten meines Profils Geld?", "answer": "Nein. Das Hosting deines Profils ist eine geplante Funktion und bleibt in der kostenlosen Stufe." },
+    { "id": "energy-limits", "question": "Für wie viele Strecken kann ich Verpflegungsstationen planen?", "answer": "Im Entwurf: kostenlos höchstens 2 Strecken oder Rennen, 5 bei Silver, 10 bei Gold und unbegrenzt bei Platinum." },
+    { "id": "garmin-tier", "question": "Brauche ich für die Garmin-Uhr eine Mitgliedschaft?", "answer": "Im Entwurf gehört die Integration in die Garmin-Uhr zu Silver, Gold und Platinum. Es ist eine geplante Funktion, also ist noch nichts entschieden." }
+  ]
+}

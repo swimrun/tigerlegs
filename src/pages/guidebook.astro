@@ -5,7 +5,7 @@ import { renderDocument } from "../build-docs.ts";
 const source = await readFile("docs/software-guidebook.md", "utf8");
 const body = renderDocument(source, import.meta.env.BASE_URL);
 ---
-<SiteLayout title="TigerLegs software guidebook" description="TigerLegs context, domain model, glossary and architecture decisions." active="guidebook">
+<SiteLayout title="TigerLegs software guidebook" description="TigerLegs context, domain model, glossary and architecture decisions." active="guidebook" chatFaq="guidebook">
   <main class="guidebook">
     <p class="rounded border-l-4 border-amber-500 bg-amber-50 p-4"><strong>For tech heads.</strong> This guidebook describes how TigerLegs is built. It is <strong>under construction</strong> and will change.</p>
     <Fragment set:html={body} />
