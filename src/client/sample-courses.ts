@@ -104,7 +104,7 @@ export const SAMPLE_COURSES: readonly SampleCourse[] = [
     variants: [{
       id: "standard",
       label: "Standard",
-      description: "The Twiske Backyard Ultra SwimRun Experience of 20 June 2026, many laps.",
+      description: "The Twiske Backyard Ultra SwimRun Experience of 20 June 2026: three laps, the Experience variant. Work in progress: the total distance is not correct yet, and the same part of the course is sometimes found as a swim on one lap and as a run on another.",
       canonical: true,
       file: "twiske-backyard.gpx",
       source: "Twiske_Backyard_SwimRun_Experience.gpx",
