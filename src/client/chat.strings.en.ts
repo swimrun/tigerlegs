@@ -11,4 +11,17 @@ export const en: ChatStrings = {
   loadFailed: "ROARRS could not load its questions. Reload the page to try again.",
   error: "Sorry, something went wrong. Please try again.",
 switchToChrome: "Free questions need Chrome on a desktop computer (Gemini Nano). Switch to Chrome to use them.",
+  youAreOn: "You are on",
+  guide: {
+    question: "What can I do in this TigerLegs web app?",
+    intro: "TigerLegs splits a swimrun into its swim and run legs. From here you can go to:",
+    pages: { extractor: "Extractorrr", training: "Training", pricing: "Pricing", about: "About", guidebook: "Guidebook", profile: "Profile" },
+    descriptions: {
+      extractor: "Extractorrr: load a GPX file and get its swim and run segments on a map and in a table.",
+      training: "Training: plan your training week, with proposals from the chat.",
+      pricing: "Pricing: what is free and what will be paid.",
+      about: "About: what TigerLegs is, how it finds swims and runs, and what happens with your data.",
+      guidebook: "Guidebook: how TigerLegs is built and why, with the architecture, the domain terms and how to contribute.",
+    },
+  },
 };

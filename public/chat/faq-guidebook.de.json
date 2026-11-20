@@ -1,0 +1,47 @@
+{
+  "language": "de",
+  "tellMore": "Erzähl mir mehr",
+  "fallback": "Es gibt noch keine echte LLM-Anbindung. Bitte nutze vorerst die Fragen zur Software.",
+  "entries": [
+    {
+      "id": "contribute",
+      "question": "Kann ich mitmachen?",
+      "answer": "TigerLegs wird von einer kleinen Gruppe auf Einladung entwickelt, und das Repository ist privat. Schreib Bart in der SwimRun-Huiskamer-Gruppe; sobald du dort vorgestellt bist, bekommst du Zugang."
+    },
+    {
+      "id": "run-locally",
+      "question": "Wie starte ich TigerLegs auf meinem Computer?",
+      "answer": "Installiere Node.js 22.23 oder neuer, führe einmal npm ci aus, dann npm run dev, und öffne http://localhost:8123/tigerlegs/ im Browser."
+    },
+    {
+      "id": "tests",
+      "question": "Wie führe ich die Tests aus?",
+      "answer": "npm test führt die Unit-Tests aus, npm run test:site testet die gebaute Seite im Browser, npm run test:features führt die Gherkin-Akzeptanzkriterien aus und npm run test:a11y prüft die Komponenten auf Barrierefreiheit. Führe npm test und npm run build aus, bevor du pushst."
+    },
+    {
+      "id": "tech-stack",
+      "question": "Womit ist TigerLegs gebaut?",
+      "answer": "Eine statische Astro-Seite mit React-Inseln. Die GPX-Analyse läuft in deinem Browser, in einem Web Worker. Außerdem gibt es ein optionales Node.js-Back-End, einen Gelände-Proxy mit Dateicache, den die Seite nicht braucht."
+    },
+    {
+      "id": "why-choices",
+      "question": "Warum wurden diese technischen Entscheidungen getroffen?",
+      "answer": "Jede wichtige Entscheidung hat einen Architecture Decision Record (ADR), und das Entscheidungsprotokoll in Kapitel 13 dieses Guidebooks listet sie auf."
+    },
+    {
+      "id": "guidebook-structure",
+      "question": "Was steht in diesem Guidebook?",
+      "answer": "Kontext und Domäne, die funktionale Übersicht mit Anwendungsfällen, Qualitätsmerkmale, Randbedingungen, Prinzipien, die Softwarearchitektur, der Code, die Daten, die Infrastruktur, die Entwicklungsumgebung und das Entscheidungsprotokoll, gefolgt von Referenzen und einem Glossar."
+    },
+    {
+      "id": "ai-agents",
+      "question": "Kann ich einen KI-Coding-Agenten in diesem Projekt benutzen?",
+      "answer": "Ja. Die Arbeitsvereinbarungen gelten für jeden Agenten: Agenten ändern Dateien und führen Prüfungen aus, committen oder pushen aber nur, wenn du es verlangst, und ein lokaler KI-Agent sollte in einer Sandbox laufen, die nur den Projektordner erreicht."
+    },
+    {
+      "id": "commit-rules",
+      "question": "Wie schreibe ich eine Commit-Nachricht?",
+      "answer": "Auf Englisch, im Imperativ, mit der Issue-Nummer im Titel, zum Beispiel: Add fixed rest days to the training week (#74). Der Titel sagt, was sich ändert; der Text sagt warum, wenn es nicht offensichtlich ist."
+    }
+  ]
+}

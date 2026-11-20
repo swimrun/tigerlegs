@@ -47,6 +47,7 @@ export async function* toAgUiEvents(
             } as BaseEvent;
           }
           if (event.uiActions) yield { type: EventType.CUSTOM, name: "uiActions", value: event.uiActions } as BaseEvent;
+          if (event.links?.length) yield { type: EventType.CUSTOM, name: "links", value: event.links } as BaseEvent;
           break;
         }
         case "run-finished":

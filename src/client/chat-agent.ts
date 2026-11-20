@@ -17,10 +17,16 @@ export type ChatEvent =
    * `ui` is a declarative description of an interface to show under the text (ui-catalog.ts, ADR-0019): data, never
    * code. The text is always shown, so it also stands in for a description that the page cannot render.
    * `uiActions` says what the buttons of that interface send to the agent, as a chip does; an action that is not
-   * listed has no button.
+   * listed has no button. `links` are buttons that open another page; the text always names them too.
    */
-  | { type: "text"; text: string; followUps?: ChatSuggestion[]; ui?: unknown; uiActions?: UiActions }
+  | { type: "text"; text: string; followUps?: ChatSuggestion[]; ui?: unknown; uiActions?: UiActions; links?: ChatLink[] }
   | { type: "run-finished" };
+
+/** A link under a message that takes the visitor to another page of the site. */
+export interface ChatLink {
+  label: string;
+  href: string;
+}
 
 export type UiActions = Partial<Record<ProposalAction, ChatSuggestion>>;
 

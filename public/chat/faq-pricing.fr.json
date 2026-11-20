@@ -1,0 +1,14 @@
+{
+  "language": "fr",
+  "tellMore": "Dis-m'en plus",
+  "fallback": "Il n'y a pas encore de véritable intégration LLM. Utilisez pour l'instant les questions sur les tarifs.",
+  "entries": [
+    { "id": "is-it-free", "question": "TigerLegs est-il gratuit ?", "answer": "Oui. TigerLegs est en développement, nous cherchons des testeurs, et pour l'instant tout est entièrement gratuit." },
+    { "id": "extraction-free", "question": "L'extraction des segments restera-t-elle gratuite ?", "answer": "Oui. Charger un fichier GPX et obtenir ses segments de nage et de course, avec les distances, sur une carte et dans un tableau, restera toujours gratuit." },
+    { "id": "prices", "question": "Combien coûteront Silver, Gold et Platinum ?", "answer": "Les prix du brouillon sont de 5 € pour Silver, 10 € pour Gold et 25 € pour Platinum. Il n'est pas encore décidé s'ils sont mensuels ou annuels, et rien ne peut encore être acheté." },
+    { "id": "why-membership", "question": "Pourquoi y a-t-il une adhésion ?", "answer": "Aujourd'hui, TigerLegs ne coûte presque rien. Dès que nous construirons un back-end qui héberge aussi des profils, nous paierons des serveurs, du stockage et des sauvegardes, et l'adhésion couvre ces coûts." },
+    { "id": "profile-free", "question": "L'hébergement de mon profil coûtera-t-il de l'argent ?", "answer": "Non. L'hébergement de votre profil est une fonction prévue, et il reste dans le niveau gratuit." },
+    { "id": "energy-limits", "question": "Pour combien de parcours puis-je planifier des ravitaillements ?", "answer": "Dans le brouillon : au maximum 2 parcours ou courses en gratuit, 5 avec Silver, 10 avec Gold et illimité avec Platinum." },
+    { "id": "garmin-tier", "question": "Faut-il une adhésion pour la montre Garmin ?", "answer": "Dans le brouillon, l'intégration à la montre Garmin fait partie de Silver, Gold et Platinum. C'est une fonction prévue, rien n'est donc encore décidé." }
+  ]
+}
