@@ -21,6 +21,7 @@ export function validateFile(file: File): ValidationResult {
     return {
       valid: false,
       error: "Only GPX files are accepted",
+      code: "notGpx",
     };
   }
 
@@ -28,6 +29,7 @@ export function validateFile(file: File): ValidationResult {
     return {
       valid: false,
       error: "File exceeds the maximum allowed size of 10 MB",
+      code: "tooLarge",
     };
   }
 
@@ -37,13 +39,20 @@ export function validateFile(file: File): ValidationResult {
 /** From this size on, analysing takes noticeable time and battery, so the page says so. */
 export const LARGE_FILE_BYTES = 3 * 1024 * 1024;
 
+/** The size in megabytes of a file that is large enough for a notice, or null for a small one. */
+export function largeFileMegabytes(sizeBytes: number): number | null {
+  return sizeBytes < LARGE_FILE_BYTES ? null : sizeBytes / (1024 * 1024);
+}
+
 /**
  * Notice for large files, or null for small ones. Choosing a file on the page does not
  * upload it, so no upload cost applies; a sample is downloaded and does use mobile data.
+ * This is the English text; the page builds the text of its own language from `largeFileMegabytes`.
  */
 export function largeFileNotice(sizeBytes: number, downloaded = false): string | null {
-  if (sizeBytes < LARGE_FILE_BYTES) return null;
-  const mb = (sizeBytes / (1024 * 1024)).toFixed(1);
+  const megabytes = largeFileMegabytes(sizeBytes);
+  if (megabytes === null) return null;
+  const mb = megabytes.toFixed(1);
   return `Large file (${mb} MB). Analysing it can take a while and uses your device's processor and battery, ` +
     `so a phone may get warm. ` +
     (downloaded

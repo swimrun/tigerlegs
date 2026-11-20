@@ -1,4 +1,6 @@
 import type { Segment, Trackpoint } from "../shared/types.ts";
+import type { Lang } from "./language.ts";
+import { localizeNumber } from "./numbers.ts";
 
 /** One leg as the bar under the map shows it. */
 export interface BarLeg {
@@ -34,8 +36,8 @@ export function barLegs(segments: readonly Segment[], points: readonly Trackpoin
 }
 
 /** "1.30 km" from 1 km up, "150 m" (to 10 m) below. */
-export function formatLegDistance(km: number): string {
-  return km >= 1 ? `${km.toFixed(2)} km` : `${Math.round((km * 1000) / 10) * 10} m`;
+export function formatLegDistance(km: number, lang: Lang = "en"): string {
+  return km >= 1 ? `${localizeNumber(km.toFixed(2), lang)} km` : `${Math.round((km * 1000) / 10) * 10} m`;
 }
 
 /** "32 min 29 s", "1 h 2 min", "45 s". */
@@ -49,8 +51,8 @@ export function formatLegDuration(seconds: number): string {
 }
 
 /** What a screen reader reads, and the panel shows: "swim, leg 3, 1.30 km, 32 min 29 s". */
-export function legLabel(leg: BarLeg, names: { swim: string; run: string; unclassified: string; leg: string }): string {
-  const parts = [`${names[leg.type]}, ${names.leg} ${leg.number}`, formatLegDistance(leg.distanceKm)];
+export function legLabel(leg: BarLeg, names: { swim: string; run: string; unclassified: string; leg: string }, lang: Lang = "en"): string {
+  const parts = [`${names[leg.type]}, ${names.leg} ${leg.number}`, formatLegDistance(leg.distanceKm, lang)];
   if (leg.durationSeconds !== null) parts.push(formatLegDuration(leg.durationSeconds));
   return parts.join(", ");
 }

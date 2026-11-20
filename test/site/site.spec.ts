@@ -541,3 +541,27 @@ test("the About chat answers where to find races, with a link to Dave's List", a
   await page.getByRole("button", { name: "Where can I find swimrun races?" }).click();
   await expect(page.getByRole("log").getByRole("link", { name: "Dave's List" })).toHaveAttribute("href", "https://lowtideboyz.com/swimrun-races");
 });
+
+test("the Extractor follows the language of the page: texts, plurals, decimal comma and dates", async ({ page }) => {
+  await page.goto("./");
+  await page.locator("#language-switch").selectOption("nl");
+  await expect(page.getByText("Upload een .gpx-bestand")).toBeVisible();
+  await expect(page.getByRole("radio", { name: "Eerst lopen" })).toBeChecked();
+  await page.locator("[data-sample-menu] summary").click();
+  await expect(page.locator("[data-sample-menu] summary")).toHaveText("Probeer een voorbeeld");
+  await page.locator('[data-sample="rhederlaag-swimrun.gpx"]').click();
+  // The status says it in Dutch, with the plural of the language, and the totals have a decimal comma.
+  await expect(page.locator("#analysis-status")).toContainText(/trackpunten geanalyseerd in \d+,\d s/);
+  await expect(page.locator("#totals-row")).toContainText(/\d+,\d/);
+  await expect(page.locator("#totals-row")).toContainText("Totaal");
+  await expect(page.getByRole("table", { name: "Swimrun-segmenten" })).toBeVisible();
+  await page.locator("#language-switch").selectOption("fr");
+  await expect(page.getByText("Téléverser un fichier .gpx")).toBeVisible();
+  await expect(page.locator("#totals-row")).toContainText("Total");
+  await page.locator("#language-switch").selectOption("de");
+  await expect(page.getByText("Eine .gpx-Datei hochladen")).toBeVisible();
+  await expect(page.getByRole("radio", { name: "Erst Laufen" })).toBeVisible();
+  await page.locator("#language-switch").selectOption("en");
+  await expect(page.getByText("Upload a .gpx file")).toBeVisible();
+  await expect(page.locator("#totals-row")).toContainText(/\d+\.\d/);
+});
