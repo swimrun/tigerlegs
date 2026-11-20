@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { SAMPLE_COURSES } from "../client/sample-courses.ts";
+import { useExtractorT } from "./useExtractorT.ts";
 
 const LINK_CLASS =
   "sample-link block rounded border border-stone-200 bg-white px-3 py-2 text-sm font-medium hover:border-amber-500 hover:bg-amber-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-stone-950";
@@ -10,9 +11,10 @@ const LINK_CLASS =
  */
 export default function SampleMenu({ base, load }: { base: string; load: (file: string) => void }) {
   const [chosen, setChosen] = useState<Record<string, string>>({});
+  const { t } = useExtractorT();
   return (
     <details data-sample-menu className="mb-3 rounded-lg border border-stone-200 bg-white shadow-sm">
-      <summary className="cursor-pointer px-4 py-2 text-sm font-semibold">Try a sample</summary>
+      <summary className="cursor-pointer px-4 py-2 text-sm font-semibold">{t("trySample")}</summary>
       <ul className="grid gap-3 p-4 sm:grid-cols-2 lg:grid-cols-3">
         {SAMPLE_COURSES.map((course) => {
           const single = course.variants.length === 1 ? course.variants[0] : null;
@@ -37,12 +39,12 @@ export default function SampleMenu({ base, load }: { base: string; load: (file: 
                 </select>
                 <button type="button" disabled={!variant.file} data-sample={variant.file ?? undefined}
                   className="rounded bg-stone-900 px-3 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:bg-stone-300 disabled:text-stone-600"
-                  onClick={() => variant.file && load(variant.file)}>Load</button>
+                  onClick={() => variant.file && load(variant.file)}>{t("load")}</button>
               </div>
               <p data-variant-description className="mt-1 text-xs text-stone-600">
-                {variant.canonical && <strong className="font-semibold">Main variant. </strong>}
+                {variant.canonical && <strong className="font-semibold">{t("mainVariant")} </strong>}
                 {variant.description}
-                {!variant.file && <span> (GPX to be added)</span>}
+                {!variant.file && <span> {t("gpxToBeAdded")}</span>}
               </p>
             </li>
           );

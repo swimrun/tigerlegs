@@ -120,7 +120,9 @@ export interface AidStation {
 /** Validation result */
 export interface ValidationResult {
   valid: boolean;
+  /** The English text; a page that shows another language picks its own text by `code`. */
   error?: string;
+  code?: "notGpx" | "tooLarge";
 }
 
 /** Result type for operations that can fail */

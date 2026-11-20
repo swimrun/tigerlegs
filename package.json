@@ -42,10 +42,14 @@
     "@astrojs/react": "^7.1.2",
     "@xmldom/xmldom": "^0.9.0",
     "astro": "^7.4.4",
+    "i18next": "^27.2.2",
+    "i18next-icu": "^2.7.1",
+    "intl-messageformat": "^12.2.0",
     "leaflet": "^1.9.4",
     "marked": "^15.0.0",
     "react": "^19.2.0",
-    "react-dom": "^19.2.0"
+    "react-dom": "^19.2.0",
+    "react-i18next": "^18.0.3"
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.4",
@@ -80,6 +84,8 @@
   "overrides": {
     "lodash": "^4.18.1",
     "yaml": "^2.9.1",
-    "qs": "^6.17.1"
+    "qs": "^6.17.1",
+    "glob": "^14.0.6",
+    "minimatch": "^11.0.9"
   }
 }

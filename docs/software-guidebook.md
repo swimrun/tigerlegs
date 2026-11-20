@@ -816,7 +816,7 @@ Open questions: how a real deviation is shown on the map (a dashed line, another
 This chapter explains how the source code is organised.
 
 The source lives in three folders: `src/client` for the browser, `src/server` for the backend and `src/shared` for types and distance calculation.
-Texts for the interface are data in external JSON files, one per language, and never inline; the library and the routing per language are decided in [ADR-0017](./adr/0017-localisation.md), and until then per-language TypeScript files are a stopgap (see `AGENTS.md`).
+Texts for the interface are data in external JSON files, one per language, and never inline; the library and the routing per language are decided in [ADR-0017](./adr/0017-localisation.md), and the other pages keep per-language TypeScript files as a stopgap until they move too. The extractor page is the first feature on that library: i18next with the ICU message syntax, texts in `src/data/extractor.<language>.json`, plurals, numbers and dates written by the rules of the language (`src/client/i18n.ts`, issue #150).
 Tests sit next to the code (`*.test.ts`) or in `test/`. The back end in `src/server` runs on Node.js (`npm run server`, type stripping, no build step) and its tests run with Vitest (`npm run test:server`); `npm run check:server` compiles it with only Node's types. Deno does not run them.
 Most tests are property-based: they state a rule that must hold for generated inputs, such as the maximum gap between samples.
 `npm run build` bundles the analysis Web Worker into `public/analysis-worker.js` with esbuild, builds the Tailwind styles with its CLI, copies the samples and diagrams, and then builds the Astro site; the scripts of `src/` run on Node with type stripping.
