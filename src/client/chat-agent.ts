@@ -37,6 +37,8 @@ export interface ChatSuggestion {
   prompt?: string;
   /** Id of the suggestion that counts as fully answered once this one is chosen. */
   completes?: string;
+  /** A follow-up that stays on its message while later messages come, instead of only on the last one. */
+  sticky?: boolean;
 }
 
 export interface ChatAgent {

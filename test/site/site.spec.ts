@@ -548,7 +548,7 @@ test("the Extractor follows the language of the page: texts, plurals, decimal co
   await expect(page.getByText("Upload een .gpx-bestand")).toBeVisible();
   await expect(page.getByRole("radio", { name: "Eerst lopen" })).toBeChecked();
   await page.locator("[data-sample-menu] summary").click();
-  await expect(page.locator("[data-sample-menu] summary")).toHaveText("Probeer een voorbeeld");
+  await expect(page.locator("[data-sample-menu] summary")).toHaveText("Probeer een demo-GPX");
   await page.locator('[data-sample="rhederlaag-swimrun.gpx"]').click();
   // The status says it in Dutch, with the plural of the language, and the totals have a decimal comma.
   await expect(page.locator("#analysis-status")).toContainText(/trackpunten geanalyseerd in \d+,\d s/);
@@ -564,4 +564,20 @@ test("the Extractor follows the language of the page: texts, plurals, decimal co
   await page.locator("#language-switch").selectOption("en");
   await expect(page.getByText("Upload a .gpx file")).toBeVisible();
   await expect(page.locator("#totals-row")).toContainText(/\d+\.\d/);
+});
+
+test("on a Dutch Training page the chat can switch the page to English, and the conversation stays", async ({ page }) => {
+  await page.addInitScript(() => Object.defineProperty(globalThis, "LanguageModel", { value: undefined, configurable: true }));
+  await page.goto("training.html");
+  await page.locator("#language-switch").selectOption("nl");
+  await page.getByRole("button", { name: ROARRS }).first().click();
+  await page.getByRole("textbox", { name: "Jouw vraag" }).fill("I travel on Friday");
+  await page.getByRole("button", { name: "Vraag", exact: true }).click();
+  await expect(page.getByRole("log")).toContainText("Gemini Nano begrijpt geen Nederlands");
+  await page.getByRole("button", { name: "Zet de pagina in het Engels" }).click();
+  await expect(page.locator("html")).toHaveAttribute("lang", "en");
+  await expect(page.locator("#language-switch")).toHaveValue("en");
+  // The talk stays, and the chat now speaks English.
+  await expect(page.getByRole("log")).toContainText("Gemini Nano begrijpt geen Nederlands");
+  await expect(page.getByRole("textbox", { name: "Your question" })).toBeVisible();
 });

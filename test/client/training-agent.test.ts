@@ -308,3 +308,10 @@ it("training agent: on a Dutch page in Chrome the model is still offered, with a
   const second = texts(await collect(agent, "I travel on Friday"));
   expect(second.map((reply) => reply.text), "the note is said once").toEqual(["downloadable"]);
 });
+
+it("training agent: the note for a Dutch page comes with a chip that switches the page to English", async () => {
+  const agent = createTrainingAgent({ model: fakeModel([]), lang: "nl", strings, chrome: true, getWeek: () => PROTOTYPE_WEEK, onApply: () => {} });
+  const [note] = texts(await collect(agent, "I travel"));
+  expect(note.followUps?.map((chip) => [chip.label, chip.prompt])).toEqual([[CHAT_STRINGS.nl.switchToEnglish, "lang:en"]]);
+  expect(CHAT_STRINGS.nl.switchToEnglish).toBe("Zet de pagina in het Engels");
+});
