@@ -2,8 +2,9 @@ import { expect, it } from "vitest";
 import { readdirSync, readFileSync } from "node:fs";
 
 /**
- * The rule: texts for the interface live in external per-language files, `<owner>.strings.<lang>.ts`, next to the
- * module that owns them, and never inline in a component or a module. This test finds inline dictionaries and
+ * The rule: texts for the interface live in external per-language files and never inline in a component or a module:
+ * ICU messages in `src/data/<feature>.<lang>.json` for the features on i18next (ADR-0017, issue #84), and for the
+ * others `<owner>.strings.<lang>.ts` next to the module that owns them. This test finds inline dictionaries and
  * strings files that miss a language.
  */
 const LANGS = ["en", "nl", "fr", "de"];

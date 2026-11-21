@@ -1,11 +1,8 @@
 import type { GuideTexts } from "./chat-guide.ts";
+import { bundle } from "./i18n.ts";
 import type { Lang } from "./language.ts";
-import { de } from "./chat.strings.de.ts";
-import { en } from "./chat.strings.en.ts";
-import { fr } from "./chat.strings.fr.ts";
-import { nl } from "./chat.strings.nl.ts";
 
-/** The texts of the chat: its interface, and why a free question cannot go to the model. One file per language next to this one. */
+/** The texts of the chat: its interface, and why a free question cannot go to the model. The texts are data in `src/data/chat.<language>.json` (ADR-0017). */
 export interface ChatStrings {
   title: string;
   prototype: string;
@@ -24,8 +21,10 @@ export interface ChatStrings {
   youAreOn: string;
   /** The chip on every page that tells what the web app can do, and where. */
   guide: GuideTexts;
+  /** The chip that goes with the note for a language that Gemini Nano does not know: it switches the page to English. */
+  switchToEnglish: string;
   /** Only for languages Gemini Nano does not support. */
   useSupportedLanguage?: string;
 }
 
-export const STRINGS: Record<Lang, ChatStrings> = { en, nl, fr, de };
+export const STRINGS: Record<Lang, ChatStrings> = { en: bundle("en", "chat"), nl: bundle("nl", "chat"), fr: bundle("fr", "chat"), de: bundle("de", "chat") };

@@ -4,7 +4,7 @@ import { getPageChat, subscribePageChat } from "../client/chat-store.ts";
 import { faqFreeformHint } from "../client/chat-hints.ts";
 import { type Inline, parseInline } from "../client/chat-markdown.ts";
 import { splitChatTitle } from "../client/chat-title.ts";
-import type { Lang } from "../client/language.ts";
+import { isLang, LANGUAGE_CHIP, type Lang, setPageLanguage } from "../client/language.ts";
 import { type ChatStrings, STRINGS } from "../client/chat.strings.ts";
 import { isPageKey, type PageKey, withPageGuide } from "../client/chat-guide.ts";
 import type { ProposalAction } from "../client/ui-catalog.ts";
@@ -127,6 +127,13 @@ function ChatPanel({ chat, t, lang, id, placeholder }: { chat: ChatAgent; t: Cha
   async function ask(text: string, { id, prompt, shown, completes }: { id?: string; prompt?: string; shown?: boolean; completes?: string } = {}) {
     const question = (prompt ?? text).trim();
     if (!question || busy) return;
+    // A chip that changes the language of the page is not a question: the page and the chat follow, and the talk stays.
+    if (question.startsWith(LANGUAGE_CHIP)) {
+      const code = question.slice(LANGUAGE_CHIP.length);
+      if (id) setAsked((a) => [...a, id]);
+      if (isLang(code)) setPageLanguage(code);
+      return;
+    }
     setBusy(true);
     setInput("");
     // A chip is used up as soon as it is chosen; the follow-ups ("tell me more") that come with the answer stay available.
@@ -197,7 +204,7 @@ function ChatPanel({ chat, t, lang, id, placeholder }: { chat: ChatAgent; t: Cha
                 {m.links.map((link) => <a key={link.href} href={link.href} data-chat-link className={pill}>{link.label}</a>)}
               </nav>
             )}
-            {i === messages.length - 1 && m.followUps?.filter((f) => !asked.includes(f.id)).map((f) => (
+            {m.followUps?.filter((f) => (i === messages.length - 1 || f.sticky) && !asked.includes(f.id)).map((f) => (
               <button key={f.id} type="button" disabled={busy} className={pill}
                 onClick={() => ask(f.label, { id: f.id, prompt: f.prompt, shown: true, completes: f.completes })}>
                 {f.label}
@@ -291,7 +298,7 @@ export default function Chatbot(
       {everOpened && (
         <div hidden={!open}>
           {page && <p data-chat-page-name className="mt-2 text-xs text-stone-700">{t.youAreOn}: <strong>{t.guide.pages[page]}</strong></p>}
-          <ChatPanel key={lang} chat={chat} t={t} lang={lang} id="chat-panel" placeholder={placeholder ?? pageChat?.placeholder ?? t.placeholder} />
+          <ChatPanel chat={chat} t={t} lang={lang} id="chat-panel" placeholder={placeholder ?? pageChat?.placeholder ?? t.placeholder} />
         </div>
       )}
     </section>

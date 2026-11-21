@@ -73,3 +73,58 @@ it("one instance serves the page, and an unknown language falls back to English"
   expect(i18nInstance()).toBe(i18nInstance());
   expect(i18nInstance().getFixedT("xx", "extractor")("upload")).toBe("Upload a .gpx file");
 });
+
+// The Training page and the chat are on the same library: their texts are data in src/data/<feature>.<language>.json.
+import chatDe from "../../src/data/chat.de.json";
+import chatEn from "../../src/data/chat.en.json";
+import chatFr from "../../src/data/chat.fr.json";
+import chatNl from "../../src/data/chat.nl.json";
+import trainingDe from "../../src/data/training.de.json";
+import trainingEn from "../../src/data/training.en.json";
+import trainingFr from "../../src/data/training.fr.json";
+import trainingNl from "../../src/data/training.nl.json";
+import { STRINGS as TRAINING } from "../../src/components/TrainingWeek.strings.ts";
+import { STRINGS as CHAT } from "../../src/client/chat.strings.ts";
+
+const NAMESPACES = {
+  training: { en: trainingEn, nl: trainingNl, fr: trainingFr, de: trainingDe },
+  chat: { en: chatEn, nl: chatNl, fr: chatFr, de: chatDe },
+} as const;
+
+it("the training and chat texts have the keys of English in every language", () => {
+  for (const [name, files] of Object.entries(NAMESPACES)) {
+    for (const lang of LANGS) {
+      const have = keys(files[lang] as Record<string, unknown>).sort();
+      const want = keys(files.en as Record<string, unknown>).sort();
+      // Dutch adds a hint about its missing language support to the chat, so only the keys of English must be there.
+      expect(want.filter((key) => !have.includes(key)), `${name} ${lang} misses keys`).toEqual([]);
+    }
+  }
+});
+
+it("how many sessions did not fit follows the plural rules of each language", () => {
+  expect(TRAINING.en.notPlaced(1)).toBe("1 session did not fit on the free days.");
+  expect(TRAINING.en.notPlaced(3)).toBe("3 sessions did not fit on the free days.");
+  expect(TRAINING.nl.notPlaced(1)).toBe("1 sessie paste niet op de vrije dagen.");
+  expect(TRAINING.nl.notPlaced(2)).toBe("2 sessies pasten niet op de vrije dagen.");
+  expect(TRAINING.fr.notPlaced(1)).toBe("1 séance ne tient pas sur les jours libres.");
+  expect(TRAINING.de.notPlaced(2)).toBe("2 Einheiten passten nicht auf die freien Tage.");
+});
+
+it("the messages with variables fill them in, in every language", () => {
+  for (const lang of LANGS) {
+    const t = TRAINING[lang];
+    for (const text of [t.applied("S"), t.movedFromTo("T", "A", "B"), t.restDayWarning("D"), t.restDayBecomes("D"), t.restDayReason("D"), t.restDayAlready("D"), t.leftOut("T", "D"), t.nextChip("T", "A", "B"), t.restDayChip("D"), t.fixReasons.clash("D")]) {
+      expect(text, lang).not.toMatch(/\{[a-zA-Z]+\}/);
+      expect(text.length > 0, lang).toBe(true);
+    }
+  }
+  expect(TRAINING.en.movedFromTo("Run", "Mon", "Wed")).toBe("Run: Mon → Wed");
+  expect(TRAINING.en.restDayChip("Wednesday")).toBe("Make Wednesday a sports rest day");
+});
+
+it("the chat texts come from the data files", () => {
+  expect(CHAT.en.ask).toBe("Ask");
+  expect(CHAT.nl.useSupportedLanguage).toContain("Engels");
+  expect(CHAT.fr.guide.pages.training).toBe("Training");
+});

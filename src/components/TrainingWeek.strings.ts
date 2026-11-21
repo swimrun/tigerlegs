@@ -1,11 +1,8 @@
 import type { Lang } from "../client/language.ts";
 import type { Day, Discipline, IssueKind, PlanLevers, Surface } from "../client/training-week.ts";
-import { de } from "./TrainingWeek.strings.de.ts";
-import { en } from "./TrainingWeek.strings.en.ts";
-import { fr } from "./TrainingWeek.strings.fr.ts";
-import { nl } from "./TrainingWeek.strings.nl.ts";
+import { bundle, trainingT } from "../client/i18n.ts";
 
-/** Every text of the training page. The page owns its translations: one file per language next to this one. */
+/** Every text of the training page. The texts are ICU messages in `src/data/training.<language>.json` (ADR-0017); the functions below fill in their variables. */
 export interface Strings {
   prototypeNote: string;
   weekTitle: string;
@@ -65,4 +62,26 @@ export interface Strings {
   disciplines: Record<Discipline, string>;
 }
 
-export const STRINGS: Record<Lang, Strings> = { en, nl, fr, de };
+type Plain = Omit<Strings, "applied" | "notPlaced" | "movedFromTo" | "restDayWarning" | "restDayBecomes" | "restDayReason" | "restDayAlready" | "leftOut" | "nextChip" | "restDayChip" | "fixReasons"> & { fixReasons: Record<IssueKind, string> };
+
+/** The texts of one language: what has no variable comes as it is, the rest are messages that get their variables here. */
+function strings(lang: Lang): Strings {
+  const t = trainingT(lang);
+  const { fixReasons, ...plain } = bundle<Plain>(lang, "training");
+  return {
+    ...plain,
+    applied: (summary) => t("applied", { summary }),
+    notPlaced: (count) => t("notPlaced", { count }),
+    movedFromTo: (title, from, to) => t("movedFromTo", { title, from, to }),
+    restDayWarning: (day) => t("restDayWarning", { day }),
+    restDayBecomes: (day) => t("restDayBecomes", { day }),
+    restDayReason: (day) => t("restDayReason", { day }),
+    restDayAlready: (day) => t("restDayAlready", { day }),
+    leftOut: (title, day) => t("leftOut", { title, day }),
+    nextChip: (title, from, to) => t("nextChip", { title, from, to }),
+    restDayChip: (day) => t("restDayChip", { day }),
+    fixReasons: Object.fromEntries(Object.keys(fixReasons).map((kind) => [kind, (day: string) => t(`fixReasons.${kind}`, { day })])) as Strings["fixReasons"],
+  };
+}
+
+export const STRINGS: Record<Lang, Strings> = { en: strings("en"), nl: strings("nl"), fr: strings("fr"), de: strings("de") };

@@ -1,6 +1,7 @@
 import type { ChatAgent, ChatEvent, ChatSuggestion } from "./chat-agent.ts";
 import { freeformHint, isChromeBrowser, isNanoLanguage } from "./chat-hints.ts";
-import type { Lang } from "./language.ts";
+import { STRINGS as CHAT_STRINGS } from "./chat.strings.ts";
+import { LANGUAGE_CHIP, type Lang } from "./language.ts";
 import {
   type AssistantReply,
   assistAvailability,
@@ -256,7 +257,7 @@ export function createTrainingAgent(
         const hint = chrome ? undefined : freeformHint(lang, false);
         if (!hint && !isNanoLanguage(lang) && !languageNoteShown) {
           languageNoteShown = true;
-          yield text(freeformHint(lang, true)!);
+          yield text(freeformHint(lang, true)!, [{ id: "chip-language-en", label: CHAT_STRINGS[lang].switchToEnglish, prompt: `${LANGUAGE_CHIP}en`, sticky: true }]);
         }
         const availability = hint ? "absent" : await assistAvailability(model);
         if (hint) {
