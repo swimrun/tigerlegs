@@ -231,7 +231,7 @@ UC-1 holds the features that the specifications number as separate stories: uplo
 Highlighting and aid stations extend the map, and track selection extends the upload.
 UC-2 and UC-3 include UC-1.
 
-**Create paddle hieroglyphics.** Swimrunners write the legs and their distances on their swim paddle, as in Figure 6, and in the podcast episode *Swimrun 201: Swim Paddle Hieroglyphics* the hosts of the Low Tide Boyz explain why you should (Low Tide Boyz, n.d.).
+**Create paddle hieroglyphics.** Many swimrunners write the legs and their distances on their swim paddle, as in Figure 6. "Paddle hieroglyphics" is the title of the podcast episode [Swimrun 201: Swim Paddle Hieroglyphics](https://lowtideboyz.com/podcast/swimrun-201-swim-paddle-hieroglyphics) of the Low Tide Boyz, in which the hosts "share some of our theories for what to write down and when" (Low Tide Boyz, 2022). Not everyone writes anything down: some swimrunners prefer to know the segments by heart.
 The compact table of [ADR-0007](./adr/0007-compact-segment-table-format.md) has one row per run and swim pair for this reason.
 
 Figures 3 and 4 give a system sequence diagram for the two central goals, following Larman (2005): the system stays a black box and only the system events of the main success scenario appear, so these diagrams belong here with the requirements.
@@ -1469,7 +1469,7 @@ ADR-0008 implements a shared Astro layout and directly linkable HTML pages, with
 - ISO/IEC. (2023). *ISO/IEC 25010:2023 Systems and software engineering: Systems and software Quality Requirements and Evaluation (SQuaRE): Product quality model*. https://www.iso.org/standard/78176.html
 - Knuth, D. E. (1984). Literate programming. *The Computer Journal, 27*(2), 97–111. https://doi.org/10.1093/comjnl/27.2.97
 - Larman, C. (2005). *Applying UML and patterns: An introduction to object-oriented analysis and design and iterative development* (3rd ed.). Prentice Hall.
-- Low Tide Boyz. (n.d.). *Swimrun 201: Swim Paddle Hieroglyphics* [Audio podcast episode 106]. In *Low Tide Boyz, a swimrun podcast*. https://lowtideboyz.com/podcast/swimrun-201-swim-paddle-hieroglyphics
+- Low Tide Boyz. (2022, January 13). *Swimrun 201: Swim Paddle Hieroglyphics* [Audio podcast episode 106]. In *Low Tide Boyz, a swimrun podcast*. https://lowtideboyz.com/podcast/swimrun-201-swim-paddle-hieroglyphics
 - MDN Contributors. (n.d.-a). *Making PWAs installable*. MDN Web Docs. Retrieved November 16, 2026, from https://developer.mozilla.org/en-US/docs/Web/Progressive_web_apps/Guides/Making_PWAs_installable
 - MDN Contributors. (n.d.-b). *How to define app icons*. MDN Web Docs. Retrieved November 16, 2026, from https://developer.mozilla.org/en-US/docs/Web/Progressive_web_apps/How_to/Define_app_icons
 - MDN Contributors. (n.d.-c). *display-mode*. MDN Web Docs. Retrieved November 16, 2026, from https://developer.mozilla.org/en-US/docs/Web/CSS/@media/display-mode
